@@ -686,6 +686,12 @@ document.querySelectorAll('input[name="layout"]').forEach(radio => {
 let splitState = 'normal';
 const editorPanel = document.querySelector('.panel.editor');
 const diagramPanel = document.querySelector('.panel.right');
+function clearCollapse(){
+  app.classList.remove('collapse-editor','collapse-diagram');
+  editorPanel.classList.remove('collapsed');
+  diagramPanel.classList.remove('collapsed');
+  document.querySelectorAll('.winbtn').forEach(b => b.classList.remove('active'));
+}
 function applySplit(){
   /* Preset-/Drag-Größen bei Preset-Wechsel zurücksetzen */
   app.style.removeProperty('--col');
@@ -696,6 +702,8 @@ function applySplit(){
   editorPanel.classList.toggle('collapsed', splitState==='b');
   document.querySelectorAll('.winbtn').forEach(b => b.classList.toggle('active', b.dataset.state===splitState));
 }
+/* Setzt einen Minimier-Zustand während des Ziehens nur bei Änderung. */
+function snapTo(state){ if(splitState!==state){ splitState = state; applySplit(); } }
 document.querySelectorAll('.winbtn').forEach(b => {
   b.addEventListener('click', () => { splitState = b.dataset.state; applySplit(); });
 });
@@ -718,23 +726,31 @@ gutter.addEventListener('pointerdown', e => {
   document.body.style.userSelect = 'none';
   /* Freies Ziehen hebt Preset und Minimierung auf */
   splitState = 'custom';
-  app.classList.remove('collapse-editor','collapse-diagram');
-  editorPanel.classList.remove('collapsed');
-  diagramPanel.classList.remove('collapsed');
-  document.querySelectorAll('.winbtn').forEach(b => b.classList.remove('active'));
+  clearCollapse();
   e.preventDefault();
 });
+/* Näher als SNAP an einem Rand: in den minimierten Zustand einrasten,
+   sonst frei skalieren. So sind beide Extreme per Splitter erreichbar. */
+const SNAP = 72;
 gutter.addEventListener('pointermove', e => {
   if(!dragging) return;
   const rect = app.getBoundingClientRect();
   if(app.classList.contains('side')){
-    let w = e.clientX - rect.left;
-    w = Math.max(220, Math.min(rect.width - 280, w));
-    app.style.setProperty('--col', w + 'px');
+    const w = e.clientX - rect.left, maxw = rect.width - 14;
+    if(w <= SNAP)               snapTo('b');            /* Editor auf Titelzeile */
+    else if(w >= maxw - SNAP)   snapTo('a');            /* Diagramm auf Titelzeile */
+    else {
+      if(splitState!=='custom'){ splitState='custom'; clearCollapse(); }
+      app.style.setProperty('--col', w + 'px');
+    }
   } else {
-    let h = e.clientY - rect.top;
-    h = Math.max(120, Math.min(rect.height - 140, h));
-    app.style.setProperty('--drow', h + 'px');
+    const h = e.clientY - rect.top, maxh = rect.height - 14;
+    if(h <= SNAP)               snapTo('a');            /* Diagramm (oben) auf Titelzeile */
+    else if(h >= maxh - SNAP)   snapTo('b');            /* Editor (unten) auf Titelzeile */
+    else {
+      if(splitState!=='custom'){ splitState='custom'; clearCollapse(); }
+      app.style.setProperty('--drow', h + 'px');
+    }
   }
 });
 function endDrag(e){
