@@ -19,6 +19,10 @@ Abhaken beim Erledigen; neue Aufgaben unten anfügen.
 - [ ] Druck-Stylesheet (Diagramm ohne Editor-Panel).
 - [ ] Fehlertolerantes Parsen weiter ausbauen (unbekannte Statuszeichen melden).
 
+## Deployment
+- [x] GitHub-Pages-Workflow angelegt (`.github/workflows/pages.yml`,
+      siehe docs/DECISIONS.md D16).
+
 ## Phase 3 — Integrationen (siehe docs/ROADMAP.md)
 - [ ] Backend-Gerüst per Spring Initializr in `backend/` anlegen
       (Kotlin, Gradle Kotlin DSL, JDK 21; Konventionen: backend/CLAUDE.md).

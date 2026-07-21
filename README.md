@@ -43,6 +43,23 @@ Elemente einblenden.
 - `docs/design/` — Design-Herleitung der Marke
 - `CLAUDE.md` — Projektkontext für Claude Code
 
+## Deployment
+
+Der Editor wird per GitHub Actions als statische Seite auf **GitHub Pages**
+veröffentlicht (Workflow: `.github/workflows/pages.yml`). Ausgelöst bei jedem
+Push auf `main` sowie manuell (`workflow_dispatch`).
+
+Der Workflow stellt einen Site-Ordner zusammen: `frontend/index.html` liegt als
+`index.html` an der Wurzel-URL, dazu die vom Editor referenzierten Dateien
+(`docs/brand/` fürs Favicon, `LICENSE` für den MIT-Link im Footer). Die
+`../`-Pfade der Editor-Quelle werden dabei nur auf der Kopie geradegezogen — die
+Quelldatei bleibt unverändert. `backend/` und die übrigen `docs/` werden nicht
+veröffentlicht.
+
+**Einmalige Einrichtung:** In den Repo-Settings unter **Pages** als **Source**
+„GitHub Actions" wählen. Das Repo muss dafür **öffentlich** sein (GitHub Pages
+via Actions ist für private Repos nur mit kostenpflichtigem Plan verfügbar).
+
 ## Lizenz
 
 MIT — siehe [LICENSE](LICENSE). © 2026 Michael Hönnig.

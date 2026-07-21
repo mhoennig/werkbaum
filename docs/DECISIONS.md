@@ -102,3 +102,23 @@ durchgezogene Hauptlinie optisch mit „all of“ konkurrieren. Grau tritt zurü
 die gestrichelte Führung bleibt eindeutig. D12/BRAND — „durchgezogen = und,
 gestrichelt = oder“ — gilt für das **Markenzeichen** unverändert (Logo behält
 Petrol); im **Diagramm** trägt allein der Linienstil die Gate-Codierung.
+
+## D16 — Deployment über GitHub Pages via Actions-Workflow
+Der Editor ist eine einzelne statische Datei (D11) — GitHub Pages genügt, kein
+eigener Server nötig. Veröffentlicht wird über den offiziellen Actions-Weg
+(`actions/upload-pages-artifact` + `actions/deploy-pages`, `permissions:
+pages/​id-token`, `concurrency: pages`) statt über den `gh-pages`-Branch: kein
+Zusatz­branch, OIDC statt Deploy-Key, Trigger bei Push auf `main` und manuell.
+Der Test-Step (Vitest, Phase 1) ist als Platzhalter auskommentiert vorbereitet.
+
+**Pfad-Entscheidung:** `frontend/index.html` referenziert Favicon und
+MIT-Lizenz relativ mit `../` (`../docs/brand/favicon.svg`, `../LICENSE`) — von
+der Wurzel-URL aus zeigten diese über die Site hinaus. Statt die Quelldatei zu
+ändern (D14/CLAUDE: „Editor nicht refaktorieren“) zieht der Workflow die
+`../`-Pfade **nur auf der Site-Kopie** gerade (`sed`) und legt die referenzierten
+Dateien passend ab: `index.html` an die Wurzel, `docs/brand/` und `LICENSE`
+daneben. So bleibt die Quelle unverändert (lokal weiter per `file://` und
+Dev-Server nutzbar), und veröffentlicht wird nur das Nötige — `backend/` und die
+übrigen `docs/` bleiben außen vor.
+
+(Nummerierung: D15 war bereits für den kompakten Modus vergeben, daher D16.)

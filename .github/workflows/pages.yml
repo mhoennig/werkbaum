@@ -1,0 +1,78 @@
+name: Deploy to GitHub Pages
+
+# Veröffentlicht den Frontend-Editor als statische Seite auf GitHub Pages.
+# Einmalige Voraussetzung: Repo-Settings → Pages → Source = "GitHub Actions"
+# (Repo muss dafür öffentlich sein). Siehe README.md, Abschnitt „Deployment".
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Nur Leserechte auf den Code, plus die für die Pages-Deployment-Actions
+# nötigen Sonderrechte: pages (Deployment schreiben) und id-token (OIDC-Token,
+# das actions/deploy-pages zur Authentifizierung braucht).
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Läuft immer nur ein Deployment gleichzeitig; neue Pushes warten, laufende
+# werden nicht abgebrochen (cancel-in-progress: false), damit ein Deploy nicht
+# mittendrin unterbrochen wird.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Platzhalter für spätere Vitest-Läufe (Tests existieren noch nicht,
+      # siehe docs/TASKS.md, Phase 1). Bei Aktivierung: Node einrichten und
+      # Tests ausführen — schlägt der Testlauf fehl, wird nicht deployt.
+      # - name: Node einrichten
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: 20
+      #     cache: npm
+      # - name: Abhängigkeiten installieren
+      #   run: npm ci
+      # - name: Tests
+      #   run: npm test
+
+      # Site-Ordner zusammenstellen: index.html an die Wurzel-URL, dazu die
+      # vom Editor referenzierten Dateien (Favicon aus docs/brand/, LICENSE für
+      # den MIT-Link im Footer). Die Editor-Quelle bleibt unverändert — die
+      # ../-Pfade werden nur auf der Kopie im Site-Ordner geradegezogen, weil
+      # sie von der Wurzel-URL aus sonst über die Site hinauszeigen würden.
+      - name: Site zusammenstellen
+        run: |
+          mkdir -p site/docs/brand
+          sed -e 's#\.\./docs/brand/#docs/brand/#g' \
+              -e 's#\.\./LICENSE#LICENSE#g' \
+              frontend/index.html > site/index.html
+          cp docs/brand/* site/docs/brand/
+          cp LICENSE site/LICENSE
+
+      - name: Pages-Konfiguration
+        uses: actions/configure-pages@v5
+
+      - name: Artefakt hochladen
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Auf GitHub Pages deployen
+        id: deployment
+        uses: actions/deploy-pages@v4
