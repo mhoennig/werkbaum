@@ -157,9 +157,12 @@ und schaltet bei jedem Tippen reihum weiter (horizontal → kompakt → vertikal
 nur die aktive Sprache; ein Tipp darauf klappt die volle Leiste als **Overlay
 über die Kopfzeile** auf (verdeckt die übrigen Bedienelemente, statt die Zeile
 zu verbreitern), nach der Auswahl klappt sie wieder auf die gewählte Sprache
-ein (Tipp daneben schließt ebenfalls). Der **Untertitel** wird auf eine
-garantiert einzeilige Kurzfassung reduziert. Voreinstellung auf kleinem
-Bildschirm ist **Vollbild** (siehe D17).
+ein (Tipp daneben schließt ebenfalls). Die **Download-Buttons** (SVG/PNG mit
+Text-Label) verbergen sich hinter einem einzelnen Download-Icon, das die
+Formatwahl bei Bedarf als kleines **Dropdown-Overlay** unter der Kopfzeile
+zeigt — sonst bräche die Titelzeile um; „Kopieren" bleibt sichtbar. Der
+**Untertitel** wird auf eine garantiert einzeilige Kurzfassung reduziert.
+Voreinstellung auf kleinem Bildschirm ist **Vollbild** (siehe D17).
 
 ### Günstigster Pfad (Kosten-Hervorhebung)
 Ein Umschalter (Icon-Button im Diagramm-Kopf, Voreinstellung **an**, Zustand

@@ -260,6 +260,11 @@
   .copybtn.done .ic-done{display:block}
   .dlbtn{gap:3px}
   .dl-label{font-family:'IBM Plex Mono',monospace;font-size:.62rem;font-weight:600;letter-spacing:.02em}
+  /* Download-Gruppe: Desktop zeigt SVG/PNG inline, der Trigger ist versteckt.
+     Auf Mobil (body.mobile, s. u.) klappt sie als Overlay-Menü auf. */
+  .dlgroup{display:inline-flex;align-items:center;gap:3px}
+  .dlmenu{display:inline-flex;gap:3px}
+  .dltrigger{display:none}
   .legendbtn{display:none}                             /* nur auf kleinem Bildschirm sichtbar */
   .togglebtn[aria-pressed="true"]{background:var(--or);color:#fff;border-color:var(--or)}
   .togglebtn[aria-pressed="true"]:hover{color:#fff}
@@ -585,6 +590,19 @@
      schaltet reihum weiter (horizontal → kompakt → vertikal → …, siehe JS). */
   body.mobile .seg label{display:none}
   body.mobile .seg label:has(input:checked){display:flex}
+  /* Download schlank: nur der Trigger-Icon-Button; ein Tipp klappt SVG/PNG als
+     Dropdown-Overlay unter der Kopfzeile auf (verhindert den Zeilenumbruch durch
+     die breiten „SVG“/„PNG“-Labels). Kopieren bleibt sichtbar. */
+  body.mobile .dlgroup{position:relative}
+  body.mobile .dltrigger{display:inline-flex}
+  body.mobile .dltrigger[aria-expanded="true"]{border-color:var(--or);color:var(--or)}
+  body.mobile .dlmenu{display:none}
+  body.mobile .dlgroup.open .dlmenu{
+    display:flex;flex-direction:column;gap:5px;
+    position:absolute;top:calc(100% + 6px);right:0;z-index:40;
+    background:var(--card);border:1px solid rgba(36,52,71,.15);
+    border-radius:8px;padding:5px;box-shadow:0 6px 18px rgba(36,52,71,.28);
+  }
 </style>
 </head>
 <body>
@@ -698,12 +716,19 @@
         <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <svg class="ic-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
       </button>
-      <button type="button" class="copybtn dlbtn" id="dlDiagram" data-i18n-title="downloadDiagramTooltip" data-i18n-aria="downloadDiagramTooltip" title="Diagramm als SVG-Datei herunterladen" aria-label="Diagramm als SVG-Datei herunterladen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 11l4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="dl-label">SVG</span>
-      </button>
-      <button type="button" class="copybtn dlbtn" id="dlDiagramPng" data-i18n-title="downloadPngTooltip" data-i18n-aria="downloadPngTooltip" title="Diagramm als PNG-Datei herunterladen" aria-label="Diagramm als PNG-Datei herunterladen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 11l4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="dl-label">PNG</span>
-      </button>
+      <div class="dlgroup" id="dlGroup">
+        <button type="button" class="copybtn dltrigger" id="dlTrigger" aria-haspopup="true" aria-expanded="false" data-i18n-title="downloadMenu" data-i18n-aria="downloadMenu" title="Diagramm herunterladen (SVG/PNG)" aria-label="Diagramm herunterladen (SVG/PNG)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 11l4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        </button>
+        <div class="dlmenu">
+          <button type="button" class="copybtn dlbtn" id="dlDiagram" data-i18n-title="downloadDiagramTooltip" data-i18n-aria="downloadDiagramTooltip" title="Diagramm als SVG-Datei herunterladen" aria-label="Diagramm als SVG-Datei herunterladen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 11l4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="dl-label">SVG</span>
+          </button>
+          <button type="button" class="copybtn dlbtn" id="dlDiagramPng" data-i18n-title="downloadPngTooltip" data-i18n-aria="downloadPngTooltip" title="Diagramm als PNG-Datei herunterladen" aria-label="Diagramm als PNG-Datei herunterladen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 11l4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="dl-label">PNG</span>
+          </button>
+        </div>
+      </div>
       <div class="winbtns" aria-label="Diagramm">
         <button type="button" class="winbtn" data-state="a" data-i18n-title="minimize" title="minimieren">—</button>
         <button type="button" class="winbtn" data-state="normal" data-i18n-title="normal" title="normal">▢</button>
@@ -1337,10 +1362,28 @@ function flashBtn(btn){   /* kurzer Petrol-Blitz als Rückmeldung, Tooltip bleib
 document.getElementById('dlDiagram').addEventListener('click', () => {
   downloadDiagramSvg();
   flashBtn(document.getElementById('dlDiagram'));
+  closeDlMenu();
 });
 document.getElementById('dlDiagramPng').addEventListener('click', async () => {
+  closeDlMenu();
   await downloadDiagramPng();
   flashBtn(document.getElementById('dlDiagramPng'));
+});
+
+/* Download-Menü (nur Mobil): Trigger klappt SVG/PNG als Overlay auf; Auswahl
+   oder Tipp außerhalb schließt wieder. Auf Desktop ist der Trigger versteckt. */
+const dlGroup = document.getElementById('dlGroup');
+const dlTrigger = document.getElementById('dlTrigger');
+function closeDlMenu(){
+  dlGroup.classList.remove('open');
+  dlTrigger.setAttribute('aria-expanded', 'false');
+}
+dlTrigger.addEventListener('click', () => {
+  const open = dlGroup.classList.toggle('open');
+  dlTrigger.setAttribute('aria-expanded', String(open));
+});
+document.addEventListener('click', e => {
+  if(dlGroup.classList.contains('open') && !dlGroup.contains(e.target)) closeDlMenu();
 });
 
 /* ---------- Internationalisierung (DE/EN/ES/FR) ---------- */
@@ -1361,6 +1404,7 @@ const I18N = {
     copyDiagramTooltip:"Diagramm als PNG-Bild in die Zwischenablage kopieren",
     downloadDiagramTooltip:"Diagramm als SVG-Datei herunterladen (z. B. für LibreOffice: Einfügen → Bild)",
     downloadPngTooltip:"Diagramm als PNG-Datei herunterladen (Rasterbild, überall einfügbar)",
+    downloadMenu:"Diagramm herunterladen (SVG/PNG)",
     minimize:"minimieren", normal:"normal", maximize:"maximieren",
     agenda:"Agenda", discarded:"verworfene",
     modeHorizontal:"Horizontal – Organigramm, Diagramm über dem Editor",
@@ -1397,6 +1441,7 @@ const I18N = {
     copyDiagramTooltip:"Copy diagram as a PNG image to the clipboard",
     downloadDiagramTooltip:"Download diagram as an SVG file (e.g. for LibreOffice: Insert → Image)",
     downloadPngTooltip:"Download diagram as a PNG file (raster image, insertable anywhere)",
+    downloadMenu:"Download diagram (SVG/PNG)",
     minimize:"minimize", normal:"normal", maximize:"maximize",
     agenda:"Legend", discarded:"discarded",
     modeHorizontal:"Horizontal – org chart, diagram above the editor",
@@ -1433,6 +1478,7 @@ const I18N = {
     copyDiagramTooltip:"Copiar el diagrama como imagen PNG al portapapeles",
     downloadDiagramTooltip:"Descargar el diagrama como archivo SVG (p. ej. para LibreOffice: Insertar → Imagen)",
     downloadPngTooltip:"Descargar el diagrama como archivo PNG (imagen de trama, insertable en cualquier lugar)",
+    downloadMenu:"Descargar el diagrama (SVG/PNG)",
     minimize:"minimizar", normal:"normal", maximize:"maximizar",
     agenda:"Leyenda", discarded:"descartados",
     modeHorizontal:"Horizontal – organigrama, diagrama sobre el editor",
@@ -1469,6 +1515,7 @@ const I18N = {
     copyDiagramTooltip:"Copier le diagramme comme image PNG dans le presse-papiers",
     downloadDiagramTooltip:"Télécharger le diagramme en fichier SVG (p. ex. pour LibreOffice : Insertion → Image)",
     downloadPngTooltip:"Télécharger le diagramme en fichier PNG (image matricielle, insérable partout)",
+    downloadMenu:"Télécharger le diagramme (SVG/PNG)",
     minimize:"réduire", normal:"normal", maximize:"agrandir",
     agenda:"Légende", discarded:"abandonnés",
     modeHorizontal:"Horizontal – organigramme, diagramme au-dessus de l'éditeur",
@@ -1505,6 +1552,7 @@ const I18N = {
     copyDiagramTooltip:"Kopiuj diagram jako obraz PNG do schowka",
     downloadDiagramTooltip:"Pobierz diagram jako plik SVG (np. dla LibreOffice: Wstaw → Obraz)",
     downloadPngTooltip:"Pobierz diagram jako plik PNG (obraz rastrowy, wszędzie do wstawienia)",
+    downloadMenu:"Pobierz diagram (SVG/PNG)",
     minimize:"minimalizuj", normal:"normalny", maximize:"maksymalizuj",
     agenda:"Legenda", discarded:"odrzucone",
     modeHorizontal:"Poziomo – schemat organizacyjny, diagram nad edytorem",
@@ -1541,6 +1589,7 @@ const I18N = {
     copyDiagramTooltip:"Скопировать диаграмму как изображение PNG в буфер обмена",
     downloadDiagramTooltip:"Скачать диаграмму как файл SVG (напр. для LibreOffice: Вставка → Изображение)",
     downloadPngTooltip:"Скачать диаграмму как файл PNG (растровое изображение, вставляется везде)",
+    downloadMenu:"Скачать диаграмму (SVG/PNG)",
     minimize:"свернуть", normal:"обычный", maximize:"развернуть",
     agenda:"Легенда", discarded:"отклонённые",
     modeHorizontal:"Горизонтально – оргсхема, диаграмма над редактором",
@@ -1577,6 +1626,7 @@ const I18N = {
     copyDiagramTooltip:"आरेख को PNG छवि के रूप में क्लिपबोर्ड पर कॉपी करें",
     downloadDiagramTooltip:"आरेख को SVG फ़ाइल के रूप में डाउनलोड करें (जैसे LibreOffice: सम्मिलित करें → छवि)",
     downloadPngTooltip:"आरेख को PNG फ़ाइल के रूप में डाउनलोड करें (रास्टर छवि, कहीं भी सम्मिलित करने योग्य)",
+    downloadMenu:"आरेख डाउनलोड करें (SVG/PNG)",
     minimize:"छोटा करें", normal:"सामान्य", maximize:"बड़ा करें",
     agenda:"लेजेंड", discarded:"अस्वीकृत",
     modeHorizontal:"क्षैतिज – संगठन-चार्ट, संपादक के ऊपर आरेख",
@@ -1613,6 +1663,7 @@ const I18N = {
     copyDiagramTooltip:"将图表作为 PNG 图片复制到剪贴板",
     downloadDiagramTooltip:"将图表下载为 SVG 文件（例如用于 LibreOffice：插入 → 图像）",
     downloadPngTooltip:"将图表下载为 PNG 文件（位图，可在任何地方插入）",
+    downloadMenu:"下载图表（SVG/PNG）",
     minimize:"最小化", normal:"正常", maximize:"最大化",
     agenda:"图例", discarded:"已放弃",
     modeHorizontal:"横向——组织结构图，图表在编辑器上方",
@@ -1649,6 +1700,7 @@ const I18N = {
     copyDiagramTooltip:"ダイアグラムを PNG 画像としてクリップボードにコピー",
     downloadDiagramTooltip:"ダイアグラムを SVG ファイルとしてダウンロード（例：LibreOffice の 挿入 → 画像）",
     downloadPngTooltip:"ダイアグラムを PNG ファイルとしてダウンロード（ラスター画像、どこにでも挿入可能）",
+    downloadMenu:"ダイアグラムをダウンロード（SVG/PNG）",
     minimize:"最小化", normal:"標準", maximize:"最大化",
     agenda:"凡例", discarded:"破棄",
     modeHorizontal:"横 — 組織図、ダイアグラムはエディターの上",
