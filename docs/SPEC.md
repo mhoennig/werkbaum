@@ -140,9 +140,12 @@ kopierbar (grafisches Format, in Dokumente/Chats einfügbar):
 
 - Das gerenderte Diagramm wird aus der Live-Geometrie in ein eigenständiges
   SVG (nur Formen + Text, keine externen Ressourcen) nachgezeichnet und als
-  **PNG** (`image/png`) in die Zwischenablage gelegt. Fällt der Bild-Clipboard
-  aus (fehlende `ClipboardItem`-Unterstützung), wird der **SVG-Quelltext**
-  kopiert (ebenfalls ein Grafikformat).
+  **PNG** in die Zwischenablage gelegt. Es werden zwei Flavors geschrieben:
+  `image/png` (das eigentliche Bild) und `text/html` mit eingebettetem PNG
+  (`<img src="data:image/png;…">`) — Office-Programme wie LibreOffice Writer
+  bevorzugen den HTML-Flavor und betten das Bild dann korrekt ein. Fällt der
+  Bild-Clipboard ganz aus (fehlende `ClipboardItem`-Unterstützung), wird der
+  **SVG-Quelltext** kopiert (ebenfalls ein Grafikformat).
 - Übernommen werden Knotenfarben (Status §4), Größen-Badge, Tags und der
   Geister-Knoten; die Verbindungslinien werden je Gate neu gezogen
   (und = durchgezogen Tinte, oder = gestrichelt Grau) und treffen die Knoten

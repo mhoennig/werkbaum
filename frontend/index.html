@@ -564,7 +564,7 @@
           <span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="9.5" width="5" height="5" rx="1"/><rect x="16" y="3" width="6" height="4" rx="1"/><rect x="16" y="17" width="6" height="4" rx="1"/><path d="M7.5 12H12M12 5V19M12 5H16M12 19H16"/></svg></span>
         </label>
       </div>
-      <button type="button" class="copybtn" id="copyDiagram" data-i18n-title="copyDiagramTooltip" data-i18n-aria="copyDiagramTooltip" title="Diagramm als Bild kopieren" aria-label="Diagramm als Bild kopieren">
+      <button type="button" class="copybtn" id="copyDiagram" data-i18n-title="copyDiagramTooltip" data-i18n-aria="copyDiagramTooltip" title="Diagramm als PNG-Bild in die Zwischenablage kopieren" aria-label="Diagramm als PNG-Bild in die Zwischenablage kopieren">
         <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <svg class="ic-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
       </button>
@@ -825,7 +825,7 @@ function diagramToSvg(){
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="'IBM Plex Sans',system-ui,sans-serif">${parts.join('')}</svg>`;
   return {svg, W, H};
 }
-function svgToPngBlob(svg, W, H, scale){
+function svgToPng(svg, W, H, scale){
   return new Promise(resolve => {
     const img = new Image();
     img.onload = () => {
@@ -834,20 +834,28 @@ function svgToPngBlob(svg, W, H, scale){
       const ctx = c.getContext('2d');
       ctx.scale(scale, scale);
       ctx.drawImage(img, 0, 0);
-      c.toBlob(b => resolve(b), 'image/png');
+      c.toBlob(b => resolve({blob:b, dataUrl:c.toDataURL('image/png')}), 'image/png');
     };
     img.onerror = () => resolve(null);
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   });
 }
+/* Kopiert das Diagramm als PNG-Bild. Zusätzlich wird eine text/html-Variante
+   mit eingebettetem PNG mitgegeben — Office-Programme wie LibreOffice Writer
+   bevorzugen den HTML-Flavor und betten das Bild dann korrekt ein. */
 async function copyDiagramImage(){
   const {svg, W, H} = diagramToSvg();
-  const blob = await svgToPngBlob(svg, W, H, 2);
-  if(blob && navigator.clipboard && window.ClipboardItem){
+  const png = await svgToPng(svg, W, H, 2);
+  if(png && png.blob && navigator.clipboard && window.ClipboardItem){
+    const html = new Blob(
+      [`<img src="${png.dataUrl}" width="${W}" height="${H}" alt="Werkbaum-Diagramm">`],
+      {type:'text/html'});
     try{
-      await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+      await navigator.clipboard.write([new ClipboardItem({'image/png':png.blob, 'text/html':html})]);
       return;
-    }catch(_){}
+    }catch(_){
+      try{ await navigator.clipboard.write([new ClipboardItem({'image/png':png.blob})]); return; }catch(_){}
+    }
   }
   await writeClipboard(svg);   /* Fallback: SVG-Quelltext (ebenfalls Grafik) */
 }
@@ -1028,7 +1036,7 @@ const I18N = {
     brandTooltip:"„Werkbaum“ bedeutet so viel wie ‚Werk-Baum‘ — der Baum des Projektstrukturplans (WBS).",
     editorTitle:"Struktur (Text)", diagramTitle:"Diagramm",
     copy:"kopieren", copyDone:"kopiert ✓", copyTooltip:"Text in die Zwischenablage kopieren",
-    copyDiagramTooltip:"Diagramm als Bild kopieren",
+    copyDiagramTooltip:"Diagramm als PNG-Bild in die Zwischenablage kopieren",
     minimize:"minimieren", normal:"normal", maximize:"maximieren",
     agenda:"Agenda", discarded:"verworfene",
     modeHorizontal:"Horizontal – Organigramm, Diagramm über dem Editor",
@@ -1057,7 +1065,7 @@ const I18N = {
     brandTooltip:"“Werkbaum” means roughly ‘work tree’ — the tree of the work breakdown structure (WBS).",
     editorTitle:"Structure (text)", diagramTitle:"Diagram",
     copy:"copy", copyDone:"copied ✓", copyTooltip:"Copy text to clipboard",
-    copyDiagramTooltip:"Copy diagram as an image",
+    copyDiagramTooltip:"Copy diagram as a PNG image to the clipboard",
     minimize:"minimize", normal:"normal", maximize:"maximize",
     agenda:"Legend", discarded:"discarded",
     modeHorizontal:"Horizontal – org chart, diagram above the editor",
@@ -1086,7 +1094,7 @@ const I18N = {
     brandTooltip:"«Werkbaum» significa algo así como ‘árbol de trabajo’ — el árbol de la estructura de desglose del trabajo (EDT).",
     editorTitle:"Estructura (texto)", diagramTitle:"Diagrama",
     copy:"copiar", copyDone:"copiado ✓", copyTooltip:"Copiar el texto al portapapeles",
-    copyDiagramTooltip:"Copiar el diagrama como imagen",
+    copyDiagramTooltip:"Copiar el diagrama como imagen PNG al portapapeles",
     minimize:"minimizar", normal:"normal", maximize:"maximizar",
     agenda:"Leyenda", discarded:"descartados",
     modeHorizontal:"Horizontal – organigrama, diagrama sobre el editor",
@@ -1115,7 +1123,7 @@ const I18N = {
     brandTooltip:"« Werkbaum » signifie à peu près « arbre de travail » — l’arbre de l’organigramme des tâches (WBS).",
     editorTitle:"Structure (texte)", diagramTitle:"Diagramme",
     copy:"copier", copyDone:"copié ✓", copyTooltip:"Copier le texte dans le presse-papiers",
-    copyDiagramTooltip:"Copier le diagramme comme image",
+    copyDiagramTooltip:"Copier le diagramme comme image PNG dans le presse-papiers",
     minimize:"réduire", normal:"normal", maximize:"agrandir",
     agenda:"Légende", discarded:"abandonnés",
     modeHorizontal:"Horizontal – organigramme, diagramme au-dessus de l'éditeur",
@@ -1144,7 +1152,7 @@ const I18N = {
     brandTooltip:"„Werkbaum” znaczy mniej więcej ‚drzewo pracy’ — drzewo struktury podziału pracy (WBS).",
     editorTitle:"Struktura (tekst)", diagramTitle:"Diagram",
     copy:"kopiuj", copyDone:"skopiowano ✓", copyTooltip:"Kopiuj tekst do schowka",
-    copyDiagramTooltip:"Kopiuj diagram jako obraz",
+    copyDiagramTooltip:"Kopiuj diagram jako obraz PNG do schowka",
     minimize:"minimalizuj", normal:"normalny", maximize:"maksymalizuj",
     agenda:"Legenda", discarded:"odrzucone",
     modeHorizontal:"Poziomo – schemat organizacyjny, diagram nad edytorem",
@@ -1173,7 +1181,7 @@ const I18N = {
     brandTooltip:"«Werkbaum» примерно означает ‚дерево работ’ — дерево структуры декомпозиции работ (СДР).",
     editorTitle:"Структура (текст)", diagramTitle:"Диаграмма",
     copy:"копировать", copyDone:"скопировано ✓", copyTooltip:"Скопировать текст в буфер обмена",
-    copyDiagramTooltip:"Скопировать диаграмму как изображение",
+    copyDiagramTooltip:"Скопировать диаграмму как изображение PNG в буфер обмена",
     minimize:"свернуть", normal:"обычный", maximize:"развернуть",
     agenda:"Легенда", discarded:"отклонённые",
     modeHorizontal:"Горизонтально – оргсхема, диаграмма над редактором",
@@ -1202,7 +1210,7 @@ const I18N = {
     brandTooltip:"„Werkbaum“ का अर्थ लगभग ‚कार्य-वृक्ष‘ है — कार्य विभाजन संरचना (WBS) का वृक्ष।",
     editorTitle:"संरचना (टेक्स्ट)", diagramTitle:"आरेख",
     copy:"कॉपी करें", copyDone:"कॉपी हो गया ✓", copyTooltip:"टेक्स्ट को क्लिपबोर्ड पर कॉपी करें",
-    copyDiagramTooltip:"आरेख को छवि के रूप में कॉपी करें",
+    copyDiagramTooltip:"आरेख को PNG छवि के रूप में क्लिपबोर्ड पर कॉपी करें",
     minimize:"छोटा करें", normal:"सामान्य", maximize:"बड़ा करें",
     agenda:"लेजेंड", discarded:"अस्वीकृत",
     modeHorizontal:"क्षैतिज – संगठन-चार्ट, संपादक के ऊपर आरेख",
