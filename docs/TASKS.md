@@ -37,7 +37,10 @@ Abhaken beim Erledigen; neue Aufgaben unten anfügen.
       `aria-hidden`; Knoten `tabindex="0"` (Fokus = Lesereihenfolge) mit
       `:focus-visible`-Rahmen; `#warn` als Live-Region (`role=status`,
       `aria-live=polite`). Snapshots aktualisiert.
-- [ ] Druck-Stylesheet (Diagramm ohne Editor-Panel).
+- [x] Druck-Stylesheet (Diagramm ohne Editor-Panel).
+      → `@media print` in `style.css`: blendet Kopf/Editor/Splitter/Bedien-
+      elemente/Warnungen/Footer aus, Diagramm füllt die Seite; Statusfarben via
+      `print-color-adjust:exact`, `break-inside:avoid`, Pfad-Overlay inklusive.
 - [ ] Fehlertolerantes Parsen weiter ausbauen (unbekannte Statuszeichen melden).
 
 ## Deployment

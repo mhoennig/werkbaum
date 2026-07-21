@@ -235,6 +235,16 @@ Lesereihenfolge** (Wurzeln, dann Kinder in Tiefe). Ein sichtbarer
 ist eine **Live-Region** (`role="status"`, `aria-live="polite"`), sodass neue
 Warnungen (z. B. gemischte Gates) angesagt werden.
 
+### Druck
+Ein `@media print`-Stylesheet reduziert die Seite auf das **Diagramm**:
+Kopfzeile, Editor-Panel, Splitter, sämtliche Bedienelemente (Diagramm-Kopf),
+Warnungen und Footer werden ausgeblendet; das Diagramm füllt die Seite und darf
+über mehrere Seiten laufen. Die **Statusfarben** werden bewusst mitgedruckt
+(`print-color-adjust: exact`), Knoten brechen nicht über den Seitenrand
+(`break-inside: avoid`), und der Günstigster-Pfad-Overlay wird mitgedruckt.
+Sehr breite Bäume laufen bei 100 % über die Seitenbreite hinaus — dann im
+Druckdialog „an Seite anpassen“ bzw. Querformat wählen.
+
 ## 10. Beispiel (kanonisch)
 
 ```

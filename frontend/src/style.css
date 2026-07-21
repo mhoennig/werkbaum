@@ -608,3 +608,26 @@
     background:var(--card);border:1px solid rgba(36,52,71,.15);
     border-radius:8px;padding:5px;box-shadow:0 6px 18px rgba(36,52,71,.28);
   }
+
+  /* ---------- Druck: nur das Diagramm (SPEC §9, TASKS Phase 2) ----------
+     Editor-Panel, Bedienelemente, Splitter, Kopfzeile, Warnungen und Footer
+     verschwinden; das Diagramm füllt die Seite und darf über mehrere Seiten
+     laufen. Statusfarben werden bewusst mitgedruckt (Browser strippen
+     Hintergründe sonst). Der Günstigster-Pfad-Overlay liegt in #out und wird
+     mitgedruckt. */
+  @media print{
+    html,body{height:auto!important;overflow:visible!important;background:#fff!important}
+    header,.panel.editor,.gutter,.panel.right .panel-head,
+    .warnings,.zoomctl,.site-footer{display:none!important}
+    .app,.app.side{display:block!important;max-width:none!important;width:auto!important;
+      height:auto!important;margin:0!important;gap:0!important}
+    .panel.right{grid-area:auto!important;background:#fff!important;border:0!important;
+      box-shadow:none!important;border-radius:0!important;
+      height:auto!important;min-height:0!important;overflow:visible!important}
+    .diagram{overflow:visible!important;height:auto!important;padding:8px 0!important}
+    /* Statusfarben & Pfad-Töne mitdrucken */
+    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    /* Knoten nicht über den Seitenrand zerschneiden */
+    #out li{break-inside:avoid}
+    @page{margin:12mm}
+  }
