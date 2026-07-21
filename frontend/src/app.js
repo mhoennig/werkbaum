@@ -1,4 +1,5 @@
 import './style.css';
+import { SIZE_RANK, STATUS_BY_CODE, parse } from './parser.js';
 
 const INITIAL = `%% Project structure – Sprint 14
 [~] Website relaunch (XL) https://wiki.example.com/relaunch
@@ -21,57 +22,12 @@ const INITIAL = `%% Project structure – Sprint 14
     | Cooperative Community Cloud https://hostsharing.net
     | On-premise`;
 
-const SIZE_RANK = {XS:0, S:1, M:2, L:3, XL:4, XXL:5};
-
-const STATUS_BY_CODE = {
-  '?': {key:'idee',       name:'Idee'},
-  ' ': {key:'geplant',    name:'geplant'},
-  '~': {key:'arbeit',     name:'in Arbeit'},
-  '/': {key:'durchstich', name:'Durchstich – funktionsbereit, Feinarbeiten offen'},
-  'x': {key:'fertig',     name:'fertig'},
-  '^': {key:'prod',       name:'in Produktion'},
-  '-': {key:'verworfen', name:'verworfen'}
-};
-
 const src  = document.getElementById('src');
 const out  = document.getElementById('out');
 const warnBox = document.getElementById('warn');
 
 function esc(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-/* ---------- Parser ---------- */
-function parse(text){
-  const virtualRoot = {label:'', type:'and', children:[]};
-  const stack = [{node:virtualRoot, width:-1}];
-  const warnings = [];
-
-  text.split('\n').forEach((raw, i) => {
-    raw = raw.replace(/%%.*$/, '');   /* %%-Kommentare entfernen (Mermaid-Konvention) */
-    if(!raw.trim()) return;
-    const m = raw.match(/^([ \t]*)([-|])?\s*(?:\[([ ?~xX^\/-])]\s*)?(.*)$/);
-    const width = m[1].replace(/\t/g,'  ').length;
-    const type  = m[2] === '|' ? 'or' : 'and';
-    const status = m[3] ? STATUS_BY_CODE[m[3].toLowerCase()] : null;
-
-    let rest = m[4], url = null, size = null;
-    const tags = [];
-    rest = rest.replace(/https?:\/\/\S+/i, s => { url = s; return ''; });
-    rest = rest.replace(/\((XXL|XS|XL|S|M|L)\)/i, (s, g) => { size = g.toUpperCase(); return ''; });
-    rest = rest.replace(/@([\p{L}\p{N}._-]+)/gu, (s, g) => { tags.push(g); return ''; });
-    const label = rest.replace(/\s+/g, ' ').trim();
-    if(!label) return;
-
-    while(stack.length > 1 && stack[stack.length-1].width >= width) stack.pop();
-    const parent = stack[stack.length-1].node;
-
-    const node = {label, type, status, url, size, tags, children:[], line:i+1};
-    parent.children.push(node);
-    stack.push({node, width});
-  });
-
-  return {roots: virtualRoot.children, warnings};
 }
 
 /* ---------- Renderer ---------- */

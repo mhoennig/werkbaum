@@ -10,7 +10,9 @@ Abhaken beim Erledigen; neue Aufgaben unten anfügen.
       einer self-contained `dist/index.html` (file://-tauglich). Gerüst steht
       (aktuell `src/app.js` + `src/style.css`); Parser/Renderer werden in den
       folgenden Checkboxen herausgelöst.
-- [ ] Parser extrahieren; Verhalten exakt wie in `docs/SPEC.md` §1–§8.
+- [x] Parser extrahieren; Verhalten exakt wie in `docs/SPEC.md` §1–§8.
+      → `src/parser.js` exportiert `parse`, `STATUS_BY_CODE`, `SIZE_RANK`
+      (headless, kein DOM); `app.js` importiert sie.
 - [ ] Unit-Tests für den Parser (Vitest): kanonisches Beispiel aus SPEC §10
       als Fixture; Randfälle: gemischte Gates, Tabs/ungleichmäßige Einrückung,
       URL mit `@`, mehrere Wurzeln, leere Labels, `%%` am Zeilenanfang/-ende.
