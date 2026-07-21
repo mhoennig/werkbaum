@@ -217,10 +217,26 @@
     overflow:auto;
     background:transparent;
   }
-  .panel.right{background:rgba(255,255,255,.6)}
+  .panel.right{background:rgba(255,255,255,.6);position:relative}
   .warnings{padding:0 16px 14px;font-size:.8rem;color:var(--warn)}
   .warnings div{margin-top:4px}
   .empty{color:var(--muted);font-size:.85rem;padding:8px 4px}
+
+  /* Zoom-Steuerung: schwebt unten rechts über dem Diagramm. */
+  .zoomctl{
+    position:absolute;right:14px;bottom:14px;z-index:5;
+    display:inline-flex;align-items:center;gap:2px;padding:2px;
+    background:var(--card);border:1px solid rgba(36,52,71,.18);
+    border-radius:8px;box-shadow:0 1px 4px rgba(36,52,71,.14);
+  }
+  .zoomctl button{
+    border:0;background:transparent;cursor:pointer;color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;font-size:.82rem;line-height:1;
+    padding:4px 8px;border-radius:6px;min-width:30px;
+  }
+  #zoomReset{min-width:48px;font-size:.72rem}
+  .zoomctl button:hover{background:var(--paper);color:var(--or)}
+  .panel.collapsed .zoomctl{display:none}
 
   /* ---------- Baum ---------- */
   .tree{width:max-content;margin:0 auto;list-style:none}
@@ -460,6 +476,11 @@
     </div>
     <div class="diagram"><ul class="tree" id="out"></ul></div>
     <div class="warnings" id="warn"></div>
+    <div class="zoomctl" aria-label="Zoom (Strg/Cmd + Mausrad)">
+      <button type="button" id="zoomOut" title="verkleinern">−</button>
+      <button type="button" id="zoomReset" title="zurücksetzen">100&nbsp;%</button>
+      <button type="button" id="zoomIn" title="vergrößern">+</button>
+    </div>
   </div>
 </div>
 
@@ -697,6 +718,26 @@ function endDrag(e){
 }
 gutter.addEventListener('pointerup', endDrag);
 gutter.addEventListener('pointercancel', endDrag);
+
+/* ---------- Zoom für das Diagramm ---------- */
+/* CSS-`zoom` skaliert die Layout-Box, dadurch greifen die Scrollbalken
+   des Diagramm-Containers korrekt (anders als transform: scale). */
+const ZMIN = 0.3, ZMAX = 3, ZSTEP = 0.1;
+let zoom = 1;
+function applyZoom(){
+  zoom = Math.min(ZMAX, Math.max(ZMIN, Math.round(zoom * 100) / 100));
+  out.style.zoom = zoom;
+  document.getElementById('zoomReset').textContent = Math.round(zoom * 100) + ' %';
+}
+document.getElementById('zoomIn').addEventListener('click', () => { zoom += ZSTEP; applyZoom(); });
+document.getElementById('zoomOut').addEventListener('click', () => { zoom -= ZSTEP; applyZoom(); });
+document.getElementById('zoomReset').addEventListener('click', () => { zoom = 1; applyZoom(); });
+diagramEl.addEventListener('wheel', e => {
+  if(!(e.ctrlKey || e.metaKey)) return;   /* Strg/Cmd + Mausrad zoomt */
+  e.preventDefault();
+  zoom += (e.deltaY < 0 ? ZSTEP : -ZSTEP);
+  applyZoom();
+}, {passive:false});
 
 const showc = document.getElementById('showc');
 showc.addEventListener('change', render);
