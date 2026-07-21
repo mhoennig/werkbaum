@@ -65,8 +65,10 @@ Beim Zusammenstellen setzt der Workflow zudem die Versionsnummer im Footer:
 gepflegt), die **Micro-Stelle** aus der Zahl der Commits seit diesem letzten
 Bump — sie steigt also mit jedem Commit und beginnt nach einem Bump wieder bei
 `0` (`Werkbaum 1.0.0`, `1.0.1`, … dann `VERSION` auf `1.1` bumpen → `1.1.0`). Es
-wird nichts ins Repo zurückgeschrieben. Lokal geöffnet zeigt der Editor den
-Platzhalter aus dem Quelltext (`Werkbaum 1.0`).
+wird nichts ins Repo zurückgeschrieben. Im Footer verlinkt der Name **Werkbaum**
+die Repo-Startseite, die **Versionsnummer** genau den zugehörigen Commit
+(`…/commit/<sha>`). Lokal geöffnet zeigt der Editor den Platzhalter aus dem
+Quelltext (`Werkbaum 1.0`).
 
 **Einmalige Einrichtung:** In den Repo-Settings unter **Pages** als **Source**
 „GitHub Actions" wählen. Das Repo muss dafür **öffentlich** sein (GitHub Pages

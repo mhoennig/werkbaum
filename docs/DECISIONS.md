@@ -131,7 +131,9 @@ reproduzierbar, monoton, ohne zurückgeschriebenen Commit/Tag und ohne
 selbstauslösenden Deploy-Zyklus. Die Micro-Stelle beginnt nach jedem Bump wieder
 bei 0 (SemVer-artig). Nötig ist ein vollständiger Klon (`fetch-depth: 0`), sonst
 zählt der flache CI-Klon nur einen Commit. `1.0` bleibt die Version beim lokalen
-Öffnen (Platzhalter im Quelltext).
+Öffnen (Platzhalter im Quelltext). Im Footer sind Name und Nummer **getrennte
+Links**: „Werkbaum" → Repo-Startseite, die Versionsnummer (`<a class="ver">`) →
+exakt der deployte Commit (`…/commit/<sha>`, im Build via `git rev-parse HEAD`).
 
 (Nummerierung: D15 war bereits für den kompakten Modus vergeben, daher D16.)
 

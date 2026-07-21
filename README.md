@@ -67,8 +67,10 @@ While assembling the site, the workflow also stamps the version into the footer:
 commit"), and the **micro** part is the number of commits since that last bump —
 so it grows with every commit and resets to `0` right after a bump
 (`Werkbaum 1.0.0`, `1.0.1`, … then bump `VERSION` to `1.1` → `1.1.0`). Nothing is
-written back to the repo. Opened locally, the editor shows the source
-placeholder (`Werkbaum 1.0`).
+written back to the repo. In the footer the name **Werkbaum** links to the
+repository, while the **version number** links to that exact commit
+(`…/commit/<sha>`). Opened locally, the editor shows the source placeholder
+(`Werkbaum 1.0`).
 
 **One-time setup:** In the repo settings under **Pages**, select **Source** =
 "GitHub Actions". The repo must be **public** for this (GitHub Pages via Actions

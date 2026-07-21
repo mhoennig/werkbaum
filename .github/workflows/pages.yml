@@ -53,12 +53,14 @@ jobs:
       # den MIT-Link im Footer). Die Editor-Quelle bleibt unverändert — die
       # ../-Pfade werden nur auf der Kopie im Site-Ordner geradegezogen, weil
       # sie von der Wurzel-URL aus sonst über die Site hinauszeigen würden.
-      # Zusätzlich wird die Versionsnummer im Footer gesetzt: Major.Minor aus
-      # der VERSION-Datei (per Bump-Commit gepflegt), die Micro-Stelle aus der
-      # Anzahl der Commits seit dem letzten VERSION-Bump — sie steigt also mit
-      # jedem Commit und beginnt nach einem Bump wieder bei 0. Aus „Werkbaum
-      # 1.0" im Footer-Quelltext wird so z. B. „Werkbaum 1.0.7" (siehe README,
-      # Abschnitt „Deployment"). Braucht die volle Historie (fetch-depth: 0).
+      # Zusätzlich werden im Footer gesetzt:
+      #  - die Versionsnummer: Major.Minor aus der VERSION-Datei (per
+      #    Bump-Commit gepflegt), die Micro-Stelle aus der Anzahl der Commits
+      #    seit dem letzten VERSION-Bump — steigt also je Commit und beginnt
+      #    nach einem Bump wieder bei 0 (z. B. 1.0.7).
+      #  - der Link der Versionsnummer: zeigt exakt auf den deployten Commit
+      #    (…/commit/<sha>). „Werkbaum" selbst verlinkt weiter die Repo-
+      #    Startseite. Braucht die volle Historie (fetch-depth: 0).
       - name: Site zusammenstellen
         run: |
           MAJORMINOR="$(tr -d '[:space:]' < VERSION)"
@@ -66,11 +68,13 @@ jobs:
           [ -z "$BASE" ] && BASE="$(git rev-list --max-parents=0 HEAD | tail -1)"
           MICRO="$(git rev-list --count "${BASE}..HEAD")"       # Commits seit dem Bump
           BUILD_VERSION="${MAJORMINOR}.${MICRO}"
-          echo "Footer-Version: ${BUILD_VERSION}"
+          COMMIT_URL="https://github.com/mhoennig/werkbaum/commit/$(git rev-parse HEAD)"
+          echo "Footer-Version: ${BUILD_VERSION} -> ${COMMIT_URL}"
           mkdir -p site/docs/brand
           sed -e 's#\.\./docs/brand/#docs/brand/#g' \
               -e 's#\.\./LICENSE#LICENSE#g' \
-              -e "s#>Werkbaum [0-9][0-9.]*</a>#>Werkbaum ${BUILD_VERSION}</a>#" \
+              -e "s#\(<a class=\"ver\" href=\"\)[^\"]*#\1${COMMIT_URL}#" \
+              -e "s#\(<a class=\"ver\"[^>]*>\)[0-9.]\+</a>#\1${BUILD_VERSION}</a>#" \
               frontend/index.html > site/index.html
           cp docs/brand/* site/docs/brand/
           cp LICENSE site/LICENSE
