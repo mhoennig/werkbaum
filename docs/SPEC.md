@@ -142,11 +142,12 @@ Das Diagramm wird aus der Live-Geometrie in ein eigenständiges SVG (nur Formen
   geschrieben: `image/png` (das eigentliche Bild) und `text/html` mit
   eingebettetem PNG. Fällt der Bild-Clipboard ganz aus (fehlende
   `ClipboardItem`-Unterstützung), wird der **SVG-Quelltext** kopiert.
-- **Herunterladen** — als **SVG-Datei** (`werkbaum-diagramm.svg`, Vektor).
-  Verlässlicher Weg für Programme, die das Browser-Bild-Clipboard nicht
-  erkennen (z. B. LibreOffice Writer: Einfügen → Bild → Datei). Das
-  Browser-Clipboard erlaubt nur `image/png`/Text als Bildtypen, kein SVG —
-  daher der Datei-Weg für Vektor.
+- **Herunterladen** — als Datei, zwei Schaltflächen mit Format-Label:
+  **SVG** (`werkbaum-diagramm.svg`, Vektor) und **PNG**
+  (`werkbaum-diagramm.png`, Raster). Der Datei-Weg ist der verlässliche Weg
+  für Programme, die das Browser-Bild-Clipboard nicht erkennen. Manche
+  Programme lesen auch das SVG nicht (z. B. LibreOffice) — dafür gibt es die
+  PNG-Datei, die überall per „Bild einfügen“ importierbar ist.
 - Übernommen werden Knotenfarben (Status §4), Größen-Badge, Tags und der
   Geister-Knoten; die Verbindungslinien werden je Gate neu gezogen
   (und = durchgezogen Tinte, oder = gestrichelt Grau) und treffen die Knoten
