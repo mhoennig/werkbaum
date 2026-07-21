@@ -19,9 +19,11 @@ Integrations-Backend.
 - Ziele: docs/ROADMAP.md · Offene Arbeit: docs/TASKS.md (Checkboxen pflegen).
 
 ## Querschnitts-Konventionen
-- Doku auf Deutsch. Die Editor-UI ist mehrsprachig (DE/EN/ES/FR, Umschalter
-  oben rechts); **Deutsch ist die Quellsprache** — neue UI-Texte zuerst auf
-  Deutsch im `I18N`-Objekt (frontend/index.html) anlegen, dann übersetzen.
+- Doku auf Deutsch. Die Editor-UI ist mehrsprachig (DE/EN/ES/FR direkt,
+  PL/RU/HI hinter dem „…“-Aufklapper des Umschalters oben rechts);
+  **Deutsch ist die Quellsprache** — neue UI-Texte zuerst auf Deutsch im
+  `I18N`-Objekt (frontend/index.html) anlegen, dann in alle Sprachen
+  übersetzen.
 - Keine neuen Laufzeit-Abhängigkeiten ohne Rückfrage (gilt in beiden Teilen).
 - Der Notationstext ist das führende Datenformat; kein Teil erfindet ein
   eigenes Speicherformat für die Struktur.

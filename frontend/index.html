@@ -47,6 +47,9 @@
   .langsel button + button{border-left:1px solid rgba(36,52,71,.14)}
   .langsel button:hover:not(.active){color:var(--or)}
   .langsel button.active{background:var(--or);color:#fff}
+  .langmore{letter-spacing:0;padding:5px 8px;font-weight:600}
+  .langsel .lang-extra{display:none}                 /* PL/RU/HI erst nach Aufklappen */
+  .langsel.expanded .lang-extra{display:block}
   .site-footer{
     max-width:1200px;margin:28px auto 0;
     color:var(--muted);font-size:.78rem;text-align:center;
@@ -460,6 +463,10 @@
       <button type="button" data-lang="en" title="English">EN</button>
       <button type="button" data-lang="es" title="Español">ES</button>
       <button type="button" data-lang="fr" title="Français">FR</button>
+      <button type="button" id="langMore" class="langmore" aria-expanded="false" data-i18n-title="langMore" data-i18n-aria="langMore" title="weitere Sprachen" aria-label="weitere Sprachen">…</button>
+      <button type="button" class="lang-extra" data-lang="pl" title="Polski">PL</button>
+      <button type="button" class="lang-extra" data-lang="ru" title="Русский">RU</button>
+      <button type="button" class="lang-extra" data-lang="hi" title="हिन्दी">HI</button>
     </div>
   </div>
   <p data-i18n="subtitle">Werkbaum – Ein Text-basierter WBS/Projektstrukturplan/Feature-Tree Diagramm-Editor.</p>
@@ -919,7 +926,7 @@ const I18N = {
     modeKompakt:"Kompakt – alles nach unten, platzsparend",
     modeVertikal:"Vertikal – Baum nach rechts, Diagramm neben dem Editor",
     zoomOut:"verkleinern", zoomReset:"zurücksetzen", zoomIn:"vergrößern",
-    zoomAria:"Zoom (Strg/Cmd + Mausrad)",
+    zoomAria:"Zoom (Strg/Cmd + Mausrad)", langMore:"weitere Sprachen",
     empty:"Noch keine Struktur — einfach lostippen.", ghost:"Untergliederung fehlt",
     mixedWarn:"Zeile {line}: Unter „{label}“ sind - und | gemischt — dargestellt nach dem ersten Kind.",
     st_idee:"Idee", st_geplant:"geplant", st_arbeit:"in Arbeit", st_durchstich:"Durchstich",
@@ -944,7 +951,7 @@ const I18N = {
     modeKompakt:"Compact – everything downward, space-saving",
     modeVertikal:"Vertical – tree to the right, diagram beside the editor",
     zoomOut:"zoom out", zoomReset:"reset", zoomIn:"zoom in",
-    zoomAria:"Zoom (Ctrl/Cmd + mouse wheel)",
+    zoomAria:"Zoom (Ctrl/Cmd + mouse wheel)", langMore:"more languages",
     empty:"No structure yet — just start typing.", ghost:"Breakdown missing",
     mixedWarn:"Line {line}: under “{label}”, - and | are mixed — rendered by the first child.",
     st_idee:"idea", st_geplant:"planned", st_arbeit:"in progress", st_durchstich:"walking skeleton",
@@ -969,7 +976,7 @@ const I18N = {
     modeKompakt:"Compacto – todo hacia abajo, ahorra espacio",
     modeVertikal:"Vertical – árbol hacia la derecha, diagrama junto al editor",
     zoomOut:"alejar", zoomReset:"restablecer", zoomIn:"acercar",
-    zoomAria:"Zoom (Ctrl/Cmd + rueda del ratón)",
+    zoomAria:"Zoom (Ctrl/Cmd + rueda del ratón)", langMore:"más idiomas",
     empty:"Aún no hay estructura — simplemente empieza a escribir.", ghost:"Falta el desglose",
     mixedWarn:"Línea {line}: bajo «{label}» se mezclan - y | — se representa según el primer hijo.",
     st_idee:"idea", st_geplant:"planificado", st_arbeit:"en curso", st_durchstich:"prototipo funcional",
@@ -994,7 +1001,7 @@ const I18N = {
     modeKompakt:"Compact – tout vers le bas, gain de place",
     modeVertikal:"Vertical – arbre vers la droite, diagramme à côté de l'éditeur",
     zoomOut:"dézoomer", zoomReset:"réinitialiser", zoomIn:"zoomer",
-    zoomAria:"Zoom (Ctrl/Cmd + molette)",
+    zoomAria:"Zoom (Ctrl/Cmd + molette)", langMore:"plus de langues",
     empty:"Pas encore de structure — commencez à taper.", ghost:"Décomposition manquante",
     mixedWarn:"Ligne {line} : sous « {label} », - et | sont mélangés — rendu selon le premier enfant.",
     st_idee:"idée", st_geplant:"planifié", st_arbeit:"en cours", st_durchstich:"squelette fonctionnel",
@@ -1007,6 +1014,81 @@ const I18N = {
     hint_break:"À partir de (M) : décomposer davantage — si la décomposition manque, un espace réservé apparaît dans le diagramme.",
     hint_comment:"Commentaires avec %% — ligne entière ou en fin de ligne.",
     hint_people:"Personnes avec @nom — affichées en bas à droite du nœud."
+  },
+  pl: {
+    subtitle:"Werkbaum – Edytor diagramów oparty na tekście: WBS / struktura podziału pracy / drzewo funkcji.",
+    editorTitle:"Struktura (tekst)", diagramTitle:"Diagram",
+    copy:"kopiuj", copyDone:"skopiowano ✓", copyTitle:"Kopiuj tekst do schowka",
+    copyDiagramTitle:"Kopiuj diagram jako drzewo tekstowe",
+    minimize:"minimalizuj", normal:"normalny", maximize:"maksymalizuj",
+    agenda:"Legenda", discarded:"odrzucone",
+    modeHorizontal:"Poziomo – schemat organizacyjny, diagram nad edytorem",
+    modeKompakt:"Kompaktowo – wszystko w dół, oszczędza miejsce",
+    modeVertikal:"Pionowo – drzewo w prawo, diagram obok edytora",
+    zoomOut:"pomniejsz", zoomReset:"resetuj", zoomIn:"powiększ",
+    zoomAria:"Powiększenie (Ctrl/Cmd + kółko myszy)", langMore:"więcej języków",
+    empty:"Brak struktury — zacznij pisać.", ghost:"Brak podziału",
+    mixedWarn:"Wiersz {line}: pod „{label}” mieszają się - i | — renderowane według pierwszego dziecka.",
+    st_idee:"pomysł", st_geplant:"zaplanowane", st_arbeit:"w toku", st_durchstich:"działający szkielet",
+    st_fertig:"gotowe", st_prod:"w produkcji", st_verworfen:"odrzucone",
+    hint_indent:"Wcięcie (2 spacje lub tabulator) definiuje hierarchię.",
+    hint_all:"podzadanie, wszystkie wymagane", hint_any:"alternatywa, wybierz jedną",
+    hint_root:"Wiersz bez znacznika = węzeł główny. Rodzeństwo powinno mieć ten sam znacznik.",
+    hint_status:"Status jako pole wyboru po znaczniku, np.",
+    hint_size:"Nakład jako rozmiar koszulki w nawiasach; link dodaj po prostu jako URL:",
+    hint_break:"Od (M): dziel dalej — gdy brakuje podziału, w diagramie pojawia się symbol zastępczy.",
+    hint_comment:"Komentarze z %% — cały wiersz lub na końcu wiersza.",
+    hint_people:"Osoby z @nazwa — pokazywane w prawym dolnym rogu węzła."
+  },
+  ru: {
+    subtitle:"Werkbaum – текстовый редактор диаграмм: СДР / структура декомпозиции работ / дерево функций.",
+    editorTitle:"Структура (текст)", diagramTitle:"Диаграмма",
+    copy:"копировать", copyDone:"скопировано ✓", copyTitle:"Скопировать текст в буфер обмена",
+    copyDiagramTitle:"Скопировать диаграмму как текстовое дерево",
+    minimize:"свернуть", normal:"обычный", maximize:"развернуть",
+    agenda:"Легенда", discarded:"отклонённые",
+    modeHorizontal:"Горизонтально – оргсхема, диаграмма над редактором",
+    modeKompakt:"Компактно – всё вниз, экономит место",
+    modeVertikal:"Вертикально – дерево вправо, диаграмма рядом с редактором",
+    zoomOut:"уменьшить", zoomReset:"сбросить", zoomIn:"увеличить",
+    zoomAria:"Масштаб (Ctrl/Cmd + колесо мыши)", langMore:"ещё языки",
+    empty:"Пока нет структуры — просто начните печатать.", ghost:"Нет декомпозиции",
+    mixedWarn:"Строка {line}: под «{label}» смешаны - и | — отображается по первому потомку.",
+    st_idee:"идея", st_geplant:"запланировано", st_arbeit:"в работе", st_durchstich:"сквозной прототип",
+    st_fertig:"готово", st_prod:"в эксплуатации", st_verworfen:"отклонено",
+    hint_indent:"Отступ (2 пробела или табуляция) задаёт иерархию.",
+    hint_all:"подзадача, все обязательны", hint_any:"альтернатива, выберите одну",
+    hint_root:"Строка без маркера = корневой узел. У соседних узлов должен быть одинаковый маркер.",
+    hint_status:"Статус в виде флажка после маркера, напр.",
+    hint_size:"Трудоёмкость как размер футболки в скобках; ссылку добавьте просто как URL:",
+    hint_break:"С (M): дробите дальше — если декомпозиции нет, в диаграмме появляется заполнитель.",
+    hint_comment:"Комментарии через %% — вся строка или в конце строки.",
+    hint_people:"Люди через @имя — показываются справа внизу узла."
+  },
+  hi: {
+    subtitle:"Werkbaum – टेक्स्ट-आधारित आरेख संपादक: WBS / कार्य विभाजन संरचना / फ़ीचर-ट्री।",
+    editorTitle:"संरचना (टेक्स्ट)", diagramTitle:"आरेख",
+    copy:"कॉपी करें", copyDone:"कॉपी हो गया ✓", copyTitle:"टेक्स्ट को क्लिपबोर्ड पर कॉपी करें",
+    copyDiagramTitle:"आरेख को टेक्स्ट-ट्री के रूप में कॉपी करें",
+    minimize:"छोटा करें", normal:"सामान्य", maximize:"बड़ा करें",
+    agenda:"लेजेंड", discarded:"अस्वीकृत",
+    modeHorizontal:"क्षैतिज – संगठन-चार्ट, संपादक के ऊपर आरेख",
+    modeKompakt:"सघन – सब नीचे की ओर, जगह बचाता है",
+    modeVertikal:"लंबवत – पेड़ दाईं ओर, संपादक के बगल में आरेख",
+    zoomOut:"ज़ूम आउट", zoomReset:"रीसेट करें", zoomIn:"ज़ूम इन",
+    zoomAria:"ज़ूम (Ctrl/Cmd + माउस-व्हील)", langMore:"और भाषाएँ",
+    empty:"अभी कोई संरचना नहीं — बस टाइप करना शुरू करें।", ghost:"विभाजन अनुपस्थित",
+    mixedWarn:"पंक्ति {line}: „{label}“ के अंतर्गत - और | मिश्रित हैं — पहले चाइल्ड के अनुसार दिखाया गया।",
+    st_idee:"विचार", st_geplant:"नियोजित", st_arbeit:"प्रगति पर", st_durchstich:"कार्यशील ढाँचा",
+    st_fertig:"पूर्ण", st_prod:"उत्पादन में", st_verworfen:"अस्वीकृत",
+    hint_indent:"इंडेंट (2 स्पेस या टैब) पदानुक्रम तय करता है।",
+    hint_all:"उप-कार्य, सभी आवश्यक", hint_any:"विकल्प, एक चुनें",
+    hint_root:"बिना मार्कर वाली पंक्ति = मूल नोड। सहोदर नोड्स का मार्कर समान होना चाहिए।",
+    hint_status:"मार्कर के बाद चेकबॉक्स के रूप में स्थिति, जैसे",
+    hint_size:"प्रयास कोष्ठक में टी-शर्ट आकार के रूप में; लिंक बस URL के रूप में जोड़ें:",
+    hint_break:"(M) से आगे: और विभाजित करें — विभाजन न होने पर आरेख में प्लेसहोल्डर दिखता है।",
+    hint_comment:"%% से टिप्पणियाँ — पूरी पंक्ति या पंक्ति के अंत में।",
+    hint_people:"@नाम से व्यक्ति — नोड के नीचे-दाएँ दिखते हैं।"
   }
 };
 let lang = 'de';
@@ -1044,11 +1126,23 @@ function applyLang(l){
   document.querySelectorAll('[data-i18n-title]').forEach(el => el.title = t(el.dataset.i18nTitle));
   document.querySelectorAll('[data-i18n-aria]').forEach(el => el.setAttribute('aria-label', t(el.dataset.i18nAria)));
   document.getElementById('hint').innerHTML = buildHint();
-  document.querySelectorAll('.langsel button').forEach(b => b.classList.toggle('active', b.dataset.lang===l));
+  document.querySelectorAll('.langsel button[data-lang]').forEach(b => b.classList.toggle('active', b.dataset.lang===l));
+  /* Ist eine aufklappbare Sprache aktiv, den erweiterten Bereich offen halten. */
+  if(LANG_EXTRA.includes(l)){
+    langsel.classList.add('expanded');
+    langMore.setAttribute('aria-expanded', 'true');
+  }
   render();
   try{ localStorage.setItem('werkbaum-lang', l); }catch(_){}
 }
-document.querySelectorAll('.langsel button').forEach(b => {
+const langsel = document.querySelector('.langsel');
+const langMore = document.getElementById('langMore');
+const LANG_EXTRA = ['pl','ru','hi'];
+langMore.addEventListener('click', () => {
+  const exp = langsel.classList.toggle('expanded');
+  langMore.setAttribute('aria-expanded', String(exp));
+});
+document.querySelectorAll('.langsel button[data-lang]').forEach(b => {
   b.addEventListener('click', () => applyLang(b.dataset.lang));
 });
 
