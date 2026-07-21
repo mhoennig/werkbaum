@@ -507,6 +507,10 @@
   body.mobile .langsel.expanded button[data-lang]{display:inline-block}
   body.mobile .langsel button[data-lang="en"],
   body.mobile .langsel button[data-lang].active{display:inline-block}
+  /* Modus-Wähler kompakt: nur das aktive Icon (ein Drittel Platz), Tippen
+     schaltet reihum weiter (horizontal → kompakt → vertikal → …, siehe JS). */
+  body.mobile .seg label{display:none}
+  body.mobile .seg label:has(input:checked){display:flex}
 </style>
 </head>
 <body>
@@ -1555,6 +1559,20 @@ legendBtn.addEventListener('click', () => {
   legendBtn.classList.toggle('active', agenda.open);
 });
 agenda.addEventListener('toggle', () => legendBtn.classList.toggle('active', agenda.open));
+/* Modus-Wähler auf kleinem Bildschirm: es ist nur das aktive Icon sichtbar,
+   Tippen schaltet zum nächsten Modus (reihum). Auf normaler Größe bleibt es
+   der Dreier-Umschalter — dort kehrt der Handler sofort zurück. */
+const seg = document.querySelector('.seg');
+const LAYOUT_MODES = ['horizontal','kompakt','vertikal'];
+seg.addEventListener('click', e => {
+  if(!isMobile()) return;
+  e.preventDefault();
+  const cur = document.querySelector('input[name="layout"]:checked').value;
+  const next = LAYOUT_MODES[(LAYOUT_MODES.indexOf(cur) + 1) % LAYOUT_MODES.length];
+  const r = document.querySelector('input[name="layout"][value="' + next + '"]');
+  r.checked = true;
+  r.dispatchEvent(new Event('change', {bubbles:true}));
+});
 function applyMobile(){
   const m = isMobile();
   document.body.classList.toggle('mobile', m);

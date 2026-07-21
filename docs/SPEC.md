@@ -148,9 +148,11 @@ Titelzeile und dient als Umschalter (Antippen bringt ihn nach vorn). Die
 Min/Normal/Max-Buttons entfallen; geteilt wird weiterhin über den **Splitter**
 (Ziehen). Die **Legende** bekommt hier einen eigenen
 Umschalter im Editor-Kopf (statt der dauerhaften „AGENDA“-Zeile), damit sie
-zugeklappt keinen Platz kostet. Die **Sprachwahl** zeigt nur Englisch und die
-aktive Sprache plus „…“ (das alle Sprachen aufklappt). Voreinstellung auf
-kleinem Bildschirm ist **Vollbild** (siehe D17).
+zugeklappt keinen Platz kostet. Der **Modus-Wähler** zeigt nur das aktive Icon
+und schaltet bei jedem Tippen reihum weiter (horizontal → kompakt → vertikal →
+…), spart also zwei Drittel der Breite. Die **Sprachwahl** zeigt nur Englisch
+und die aktive Sprache plus „…“ (das alle Sprachen aufklappt). Voreinstellung
+auf kleinem Bildschirm ist **Vollbild** (siehe D17).
 
 ### Grafikexport des Diagramms
 Das Diagramm wird aus der Live-Geometrie in ein eigenständiges SVG (nur Formen
