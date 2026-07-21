@@ -69,9 +69,10 @@ Codiert als Checkbox nach dem Zeichen (Erweiterung der Markdown-Task-Syntax):
 
 - Werte: `XS < S < M < L < XL < XXL`, notiert in Klammern, z. B. `(L)`.
 - **Untergliederungsregel:** Ab `(M)` muss ein Element weiter zerlegt sein.
-  Ein Element ≥ M **ohne Kinder** erhält:
-  - gestrichelte orange Umrandung (`--warn`, `#B45309`) und
-  - einen Geister-Knoten „Untergliederung fehlt“ an gestrichelter Linie darunter.
+  Ein Element ≥ M **ohne Kinder** erhält einen Geister-Knoten
+  „Untergliederung fehlt“ an gestrichelter Linie darunter (in `--warn`,
+  `#B45309`). Der angedeutete Unterpunkt genügt als Hinweis; eine zusätzliche
+  Umrandung des Knotens gibt es nicht.
 - Ausnahme: verworfene Elemente lösen die Regel nie aus.
 - Anzeige: dunkles Badge oben rechts an der Knoten-Ecke.
 

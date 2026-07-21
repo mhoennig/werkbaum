@@ -181,7 +181,6 @@
     border:1.5px solid var(--card);
     border-radius:999px;padding:1px 6px;line-height:1.4;
   }
-  .node.needs{outline:2px dashed var(--warn);outline-offset:2px}
   .tags{
     position:absolute;right:-9px;bottom:-9px;
     display:flex;gap:3px;
@@ -469,7 +468,7 @@ const GHOST = '<div class="ghost-node">Untergliederung fehlt</div>';
 
 function nodeHtml(n, extra){
   const need = needsBreakdown(n);
-  const cls = ['node', extra || '', n.status ? 'st-' + n.status.key : '', need ? 'needs' : '']
+  const cls = ['node', extra || '', n.status ? 'st-' + n.status.key : '']
     .filter(Boolean).join(' ');
   const title = n.status ? ` title="${n.status.name}"` : '';
   const tagsHtml = n.tags && n.tags.length
