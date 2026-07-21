@@ -133,6 +133,13 @@ ist grau (`#6B7A8C`) — kein Petrol mehr im Diagramm. Der Modus ändert nur die
   deterministisch auf Knotenmitte liegen (Offset 23 px = 5 px Listenabstand
   + halbe Knotenhöhe). Abzweige zielen auf den **Knoten**, nie auf die Mitte
   des Teilbaums.
+- In den transponierten Modi (vertikal, kompakt) stehen untereinander
+  gestapelte Geschwister mit **zusätzlichem Abstand nach unten** (damit das
+  Größen-Badge oben rechts nicht mit den Tags unten rechts des darüber
+  liegenden Knotens überlappt). Der Abstand wird nur **unterhalb** ergänzt, der
+  23-px-Abzweig oben bleibt unverändert; die vertikal **zentrierten**
+  all-of-Zwischenknoten bekommen ihn **symmetrisch**, damit ihr Abzweig
+  (50 %-Höhe) weiterhin auf der Knotenmitte liegt.
 
 ### Grafikexport des Diagramms
 Das Diagramm wird aus der Live-Geometrie in ein eigenständiges SVG (nur Formen

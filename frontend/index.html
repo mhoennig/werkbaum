@@ -464,6 +464,22 @@
   .tree.vertical li.has-and>ul.and>li.has-and:last-child::after{top:0;height:50%}
   .tree.vertical li.has-and>ul.and>li.has-and:only-child::after{border:0}
 
+  /* Mehr Luft zwischen gestapelten Knoten (transponierte Modi): sonst
+     überlappt das Größen-Badge (oben rechts) eines Knotens mit den
+     Namens-Tags (unten rechts) des Knotens darüber. Nur zusätzlicher Abstand
+     NACH unten, damit der obere 23-px-Abzweig unverändert bleibt. */
+  .tree.kompakt ul.and>li,
+  .tree.kompakt ul.or>li,
+  .tree.vertical ul.or>li,
+  .tree.vertical ul.and>li:not(.has-and){
+    padding-bottom:20px;
+  }
+  /* Zentrierte all-of-Zwischenknoten (nur vertikal) brauchen den Abstand
+     symmetrisch, damit ihr 50%-Abzweig auf der Knotenmitte bleibt. */
+  .tree.vertical li.has-and>ul.and>li.has-and{
+    padding-top:16px;padding-bottom:16px;
+  }
+
   /* Kompakt: auch All-of läuft nach unten (spart Breite) — kein Rechts-Fächer.
      Die graue, gestrichelte Any-of-Führung kommt aus der Basis und gilt hier
      wie in allen Modi. Gate-Codierung: und = durchgezogen dunkel (Tinte),
