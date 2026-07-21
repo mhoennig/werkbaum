@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Werkbaum · Sekundärzeichen (Variante B, transponiert) · hell -->
+  <rect x="4" y="26" width="20" height="12" rx="3.5" fill="#243447"/>
+  <path d="M24 32 H30 M30 14 V32 M30 14 H38 M30 32 H38" fill="none" stroke="#243447" stroke-width="3"/>
+  <path d="M30 32 V50 M30 50 H38" fill="none" stroke="#0F766E" stroke-width="3" stroke-dasharray="4 4"/>
+  <rect x="38" y="8" width="22" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+  <rect x="38" y="26" width="22" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+  <rect x="38" y="44" width="22" height="12" rx="3.5" fill="#fff" stroke="#0F766E" stroke-width="3"/>
+</svg>

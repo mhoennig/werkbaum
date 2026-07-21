@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Werkbaum · K2 „Die Miniatur" — zwei Varianten</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F3F6F9;
+    --grid:rgba(36,52,71,.055);
+    --ink:#243447;
+    --card:#FFFFFF;
+    --muted:#6B7A8C;
+    --or:#0F766E;
+    --or-dark:#45C4B4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'IBM Plex Sans',system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      repeating-linear-gradient(0deg,transparent 0 23px,var(--grid) 23px 24px),
+      repeating-linear-gradient(90deg,transparent 0 23px,var(--grid) 23px 24px),
+      var(--paper);
+    min-height:100vh;
+    padding:44px 24px 72px;
+  }
+  main{max-width:980px;margin:0 auto}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--or);
+  }
+  h1{font-size:1.5rem;font-weight:600;letter-spacing:-.01em;margin-top:6px}
+  header p{margin-top:8px;color:var(--muted);font-size:.92rem;max-width:66ch;line-height:1.6}
+  header p b{color:var(--ink);font-weight:500}
+
+  .variant{
+    margin-top:28px;
+    background:var(--card);
+    border:1px solid rgba(36,52,71,.14);
+    border-radius:16px;
+    padding:24px;
+  }
+  .v-head{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+  .v-head h2{font-size:1.05rem;font-weight:600}
+  .v-head span{
+    font-family:'IBM Plex Mono',monospace;font-size:.62rem;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  }
+  .stage{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  .swatch{
+    border-radius:14px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+  }
+  .sw-paper{width:140px;height:140px;background:var(--paper);border:1px solid rgba(36,52,71,.12)}
+  .sw-ink{width:140px;height:140px;background:var(--ink)}
+  .minis{display:flex;flex-direction:column;gap:8px;align-items:center}
+  .minis .swatch{background:var(--paper);border:1px solid rgba(36,52,71,.12);border-radius:7px}
+  .m32{width:48px;height:48px}
+  .m16{width:28px;height:28px}
+  .minis span{font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--muted)}
+  .lockup{
+    display:flex;align-items:center;gap:14px;
+    background:var(--paper);border:1px solid rgba(36,52,71,.12);
+    border-radius:14px;padding:18px 24px;flex:1 1 260px;min-width:250px;
+  }
+  .wordmark{font-size:1.75rem;font-weight:600;letter-spacing:-.02em;line-height:1}
+  .wordmark .w1{color:var(--ink)}
+  .wordmark .w2{color:var(--or)}
+  .variant p{margin-top:16px;font-size:.88rem;color:var(--muted);line-height:1.7;max-width:76ch}
+  .variant p b{color:var(--ink);font-weight:500}
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <span class="eyebrow">Markenentwurf · K2 ausgearbeitet</span>
+  <h1>Die Miniatur — zwei Varianten</h1>
+  <p>Beide Varianten zeigen denselben Baum: gefüllte Wurzel, Und-Fächer mit
+     durchgezogenen Linien, ein Oder-Anschluss gestrichelt in Petrol. Sie
+     entsprechen den <b>zwei Darstellungsmodi des Produkts</b> — Hochformat wie
+     die normale Ansicht, Querformat wie die transponierte.</p>
+</header>
+
+<div class="variant">
+  <div class="v-head"><h2>Variante A · Hochformat</h2><span>Primärzeichen</span></div>
+  <div class="stage">
+    <div class="swatch sw-paper">
+      <svg width="112" height="112" viewBox="0 0 64 64">
+        <rect x="22" y="5" width="20" height="12" rx="3.5" fill="#243447"/>
+        <path d="M32 17 V22 M14 22 H50 M14 22 V27 M50 22 V27" fill="none" stroke="#243447" stroke-width="3"/>
+        <rect x="4" y="27" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+        <rect x="40" y="27" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+        <path d="M50 39 V46" fill="none" stroke="#0F766E" stroke-width="3" stroke-dasharray="4 4"/>
+        <rect x="40" y="46" width="20" height="12" rx="3.5" fill="#fff" stroke="#0F766E" stroke-width="3"/>
+      </svg>
+    </div>
+    <div class="swatch sw-ink">
+      <svg width="112" height="112" viewBox="0 0 64 64">
+        <rect x="22" y="5" width="20" height="12" rx="3.5" fill="#F3F6F9"/>
+        <path d="M32 17 V22 M14 22 H50 M14 22 V27 M50 22 V27" fill="none" stroke="#F3F6F9" stroke-width="3"/>
+        <rect x="4" y="27" width="20" height="12" rx="3.5" fill="none" stroke="#F3F6F9" stroke-width="3"/>
+        <rect x="40" y="27" width="20" height="12" rx="3.5" fill="none" stroke="#F3F6F9" stroke-width="3"/>
+        <path d="M50 39 V46" fill="none" stroke="#45C4B4" stroke-width="3" stroke-dasharray="4 4"/>
+        <rect x="40" y="46" width="20" height="12" rx="3.5" fill="none" stroke="#45C4B4" stroke-width="3"/>
+      </svg>
+    </div>
+    <div class="minis">
+      <div class="swatch m32">
+        <svg width="36" height="36" viewBox="0 0 64 64">
+          <rect x="22" y="5" width="20" height="12" rx="3.5" fill="#243447"/>
+          <path d="M32 17 V22 M14 22 H50 M14 22 V27 M50 22 V27" fill="none" stroke="#243447" stroke-width="4"/>
+          <rect x="4" y="27" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="4"/>
+          <rect x="40" y="27" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="4"/>
+          <path d="M50 39 V46" fill="none" stroke="#0F766E" stroke-width="4" stroke-dasharray="5 5"/>
+          <rect x="40" y="46" width="20" height="12" rx="3.5" fill="#fff" stroke="#0F766E" stroke-width="4"/>
+        </svg>
+      </div>
+      <div class="swatch m16">
+        <svg width="18" height="18" viewBox="0 0 64 64">
+          <rect x="18" y="4" width="28" height="16" rx="4" fill="#243447"/>
+          <path d="M32 20 V26 M12 26 H52 M12 26 V32 M52 26 V32" fill="none" stroke="#243447" stroke-width="5"/>
+          <rect x="2" y="32" width="24" height="16" rx="4" fill="#fff" stroke="#243447" stroke-width="5"/>
+          <rect x="38" y="32" width="24" height="16" rx="4" fill="#fff" stroke="#0F766E" stroke-width="5"/>
+        </svg>
+      </div>
+      <span>32 / 16 px</span>
+    </div>
+    <div class="lockup">
+      <svg width="46" height="46" viewBox="0 0 64 64">
+        <rect x="22" y="5" width="20" height="12" rx="3.5" fill="#243447"/>
+        <path d="M32 17 V22 M14 22 H50 M14 22 V27 M50 22 V27" fill="none" stroke="#243447" stroke-width="3"/>
+        <rect x="4" y="27" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+        <rect x="40" y="27" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+        <path d="M50 39 V46" fill="none" stroke="#0F766E" stroke-width="3" stroke-dasharray="4 4"/>
+        <rect x="40" y="46" width="20" height="12" rx="3.5" fill="#fff" stroke="#0F766E" stroke-width="3"/>
+      </svg>
+      <span class="wordmark"><span class="w1">Werk</span><span class="w2">baum</span></span>
+    </div>
+  </div>
+  <p>Drei Ebenen erzählen die ganze Geschichte: Wurzel, Und-Fächer, und aus dem
+     rechten Paket hängt gestrichelt eine Alternative. <b>Einsatz:</b> Website,
+     Doku-Titel, App-Icon, README. Für 16 px die vereinfachte Form — zwei Ebenen,
+     der Oder-Anteil wandert als petrolfarbener Rahmen ins rechte Kind.</p>
+</div>
+
+<div class="variant">
+  <div class="v-head"><h2>Variante B · Transponiert</h2><span>Sekundärzeichen für breite Flächen</span></div>
+  <div class="stage">
+    <div class="swatch sw-paper">
+      <svg width="112" height="112" viewBox="0 0 64 64">
+        <rect x="4" y="26" width="20" height="12" rx="3.5" fill="#243447"/>
+        <path d="M24 32 H30 M30 14 V32 M30 14 H38 M30 32 H38" fill="none" stroke="#243447" stroke-width="3"/>
+        <path d="M30 32 V50 M30 50 H38" fill="none" stroke="#0F766E" stroke-width="3" stroke-dasharray="4 4"/>
+        <rect x="38" y="8" width="22" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+        <rect x="38" y="26" width="22" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+        <rect x="38" y="44" width="22" height="12" rx="3.5" fill="#fff" stroke="#0F766E" stroke-width="3"/>
+      </svg>
+    </div>
+    <div class="swatch sw-ink">
+      <svg width="112" height="112" viewBox="0 0 64 64">
+        <rect x="4" y="26" width="20" height="12" rx="3.5" fill="#F3F6F9"/>
+        <path d="M24 32 H30 M30 14 V32 M30 14 H38 M30 32 H38" fill="none" stroke="#F3F6F9" stroke-width="3"/>
+        <path d="M30 32 V50 M30 50 H38" fill="none" stroke="#45C4B4" stroke-width="3" stroke-dasharray="4 4"/>
+        <rect x="38" y="8" width="22" height="12" rx="3.5" fill="none" stroke="#F3F6F9" stroke-width="3"/>
+        <rect x="38" y="26" width="22" height="12" rx="3.5" fill="none" stroke="#F3F6F9" stroke-width="3"/>
+        <rect x="38" y="44" width="22" height="12" rx="3.5" fill="none" stroke="#45C4B4" stroke-width="3"/>
+      </svg>
+    </div>
+    <div class="minis">
+      <div class="swatch m32">
+        <svg width="36" height="36" viewBox="0 0 64 64">
+          <rect x="4" y="26" width="20" height="12" rx="3.5" fill="#243447"/>
+          <path d="M24 32 H30 M30 14 V32 M30 14 H38 M30 32 H38" fill="none" stroke="#243447" stroke-width="4"/>
+          <path d="M30 32 V50 M30 50 H38" fill="none" stroke="#0F766E" stroke-width="4" stroke-dasharray="5 5"/>
+          <rect x="38" y="8" width="22" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="4"/>
+          <rect x="38" y="26" width="22" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="4"/>
+          <rect x="38" y="44" width="22" height="12" rx="3.5" fill="#fff" stroke="#0F766E" stroke-width="4"/>
+        </svg>
+      </div>
+      <div class="swatch m16">
+        <svg width="18" height="18" viewBox="0 0 64 64">
+          <rect x="2" y="24" width="24" height="16" rx="4" fill="#243447"/>
+          <path d="M26 32 H32 M32 14 V32 M32 14 H40 M32 32 H40" fill="none" stroke="#243447" stroke-width="5"/>
+          <rect x="40" y="6" width="22" height="16" rx="4" fill="#fff" stroke="#243447" stroke-width="5"/>
+          <rect x="40" y="24" width="22" height="16" rx="4" fill="#fff" stroke="#0F766E" stroke-width="5"/>
+        </svg>
+      </div>
+      <span>32 / 16 px</span>
+    </div>
+    <div class="lockup">
+      <svg width="46" height="46" viewBox="0 0 64 64">
+        <rect x="4" y="26" width="20" height="12" rx="3.5" fill="#243447"/>
+        <path d="M24 32 H30 M30 14 V32 M30 14 H38 M30 32 H38" fill="none" stroke="#243447" stroke-width="3"/>
+        <path d="M30 32 V50 M30 50 H38" fill="none" stroke="#0F766E" stroke-width="3" stroke-dasharray="4 4"/>
+        <rect x="38" y="8" width="22" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+        <rect x="38" y="26" width="22" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+        <rect x="38" y="44" width="22" height="12" rx="3.5" fill="#fff" stroke="#0F766E" stroke-width="3"/>
+      </svg>
+      <span class="wordmark"><span class="w1">Werk</span><span class="w2">baum</span></span>
+    </div>
+  </div>
+  <p>Die Wurzel links, die Struktur wächst nach rechts — exakt die Logik des
+     transponierten Modus: die Und-Linie tritt <b>rechts</b> aus der Wurzel aus,
+     der Oder-Zweig hängt gestrichelt <b>unten</b> an der Sammelleiste.
+     <b>Einsatz:</b> breite Flächen wie Header-Leisten, Social-Banner,
+     Doku-Fußzeilen — überall dort, wo das Hochformat zu viel Höhe bräuchte.</p>
+</div>
+
+</main>
+</body>
+</html>

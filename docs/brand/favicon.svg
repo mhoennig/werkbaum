@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Werkbaum · Favicon (vereinfachte Zwei-Ebenen-Form) -->
+  <rect x="18" y="4" width="28" height="16" rx="4" fill="#243447"/>
+  <path d="M32 20 V26 M12 26 H52 M12 26 V32 M52 26 V32" fill="none" stroke="#243447" stroke-width="5"/>
+  <rect x="2" y="32" width="24" height="16" rx="4" fill="#fff" stroke="#243447" stroke-width="5"/>
+  <rect x="38" y="32" width="24" height="16" rx="4" fill="#fff" stroke="#0F766E" stroke-width="5"/>
+</svg>

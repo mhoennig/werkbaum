@@ -1,0 +1,61 @@
+# === Betriebssystem ===
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# === IntelliJ IDEA / JetBrains (D13) ===
+# Projektdateien lokal halten; geteilte Einstellungen ggf. gezielt wieder einchecken.
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# === Editoren ===
+.vscode/
+*.swp
+*~
+
+# === Backend: Gradle / Kotlin / JVM (D13) ===
+backend/.gradle/
+backend/build/
+backend/**/build/
+!backend/**/src/**/build/
+.gradle/
+build/
+!src/**/build/
+# Gradle-Wrapper einchecken, aber lokale Overrides ignorieren
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+gradle-app.setting
+
+# Spring Boot / lokale Laufzeit
+*.log
+logs/
+application-local.properties
+application-local.yml
+application-local.yaml
+
+# === Java-Artefakte ===
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*
+!gradle-wrapper.jar
+
+# === Frontend (Vanilla HTML/CSS/JS, D11) ===
+# Derzeit build-frei; falls später Tooling dazukommt:
+frontend/node_modules/
+frontend/dist/
+
+# === Geheimnisse / lokale Umgebung ===
+.env
+.env.local
+*.local
+
+# === Temporäres ===
+tmp/
+*.tmp
+*.bak

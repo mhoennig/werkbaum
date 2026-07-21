@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Werkbaum · WBS-Editor</title>
+<link rel="icon" type="image/svg+xml" href="../docs/brand/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F3F6F9;
+    --grid:rgba(36,52,71,.055);
+    --ink:#243447;
+    --line:#41556E;
+    --card:#FFFFFF;
+    --muted:#6B7A8C;
+    --or:#0F766E;
+    --warn:#B45309;
+    --r:8px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'IBM Plex Sans',system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      repeating-linear-gradient(0deg,transparent 0 23px,var(--grid) 23px 24px),
+      repeating-linear-gradient(90deg,transparent 0 23px,var(--grid) 23px 24px),
+      var(--paper);
+    min-height:100vh;
+    padding:32px 20px 56px;
+  }
+  header{max-width:1200px;margin:0 auto 24px}
+  h1{font-size:1.25rem;font-weight:600;letter-spacing:-.01em}
+  header p{margin-top:4px;color:var(--muted);font-size:.9rem}
+
+  .app{
+    max-width:1200px;margin:0 auto;
+    display:grid;grid-template-columns:360px 1fr;gap:20px;
+    align-items:start;
+  }
+  @media (max-width:820px){ .app{grid-template-columns:1fr} }
+
+  .panel{
+    background:var(--card);
+    border:1px solid rgba(36,52,71,.14);
+    border-radius:12px;
+    overflow:hidden;
+  }
+  .panel-head{
+    padding:10px 16px;
+    display:flex;justify-content:space-between;align-items:center;gap:14px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);
+    border-bottom:1px solid rgba(36,52,71,.1);
+    flex-wrap:wrap;
+  }
+  .panel-head>span{margin-right:auto}
+  .switch{
+    display:flex;align-items:center;gap:7px;cursor:pointer;
+    text-transform:none;letter-spacing:0;
+    font-family:'IBM Plex Sans',sans-serif;font-size:.78rem;color:var(--muted);
+  }
+  .switch input{position:absolute;opacity:0;width:0;height:0}
+  .switch i{
+    width:30px;height:17px;border-radius:999px;background:#C6CFD8;
+    position:relative;transition:background .15s;flex:0 0 auto;
+  }
+  .switch i::before{
+    content:'';position:absolute;top:2px;left:2px;width:13px;height:13px;
+    border-radius:50%;background:#fff;transition:left .15s;
+    box-shadow:0 1px 2px rgba(36,52,71,.25);
+  }
+  .switch input:checked + i{background:var(--or)}
+  .switch input:checked + i::before{left:15px}
+  textarea{
+    display:block;width:100%;min-height:380px;
+    border:0;outline:none;resize:vertical;
+    padding:14px 16px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.85rem;line-height:1.7;
+    color:var(--ink);background:var(--card);
+    tab-size:2;
+  }
+  .hint{
+    padding:12px 16px;border-top:1px dashed rgba(36,52,71,.18);
+    font-size:.8rem;color:var(--muted);line-height:1.7;
+  }
+  .hint code{
+    font-family:'IBM Plex Mono',monospace;font-size:.75rem;
+    background:var(--paper);border:1px solid rgba(36,52,71,.12);
+    border-radius:4px;padding:0 5px;
+  }
+  .hint .or-code{color:var(--or);border-color:rgba(15,118,110,.4)}
+
+  .diagram{
+    padding:28px 16px 24px;
+    overflow-x:auto;
+    background:transparent;
+  }
+  .panel.right{background:rgba(255,255,255,.6)}
+  .warnings{padding:0 16px 14px;font-size:.8rem;color:var(--warn)}
+  .warnings div{margin-top:4px}
+  .empty{color:var(--muted);font-size:.85rem;padding:8px 4px}
+
+  /* ---------- Baum ---------- */
+  .tree{width:max-content;margin:0 auto;list-style:none}
+  .tree ul{list-style:none}
+  .tree li{display:flex;flex-direction:column;align-items:center;position:relative}
+  .tree > li + li{margin-top:36px}
+
+  .node{
+    position:relative;
+    color:var(--ink);
+    background:var(--card);
+    border:1.5px solid var(--line);
+    border-radius:var(--r);
+    padding:7px 14px;
+    font-size:.88rem;font-weight:500;line-height:1.3;
+    white-space:nowrap;
+    box-shadow:0 1px 2px rgba(36,52,71,.08);
+  }
+  a.node{text-decoration:none;cursor:pointer}
+  a.node:hover{box-shadow:0 2px 8px rgba(36,52,71,.22)}
+  .ext{font-size:.72em;margin-left:5px;opacity:.55}
+  .size{
+    position:absolute;top:-9px;right:-9px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.58rem;font-weight:500;letter-spacing:.02em;
+    background:var(--ink);color:#fff;
+    border:1.5px solid var(--card);
+    border-radius:999px;padding:1px 6px;line-height:1.4;
+  }
+  .node.needs{outline:2px dashed var(--warn);outline-offset:2px}
+  .tags{
+    position:absolute;right:-9px;bottom:-9px;
+    display:flex;gap:3px;
+  }
+  .tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.58rem;font-weight:500;letter-spacing:.02em;
+    background:#EEF1F4;color:var(--ink);
+    border:1.5px solid var(--line);
+    border-radius:999px;padding:1px 6px;line-height:1.4;
+    box-shadow:0 0 0 1.5px var(--card);
+  }
+  .ghost-node{
+    position:relative;margin-top:14px;
+    border:1.5px dashed var(--warn);
+    color:var(--warn);background:rgba(180,83,9,.06);
+    border-radius:var(--r);padding:4px 12px;
+    font-size:.74rem;font-style:italic;white-space:nowrap;
+  }
+  .ghost-node::before{
+    content:'';position:absolute;top:-14px;left:50%;height:14px;
+    border-left:2px dashed var(--warn);
+  }
+  .root-node{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600;padding:9px 20px}
+
+  /* --- ALL OF: Kinder nebeneinander, durchgezogener Verteiler --- */
+  ul.and{display:flex;align-items:flex-start;position:relative;padding-top:14px}
+  ul.and::before{
+    content:'';position:absolute;top:0;left:50%;height:14px;border-left:2px solid var(--line);
+  }
+  ul.and>li{padding:16px 12px 0}
+  ul.and>li::before,
+  ul.and>li::after{
+    content:'';position:absolute;top:0;right:50%;
+    border-top:2px solid var(--line);width:50%;height:16px;
+  }
+  ul.and>li::after{right:auto;left:50%;border-left:2px solid var(--line)}
+  ul.and>li:only-child{padding-top:14px}
+  ul.and>li:only-child::before,ul.and>li:only-child::after{border-top:none}
+  ul.and>li:only-child::after{border-left:2px solid var(--line);height:14px}
+  ul.and>li:first-child::before,
+  ul.and>li:last-child::after{border:0 none}
+  ul.and>li:last-child::before{border-right:2px solid var(--line);border-radius:0 6px 0 0}
+  ul.and>li:first-child::after{border-radius:6px 0 0 0}
+
+  /* --- ANY OF: durchgezogene Linie links, gestrichelte Abzweige --- */
+  li.has-or{align-items:flex-start}
+  ul.or{
+    display:flex;flex-direction:column;
+    align-items:flex-start;
+    position:relative;
+    padding-top:14px;
+  }
+  ul.or::before{
+    content:'';position:absolute;top:0;left:9px;height:14px;border-left:2px solid var(--or);
+  }
+  ul.or>li{position:relative;align-items:flex-start;padding:5px 0 5px 30px}
+  /* Abzweig auf Höhe der Knoten-Mitte (5px li-Padding + halbe Knotenhöhe), nicht Mitte des Teilbaums */
+  ul.or>li::before{
+    content:'';position:absolute;left:9px;top:23px;width:21px;border-top:2px dashed var(--or);
+  }
+  ul.or>li::after{
+    content:'';position:absolute;left:9px;top:0;height:100%;border-left:2px solid var(--or);
+  }
+  ul.or>li:last-child::after{height:23px}
+  ul.or .node{
+    border-color:var(--or);
+    box-shadow:none;
+    font-weight:400;
+  }
+
+  /* ---------- Status (Pastell) ---------- */
+  .node.st-idee      {background:#EBEDEF;border-color:#A2ABB5;color:var(--ink)}
+  .node.st-geplant   {background:#EBE4F6;border-color:#A991D4;color:var(--ink)}
+  .node.st-arbeit    {background:#FADDE4;border-color:#D897A8;color:var(--ink)}
+  .node.st-durchstich{background:#FBF2CE;border-color:#D9BE63;color:var(--ink)}
+  .node.st-fertig    {background:#DCF1DE;border-color:#86C293;color:var(--ink)}
+  .node.st-prod      {background:#DBEAF8;border-color:#85ACD7;color:var(--ink)}
+  .node.st-verworfen{
+    background:#F1F2F4;border-color:#B3BAC2;border-style:dashed;
+    color:var(--muted);text-decoration:line-through;box-shadow:none;
+  }
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .chip{
+    font-family:'IBM Plex Mono',monospace;font-size:.72rem;
+    border:1.5px solid;border-radius:6px;padding:2px 8px;
+    color:var(--ink);white-space:nowrap;
+  }
+  .chip.st-idee      {background:#EBEDEF;border-color:#A2ABB5}
+  .chip.st-geplant   {background:#EBE4F6;border-color:#A991D4}
+  .chip.st-arbeit    {background:#FADDE4;border-color:#D897A8}
+  .chip.st-durchstich{background:#FBF2CE;border-color:#D9BE63}
+  .chip.st-fertig    {background:#DCF1DE;border-color:#86C293}
+  .chip.st-prod      {background:#DBEAF8;border-color:#85ACD7}
+  .chip.st-verworfen{background:#F1F2F4;border-color:#B3BAC2;border-style:dashed;color:var(--muted);text-decoration:line-through}
+
+  /* ---------- Vertikal-Modus (transponiert) ---------- */
+  .tree.vertical{margin:0}
+  .tree.vertical li{align-items:flex-start}
+  .tree.vertical ul.and{flex-direction:column;align-items:flex-start;padding-top:14px}
+  .tree.vertical ul.and::before{left:9px;height:14px}
+  .tree.vertical ul.and>li{padding:5px 0 5px 30px}
+  .tree.vertical ul.and>li::before{
+    left:9px;right:auto;top:23px;width:21px;height:0;
+    border:0;border-top:2px solid var(--line);border-radius:0;
+  }
+  .tree.vertical ul.and>li::after{
+    left:9px;right:auto;top:0;width:0;height:100%;
+    border:0;border-left:2px solid var(--line);border-radius:0;
+  }
+  .tree.vertical ul.and>li:last-child::after{height:23px}
+
+  /* All-of transponiert: Linie läuft rechts aus dem Überknoten heraus (wie Richtung LR),
+     Any-of bleibt unten-links — dadurch klar unterscheidbare Austrittsseiten */
+  .tree.vertical li.has-and{flex-direction:row;align-items:flex-start}
+  .tree.vertical li.has-and>ul.and{padding-top:0}
+  .tree.vertical li.has-and>ul.and::before{
+    left:0;top:17px;width:9px;height:0;
+    border-left:0;border-top:2px solid var(--line);
+  }
+  .tree.vertical li.has-and>ul.and>li:first-child::after{top:17px;height:calc(100% - 17px)}
+  .tree.vertical li.has-and>ul.and>li:only-child::after{top:17px;height:6px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 style="display:flex;align-items:center;gap:11px">
+    <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+      <rect x="22" y="5" width="20" height="12" rx="3.5" fill="#243447"/>
+      <path d="M32 17 V22 M14 22 H50 M14 22 V27 M50 22 V27" fill="none" stroke="#243447" stroke-width="3"/>
+      <rect x="4" y="27" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+      <rect x="40" y="27" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+      <path d="M50 39 V46" fill="none" stroke="#0F766E" stroke-width="3" stroke-dasharray="4 4"/>
+      <rect x="40" y="46" width="20" height="12" rx="3.5" fill="#fff" stroke="#0F766E" stroke-width="3"/>
+    </svg>
+    <span>Werk<span style="color:var(--or)">baum</span></span>
+  </h1>
+  <p>Links die textuelle Struktur bearbeiten — rechts entsteht das Diagramm live.</p>
+</header>
+
+<div class="app">
+  <div class="panel">
+    <div class="panel-head">Struktur (Text)</div>
+    <textarea id="src" spellcheck="false"></textarea>
+    <div class="hint">
+      Einrückung (2 Leerzeichen oder Tab) definiert die Hierarchie.<br>
+      <code>-</code>&nbsp; Teilpaket, alle erforderlich <em>(all of)</em><br>
+      <code class="or-code">|</code>&nbsp; Alternative, eine wählen <em>(any of)</em><br>
+      Zeile ohne Zeichen = Wurzelknoten. Geschwister sollten dasselbe Zeichen tragen.<br>
+      Status als Kästchen nach dem Zeichen, z.&nbsp;B. <code>- [~] Frontend</code>:
+      <div class="chips">
+        <span class="chip st-idee">[?] Idee</span>
+        <span class="chip st-geplant">[&nbsp;] geplant</span>
+        <span class="chip st-arbeit">[~] in Arbeit</span>
+        <span class="chip st-durchstich">[/] Durchstich</span>
+        <span class="chip st-fertig">[x] fertig</span>
+        <span class="chip st-prod">[^] in Produktion</span>
+        <span class="chip st-verworfen">[-] verworfen</span>
+      </div>
+      Aufwand als T-Shirt-Größe in Klammern, Link einfach als URL anhängen:<br>
+      <code>- [ ] Backend (L) https://…</code><br>
+      Ab <code>(M)</code> gilt: weiter untergliedern — fehlt die Untergliederung, erscheint ein Platzhalter im Diagramm.<br>
+      Kommentare mit <code>%%</code> — als ganze Zeile oder am Zeilenende.
+      Personen mit <code>@name</code> — erscheinen unten rechts am Knoten.
+    </div>
+  </div>
+
+  <div class="panel right">
+    <div class="panel-head">
+      <span>Diagramm</span>
+      <label class="switch">
+        <input type="checkbox" id="showc"><i></i>verworfene
+      </label>
+      <label class="switch">
+        <input type="checkbox" id="vert"><i></i>vertikal
+      </label>
+    </div>
+    <div class="diagram"><ul class="tree" id="out"></ul></div>
+    <div class="warnings" id="warn"></div>
+  </div>
+</div>
+
+<script>
+const INITIAL = `%% Projektstruktur – Stand Sprint 14
+[~] Website-Relaunch (XL) https://wiki.example.de/relaunch
+  - [x] Konzeption (M)
+    - [x] Zielgruppenanalyse (S)
+    - [x] Sitemap (XS)
+  - [~] Umsetzung (XL)
+    - [/] Frontend (S) https://git.example.de/frontend @anna
+    - [ ] Backend (L) @ben @carla
+    - [ ] CMS-Anbindung (M)
+      | [ ] WordPress
+      | [?] Headless CMS
+      | [-] Eigenentwicklung  %% Aufwand zu hoch
+  - [?] Hosting (M)
+    | Cloud
+    | On-Premise`;
+
+const SIZE_RANK = {XS:0, S:1, M:2, L:3, XL:4, XXL:5};
+
+const STATUS_BY_CODE = {
+  '?': {key:'idee',       name:'Idee'},
+  ' ': {key:'geplant',    name:'geplant'},
+  '~': {key:'arbeit',     name:'in Arbeit'},
+  '/': {key:'durchstich', name:'Durchstich – funktionsbereit, Feinarbeiten offen'},
+  'x': {key:'fertig',     name:'fertig'},
+  '^': {key:'prod',       name:'in Produktion'},
+  '-': {key:'verworfen', name:'verworfen'}
+};
+
+const src  = document.getElementById('src');
+const out  = document.getElementById('out');
+const warnBox = document.getElementById('warn');
+
+function esc(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ---------- Parser ---------- */
+function parse(text){
+  const virtualRoot = {label:'', type:'and', children:[]};
+  const stack = [{node:virtualRoot, width:-1}];
+  const warnings = [];
+
+  text.split('\n').forEach((raw, i) => {
+    raw = raw.replace(/%%.*$/, '');   /* %%-Kommentare entfernen (Mermaid-Konvention) */
+    if(!raw.trim()) return;
+    const m = raw.match(/^([ \t]*)([-|])?\s*(?:\[([ ?~xX^\/-])]\s*)?(.*)$/);
+    const width = m[1].replace(/\t/g,'  ').length;
+    const type  = m[2] === '|' ? 'or' : 'and';
+    const status = m[3] ? STATUS_BY_CODE[m[3].toLowerCase()] : null;
+
+    let rest = m[4], url = null, size = null;
+    const tags = [];
+    rest = rest.replace(/https?:\/\/\S+/i, s => { url = s; return ''; });
+    rest = rest.replace(/\((XXL|XS|XL|S|M|L)\)/i, (s, g) => { size = g.toUpperCase(); return ''; });
+    rest = rest.replace(/@([\p{L}\p{N}._-]+)/gu, (s, g) => { tags.push(g); return ''; });
+    const label = rest.replace(/\s+/g, ' ').trim();
+    if(!label) return;
+
+    while(stack.length > 1 && stack[stack.length-1].width >= width) stack.pop();
+    const parent = stack[stack.length-1].node;
+
+    const node = {label, type, status, url, size, tags, children:[], line:i+1};
+    parent.children.push(node);
+    stack.push({node, width});
+  });
+
+  return {roots: virtualRoot.children, warnings};
+}
+
+/* ---------- Renderer ---------- */
+function gateOf(children){
+  return children.length && children[0].type === 'or' ? 'or' : 'and';
+}
+
+function needsBreakdown(n){
+  if(n.status && n.status.key === 'verworfen') return false;
+  return !!n.size && SIZE_RANK[n.size] >= SIZE_RANK.M && !n.children.length;
+}
+
+function visibleChildren(n){
+  if(showc.checked) return n.children;
+  return n.children.filter(k => !k.status || k.status.key !== 'verworfen');
+}
+
+const GHOST = '<div class="ghost-node">Untergliederung fehlt</div>';
+
+function nodeHtml(n, extra){
+  const need = needsBreakdown(n);
+  const cls = ['node', extra || '', n.status ? 'st-' + n.status.key : '', need ? 'needs' : '']
+    .filter(Boolean).join(' ');
+  const title = n.status ? ` title="${n.status.name}"` : '';
+  const tagsHtml = n.tags && n.tags.length
+    ? `<span class="tags">${n.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</span>`
+    : '';
+  const inner = esc(n.label) +
+                (n.url ? '<span class="ext">↗</span>' : '') +
+                (n.size ? `<span class="size">${n.size}</span>` : '') +
+                tagsHtml;
+  const html = n.url
+    ? `<a class="${cls}" href="${esc(n.url).replace(/"/g,'&quot;')}" target="_blank" rel="noopener"${title}>${inner}</a>`
+    : `<div class="${cls}"${title}>${inner}</div>`;
+  return html + (need ? GHOST : '');
+}
+
+function renderChildren(node, warnings){
+  const kids = visibleChildren(node);
+  if(!kids.length) return '';
+  const types = new Set(kids.map(k => k.type));
+  if(types.size > 1){
+    warnings.push(`Zeile ${kids[0].line}: Unter „${esc(node.label)}“ sind - und | gemischt — dargestellt nach dem ersten Kind.`);
+  }
+  const gate = gateOf(kids);
+  const items = kids.map(k => {
+    const vk = visibleChildren(k);
+    const liCls = vk.length ? (gateOf(vk) === 'or' ? ' class="has-or"' : ' class="has-and"') : '';
+    return `<li${liCls}>` +
+           nodeHtml(k) +
+           renderChildren(k, warnings) +
+           `</li>`;
+  }).join('');
+  return `<ul class="${gate}">${items}</ul>`;
+}
+
+function render(){
+  let {roots} = parse(src.value);
+  const warnings = [];
+  if(!showc.checked){
+    roots = roots.filter(r => !r.status || r.status.key !== 'verworfen');
+  }
+
+  if(!roots.length){
+    out.innerHTML = '<div class="empty">Noch keine Struktur — einfach lostippen.</div>';
+    warnBox.innerHTML = '';
+    return;
+  }
+
+  out.innerHTML = roots.map(root => {
+    const vk = visibleChildren(root);
+    const liCls = vk.length ? (gateOf(vk) === 'or' ? ' class="has-or"' : ' class="has-and"') : '';
+    return `<li${liCls}>` +
+           nodeHtml(root, 'root-node') +
+           renderChildren(root, warnings) +
+           `</li>`;
+  }).join('');
+
+  warnBox.innerHTML = warnings.map(w => `<div>⚠ ${w}</div>`).join('');
+}
+
+/* Tab-Taste rückt ein statt den Fokus zu wechseln */
+src.addEventListener('keydown', e => {
+  if(e.key === 'Tab'){
+    e.preventDefault();
+    const {selectionStart:s, selectionEnd:eEnd, value} = src;
+    src.value = value.slice(0, s) + '  ' + value.slice(eEnd);
+    src.selectionStart = src.selectionEnd = s + 2;
+    render();
+  }
+});
+
+src.addEventListener('input', render);
+
+const vert = document.getElementById('vert');
+vert.addEventListener('change', () => {
+  out.classList.toggle('vertical', vert.checked);
+});
+
+const showc = document.getElementById('showc');
+showc.addEventListener('change', render);
+
+src.value = INITIAL;
+render();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Werkbaum · Logo &amp; Wortbild</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F3F6F9;
+    --grid:rgba(36,52,71,.055);
+    --ink:#243447;
+    --line:#41556E;
+    --card:#FFFFFF;
+    --muted:#6B7A8C;
+    --or:#0F766E;
+    --or-dark:#45C4B4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'IBM Plex Sans',system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      repeating-linear-gradient(0deg,transparent 0 23px,var(--grid) 23px 24px),
+      repeating-linear-gradient(90deg,transparent 0 23px,var(--grid) 23px 24px),
+      var(--paper);
+    min-height:100vh;
+    padding:44px 24px 72px;
+  }
+  main{max-width:980px;margin:0 auto}
+  header{margin-bottom:14px}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--or);
+  }
+  h1{font-size:1.5rem;font-weight:600;letter-spacing:-.01em;margin-top:6px}
+  header p{margin-top:8px;color:var(--muted);font-size:.92rem;max-width:64ch;line-height:1.6}
+  header p b{color:var(--ink);font-weight:500}
+
+  section{margin-top:40px}
+  h2{
+    font-family:'IBM Plex Mono',monospace;font-size:.72rem;font-weight:500;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+    border-bottom:1px solid rgba(36,52,71,.14);padding-bottom:8px;margin-bottom:18px;
+  }
+
+  .concepts{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .concept{
+    background:var(--card);
+    border:1px solid rgba(36,52,71,.14);
+    border-radius:14px;
+    padding:20px;position:relative;
+  }
+  .concept.reco{border-color:var(--or)}
+  .reco-tag{
+    position:absolute;top:-9px;left:16px;
+    font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.08em;
+    background:var(--or);color:#fff;border-radius:999px;padding:2px 9px;
+  }
+  .stage{
+    display:flex;gap:14px;align-items:center;margin-bottom:14px;
+  }
+  .swatch{
+    border-radius:14px;display:flex;align-items:center;justify-content:center;
+    flex:0 0 auto;
+  }
+  .sw-paper{width:112px;height:112px;background:var(--paper);border:1px solid rgba(36,52,71,.12)}
+  .sw-ink{width:112px;height:112px;background:var(--ink)}
+  .minis{display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center}
+  .minis .swatch{background:var(--paper);border:1px solid rgba(36,52,71,.12);border-radius:7px}
+  .m32{width:44px;height:44px}
+  .m16{width:26px;height:26px}
+  .minis span{font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--muted)}
+  .concept h3{font-size:.98rem;font-weight:600}
+  .concept p{margin-top:6px;font-size:.85rem;color:var(--muted);line-height:1.6}
+  .concept p b{color:var(--ink);font-weight:500}
+
+  .wordmarks{display:flex;flex-direction:column;gap:14px}
+  .wm{
+    background:var(--card);border:1px solid rgba(36,52,71,.14);border-radius:14px;
+    padding:22px 24px;display:flex;align-items:center;gap:22px;flex-wrap:wrap;
+  }
+  .wm .label{
+    font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--muted);flex:0 0 118px;
+  }
+  .lockup{display:flex;align-items:center;gap:13px}
+  .lockup svg{flex:0 0 auto}
+  .wordmark{
+    font-size:1.9rem;font-weight:600;letter-spacing:-.02em;line-height:1;
+  }
+  .wordmark .w1{color:var(--ink)}
+  .wordmark .w2{color:var(--or)}
+  .wm.dark{background:var(--ink);border-color:var(--ink)}
+  .wm.dark .wordmark .w1{color:#F3F6F9}
+  .wm.dark .wordmark .w2{color:var(--or-dark)}
+  .wm.dark .label{color:#8CA0B5}
+  .cli{
+    font-family:'IBM Plex Mono',monospace;font-size:1.05rem;color:var(--ink);
+    background:var(--paper);border:1px solid rgba(36,52,71,.14);
+    border-radius:8px;padding:10px 16px;
+  }
+  .cli .brk{color:var(--or)}
+  .cli .dim{color:var(--muted)}
+
+  .rules{
+    background:var(--card);border:1px solid rgba(36,52,71,.14);border-radius:14px;
+    padding:20px 24px;font-size:.88rem;line-height:1.75;color:var(--muted);max-width:74ch;
+  }
+  .rules b{color:var(--ink);font-weight:500}
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <span class="eyebrow">Markenentwurf</span>
+  <h1>Werkbaum — Logo &amp; Wortbild</h1>
+  <p>Leitidee: Die Marke wird aus den Strichen der Notation selbst gebaut —
+     <b>durchgezogen&nbsp;=&nbsp;und</b>, <b>gestrichelt&nbsp;=&nbsp;oder</b>.
+     Wer das Diagramm kennt, liest das Logo; wer das Logo kennt, versteht das Diagramm.</p>
+</header>
+
+<section>
+  <h2>Bildmarken</h2>
+  <div class="concepts">
+
+    <div class="concept reco">
+      <span class="reco-tag">Empfehlung</span>
+      <div class="stage">
+        <div class="swatch sw-paper">
+          <svg width="88" height="88" viewBox="0 0 64 64">
+            <path d="M32 11 L32 28 L19 49" fill="none" stroke="#243447" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M32 28 L45 49" fill="none" stroke="#0F766E" stroke-width="5" stroke-linecap="round" stroke-dasharray="6 7"/>
+            <circle cx="32" cy="10" r="4.6" fill="#243447"/>
+          </svg>
+        </div>
+        <div class="swatch sw-ink">
+          <svg width="88" height="88" viewBox="0 0 64 64">
+            <path d="M32 11 L32 28 L19 49" fill="none" stroke="#F3F6F9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M32 28 L45 49" fill="none" stroke="#45C4B4" stroke-width="5" stroke-linecap="round" stroke-dasharray="6 7"/>
+            <circle cx="32" cy="10" r="4.6" fill="#F3F6F9"/>
+          </svg>
+        </div>
+        <div class="minis">
+          <div class="swatch m32">
+            <svg width="32" height="32" viewBox="0 0 64 64">
+              <path d="M32 11 L32 28 L19 49" fill="none" stroke="#243447" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M32 28 L45 49" fill="none" stroke="#0F766E" stroke-width="6" stroke-linecap="round" stroke-dasharray="7 8"/>
+              <circle cx="32" cy="10" r="5.2" fill="#243447"/>
+            </svg>
+          </div>
+          <div class="swatch m16">
+            <svg width="16" height="16" viewBox="0 0 64 64">
+              <path d="M32 11 L32 28 L19 49" fill="none" stroke="#243447" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M32 28 L45 49" fill="none" stroke="#0F766E" stroke-width="8" stroke-linecap="round" stroke-dasharray="9 10"/>
+              <circle cx="32" cy="10" r="6" fill="#243447"/>
+            </svg>
+          </div>
+          <span>32 / 16 px</span>
+        </div>
+      </div>
+      <h3>K1 · Die Gabelung</h3>
+      <p>Wurzelpunkt, Stamm, eine Und-Gabel, ein Oder-Zweig — die ganze Notation
+         in einer Geste. <b>Skaliert bis zum Favicon</b>, funktioniert einfarbig
+         und ist als App-Kachel sofort erkennbar.</p>
+    </div>
+
+    <div class="concept">
+      <div class="stage">
+        <div class="swatch sw-paper">
+          <svg width="88" height="88" viewBox="0 0 64 64">
+            <rect x="20" y="6" width="24" height="13" rx="3.5" fill="#243447"/>
+            <path d="M32 19 V24 M14 24 H50 M14 24 V29 M50 24 V29" fill="none" stroke="#243447" stroke-width="3"/>
+            <rect x="4" y="29" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+            <rect x="40" y="29" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+            <path d="M50 41 V47" fill="none" stroke="#0F766E" stroke-width="3" stroke-dasharray="4 4"/>
+            <rect x="40" y="47" width="20" height="11" rx="3.5" fill="#fff" stroke="#0F766E" stroke-width="3"/>
+          </svg>
+        </div>
+        <div class="swatch sw-ink">
+          <svg width="88" height="88" viewBox="0 0 64 64">
+            <rect x="20" y="6" width="24" height="13" rx="3.5" fill="#F3F6F9"/>
+            <path d="M32 19 V24 M14 24 H50 M14 24 V29 M50 24 V29" fill="none" stroke="#F3F6F9" stroke-width="3"/>
+            <rect x="4" y="29" width="20" height="12" rx="3.5" fill="none" stroke="#F3F6F9" stroke-width="3"/>
+            <rect x="40" y="29" width="20" height="12" rx="3.5" fill="none" stroke="#F3F6F9" stroke-width="3"/>
+            <path d="M50 41 V47" fill="none" stroke="#45C4B4" stroke-width="3" stroke-dasharray="4 4"/>
+            <rect x="40" y="47" width="20" height="11" rx="3.5" fill="none" stroke="#45C4B4" stroke-width="3"/>
+          </svg>
+        </div>
+        <div class="minis">
+          <div class="swatch m32">
+            <svg width="32" height="32" viewBox="0 0 64 64">
+              <rect x="20" y="6" width="24" height="13" rx="3.5" fill="#243447"/>
+              <path d="M32 19 V24 M14 24 H50 M14 24 V29 M50 24 V29" fill="none" stroke="#243447" stroke-width="4"/>
+              <rect x="4" y="29" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="4"/>
+              <rect x="40" y="29" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="4"/>
+              <path d="M50 41 V47" fill="none" stroke="#0F766E" stroke-width="4" stroke-dasharray="4 4"/>
+              <rect x="40" y="47" width="20" height="11" rx="3.5" fill="#fff" stroke="#0F766E" stroke-width="4"/>
+            </svg>
+          </div>
+          <div class="swatch m16">
+            <svg width="16" height="16" viewBox="0 0 64 64">
+              <rect x="18" y="4" width="28" height="16" rx="4" fill="#243447"/>
+              <path d="M32 20 V26 M12 26 H52 M12 26 V32 M52 26 V32" fill="none" stroke="#243447" stroke-width="5"/>
+              <rect x="2" y="32" width="24" height="15" rx="4" fill="#fff" stroke="#243447" stroke-width="5"/>
+              <rect x="38" y="32" width="24" height="15" rx="4" fill="#fff" stroke="#243447" stroke-width="5"/>
+            </svg>
+          </div>
+          <span>32 / 16 px</span>
+        </div>
+      </div>
+      <h3>K2 · Die Miniatur</h3>
+      <p>Der Projektstrukturplan selbst als Zeichen: gefüllte Wurzel, Und-Fächer,
+         gestrichelter Oder-Anschluss. <b>Am erklärendsten</b> — ideal für
+         Website-Header und Doku; fürs Favicon braucht es die vereinfachte Form.</p>
+    </div>
+
+    <div class="concept">
+      <div class="stage">
+        <div class="swatch sw-paper">
+          <svg width="88" height="88" viewBox="0 0 64 64">
+            <rect x="20" y="27" width="24" height="24" rx="5.5" fill="#fff" stroke="#243447" stroke-width="4"/>
+            <path d="M27 45.5 L37 32.5" stroke="#0F766E" stroke-width="4" stroke-linecap="round"/>
+            <path d="M32 27 V16 M32 16 L23 8" fill="none" stroke="#243447" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M32 16 L41 8" fill="none" stroke="#0F766E" stroke-width="4" stroke-linecap="round" stroke-dasharray="5 6"/>
+          </svg>
+        </div>
+        <div class="swatch sw-ink">
+          <svg width="88" height="88" viewBox="0 0 64 64">
+            <rect x="20" y="27" width="24" height="24" rx="5.5" fill="none" stroke="#F3F6F9" stroke-width="4"/>
+            <path d="M27 45.5 L37 32.5" stroke="#45C4B4" stroke-width="4" stroke-linecap="round"/>
+            <path d="M32 27 V16 M32 16 L23 8" fill="none" stroke="#F3F6F9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M32 16 L41 8" fill="none" stroke="#45C4B4" stroke-width="4" stroke-linecap="round" stroke-dasharray="5 6"/>
+          </svg>
+        </div>
+        <div class="minis">
+          <div class="swatch m32">
+            <svg width="32" height="32" viewBox="0 0 64 64">
+              <rect x="18" y="26" width="28" height="27" rx="6" fill="#fff" stroke="#243447" stroke-width="5"/>
+              <path d="M26 47 L38 32" stroke="#0F766E" stroke-width="5" stroke-linecap="round"/>
+              <path d="M32 26 V15 M32 15 L22 7" fill="none" stroke="#243447" stroke-width="5" stroke-linecap="round"/>
+              <path d="M32 15 L42 7" fill="none" stroke="#0F766E" stroke-width="5" stroke-linecap="round" stroke-dasharray="6 7"/>
+            </svg>
+          </div>
+          <div class="swatch m16">
+            <svg width="16" height="16" viewBox="0 0 64 64">
+              <rect x="16" y="26" width="32" height="30" rx="7" fill="#fff" stroke="#243447" stroke-width="6"/>
+              <path d="M25 48 L39 33" stroke="#0F766E" stroke-width="6" stroke-linecap="round"/>
+              <path d="M32 26 V14 M32 14 L21 5 M32 14 L43 5" fill="none" stroke="#243447" stroke-width="6" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span>32 / 16 px</span>
+        </div>
+      </div>
+      <h3>K3 · Der Spross</h3>
+      <p>Aus der Status-Checkbox <b>[/]</b> (Durchstich) wächst ein Zweig — Und
+         solid, Oder gestrichelt. Erzählt die Herkunft aus der Markdown-Task-Welt;
+         der verspielteste der drei Entwürfe.</p>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <h2>Wortbild</h2>
+  <div class="wordmarks">
+
+    <div class="wm">
+      <span class="label">Primär-Lockup</span>
+      <div class="lockup">
+        <svg width="42" height="42" viewBox="0 0 64 64">
+          <path d="M32 11 L32 28 L19 49" fill="none" stroke="#243447" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M32 28 L45 49" fill="none" stroke="#0F766E" stroke-width="5" stroke-linecap="round" stroke-dasharray="6 7"/>
+          <circle cx="32" cy="10" r="4.6" fill="#243447"/>
+        </svg>
+        <span class="wordmark"><span class="w1">Werk</span><span class="w2">baum</span></span>
+      </div>
+    </div>
+
+    <div class="wm dark">
+      <span class="label">Auf Tinte</span>
+      <div class="lockup">
+        <svg width="42" height="42" viewBox="0 0 64 64">
+          <path d="M32 11 L32 28 L19 49" fill="none" stroke="#F3F6F9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M32 28 L45 49" fill="none" stroke="#45C4B4" stroke-width="5" stroke-linecap="round" stroke-dasharray="6 7"/>
+          <circle cx="32" cy="10" r="4.6" fill="#F3F6F9"/>
+        </svg>
+        <span class="wordmark"><span class="w1">Werk</span><span class="w2">baum</span></span>
+      </div>
+    </div>
+
+    <div class="wm">
+      <span class="label">CLI / npm</span>
+      <div class="cli"><span class="dim">$</span> <span class="brk">[/]</span> werkbaum <span class="dim">render projekt.wbs</span></div>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <h2>Anwendungsregeln</h2>
+  <div class="rules">
+    Die Marke nutzt genau zwei Farben: <b>Tinte #243447</b> und <b>Petrol #0F766E</b>
+    (auf dunklem Grund #F3F6F9 und #45C4B4). Die Pastelltöne bleiben ausschließlich
+    <b>Statusfarben im Produkt</b> und erscheinen nie im Logo — so bleibt die Marke
+    ruhig und die Status-Semantik eindeutig. Der gestrichelte Zweig zeigt immer nach
+    rechts unten und behält sein Strichmuster; einfarbige Variante: alles in Tinte,
+    Strichelung bleibt. Wortbild in IBM Plex Sans SemiBold mit der Zweiteilung
+    <b>Werk</b>&thinsp;/&thinsp;<b style="color:var(--or)">baum</b>; für CLI, npm und
+    Code-Kontexte konsequent <b>kleingeschrieben</b>: <span style="font-family:'IBM Plex Mono',monospace">werkbaum</span>.
+  </div>
+</section>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Werkbaum · Primärzeichen (Variante A, Hochformat) · für dunkle Flächen -->
+  <rect x="22" y="5" width="20" height="12" rx="3.5" fill="#F3F6F9"/>
+  <path d="M32 17 V22 M14 22 H50 M14 22 V27 M50 22 V27" fill="none" stroke="#F3F6F9" stroke-width="3"/>
+  <rect x="4" y="27" width="20" height="12" rx="3.5" fill="none" stroke="#F3F6F9" stroke-width="3"/>
+  <rect x="40" y="27" width="20" height="12" rx="3.5" fill="none" stroke="#F3F6F9" stroke-width="3"/>
+  <path d="M50 39 V46" fill="none" stroke="#45C4B4" stroke-width="3" stroke-dasharray="4 4"/>
+  <rect x="40" y="46" width="20" height="12" rx="3.5" fill="none" stroke="#45C4B4" stroke-width="3"/>
+</svg>
