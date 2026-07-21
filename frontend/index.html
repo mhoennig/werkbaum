@@ -533,6 +533,14 @@
   .tree.vertical li.has-and>ul.and>li.has-and{
     padding-top:16px;padding-bottom:16px;
   }
+  /* Vertikal + any-of-Alternative, die selbst all-of zerlegt (z. B. „Web+Nativ“):
+     Der Knoten sitzt vertikal mittig zu seinem Rechts-Fächer, also muss auch der
+     EINKOMMENDE any-of-Abzweig auf die Knotenmitte (50 %) zeigen statt auf 23 px —
+     sonst ist der Knoten von seiner Linie von oben abgetrennt. Symmetrisches
+     Padding hält die Mitte bei 50 % (überschreibt das asymmetrische ul.or>li). */
+  .tree.vertical ul.or>li.has-and{padding-top:16px;padding-bottom:16px}
+  .tree.vertical ul.or>li.has-and::before{top:50%}
+  .tree.vertical ul.or>li.has-and:last-child::after{height:50%}
 
   /* Kompakt: auch All-of läuft nach unten (spart Breite) — kein Rechts-Fächer.
      Die graue, gestrichelte Any-of-Führung kommt aus der Basis und gilt hier

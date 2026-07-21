@@ -195,5 +195,14 @@ breite horizontale Fächer den Alternativknoten zentrieren und samt Elternbaum
 weit nach rechts schieben. Deshalb wird dieser Teilbaum **nur horizontal**
 schmal **transponiert** gestapelt (Kinder untereinander, linker solider
 Verteiler — wie im kompakten Modus), passend zur gestapelten any-of-Spalte
-darüber. Vertikal/kompakt haben ihre eigene `ul.and`-Behandlung und bleiben
-unberührt.
+darüber. Kompakt führt all-of ohnehin nach unten (Knoten bleibt oben,
+Abzweig bei 23 px passt).
+
+**Vertikal** dagegen behält den zentrierten Rechts-Fächer: `li.has-and` legt
+den Alternativknoten `align-items:center` **vertikal mittig** zu seiner
+Kindergruppe. Dann sitzt aber auch der **einkommende** any-of-Abzweig nicht mehr
+bei 23 px, sondern muss auf die **Knotenmitte (50 %)** zeigen — sonst ist der
+Knoten von seiner Linie von oben abgetrennt. Fix: `ul.or>li.has-and` bekommt
+vertikal **symmetrisches** Padding (Mitte bleibt bei 50 %), der Abzweig
+(`::before`) und die Rail-Endkante (`:last-child::after`) werden auf 50 %
+gesetzt — analog zu den bereits zentrierten all-of-Zwischenknoten.
