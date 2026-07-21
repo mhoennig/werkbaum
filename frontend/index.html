@@ -154,6 +154,15 @@
   }
   .winbtn:hover{border-color:var(--or);color:var(--or)}
   .winbtn.active{background:var(--or);color:#fff;border-color:var(--or)}
+  .copybtn{
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:.72rem;text-transform:none;letter-spacing:0;
+    color:var(--muted);background:var(--card);
+    border:1px solid rgba(36,52,71,.2);border-radius:6px;
+    padding:2px 9px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:5px;
+  }
+  .copybtn:hover,.copybtn.done{border-color:var(--or);color:var(--or)}
   textarea{
     display:block;width:100%;min-height:380px;
     border:0;outline:none;resize:vertical;
@@ -365,6 +374,7 @@
   <div class="panel editor">
     <div class="panel-head">
       <span>Struktur (Text)</span>
+      <button type="button" class="copybtn" id="copy" title="Text in die Zwischenablage kopieren">kopieren</button>
       <div class="winbtns" aria-label="Editor-Größe">
         <button type="button" class="winbtn" data-state="b" title="minimieren">—</button>
         <button type="button" class="winbtn" data-state="normal" title="normal">▢</button>
@@ -656,6 +666,22 @@ gutter.addEventListener('pointercancel', endDrag);
 
 const showc = document.getElementById('showc');
 showc.addEventListener('change', render);
+
+/* ---------- Text in die Zwischenablage kopieren ---------- */
+const copyBtn = document.getElementById('copy');
+copyBtn.addEventListener('click', async () => {
+  try{
+    await navigator.clipboard.writeText(src.value);
+  }catch(_){
+    src.select();
+    document.execCommand('copy');
+    src.setSelectionRange(0, 0);
+    src.blur();
+  }
+  copyBtn.textContent = 'kopiert ✓';
+  copyBtn.classList.add('done');
+  setTimeout(() => { copyBtn.textContent = 'kopieren'; copyBtn.classList.remove('done'); }, 1500);
+});
 
 applySplit();   /* Startzustand: normal, markiert die normal-Buttons aktiv */
 src.value = INITIAL;
