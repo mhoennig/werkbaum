@@ -900,10 +900,12 @@ src.addEventListener('keydown', e => {
     src.value = value.slice(0, s) + '  ' + value.slice(eEnd);
     src.selectionStart = src.selectionEnd = s + 2;
     render();
+    saveSrc();
   }
 });
 
 src.addEventListener('input', render);
+src.addEventListener('input', saveSrc);
 
 const app = document.getElementById('app');
 function applyLayout(mode){
@@ -939,6 +941,7 @@ function applySplit(){
   diagramPanel.classList.toggle('collapsed', splitState==='a');
   editorPanel.classList.toggle('collapsed', splitState==='b');
   document.querySelectorAll('.winbtn').forEach(b => b.classList.toggle('active', b.dataset.state===splitState));
+  saveUI();
 }
 /* Setzt einen Minimier-Zustand während des Ziehens nur bei Änderung. */
 function snapTo(state){ if(splitState!==state){ splitState = state; applySplit(); } }
@@ -1001,6 +1004,7 @@ function endDrag(e){
   gutter.classList.remove('dragging');
   document.body.style.userSelect = '';
   try{ gutter.releasePointerCapture(e.pointerId); }catch(_){}
+  saveUI();   /* freie Drag-Groesse (--col/--drow) sichern */
 }
 gutter.addEventListener('pointerup', endDrag);
 gutter.addEventListener('pointercancel', endDrag);
@@ -1016,6 +1020,7 @@ function applyZoom(){
   zoom = Math.min(ZMAX, Math.max(ZMIN, Math.round(zoom * 100) / 100));
   out.style.zoom = zoom;
   document.getElementById('zoomReset').textContent = Math.round(zoom * 100) + ' %';
+  saveUI();
 }
 document.getElementById('zoomIn').addEventListener('click', () => { zoom += ZSTEP; applyZoom(); });
 document.getElementById('zoomOut').addEventListener('click', () => { zoom -= ZSTEP; applyZoom(); });
@@ -1029,6 +1034,7 @@ diagramEl.addEventListener('wheel', e => {
 
 const showc = document.getElementById('showc');
 showc.addEventListener('change', render);
+showc.addEventListener('change', saveUI);
 
 /* ---------- In die Zwischenablage kopieren ---------- */
 async function writeClipboard(text){
@@ -1422,10 +1428,63 @@ fsBtn.addEventListener('click', () => {
   const on = document.body.classList.toggle('fullscreen');
   fsBtn.classList.toggle('active', on);
   fsBtn.setAttribute('aria-pressed', String(on));
+  saveUI();
 });
 
-applySplit();   /* Startzustand: normal, markiert die normal-Buttons aktiv */
-src.value = INITIAL;
+/* ---------- GUI-Zustand + Editortext im Browser sichern ----------
+   Noch kein Backend: Einstellungen (Modus, verworfene, Aufteilung, Zoom,
+   Vollbild) und der Editortext bleiben per localStorage über Neuladen
+   erhalten. Sprache liegt weiterhin in 'werkbaum-lang'. */
+const LS_UI = 'werkbaum-ui', LS_SRC = 'werkbaum-src';
+let restoring = false;   /* unterdrückt Speichern während des Wiederherstellens */
+function saveSrc(){
+  if(restoring) return;
+  try{ localStorage.setItem(LS_SRC, src.value); }catch(_){}
+}
+function saveUI(){
+  if(restoring) return;
+  try{
+    const modeEl = document.querySelector('input[name="layout"]:checked');
+    localStorage.setItem(LS_UI, JSON.stringify({
+      mode: modeEl ? modeEl.value : 'horizontal',
+      discarded: showc.checked,
+      split: splitState,
+      col: app.style.getPropertyValue('--col') || null,
+      drow: app.style.getPropertyValue('--drow') || null,
+      zoom: zoom,
+      fullscreen: document.body.classList.contains('fullscreen')
+    }));
+  }catch(_){}
+}
+function restoreState(){
+  restoring = true;
+  let savedSrc = null, ui = null;
+  try{ savedSrc = localStorage.getItem(LS_SRC); }catch(_){}
+  try{ ui = JSON.parse(localStorage.getItem(LS_UI) || 'null'); }catch(_){}
+  src.value = (savedSrc !== null) ? savedSrc : INITIAL;   /* leerer String bleibt leer */
+  const mode = (ui && ui.mode) || 'horizontal';
+  const modeEl = document.querySelector('input[name="layout"][value="' + mode + '"]');
+  if(modeEl) modeEl.checked = true;
+  if(ui){
+    if(typeof ui.discarded === 'boolean') showc.checked = ui.discarded;
+    if(typeof ui.zoom === 'number') zoom = ui.zoom;
+    if(ui.split) splitState = ui.split;
+    if(ui.fullscreen){
+      document.body.classList.add('fullscreen');
+      fsBtn.classList.add('active');
+      fsBtn.setAttribute('aria-pressed', 'true');
+    }
+  }
+  applyLayout(mode);                 /* setzt Ausrichtung + ruft applySplit() */
+  if(splitState === 'custom'){        /* freie Drag-Größen nach applySplit wieder setzen */
+    if(ui && ui.col)  app.style.setProperty('--col', ui.col);
+    if(ui && ui.drow) app.style.setProperty('--drow', ui.drow);
+  }
+  applyZoom();
+  restoring = false;
+}
+
+restoreState();   /* Editortext + GUI-Zustand aus dem Browser wiederherstellen */
 let startLang = 'de';
 try{ startLang = localStorage.getItem('werkbaum-lang') || 'de'; }catch(_){}
 applyLang(I18N[startLang] ? startLang : 'de');   /* setzt Texte + rendert */

@@ -24,3 +24,10 @@ Diagramm rechts, Toggles für transponierte Ansicht und verworfene Elemente).
   Status → URL → Größe → Tags (sonst kollidiert `@` in URLs).
 - „verworfen" ist per Default ausgeblendet; Filterlogik steckt in
   `visibleChildren()` und muss bei Renderer-Umbauten erhalten bleiben.
+- Zustand wird im `localStorage` gehalten (noch kein Backend): `werkbaum-lang`
+  (Sprache), `werkbaum-src` (Editortext), `werkbaum-ui` (JSON: Modus,
+  verworfene, Split-Zustand inkl. `--col`/`--drow`, Zoom, Vollbild). Neue
+  GUI-Einstellungen in `saveUI()`/`restoreState()` mitführen; `saveUI` liefert
+  während `restoring===true` nichts, damit das Wiederherstellen nicht sofort
+  zurückschreibt. Fehlender `werkbaum-src` fällt auf `INITIAL` zurück, ein
+  leerer String bleibt jedoch leer.
