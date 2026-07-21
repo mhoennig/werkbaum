@@ -42,3 +42,7 @@ Elemente einblenden.
 - `docs/brand/BRAND.md` — Logo, Wortbild, Anwendungsregeln
 - `docs/design/` — Design-Herleitung der Marke
 - `CLAUDE.md` — Projektkontext für Claude Code
+
+## Lizenz
+
+MIT — siehe [LICENSE](LICENSE). © 2026 Michael Hönnig.
