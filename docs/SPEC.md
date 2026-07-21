@@ -113,9 +113,11 @@ ist grau (`#6B7A8C`) — kein Petrol mehr im Diagramm. Der Modus ändert nur die
   unterhalb des Parents, gestrichelte graue Abzweige zu den Alternativen.
 
 ### Vertikal (transponiert)
-- **all of:** Linie tritt **rechts auf halber Höhe** aus dem Parent aus
-  (entspricht Richtung LR), vertikale Sammelleiste, durchgezogene Abzweige;
-  Kinder rechts eingerückt untereinander.
+- **all of:** exakter transponierter Organigramm-Fächer (horizontal um 90°
+  gedreht): Der Parent sitzt **vertikal mittig** zu seiner Kindergruppe, die
+  Linie tritt **rechts auf halber Höhe** aus (entspricht Richtung LR), eine
+  vertikale Sammelleiste (von erster bis letzter Kindmitte) verteilt mit
+  durchgezogenen Abzweigen; Kinder rechts untereinander.
 - **any of:** Austritt **unten links**, gestrichelte graue Abzweige.
 - Merkregel: Austrittsseite codiert das Gate (rechts = und, unten = oder),
   Linienstil bestätigt es.

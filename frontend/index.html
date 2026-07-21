@@ -413,16 +413,22 @@
   }
   .tree.vertical ul.and>li:last-child::after, .tree.kompakt ul.and>li:last-child::after{height:23px}
 
-  /* Nur vertikal: All-of tritt rechts aus dem Überknoten heraus (wie Richtung LR),
-     Any-of bleibt unten-links — klar unterscheidbare Austrittsseiten, aber breit. */
-  .tree.vertical li.has-and{flex-direction:row;align-items:flex-start}
+  /* Nur vertikal: echter transponierter, ZENTRIERTER LR-Baum — analog zur
+     horizontalen Darstellung, nur um 90° gedreht. Der Überknoten sitzt
+     vertikal mittig zu seiner Kindergruppe; die all-of-Verbindung tritt rechts
+     auf halber Höhe aus, eine vertikale Sammelleiste verteilt auf die Kinder.
+     Kompakt bleibt unberührt (führt all-of nach unten). */
+  .tree.vertical li.has-and{flex-direction:row;align-items:center}
   .tree.vertical li.has-and>ul.and{padding-top:0}
+  /* Stub von der Parent-Mitte (halbe Höhe) zur vertikalen Sammelleiste */
   .tree.vertical li.has-and>ul.and::before{
-    left:0;top:17px;width:9px;height:0;
+    left:0;top:50%;width:9px;height:0;
     border-left:0;border-top:2px solid var(--line);
   }
-  .tree.vertical li.has-and>ul.and>li:first-child::after{top:17px;height:calc(100% - 17px)}
-  .tree.vertical li.has-and>ul.and>li:only-child::after{top:17px;height:6px}
+  /* Sammelleiste nur von erster bis letzter Kindmitte (23-px-Offset);
+     mittlere Kinder tragen die volle Höhe (Basis), Rand-Kinder halbieren. */
+  .tree.vertical li.has-and>ul.and>li:first-child::after{top:23px;height:calc(100% - 23px)}
+  .tree.vertical li.has-and>ul.and>li:only-child::after{border:0}
 
   /* Kompakt: auch All-of läuft nach unten (spart Breite) — kein Rechts-Fächer.
      Die graue, gestrichelte Any-of-Führung kommt aus der Basis und gilt hier
