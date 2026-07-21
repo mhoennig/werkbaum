@@ -251,6 +251,8 @@
   .dlbtn{gap:3px}
   .dl-label{font-family:'IBM Plex Mono',monospace;font-size:.62rem;font-weight:600;letter-spacing:.02em}
   .legendbtn{display:none}                             /* nur auf kleinem Bildschirm sichtbar */
+  .togglebtn[aria-pressed="true"]{background:var(--or);color:#fff;border-color:var(--or)}
+  .togglebtn[aria-pressed="true"]:hover{color:#fff}
   textarea{
     display:block;width:100%;min-height:0;
     border:0;outline:none;resize:none;
@@ -600,9 +602,9 @@
   <div class="panel right">
     <div class="panel-head">
       <span data-i18n="diagramTitle">Diagramm</span>
-      <label class="switch" data-i18n-title="discardedTooltip" title="Verworfene Knoten samt Teilbaum ein-/ausblenden">
-        <input type="checkbox" id="showc"><i></i><span data-i18n="discarded">verworfene</span>
-      </label>
+      <button type="button" class="copybtn togglebtn" id="showc" aria-pressed="false" data-i18n-title="discardedTooltip" data-i18n-aria="discardedTooltip" title="Verworfene Knoten samt Teilbaum ein-/ausblenden" aria-label="Verworfene Knoten samt Teilbaum ein-/ausblenden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2" stroke-dasharray="3 2.5"/><path d="M7 12h10"/></svg>
+      </button>
       <div class="seg" role="radiogroup" aria-label="Darstellung">
         <label data-i18n-title="modeHorizontal" title="Horizontal – Organigramm, Diagramm über dem Editor">
           <input type="radio" name="layout" value="horizontal" checked data-i18n-aria="modeHorizontal" aria-label="Horizontal – Organigramm">
@@ -726,7 +728,7 @@ function needsBreakdown(n){
 }
 
 function visibleChildren(n){
-  if(showc.checked) return n.children;
+  if(discardedShown()) return n.children;
   return n.children.filter(k => !k.status || k.status.key !== 'verworfen');
 }
 
@@ -772,7 +774,7 @@ function renderChildren(node, warnings){
 function render(){
   let {roots} = parse(src.value);
   const warnings = [];
-  if(!showc.checked){
+  if(!discardedShown()){
     roots = roots.filter(r => !r.status || r.status.key !== 'verworfen');
   }
 
@@ -1085,8 +1087,9 @@ diagramEl.addEventListener('wheel', e => {
 }, {passive:false});
 
 const showc = document.getElementById('showc');
-showc.addEventListener('change', render);
-showc.addEventListener('change', saveUI);
+function discardedShown(){ return showc.getAttribute('aria-pressed') === 'true'; }
+function setDiscarded(on){ showc.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+showc.addEventListener('click', () => { setDiscarded(!discardedShown()); render(); saveUI(); });
 
 /* ---------- In die Zwischenablage kopieren ---------- */
 async function writeClipboard(text){
@@ -1511,7 +1514,7 @@ function saveUI(){
     const modeEl = document.querySelector('input[name="layout"]:checked');
     localStorage.setItem(LS_UI, JSON.stringify({
       mode: modeEl ? modeEl.value : 'horizontal',
-      discarded: showc.checked,
+      discarded: discardedShown(),
       split: splitState,
       col: app.style.getPropertyValue('--col') || null,
       drow: app.style.getPropertyValue('--drow') || null,
@@ -1531,7 +1534,7 @@ function restoreState(){
   const modeEl = document.querySelector('input[name="layout"][value="' + mode + '"]');
   if(modeEl) modeEl.checked = true;
   if(ui){
-    if(typeof ui.discarded === 'boolean') showc.checked = ui.discarded;
+    if(typeof ui.discarded === 'boolean') setDiscarded(ui.discarded);
     if(typeof ui.zoom === 'number') zoom = ui.zoom;
     if(ui.split) splitState = ui.split;
     if(ui.fullscreen){
