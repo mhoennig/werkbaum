@@ -742,7 +742,11 @@ function applySplit(){
 /* Setzt einen Minimier-Zustand während des Ziehens nur bei Änderung. */
 function snapTo(state){ if(splitState!==state){ splitState = state; applySplit(); } }
 document.querySelectorAll('.winbtn').forEach(b => {
-  b.addEventListener('click', () => { splitState = b.dataset.state; applySplit(); });
+  b.addEventListener('click', e => {
+    /* Fenster-Buttons sind maßgeblich: nicht zum Titelzeilen-Restore durchreichen */
+    e.stopPropagation();
+    splitState = b.dataset.state; applySplit();
+  });
 });
 /* Klick auf die Titelzeile eines minimierten Panels stellt es wieder her. */
 [editorPanel, diagramPanel].forEach(panel => {
