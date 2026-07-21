@@ -27,12 +27,15 @@
       repeating-linear-gradient(0deg,transparent 0 23px,var(--grid) 23px 24px),
       repeating-linear-gradient(90deg,transparent 0 23px,var(--grid) 23px 24px),
       var(--paper);
-    /* 100vh ist auf Mobilgeräten die *große* Viewport-Höhe (inkl. Fläche
-       hinter der unteren Browserleiste) — Footer/Editor-Titelzeile rutschen
-       dahinter. 100dvh = dynamische Viewport-Höhe, folgt der sichtbaren
-       Fläche. vh bleibt als Fallback für alte Browser. */
+    /* Mobile Viewport-Höhe: 100vh ist die *große* Höhe (inkl. Fläche hinter
+       der unteren Browserleiste) — Footer/Editor-Titelzeile rutschen dahinter.
+       100dvh folgt der sichtbaren Fläche, versagt aber bei Browsern mit
+       Overlay-Leiste (z. B. Brave). Deshalb setzt JS zusätzlich --app-height
+       aus window.visualViewport.height (die wirklich sichtbare Höhe). Reihen-
+       folge = Fallback-Kaskade: vh → dvh → exakte JS-Höhe. */
     height:100vh;
     height:100dvh;
+    height:var(--app-height, 100dvh);
     overflow:hidden;
     display:flex;flex-direction:column;
     padding:24px 20px 12px;
@@ -1809,6 +1812,23 @@ function restoreState(){
 /* ---------- Kleiner Bildschirm: nur ein Panel, schlanke Sprachwahl, Vollbild ---------- */
 const mqMobile = window.matchMedia('(max-width:640px)');
 function isMobile(){ return mqMobile.matches; }
+
+/* Exakte sichtbare Höhe (--app-height) aus window.visualViewport ableiten.
+   Nötig, weil manche Browser (z. B. Brave) ihre untere Leiste als Overlay
+   zeichnen: 100dvh meldet dann weiterhin die volle Höhe, und Footer/Editor-
+   Titelzeile verschwinden dahinter. visualViewport.height liefert die wirklich
+   sichtbare Fläche. Fällt es weg, greift die CSS-Kaskade (dvh/vh). */
+function setAppHeight(){
+  const vv = window.visualViewport;
+  const h = vv ? vv.height : window.innerHeight;
+  document.documentElement.style.setProperty('--app-height', Math.round(h) + 'px');
+}
+setAppHeight();
+window.addEventListener('resize', setAppHeight);
+window.addEventListener('orientationchange', setAppHeight);
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', setAppHeight);
+}
 const legendBtn = document.getElementById('legendBtn');
 const agenda = document.querySelector('.agenda');
 legendBtn.addEventListener('click', () => {
