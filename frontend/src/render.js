@@ -47,7 +47,8 @@ function renderChildren(node, warnings, opts){
   if(!kids.length) return '';
   const types = new Set(kids.map(k => k.type));
   if(types.size > 1){
-    warnings.push(opts.t('mixedWarn', {line: kids[0].line, label: esc(node.label)}));
+    /* strukturierte Warnung (Typ + Zeile); Formatierung in warnings.js */
+    warnings.push({type: 'mixedGate', line: kids[0].line, label: node.label});
   }
   const gate = gateOf(kids);
   const items = kids.map(k => {
@@ -62,7 +63,8 @@ function renderChildren(node, warnings, opts){
 }
 
 /* Baut den inneren HTML-String für #out aus (bereits gefilterten) Wurzeln und
-   sammelt Warnungen (gemischte Gates). Leere Wurzelliste ⇒ leerer String. */
+   sammelt strukturierte Warnungen ({type, line, ...}, siehe warnings.js).
+   Leere Wurzelliste ⇒ leerer String. */
 export function renderTreeHtml(roots, opts){
   const warnings = [];
   const html = roots.map(root => {

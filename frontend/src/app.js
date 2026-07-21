@@ -2,6 +2,7 @@ import './style.css';
 import { parse } from './parser.js';
 import { computeCheapSet } from './model.js';
 import { esc, renderTreeHtml } from './render.js';
+import { formatWarning } from './warnings.js';
 
 const INITIAL = `%% Project structure – Sprint 14
 [~] Website relaunch (XL) https://wiki.example.com/relaunch
@@ -57,7 +58,7 @@ function render(){
   });
   out.innerHTML = html;
 
-  warnBox.innerHTML = warnings.map(w => `<div>⚠ ${w}</div>`).join('');
+  warnBox.innerHTML = warnings.map(w => `<div>⚠ ${formatWarning(w, t)}</div>`).join('');
   drawCheapPath();
 }
 

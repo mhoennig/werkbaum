@@ -79,6 +79,20 @@ describe('renderTreeHtml — „Untergliederung fehlt" (Geister-Knoten, SPEC §5
   });
 });
 
+describe('renderTreeHtml — strukturierte Warnungen', () => {
+  it('gemischte Gates ergeben eine {type:mixedGate, line, label}-Warnung', () => {
+    let {roots} = parse('- Eltern\n  - und-Kind\n  | oder-Kind');
+    const {warnings} = renderTreeHtml(roots, {t, showDiscarded: false, cheapPath: false, cheapSet: new Set()});
+    expect(warnings).toEqual([{type: 'mixedGate', line: 2, label: 'Eltern'}]);
+  });
+
+  it('einheitliche Gates ergeben keine Warnung', () => {
+    let {roots} = parse('- Eltern\n  - a\n  - b');
+    const {warnings} = renderTreeHtml(roots, {t, showDiscarded: false, cheapPath: false, cheapSet: new Set()});
+    expect(warnings).toEqual([]);
+  });
+});
+
 describe('renderTreeHtml — Moduswechsel ist CSS, nicht Renderer', () => {
   it('erzeugt nie eine Modus-Klasse (vertical/kompakt) — die setzt app.js am Container', () => {
     const {html} = renderExample();

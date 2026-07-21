@@ -24,7 +24,11 @@ Abhaken beim Erledigen; neue Aufgaben unten anfügen.
       `tests/render.test.js` (6 Tests, Snapshots). Anm.: der Modus
       (horizontal/vertikal/kompakt) ist reine CSS-Container-Klasse und ändert
       den Renderer-String nicht — ein Snapshot deckt alle drei Modi ab.
-- [ ] Warnungs-Modell vereinheitlichen (Zeilennummern, Typen).
+- [x] Warnungs-Modell vereinheitlichen (Zeilennummern, Typen).
+      → strukturierte Objekte `{type, line, ...}` (Renderer emittiert
+      `mixedGate`); `src/warnings.js` `formatWarning(w, t)` macht daraus den
+      lokalisierten, HTML-escapten Text an einer Stelle. Vorbereitet für
+      Phase 2 (`unknownStatus`). `tests/warnings.test.js`.
 
 ## Phase 2 — Qualität
 - [ ] Barrierefreiheit: Fokusreihenfolge, aria-Labels für Status/Größe/Tags.
