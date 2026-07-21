@@ -250,6 +250,7 @@
   .copybtn.done .ic-done{display:block}
   .dlbtn{gap:3px}
   .dl-label{font-family:'IBM Plex Mono',monospace;font-size:.62rem;font-weight:600;letter-spacing:.02em}
+  .legendbtn{display:none}                             /* nur auf kleinem Bildschirm sichtbar */
   textarea{
     display:block;width:100%;min-height:0;
     border:0;outline:none;resize:none;
@@ -484,6 +485,36 @@
      Die graue, gestrichelte Any-of-Führung kommt aus der Basis und gilt hier
      wie in allen Modi. Gate-Codierung: und = durchgezogen dunkel (Tinte),
      oder = gestrichelt grau. */
+
+  /* ---------- Kleiner Bildschirm (Smartphone): nur ein Panel ----------
+     body.mobile wird per matchMedia (<=640px) gesetzt. Es ist immer genau
+     EIN Panel groß, das andere schrumpft auf seine Titelzeile und dient als
+     Umschalter (Tippen bringt es nach vorn). Splitter und Fenster-Buttons
+     entfallen; die Legende bekommt einen eigenen Umschalter statt der
+     dauerhaften „AGENDA“-Zeile. */
+  body.mobile .gutter{display:none}
+  body.mobile .winbtns{display:none}
+  body.mobile .app,
+  body.mobile .app.side{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"diagram" "editor";
+  }
+  body.mobile .app.collapse-diagram,
+  body.mobile .app.side.collapse-diagram{grid-template-rows:auto minmax(0,1fr)}
+  body.mobile .app.collapse-editor,
+  body.mobile .app.side.collapse-editor{grid-template-rows:minmax(0,1fr) auto}
+  /* Editor immer gestapelt (Textarea oben, Legende darunter) */
+  body.mobile .editor-body{flex-direction:column;align-items:stretch}
+  body.mobile .agenda{border-left:0;border-top:1px dashed rgba(36,52,71,.18)}
+  body.mobile .agenda[open]{width:auto}
+  /* Legende: keine dauerhafte Summary-Zeile, dafür der #legendBtn im Kopf */
+  body.mobile .agenda>summary{display:none}
+  body.mobile .legendbtn{display:inline-flex}
+  /* Sprachwahl schlank: nur EN + aktuelle Sprache + „…“; „…“ klappt alle auf */
+  body.mobile .langsel button[data-lang]{display:none}
+  body.mobile .langsel.expanded button[data-lang]{display:inline-block}
+  body.mobile .langsel button[data-lang="en"],
+  body.mobile .langsel button[data-lang].active{display:inline-block}
 </style>
 </head>
 <body>
@@ -529,6 +560,9 @@
       <button type="button" class="copybtn" id="copy" data-i18n-title="copyTooltip" data-i18n-aria="copyTooltip" title="Text in die Zwischenablage kopieren" aria-label="Text in die Zwischenablage kopieren">
         <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <svg class="ic-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+      </button>
+      <button type="button" class="copybtn legendbtn" id="legendBtn" data-i18n-title="legendTooltip" data-i18n-aria="legendTooltip" title="Legende ein-/ausblenden" aria-label="Legende ein-/ausblenden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
       </button>
       <div class="winbtns" aria-label="Editor">
         <button type="button" class="winbtn" data-state="b" data-i18n-title="minimize" title="minimieren">—</button>
@@ -973,7 +1007,12 @@ document.querySelectorAll('.winbtn').forEach(b => {
 [editorPanel, diagramPanel].forEach(panel => {
   panel.querySelector('.panel-head').addEventListener('click', e => {
     if(e.target.closest('button, label, input')) return;   /* Bedienelemente behalten ihre Funktion */
-    if(panel.classList.contains('collapsed')){ splitState = 'normal'; applySplit(); }
+    if(!panel.classList.contains('collapsed')) return;
+    /* Klein: das getippte Panel nach vorn holen (das andere schrumpft);
+       sonst: zurück in die normale Zweiteilung. */
+    if(isMobile()) splitState = (panel === editorPanel) ? 'a' : 'b';
+    else splitState = 'normal';
+    applySplit();
   });
 });
 
@@ -1098,6 +1137,7 @@ const I18N = {
   de: {
     subtitle:"Werkbaum – Ein Text-basierter WBS/Projektstrukturplan/Feature-Tree Diagramm-Editor.",
     imprint:"Impressum",
+    legendTooltip:"Legende ein-/ausblenden",
     ghostTooltip:"Ab Größe M sollte ein Element weiter untergliedert werden.",
     discardedTooltip:"Verworfene Knoten samt Teilbaum ein-/ausblenden",
     fullscreenTooltip:"Vollbild – Panels nutzen die ganze Fensterbreite",
@@ -1130,6 +1170,7 @@ const I18N = {
   en: {
     subtitle:"Werkbaum – A text-based WBS / work breakdown structure / feature-tree diagram editor.",
     imprint:"Imprint (Impressum)",
+    legendTooltip:"Show/hide legend",
     ghostTooltip:"From size M upward, an item should be broken down further.",
     discardedTooltip:"Show/hide discarded nodes and their subtree",
     fullscreenTooltip:"Full screen – panels use the full window width",
@@ -1162,6 +1203,7 @@ const I18N = {
   es: {
     subtitle:"Werkbaum – Un editor de diagramas basado en texto para EDT / estructura de desglose del trabajo / árbol de características.",
     imprint:"Aviso legal (Impressum)",
+    legendTooltip:"Mostrar u ocultar la leyenda",
     ghostTooltip:"A partir de la talla M, un elemento debería desglosarse más.",
     discardedTooltip:"Mostrar u ocultar los nodos descartados y su subárbol",
     fullscreenTooltip:"Pantalla completa – los paneles usan todo el ancho de la ventana",
@@ -1194,6 +1236,7 @@ const I18N = {
   fr: {
     subtitle:"Werkbaum – Un éditeur de diagrammes basé sur le texte pour WBS / organigramme des tâches / arbre de fonctionnalités.",
     imprint:"Mentions légales (Impressum)",
+    legendTooltip:"Afficher/masquer la légende",
     ghostTooltip:"À partir de la taille M, un élément devrait être décomposé davantage.",
     discardedTooltip:"Afficher/masquer les nœuds abandonnés et leur sous-arbre",
     fullscreenTooltip:"Plein écran – les panneaux occupent toute la largeur de la fenêtre",
@@ -1226,6 +1269,7 @@ const I18N = {
   pl: {
     subtitle:"Werkbaum – Edytor diagramów oparty na tekście: WBS / struktura podziału pracy / drzewo funkcji.",
     imprint:"Nota prawna (Impressum)",
+    legendTooltip:"Pokaż/ukryj legendę",
     ghostTooltip:"Od rozmiaru M element powinien być dalej podzielony.",
     discardedTooltip:"Pokaż/ukryj odrzucone węzły wraz z poddrzewem",
     fullscreenTooltip:"Pełny ekran – panele wykorzystują całą szerokość okna",
@@ -1258,6 +1302,7 @@ const I18N = {
   ru: {
     subtitle:"Werkbaum – текстовый редактор диаграмм: СДР / структура декомпозиции работ / дерево функций.",
     imprint:"Выходные данные (Impressum)",
+    legendTooltip:"Показать/скрыть легенду",
     ghostTooltip:"Начиная с размера M элемент следует далее декомпозировать.",
     discardedTooltip:"Показать/скрыть отклонённые узлы вместе с поддеревом",
     fullscreenTooltip:"Полный экран – панели занимают всю ширину окна",
@@ -1290,6 +1335,7 @@ const I18N = {
   hi: {
     subtitle:"Werkbaum – टेक्स्ट-आधारित आरेख संपादक: WBS / कार्य विभाजन संरचना / फ़ीचर-ट्री।",
     imprint:"प्रकाशन विवरण (Impressum)",
+    legendTooltip:"लेजेंड दिखाएँ/छिपाएँ",
     ghostTooltip:"आकार M से ऊपर किसी तत्व को और अधिक उप-विभाजित करना चाहिए।",
     discardedTooltip:"अस्वीकृत नोड्स और उनके उप-वृक्ष दिखाएँ/छिपाएँ",
     fullscreenTooltip:"पूर्ण स्क्रीन – पैनल पूरी विंडो चौड़ाई का उपयोग करते हैं",
@@ -1322,6 +1368,7 @@ const I18N = {
   zh: {
     subtitle:"Werkbaum – 基于文本的图表编辑器：WBS / 工作分解结构 / 功能树。",
     imprint:"法律声明（Impressum）",
+    legendTooltip:"显示/隐藏图例",
     brandTooltip:"「Werkbaum」大致意为‘工作之树’——即工作分解结构（WBS）之树。",
     fullscreenTooltip:"全屏——面板占据整个窗口宽度",
     discardedTooltip:"显示/隐藏已放弃的节点及其子树",
@@ -1354,6 +1401,7 @@ const I18N = {
   ja: {
     subtitle:"Werkbaum – テキストベースの図エディター：WBS / 作業分解構成図 / フィーチャーツリー。",
     imprint:"運営者情報（Impressum）",
+    legendTooltip:"凡例を表示/非表示",
     brandTooltip:"「Werkbaum」はおおよそ『作業の木』の意味 — 作業分解構成図（WBS）のツリーです。",
     fullscreenTooltip:"全画面 — パネルがウィンドウ幅いっぱいを使用",
     discardedTooltip:"破棄したノードとその下位ツリーを表示/非表示",
@@ -1420,8 +1468,10 @@ function applyLang(l){
   document.querySelectorAll('[data-i18n-aria]').forEach(el => el.setAttribute('aria-label', t(el.dataset.i18nAria)));
   document.getElementById('hint').innerHTML = buildHint();
   document.querySelectorAll('.langsel button[data-lang]').forEach(b => b.classList.toggle('active', b.dataset.lang===l));
-  /* Ist eine aufklappbare Sprache aktiv, den erweiterten Bereich offen halten. */
-  if(LANG_EXTRA.includes(l)){
+  /* Ist eine aufklappbare Sprache aktiv, den erweiterten Bereich offen halten.
+     Auf kleinem Bildschirm nicht — dort bleibt die Leiste schlank (EN + aktive
+     Sprache reichen; die aktive wird per CSS auch als „extra“ eingeblendet). */
+  if(LANG_EXTRA.includes(l) && !isMobile()){
     langsel.classList.add('expanded');
     langMore.setAttribute('aria-expanded', 'true');
   }
@@ -1454,6 +1504,7 @@ fsBtn.addEventListener('click', () => {
    erhalten. Sprache liegt weiterhin in 'werkbaum-lang'. */
 const LS_UI = 'werkbaum-ui', LS_SRC = 'werkbaum-src';
 let restoring = false;   /* unterdrückt Speichern während des Wiederherstellens */
+let hadStoredUI = false;  /* gab es beim Laden schon gespeicherte GUI-Einstellungen? */
 function saveSrc(){
   if(restoring) return;
   try{ localStorage.setItem(LS_SRC, src.value); }catch(_){}
@@ -1478,6 +1529,7 @@ function restoreState(){
   let savedSrc = null, ui = null;
   try{ savedSrc = localStorage.getItem(LS_SRC); }catch(_){}
   try{ ui = JSON.parse(localStorage.getItem(LS_UI) || 'null'); }catch(_){}
+  hadStoredUI = !!ui;
   src.value = (savedSrc !== null) ? savedSrc : INITIAL;   /* leerer String bleibt leer */
   const mode = (ui && ui.mode) || 'horizontal';
   const modeEl = document.querySelector('input[name="layout"][value="' + mode + '"]');
@@ -1501,10 +1553,37 @@ function restoreState(){
   restoring = false;
 }
 
+/* ---------- Kleiner Bildschirm: nur ein Panel, schlanke Sprachwahl, Vollbild ---------- */
+const mqMobile = window.matchMedia('(max-width:640px)');
+function isMobile(){ return mqMobile.matches; }
+const legendBtn = document.getElementById('legendBtn');
+const agenda = document.querySelector('.agenda');
+legendBtn.addEventListener('click', () => {
+  agenda.open = !agenda.open;
+  legendBtn.classList.toggle('active', agenda.open);
+});
+agenda.addEventListener('toggle', () => legendBtn.classList.toggle('active', agenda.open));
+function applyMobile(){
+  const m = isMobile();
+  document.body.classList.toggle('mobile', m);
+  if(!m) return;
+  /* Nur ein Panel sichtbar: normal/custom passen nicht — auf Diagramm (b). */
+  if(splitState !== 'a' && splitState !== 'b'){ splitState = 'b'; applySplit(); }
+  /* Default Vollbild auf kleinem Bildschirm — nur ohne gespeicherte Wahl. */
+  if(!hadStoredUI && !document.body.classList.contains('fullscreen')){
+    document.body.classList.add('fullscreen');
+    fsBtn.classList.add('active');
+    fsBtn.setAttribute('aria-pressed', 'true');
+    saveUI();
+  }
+}
+mqMobile.addEventListener('change', applyMobile);
+
 restoreState();   /* Editortext + GUI-Zustand aus dem Browser wiederherstellen */
 let startLang = 'de';
 try{ startLang = localStorage.getItem('werkbaum-lang') || 'de'; }catch(_){}
 applyLang(I18N[startLang] ? startLang : 'de');   /* setzt Texte + rendert */
+applyMobile();   /* Mobil-Verhalten (nach Sprache/Restore) anwenden */
 </script>
 
 </body>

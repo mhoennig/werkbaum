@@ -134,3 +134,16 @@ zählt der flache CI-Klon nur einen Commit. `1.0` bleibt die Version beim lokale
 Öffnen (Platzhalter im Quelltext).
 
 (Nummerierung: D15 war bereits für den kompakten Modus vergeben, daher D16.)
+
+## D17 — Kleiner Bildschirm: ein Bereich, kompakte Legende & Sprachwahl
+Auf schmalen Viewports (≤ 640 px) ist für beide Bereiche kein Platz. Daher ist
+immer nur **ein** Bereich groß (Diagramm oder Editor); der andere schrumpft auf
+seine Titelzeile und dient als Umschalter (Antippen bringt ihn nach vorn),
+Splitter und Fenster-Buttons entfallen. Die Legende wird von der Bereichs-
+Umschaltung **entkoppelt** und über einen eigenen Umschalter im Editor-Kopf
+gesteuert — das dauerhafte „AGENDA“-Band kostet sonst zu viel Höhe. Die
+Sprachleiste zeigt nur Englisch + aktive Sprache + „…“. Voreinstellung ist
+**Vollbild** (maximale Fläche). Umgesetzt über die Klasse `body.mobile` (per
+`matchMedia`), damit CSS und JS denselben Schwellwert teilen; die Vollbild-
+Voreinstellung greift nur, wenn noch **keine** gespeicherte Nutzerwahl vorliegt
+(eine bewusste Abschaltung bleibt so erhalten, siehe localStorage-Persistenz).

@@ -31,3 +31,9 @@ Diagramm rechts, Toggles für transponierte Ansicht und verworfene Elemente).
   während `restoring===true` nichts, damit das Wiederherstellen nicht sofort
   zurückschreibt. Fehlender `werkbaum-src` fällt auf `INITIAL` zurück, ein
   leerer String bleibt jedoch leer.
+- Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) schaltet auf
+  Ein-Bereich-Ansicht (Diagramm **oder** Editor, Umschalten per Titelzeile),
+  eigenen Legenden-Umschalter (`#legendBtn`) und schlanke Sprachwahl; Default
+  Vollbild. Layout-CSS hängt an `body.mobile`, nicht an einer eigenen
+  `@media`-Regel — beide Seiten müssen denselben 640-px-Schwellwert nutzen
+  (SPEC §9, D17).
