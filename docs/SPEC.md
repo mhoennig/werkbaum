@@ -95,8 +95,9 @@ Codiert als Checkbox nach dem Zeichen (Erweiterung der Markdown-Task-Syntax):
 
 ## 9. Darstellung
 
-Drei Modi, umschaltbar über „horizontal / vertikal / kompakt“. Der Modus wählt
-zugleich die Seitenanordnung: **horizontal** stellt Diagramm über den Editor
+Drei Modi, im Editor umschaltbar über Icon-Buttons (Reihenfolge
+**horizontal · kompakt · vertikal**, je mit Tooltip). Der Modus wählt zugleich
+die Seitenanordnung: **horizontal** stellt Diagramm über den Editor
 (volle Breite), **vertikal** und **kompakt** stellen Editor und Diagramm
 nebeneinander (schmales Diagramm rechts).
 
