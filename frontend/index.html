@@ -476,7 +476,7 @@
   <div class="panel editor">
     <div class="panel-head">
       <span data-i18n="editorTitle">Struktur (Text)</span>
-      <button type="button" class="copybtn" id="copy" data-i18n-title="copyTitle" data-i18n-aria="copyTitle" title="Text in die Zwischenablage kopieren" aria-label="Text in die Zwischenablage kopieren">
+      <button type="button" class="copybtn" id="copy" data-i18n-title="copyTooltip" data-i18n-aria="copyTooltip" title="Text in die Zwischenablage kopieren" aria-label="Text in die Zwischenablage kopieren">
         <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <svg class="ic-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
       </button>
@@ -537,7 +537,7 @@
           <span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="9.5" width="5" height="5" rx="1"/><rect x="16" y="3" width="6" height="4" rx="1"/><rect x="16" y="17" width="6" height="4" rx="1"/><path d="M7.5 12H12M12 5V19M12 5H16M12 19H16"/></svg></span>
         </label>
       </div>
-      <button type="button" class="copybtn" id="copyDiagram" data-i18n-title="copyDiagramTitle" data-i18n-aria="copyDiagramTitle" title="Diagramm als Textbaum kopieren" aria-label="Diagramm als Textbaum kopieren">
+      <button type="button" class="copybtn" id="copyDiagram" data-i18n-title="copyDiagramTooltip" data-i18n-aria="copyDiagramTooltip" title="Diagramm als Textbaum kopieren" aria-label="Diagramm als Textbaum kopieren">
         <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <svg class="ic-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
       </button>
@@ -906,11 +906,11 @@ function flashCopied(btn, restoreTitleKey){
 }
 document.getElementById('copy').addEventListener('click', async () => {
   await writeClipboard(src.value);
-  flashCopied(document.getElementById('copy'), 'copyTitle');
+  flashCopied(document.getElementById('copy'), 'copyTooltip');
 });
 document.getElementById('copyDiagram').addEventListener('click', async () => {
   await writeClipboard(treeToText());
-  flashCopied(document.getElementById('copyDiagram'), 'copyDiagramTitle');
+  flashCopied(document.getElementById('copyDiagram'), 'copyDiagramTooltip');
 });
 
 /* ---------- Internationalisierung (DE/EN/ES/FR) ---------- */
@@ -918,8 +918,8 @@ const I18N = {
   de: {
     subtitle:"Werkbaum – Ein Text-basierter WBS/Projektstrukturplan/Feature-Tree Diagramm-Editor.",
     editorTitle:"Struktur (Text)", diagramTitle:"Diagramm",
-    copy:"kopieren", copyDone:"kopiert ✓", copyTitle:"Text in die Zwischenablage kopieren",
-    copyDiagramTitle:"Diagramm als Textbaum kopieren",
+    copy:"kopieren", copyDone:"kopiert ✓", copyTooltip:"Text in die Zwischenablage kopieren",
+    copyDiagramTooltip:"Diagramm als Textbaum kopieren",
     minimize:"minimieren", normal:"normal", maximize:"maximieren",
     agenda:"Agenda", discarded:"verworfene",
     modeHorizontal:"Horizontal – Organigramm, Diagramm über dem Editor",
@@ -943,8 +943,8 @@ const I18N = {
   en: {
     subtitle:"Werkbaum – A text-based WBS / work breakdown structure / feature-tree diagram editor.",
     editorTitle:"Structure (text)", diagramTitle:"Diagram",
-    copy:"copy", copyDone:"copied ✓", copyTitle:"Copy text to clipboard",
-    copyDiagramTitle:"Copy diagram as a text tree",
+    copy:"copy", copyDone:"copied ✓", copyTooltip:"Copy text to clipboard",
+    copyDiagramTooltip:"Copy diagram as a text tree",
     minimize:"minimize", normal:"normal", maximize:"maximize",
     agenda:"Legend", discarded:"discarded",
     modeHorizontal:"Horizontal – org chart, diagram above the editor",
@@ -968,8 +968,8 @@ const I18N = {
   es: {
     subtitle:"Werkbaum – Un editor de diagramas basado en texto para EDT / estructura de desglose del trabajo / árbol de características.",
     editorTitle:"Estructura (texto)", diagramTitle:"Diagrama",
-    copy:"copiar", copyDone:"copiado ✓", copyTitle:"Copiar el texto al portapapeles",
-    copyDiagramTitle:"Copiar el diagrama como árbol de texto",
+    copy:"copiar", copyDone:"copiado ✓", copyTooltip:"Copiar el texto al portapapeles",
+    copyDiagramTooltip:"Copiar el diagrama como árbol de texto",
     minimize:"minimizar", normal:"normal", maximize:"maximizar",
     agenda:"Leyenda", discarded:"descartados",
     modeHorizontal:"Horizontal – organigrama, diagrama sobre el editor",
@@ -993,8 +993,8 @@ const I18N = {
   fr: {
     subtitle:"Werkbaum – Un éditeur de diagrammes basé sur le texte pour WBS / organigramme des tâches / arbre de fonctionnalités.",
     editorTitle:"Structure (texte)", diagramTitle:"Diagramme",
-    copy:"copier", copyDone:"copié ✓", copyTitle:"Copier le texte dans le presse-papiers",
-    copyDiagramTitle:"Copier le diagramme en arbre de texte",
+    copy:"copier", copyDone:"copié ✓", copyTooltip:"Copier le texte dans le presse-papiers",
+    copyDiagramTooltip:"Copier le diagramme en arbre de texte",
     minimize:"réduire", normal:"normal", maximize:"agrandir",
     agenda:"Légende", discarded:"abandonnés",
     modeHorizontal:"Horizontal – organigramme, diagramme au-dessus de l'éditeur",
@@ -1018,8 +1018,8 @@ const I18N = {
   pl: {
     subtitle:"Werkbaum – Edytor diagramów oparty na tekście: WBS / struktura podziału pracy / drzewo funkcji.",
     editorTitle:"Struktura (tekst)", diagramTitle:"Diagram",
-    copy:"kopiuj", copyDone:"skopiowano ✓", copyTitle:"Kopiuj tekst do schowka",
-    copyDiagramTitle:"Kopiuj diagram jako drzewo tekstowe",
+    copy:"kopiuj", copyDone:"skopiowano ✓", copyTooltip:"Kopiuj tekst do schowka",
+    copyDiagramTooltip:"Kopiuj diagram jako drzewo tekstowe",
     minimize:"minimalizuj", normal:"normalny", maximize:"maksymalizuj",
     agenda:"Legenda", discarded:"odrzucone",
     modeHorizontal:"Poziomo – schemat organizacyjny, diagram nad edytorem",
@@ -1043,8 +1043,8 @@ const I18N = {
   ru: {
     subtitle:"Werkbaum – текстовый редактор диаграмм: СДР / структура декомпозиции работ / дерево функций.",
     editorTitle:"Структура (текст)", diagramTitle:"Диаграмма",
-    copy:"копировать", copyDone:"скопировано ✓", copyTitle:"Скопировать текст в буфер обмена",
-    copyDiagramTitle:"Скопировать диаграмму как текстовое дерево",
+    copy:"копировать", copyDone:"скопировано ✓", copyTooltip:"Скопировать текст в буфер обмена",
+    copyDiagramTooltip:"Скопировать диаграмму как текстовое дерево",
     minimize:"свернуть", normal:"обычный", maximize:"развернуть",
     agenda:"Легенда", discarded:"отклонённые",
     modeHorizontal:"Горизонтально – оргсхема, диаграмма над редактором",
@@ -1068,8 +1068,8 @@ const I18N = {
   hi: {
     subtitle:"Werkbaum – टेक्स्ट-आधारित आरेख संपादक: WBS / कार्य विभाजन संरचना / फ़ीचर-ट्री।",
     editorTitle:"संरचना (टेक्स्ट)", diagramTitle:"आरेख",
-    copy:"कॉपी करें", copyDone:"कॉपी हो गया ✓", copyTitle:"टेक्स्ट को क्लिपबोर्ड पर कॉपी करें",
-    copyDiagramTitle:"आरेख को टेक्स्ट-ट्री के रूप में कॉपी करें",
+    copy:"कॉपी करें", copyDone:"कॉपी हो गया ✓", copyTooltip:"टेक्स्ट को क्लिपबोर्ड पर कॉपी करें",
+    copyDiagramTooltip:"आरेख को टेक्स्ट-ट्री के रूप में कॉपी करें",
     minimize:"छोटा करें", normal:"सामान्य", maximize:"बड़ा करें",
     agenda:"लेजेंड", discarded:"अस्वीकृत",
     modeHorizontal:"क्षैतिज – संगठन-चार्ट, संपादक के ऊपर आरेख",
