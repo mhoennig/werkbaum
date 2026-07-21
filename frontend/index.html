@@ -54,10 +54,14 @@
   /* Im gestapelten Modus die Diagrammhöhe per Gutter begrenzen (scrollt intern). */
   .app:not(.side) .diagram{max-height:var(--diagram-h,none)}
   @media (max-width:820px){
-    .app.side{
+    .app.side,.app.side.collapse-editor,.app.side.collapse-diagram{
       grid-template-columns:1fr;
       grid-template-areas:"diagram" "gutter" "editor";
     }
+    /* Im schmalen Viewport verhält sich Minimieren wie gestapelt (Kopf horizontal). */
+    .app.side .panel.collapsed .panel-head{flex-direction:row;height:auto;padding:10px 16px}
+    .app.side .panel.collapsed .panel-head>span{writing-mode:horizontal-tb;transform:none}
+    .app.side .panel.collapsed .winbtns{flex-direction:row}
   }
 
   /* Splitter/Gutter: stapelweise horizontal, seitlich vertikal. */
@@ -73,6 +77,30 @@
   }
   .app.side .gutter::before{width:4px;height:46px}
   .gutter:hover::before,.gutter.dragging::before{background:var(--or)}
+
+  /* Minimieren: Panel auf seine Titelzeile schrumpfen, Körper ausblenden.
+     'a' = Diagramm minimiert (Editor maximal), 'b' = Editor minimiert. */
+  .panel.collapsed .editor-body,
+  .panel.collapsed .diagram,
+  .panel.collapsed .warnings{display:none}
+  .panel.collapsed .copybtn,
+  .panel.collapsed .switch,
+  .panel.collapsed .seg{display:none}
+  /* Gestapelt: nur die Kopfzeile bleibt, das andere Panel füllt. */
+  .app.collapse-diagram{grid-template-rows:auto 14px 1fr}
+  /* Seitlich: schmaler vertikaler Streifen mit gedrehter Beschriftung. */
+  .app.side.collapse-editor{grid-template-columns:auto 14px 1fr}
+  .app.side.collapse-diagram{grid-template-columns:1fr 14px auto}
+  .app.side .panel.collapsed{align-self:stretch}
+  .app.side .panel.collapsed .panel-head{
+    flex-direction:column;align-items:center;gap:12px;
+    height:100%;padding:12px 6px;border-bottom:0;
+  }
+  .app.side .panel.collapsed .panel-head>span{
+    writing-mode:vertical-rl;transform:rotate(180deg);
+    margin:0;white-space:nowrap;
+  }
+  .app.side .panel.collapsed .winbtns{flex-direction:column}
 
   /* Editor-Innenaufbau: Textarea + aufklappbare Agenda.
      Horizontal nebeneinander, vertikal (.side) untereinander. */
@@ -609,19 +637,21 @@ document.querySelectorAll('input[name="layout"]').forEach(radio => {
 });
 
 /* ---------- Min/Normal/Max je Bereich (Fenster-Buttons) ---------- */
-/* Zustand 'a' = Editor bevorzugt, 'b' = Diagramm bevorzugt, 'normal' = Default.
-   Maximieren des einen entspricht Minimieren des anderen. */
+/* Zustand 'a' = Diagramm minimiert (Editor maximiert),
+   'b' = Editor minimiert (Diagramm maximiert), 'normal' = beide sichtbar.
+   Minimieren schrumpft ein Panel auf seine Titelzeile; Maximieren des einen
+   entspricht dem Minimieren des anderen. */
 let splitState = 'normal';
+const editorPanel = document.querySelector('.panel.editor');
+const diagramPanel = document.querySelector('.panel.right');
 function applySplit(){
-  if(app.classList.contains('side')){
-    app.style.removeProperty('--diagram-h');
-    app.style.setProperty('--col', splitState==='a' ? '72%' : splitState==='b' ? '20%' : '360px');
-  } else {
-    app.style.removeProperty('--col');
-    if(splitState==='a') app.style.setProperty('--diagram-h','160px');
-    else if(splitState==='b') app.style.setProperty('--diagram-h','72vh');
-    else app.style.removeProperty('--diagram-h');
-  }
+  /* Preset-/Drag-Größen bei Preset-Wechsel zurücksetzen */
+  app.style.removeProperty('--col');
+  app.style.removeProperty('--diagram-h');
+  app.classList.toggle('collapse-diagram', splitState==='a');
+  app.classList.toggle('collapse-editor',  splitState==='b');
+  diagramPanel.classList.toggle('collapsed', splitState==='a');
+  editorPanel.classList.toggle('collapsed', splitState==='b');
   document.querySelectorAll('.winbtn').forEach(b => b.classList.toggle('active', b.dataset.state===splitState));
 }
 document.querySelectorAll('.winbtn').forEach(b => {
@@ -637,8 +667,11 @@ gutter.addEventListener('pointerdown', e => {
   gutter.classList.add('dragging');
   gutter.setPointerCapture(e.pointerId);
   document.body.style.userSelect = 'none';
-  /* Freies Ziehen hebt das aktive Preset auf */
+  /* Freies Ziehen hebt Preset und Minimierung auf */
   splitState = 'custom';
+  app.classList.remove('collapse-editor','collapse-diagram');
+  editorPanel.classList.remove('collapsed');
+  diagramPanel.classList.remove('collapsed');
   document.querySelectorAll('.winbtn').forEach(b => b.classList.remove('active'));
   e.preventDefault();
 });
