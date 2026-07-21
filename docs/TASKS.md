@@ -13,9 +13,10 @@ Abhaken beim Erledigen; neue Aufgaben unten anfügen.
 - [x] Parser extrahieren; Verhalten exakt wie in `docs/SPEC.md` §1–§8.
       → `src/parser.js` exportiert `parse`, `STATUS_BY_CODE`, `SIZE_RANK`
       (headless, kein DOM); `app.js` importiert sie.
-- [ ] Unit-Tests für den Parser (Vitest): kanonisches Beispiel aus SPEC §10
+- [x] Unit-Tests für den Parser (Vitest): kanonisches Beispiel aus SPEC §10
       als Fixture; Randfälle: gemischte Gates, Tabs/ungleichmäßige Einrückung,
       URL mit `@`, mehrere Wurzeln, leere Labels, `%%` am Zeilenanfang/-ende.
+      → `tests/parser.test.js` (18 Tests).
 - [ ] Renderer extrahieren (HTML-String-Erzeugung), Snapshot-Tests für
       Normal- und Vertikalmodus sowie „Untergliederung fehlt“.
 - [ ] Warnungs-Modell vereinheitlichen (Zeilennummern, Typen).
