@@ -547,7 +547,7 @@
   <div class="panel right">
     <div class="panel-head">
       <span data-i18n="diagramTitle">Diagramm</span>
-      <label class="switch">
+      <label class="switch" data-i18n-title="discardedTooltip" title="Verworfene Knoten samt Teilbaum ein-/ausblenden">
         <input type="checkbox" id="showc"><i></i><span data-i18n="discarded">verworfene</span>
       </label>
       <div class="seg" role="radiogroup" aria-label="Darstellung">
@@ -944,6 +944,7 @@ document.getElementById('copyDiagram').addEventListener('click', async () => {
 const I18N = {
   de: {
     subtitle:"Werkbaum – Ein Text-basierter WBS/Projektstrukturplan/Feature-Tree Diagramm-Editor.",
+    discardedTooltip:"Verworfene Knoten samt Teilbaum ein-/ausblenden",
     fullscreenTooltip:"Vollbild – Panels nutzen die ganze Fensterbreite",
     brandTooltip:"„Werkbaum“ bedeutet so viel wie ‚Werk-Baum‘ — der Baum des Projektstrukturplans (WBS).",
     editorTitle:"Struktur (Text)", diagramTitle:"Diagramm",
@@ -971,6 +972,7 @@ const I18N = {
   },
   en: {
     subtitle:"Werkbaum – A text-based WBS / work breakdown structure / feature-tree diagram editor.",
+    discardedTooltip:"Show/hide discarded nodes and their subtree",
     fullscreenTooltip:"Full screen – panels use the full window width",
     brandTooltip:"“Werkbaum” means roughly ‘work tree’ — the tree of the work breakdown structure (WBS).",
     editorTitle:"Structure (text)", diagramTitle:"Diagram",
@@ -998,6 +1000,7 @@ const I18N = {
   },
   es: {
     subtitle:"Werkbaum – Un editor de diagramas basado en texto para EDT / estructura de desglose del trabajo / árbol de características.",
+    discardedTooltip:"Mostrar u ocultar los nodos descartados y su subárbol",
     fullscreenTooltip:"Pantalla completa – los paneles usan todo el ancho de la ventana",
     brandTooltip:"«Werkbaum» significa algo así como ‘árbol de trabajo’ — el árbol de la estructura de desglose del trabajo (EDT).",
     editorTitle:"Estructura (texto)", diagramTitle:"Diagrama",
@@ -1025,6 +1028,7 @@ const I18N = {
   },
   fr: {
     subtitle:"Werkbaum – Un éditeur de diagrammes basé sur le texte pour WBS / organigramme des tâches / arbre de fonctionnalités.",
+    discardedTooltip:"Afficher/masquer les nœuds abandonnés et leur sous-arbre",
     fullscreenTooltip:"Plein écran – les panneaux occupent toute la largeur de la fenêtre",
     brandTooltip:"« Werkbaum » signifie à peu près « arbre de travail » — l’arbre de l’organigramme des tâches (WBS).",
     editorTitle:"Structure (texte)", diagramTitle:"Diagramme",
@@ -1052,6 +1056,7 @@ const I18N = {
   },
   pl: {
     subtitle:"Werkbaum – Edytor diagramów oparty na tekście: WBS / struktura podziału pracy / drzewo funkcji.",
+    discardedTooltip:"Pokaż/ukryj odrzucone węzły wraz z poddrzewem",
     fullscreenTooltip:"Pełny ekran – panele wykorzystują całą szerokość okna",
     brandTooltip:"„Werkbaum” znaczy mniej więcej ‚drzewo pracy’ — drzewo struktury podziału pracy (WBS).",
     editorTitle:"Struktura (tekst)", diagramTitle:"Diagram",
@@ -1079,6 +1084,7 @@ const I18N = {
   },
   ru: {
     subtitle:"Werkbaum – текстовый редактор диаграмм: СДР / структура декомпозиции работ / дерево функций.",
+    discardedTooltip:"Показать/скрыть отклонённые узлы вместе с поддеревом",
     fullscreenTooltip:"Полный экран – панели занимают всю ширину окна",
     brandTooltip:"«Werkbaum» примерно означает ‚дерево работ’ — дерево структуры декомпозиции работ (СДР).",
     editorTitle:"Структура (текст)", diagramTitle:"Диаграмма",
@@ -1106,6 +1112,7 @@ const I18N = {
   },
   hi: {
     subtitle:"Werkbaum – टेक्स्ट-आधारित आरेख संपादक: WBS / कार्य विभाजन संरचना / फ़ीचर-ट्री।",
+    discardedTooltip:"अस्वीकृत नोड्स और उनके उप-वृक्ष दिखाएँ/छिपाएँ",
     fullscreenTooltip:"पूर्ण स्क्रीन – पैनल पूरी विंडो चौड़ाई का उपयोग करते हैं",
     brandTooltip:"„Werkbaum“ का अर्थ लगभग ‚कार्य-वृक्ष‘ है — कार्य विभाजन संरचना (WBS) का वृक्ष।",
     editorTitle:"संरचना (टेक्स्ट)", diagramTitle:"आरेख",
