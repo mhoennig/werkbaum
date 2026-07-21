@@ -153,10 +153,13 @@ Min/Normal/Max-Buttons entfallen; geteilt wird weiterhin über den **Splitter**
 Umschalter im Editor-Kopf (statt der dauerhaften „AGENDA“-Zeile), damit sie
 zugeklappt keinen Platz kostet. Der **Modus-Wähler** zeigt nur das aktive Icon
 und schaltet bei jedem Tippen reihum weiter (horizontal → kompakt → vertikal →
-…), spart also zwei Drittel der Breite. Die **Sprachwahl** zeigt nur Englisch
-und die aktive Sprache plus „…“ (das alle Sprachen aufklappt). Der **Untertitel**
-wird auf eine garantiert einzeilige Kurzfassung reduziert. Voreinstellung auf
-kleinem Bildschirm ist **Vollbild** (siehe D17).
+…), spart also zwei Drittel der Breite. Die **Sprachwahl** zeigt eingeklappt
+nur die aktive Sprache; ein Tipp darauf klappt die volle Leiste als **Overlay
+über die Kopfzeile** auf (verdeckt die übrigen Bedienelemente, statt die Zeile
+zu verbreitern), nach der Auswahl klappt sie wieder auf die gewählte Sprache
+ein (Tipp daneben schließt ebenfalls). Der **Untertitel** wird auf eine
+garantiert einzeilige Kurzfassung reduziert. Voreinstellung auf kleinem
+Bildschirm ist **Vollbild** (siehe D17).
 
 ### Günstigster Pfad (Kosten-Hervorhebung)
 Ein Umschalter (Icon-Button im Diagramm-Kopf, Voreinstellung **an**, Zustand

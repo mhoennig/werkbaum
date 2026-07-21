@@ -550,11 +550,20 @@
   /* Legende: keine dauerhafte Summary-Zeile, dafür der #legendBtn im Kopf */
   body.mobile .agenda>summary{display:none}
   body.mobile .legendbtn{display:inline-flex}
-  /* Sprachwahl schlank: nur EN + aktuelle Sprache + „…“; „…“ klappt alle auf */
+  /* Sprachwahl schlank: eingeklappt nur die aktive Sprache. Ein Tipp klappt die
+     volle Leiste als Overlay über die Kopfzeile auf (verdeckt fsToggle usw.,
+     statt die Zeile zu verbreitern); nach der Auswahl klappt sie wieder ein
+     (JS). Das „…“ entfällt hier — die aktive Sprache ist selbst der Auslöser. */
+  body.mobile .header-tools{position:relative}
   body.mobile .langsel button[data-lang]{display:none}
-  body.mobile .langsel.expanded button[data-lang]{display:inline-block}
-  body.mobile .langsel button[data-lang="en"],
   body.mobile .langsel button[data-lang].active{display:inline-block}
+  body.mobile .langmore{display:none}
+  body.mobile .langsel.expanded{
+    position:absolute;top:0;right:0;z-index:40;
+    background:var(--card);
+    box-shadow:0 6px 18px rgba(36,52,71,.28);
+  }
+  body.mobile .langsel.expanded button[data-lang]{display:inline-block}
   /* Modus-Wähler kompakt: nur das aktive Icon (ein Drittel Platz), Tippen
      schaltet reihum weiter (horizontal → kompakt → vertikal → …, siehe JS). */
   body.mobile .seg label{display:none}
@@ -1697,8 +1706,29 @@ langMore.addEventListener('click', () => {
   const exp = langsel.classList.toggle('expanded');
   langMore.setAttribute('aria-expanded', String(exp));
 });
+function collapseLangsel(){
+  langsel.classList.remove('expanded');
+  langMore.setAttribute('aria-expanded', 'false');
+}
 document.querySelectorAll('.langsel button[data-lang]').forEach(b => {
-  b.addEventListener('click', () => applyLang(b.dataset.lang));
+  b.addEventListener('click', () => {
+    /* Mobil: eingeklappt ist nur die aktive Sprache sichtbar — ein Tipp klappt
+       die volle Leiste als Overlay auf; erst im aufgeklappten Zustand wählt ein
+       Tipp die Sprache und klappt wieder ein. */
+    if(isMobile() && !langsel.classList.contains('expanded')){
+      langsel.classList.add('expanded');
+      langMore.setAttribute('aria-expanded', 'true');
+      return;
+    }
+    applyLang(b.dataset.lang);
+    if(isMobile()) collapseLangsel();
+  });
+});
+/* Mobil: Tipp außerhalb der aufgeklappten Leiste schließt sie wieder. */
+document.addEventListener('click', e => {
+  if(isMobile() && langsel.classList.contains('expanded') && !langsel.contains(e.target)){
+    collapseLangsel();
+  }
 });
 
 /* ---------- Vollbild: Panels über die ganze Fensterbreite ---------- */
@@ -1797,6 +1827,7 @@ seg.addEventListener('click', e => {
 function applyMobile(){
   const m = isMobile();
   document.body.classList.toggle('mobile', m);
+  if(m) collapseLangsel();   /* Sprachleiste eingeklappt starten (Overlay-Logik) */
   if(!m) return;
   /* Nur ein Panel sichtbar: normal/custom passen nicht — auf Diagramm (b). */
   if(splitState !== 'a' && splitState !== 'b'){ splitState = 'b'; applySplit(); }

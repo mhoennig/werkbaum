@@ -145,8 +145,12 @@ Fenster-Buttons entfallen, der **Splitter bleibt** (Teilen per Ziehen möglich).
 Die Legende wird von der Bereichs-
 Umschaltung **entkoppelt** und über einen eigenen Umschalter im Editor-Kopf
 gesteuert — das dauerhafte „AGENDA“-Band kostet sonst zu viel Höhe. Die
-Sprachleiste zeigt nur Englisch + aktive Sprache + „…“. Voreinstellung ist
-**Vollbild** (maximale Fläche). Umgesetzt über die Klasse `body.mobile` (per
+Sprachleiste zeigt eingeklappt nur die **aktive** Sprache; ein Tipp klappt die
+volle Leiste als **Overlay über die Kopfzeile** auf (rechtsbündig, `z-index`,
+verdeckt die übrigen Elemente statt die Zeile umzubrechen), nach der Auswahl —
+oder einem Tipp daneben — klappt sie wieder ein. So bleibt die Kopfzeile schmal
+und die vollständige Sprachliste dennoch erreichbar (frühere Lösung
+„EN + aktive + …“ ersetzt). Voreinstellung ist **Vollbild** (maximale Fläche). Umgesetzt über die Klasse `body.mobile` (per
 `matchMedia`), damit CSS und JS denselben Schwellwert teilen; die Vollbild-
 Voreinstellung greift nur, wenn noch **keine** gespeicherte Nutzerwahl vorliegt
 (eine bewusste Abschaltung bleibt so erhalten, siehe localStorage-Persistenz).
