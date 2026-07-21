@@ -3,9 +3,13 @@
 Abhaken beim Erledigen; neue Aufgaben unten anfügen.
 
 ## Phase 1 — Modularisierung & Tests
-- [ ] Projektgerüst: `src/` (parser.js, model.js, render.js, app.js),
+- [x] Projektgerüst: `src/` (parser.js, model.js, render.js, app.js),
       `tests/`, `index.html` bindet Module ein; weiterhin ohne Build nutzbar
       (ES-Module) oder mit minimalem Setup (Vite) — Entscheidung dokumentieren.
+      → **Vite** gewählt (D19): `src/` als ES-Module, `npm run build` bündelt zu
+      einer self-contained `dist/index.html` (file://-tauglich). Gerüst steht
+      (aktuell `src/app.js` + `src/style.css`); Parser/Renderer werden in den
+      folgenden Checkboxen herausgelöst.
 - [ ] Parser extrahieren; Verhalten exakt wie in `docs/SPEC.md` §1–§8.
 - [ ] Unit-Tests für den Parser (Vitest): kanonisches Beispiel aus SPEC §10
       als Fixture; Randfälle: gemischte Gates, Tabs/ungleichmäßige Einrückung,

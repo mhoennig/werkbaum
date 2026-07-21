@@ -214,3 +214,40 @@ Knoten von seiner Linie von oben abgetrennt. Fix: `ul.or>li.has-and` bekommt
 vertikal **symmetrisches** Padding (Mitte bleibt bei 50 %), der Abzweig
 (`::before`) und die Rail-Endkante (`:last-child::after`) werden auf 50 %
 gesetzt — analog zu den bereits zentrierten all-of-Zwischenknoten.
+
+## D19 — Modularisierung mit Vite-Bündelung zu einer self-contained Datei
+Das Nahziel „tragfähige Codebasis" (ROADMAP) verlangt, den Single-HTML-
+Prototyp in headless nutzbare Module (`parser`, `model`, `render`, `app`) zu
+zerlegen und gegen SPEC zu testen. Die Zwickmühle: **modulare Einzeldateien**,
+**`file://`-Tauglichkeit** (D16) und **kein Build** (D11) sind nicht gleichzeitig
+erfüllbar — ES-`import` über `file://` blockt der Browser (CORS).
+
+**Entscheidung: Vite als Bündler/Testrunner.** `frontend/src/*.js` sind echte
+ES-Module und die Quelle der Wahrheit; `frontend/index.html` lädt im Dev-Server
+per `<script type="module">`. `npm run build` (Vite + `vite-plugin-singlefile`)
+inlint **alle** Module, das CSS und das Favicon (als `data:`-URI) in **eine**
+`dist/index.html` — damit bleibt das `file://`-Versprechen aus D16 erhalten
+(die gebaute Datei ist standalone), und der Deploy lädt nichts extern nach.
+
+Damit wird **D11 („kein Build-Zwang") bewusst aufgeweicht**: Zum *Weiter­ent­
+wickeln/Testen* braucht es nun Node + Vite (Dev-Abhängigkeiten, keine
+Laufzeit-Abhängigkeiten — das Ergebnis ist reines HTML/CSS/JS ohne Framework).
+Das *Ergebnis* bleibt im Geist von D11: eine einzelne, framework-freie Datei,
+die überall ohne Server läuft. Verworfene Alternativen:
+- **ES-Module ohne Build:** bräche `file://` (Dev-Server-Zwang lokal) — verwarf
+  der Nutzer, weil das lokale Öffnen erhalten bleiben soll.
+- **Klassische `<script>`+Globals:** hielte `file://` ohne Build, ist aber kein
+  echtes ESM und erschwert headless-Tests/Tree-Shaking.
+
+**Deploy (D16-Fortschreibung):** Der Pages-Workflow richtet Node ein, führt
+`npm ci` + `npm test` (Vitest) + `npm run build` aus und nimmt
+`frontend/dist/index.html`. Die frühere `sed`-Kur der `../docs/brand/`-Pfade
+entfällt (Favicon inline); nur der Laufzeit-Link `../LICENSE` und die
+Footer-Version werden weiter auf der Site-Kopie gesetzt. Schlägt der Testlauf
+fehl, wird nicht deployt (der frühere auskommentierte Platzhalter ist nun
+aktiv).
+
+(Favicon-Inlining: ein kleiner `transformIndexHtml`-Plugin in `vite.config.js`
+liest `../docs/brand/favicon.svg` und ersetzt den `<link rel="icon">` durch eine
+`data:`-URI — so bleibt die Brand-Quelle unverändert und die Ausgabe eine
+einzige Datei.)

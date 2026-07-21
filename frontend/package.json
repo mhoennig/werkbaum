@@ -1,0 +1,20 @@
+{
+  "name": "werkbaum-frontend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Werkbaum WBS-Editor (Vanilla HTML/CSS/JS, mit Vite gebündelt zu einer einzelnen self-contained index.html).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1",
+    "vite": "^8.1.5",
+    "vite-plugin-singlefile": "^2.3.3",
+    "vitest": "^4.1.10"
+  }
+}

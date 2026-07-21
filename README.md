@@ -33,10 +33,27 @@ and/or decomposition — plus a live editor that renders it as a diagram.
 
 ![Werkbaum editor: live diagram on top, text notation below, with status colours, T-shirt sizes, tags and export buttons](docs/screenshot.png)
 
-Open the [hosted editor](https://mhoennig.github.io/werkbaum/) — or
-`frontend/index.html` in the browser — edit text on the left, the diagram is
-built live on the right. Toggles: transposed (narrow) layout, show discarded
-elements.
+Open the [hosted editor](https://mhoennig.github.io/werkbaum/) — edit text on
+the left, the diagram is built live on the right. Toggles: transposed (narrow)
+layout, show discarded elements.
+
+### Running it locally
+
+The editor source now lives as ES modules under `frontend/src/`, bundled by
+[Vite](https://vitejs.dev/) (see `docs/DECISIONS.md` D19). Because browsers block
+ES-module imports over `file://`, opening `frontend/index.html` directly no
+longer works — use one of:
+
+```bash
+cd frontend
+npm install          # once
+npm run dev          # dev server at http://localhost:8137
+npm test             # Vitest unit tests
+npm run build        # -> frontend/dist/index.html (single self-contained file)
+```
+
+The built `dist/index.html` inlines all JS, CSS and the favicon, so **that** file
+does open standalone via `file://` and is what gets deployed.
 
 ## Project documents
 
@@ -59,11 +76,12 @@ The editor is published as a static page on **GitHub Pages** via GitHub
 Actions (workflow: `.github/workflows/pages.yml`). Triggered on every push to
 `main` and manually (`workflow_dispatch`).
 
-The workflow assembles a site folder: `frontend/index.html` is placed as
-`index.html` at the root URL, along with the files the editor references
-(`docs/brand/` for the favicon, `LICENSE` for the MIT link in the footer). The
-`../` paths in the editor source are straightened only on the copy — the source
-file stays unchanged. `backend/` and the remaining `docs/` are not published.
+The workflow sets up Node, runs `npm ci`, `npm test` (Vitest) and `npm run build`
+(Vite), then publishes the bundled `frontend/dist/index.html` as `index.html` at
+the root URL, plus `LICENSE` for the MIT link in the footer. The favicon is
+already inlined into the build, so nothing else needs copying; only the runtime
+`../LICENSE` link is straightened on the copy. A failing test blocks the deploy.
+`backend/` and the remaining `docs/` are not published.
 
 While assembling the site, the workflow also stamps the version into the footer:
 **major.minor** comes from the `VERSION` file (bumped by an explicit "bump

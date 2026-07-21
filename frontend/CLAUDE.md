@@ -1,12 +1,28 @@
 # Werkbaum · Frontend
 
-Editor: `index.html` ist der funktionierende Prototyp (Text links,
-Diagramm rechts, Toggles für transponierte Ansicht und verworfene Elemente).
+Editor: Text links, Diagramm rechts, Toggles für transponierte Ansicht und
+verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
+**Vite-Entry** (lädt im Dev-Server `src/app.js` als `<script type="module">`).
+
+## Build & Entwicklung (D19)
+- **Vite** ist Bündler + Testrunner (nur Dev-Abhängigkeiten, keine Laufzeit-
+  Abhängigkeit — das Ergebnis ist framework-freies HTML/CSS/JS).
+- `npm --prefix frontend run dev` — Dev-Server (Port 8137, `.claude/launch.json`).
+  Direktes Öffnen von `frontend/index.html` per `file://` funktioniert **nicht**
+  mehr (ES-`import` braucht http); stattdessen Dev-Server oder die gebaute Datei.
+- `npm --prefix frontend run build` — `vite-plugin-singlefile` inlint JS + CSS +
+  Favicon (als `data:`-URI, via `transformIndexHtml`-Plugin in `vite.config.js`)
+  in **eine** self-contained `dist/index.html` — die bleibt `file://`-tauglich
+  (D16) und ist die Deploy-Artefakt-Quelle (Pages-Workflow, siehe README).
+- `npm --prefix frontend test` — Vitest (`tests/**/*.test.js`).
+- `node_modules/` und `dist/` sind ge-`.gitignore`-t; `package-lock.json` ist
+  eingecheckt (der Workflow nutzt `npm ci`).
 
 ## Konventionen
-- Vanilla HTML/CSS/JS, ES-Module; keine Frameworks. Testwerkzeug (Vitest) ok.
+- Vanilla HTML/CSS/JS, ES-Module; keine Frameworks. Testwerkzeug: Vitest.
 - Parser und Renderer müssen headless (ohne Editor-UI) nutzbar bleiben —
-  Basis für SVG-Export und Mermaid-Plugin (docs/ROADMAP.md).
+  Basis für SVG-Export und Mermaid-Plugin (docs/ROADMAP.md). `app.js` ist der
+  DOM-/UI-Einstieg; reine Logik gehört in `parser.js`/`model.js`/`render.js`.
 - Design: Farben/Typografie beibehalten (CSS-Variablen, IBM Plex);
   Statusfarben sind in SPEC §4 normiert. Marke nach ../brand/BRAND.md;
   Pastelltöne nie im Logo.

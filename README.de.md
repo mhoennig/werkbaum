@@ -34,10 +34,27 @@ der sie als Diagramm rendert.
 
 ![Werkbaum-Editor: Live-Diagramm oben, Textnotation darunter, mit Statusfarben, T-Shirt-Größen, Tags und Export-Schaltflächen](docs/screenshot.png)
 
-Den [gehosteten Editor](https://mhoennig.github.io/werkbaum/) öffnen — oder
-`frontend/index.html` im Browser — links Text bearbeiten, rechts entsteht das
-Diagramm live. Toggles: transponierte (schmale) Darstellung, verworfene
-Elemente einblenden.
+Den [gehosteten Editor](https://mhoennig.github.io/werkbaum/) öffnen — links
+Text bearbeiten, rechts entsteht das Diagramm live. Toggles: transponierte
+(schmale) Darstellung, verworfene Elemente einblenden.
+
+### Lokal ausführen
+
+Die Editor-Quelle liegt jetzt als ES-Module unter `frontend/src/`, gebündelt mit
+[Vite](https://vitejs.dev/) (siehe `docs/DECISIONS.md` D19). Da Browser
+ES-Modul-Importe über `file://` blocken, funktioniert das direkte Öffnen von
+`frontend/index.html` nicht mehr — stattdessen:
+
+```bash
+cd frontend
+npm install          # einmalig
+npm run dev          # Dev-Server unter http://localhost:8137
+npm test             # Vitest-Unit-Tests
+npm run build        # -> frontend/dist/index.html (eine self-contained Datei)
+```
+
+Die gebaute `dist/index.html` inlint JS, CSS und Favicon — **diese** Datei öffnet
+also standalone per `file://` und ist zugleich das, was deployt wird.
 
 ## Projektdokumente
 
@@ -56,12 +73,13 @@ Der Editor wird per GitHub Actions als statische Seite auf **GitHub Pages**
 veröffentlicht (Workflow: `.github/workflows/pages.yml`). Ausgelöst bei jedem
 Push auf `main` sowie manuell (`workflow_dispatch`).
 
-Der Workflow stellt einen Site-Ordner zusammen: `frontend/index.html` liegt als
-`index.html` an der Wurzel-URL, dazu die vom Editor referenzierten Dateien
-(`docs/brand/` fürs Favicon, `LICENSE` für den MIT-Link im Footer). Die
-`../`-Pfade der Editor-Quelle werden dabei nur auf der Kopie geradegezogen — die
-Quelldatei bleibt unverändert. `backend/` und die übrigen `docs/` werden nicht
-veröffentlicht.
+Der Workflow richtet Node ein, führt `npm ci`, `npm test` (Vitest) und
+`npm run build` (Vite) aus und veröffentlicht die gebündelte
+`frontend/dist/index.html` als `index.html` an der Wurzel-URL, dazu `LICENSE`
+für den MIT-Link im Footer. Das Favicon ist im Build bereits inline, es muss also
+nichts weiter kopiert werden; nur der Laufzeit-Link `../LICENSE` wird auf der
+Kopie geradegezogen. Ein fehlschlagender Test blockiert das Deployment.
+`backend/` und die übrigen `docs/` werden nicht veröffentlicht.
 
 Beim Zusammenstellen setzt der Workflow zudem die Versionsnummer im Footer:
 **Major.Minor** stammt aus der Datei `VERSION` (per bewusstem „Bump-Commit"

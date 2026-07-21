@@ -35,25 +35,27 @@ jobs:
           # abgeleitet (Standard wäre ein flacher Klon mit nur einem Commit).
           fetch-depth: 0
 
-      # Platzhalter für spätere Vitest-Läufe (Tests existieren noch nicht,
-      # siehe docs/TASKS.md, Phase 1). Bei Aktivierung: Node einrichten und
-      # Tests ausführen — schlägt der Testlauf fehl, wird nicht deployt.
-      # - name: Node einrichten
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: 20
-      #     cache: npm
-      # - name: Abhängigkeiten installieren
-      #   run: npm ci
-      # - name: Tests
-      #   run: npm test
+      # Node einrichten und den Vite-Build fahren (D19): der Editor liegt jetzt
+      # als ES-Module unter frontend/src/, Vite bündelt sie zu EINER
+      # self-contained frontend/dist/index.html (JS+CSS+Favicon inline). Tests
+      # laufen zuerst — schlägt Vitest fehl, wird nicht deployt.
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Abhängigkeiten installieren
+        run: npm ci --prefix frontend
+      - name: Tests
+        run: npm test --prefix frontend
+      - name: Build (Vite)
+        run: npm run build --prefix frontend
 
-      # Site-Ordner zusammenstellen: index.html an die Wurzel-URL, dazu die
-      # vom Editor referenzierten Dateien (Favicon aus docs/brand/, LICENSE für
-      # den MIT-Link im Footer). Die Editor-Quelle bleibt unverändert — die
-      # ../-Pfade werden nur auf der Kopie im Site-Ordner geradegezogen, weil
-      # sie von der Wurzel-URL aus sonst über die Site hinauszeigen würden.
-      # Zusätzlich werden im Footer gesetzt:
+      # Site-Ordner zusammenstellen: die gebaute dist/index.html an die
+      # Wurzel-URL, dazu LICENSE für den MIT-Link im Footer. Das Favicon ist im
+      # Build bereits als data:-URI inline (kein docs/brand-Kopieren mehr nötig).
+      # Im Footer werden gesetzt:
       #  - die Versionsnummer: Major.Minor aus der VERSION-Datei (per
       #    Bump-Commit gepflegt), die Micro-Stelle aus der Anzahl der Commits
       #    seit dem letzten VERSION-Bump — steigt also je Commit und beginnt
@@ -61,6 +63,9 @@ jobs:
       #  - der Link der Versionsnummer: zeigt exakt auf den deployten Commit
       #    (…/commit/<sha>). „Werkbaum" selbst verlinkt weiter die Repo-
       #    Startseite. Braucht die volle Historie (fetch-depth: 0).
+      # Der ../LICENSE-Link ist eine Laufzeit-Verknüpfung (kein Vite-Asset) und
+      # zeigt von der Wurzel-URL aus sonst über die Site hinaus — daher hier auf
+      # der Kopie geradegezogen.
       - name: Site zusammenstellen
         run: |
           MAJORMINOR="$(tr -d '[:space:]' < VERSION)"
@@ -70,13 +75,11 @@ jobs:
           BUILD_VERSION="${MAJORMINOR}.${MICRO}"
           COMMIT_URL="https://github.com/mhoennig/werkbaum/commit/$(git rev-parse HEAD)"
           echo "Footer-Version: ${BUILD_VERSION} -> ${COMMIT_URL}"
-          mkdir -p site/docs/brand
-          sed -e 's#\.\./docs/brand/#docs/brand/#g' \
-              -e 's#\.\./LICENSE#LICENSE#g' \
+          mkdir -p site
+          sed -e 's#\.\./LICENSE#LICENSE#g' \
               -e "s#\(<a class=\"ver\" href=\"\)[^\"]*#\1${COMMIT_URL}#" \
               -e "s#\(<a class=\"ver\"[^>]*>\)[0-9.]\+</a>#\1${BUILD_VERSION}</a>#" \
-              frontend/index.html > site/index.html
-          cp docs/brand/* site/docs/brand/
+              frontend/dist/index.html > site/index.html
           cp LICENSE site/LICENSE
 
       - name: Pages-Konfiguration
