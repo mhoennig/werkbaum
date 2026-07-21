@@ -145,6 +145,15 @@
   .seg label + label span{border-left:1px solid rgba(36,52,71,.14)}
   .seg input:checked + span{background:var(--or);color:#fff}
   .seg input:focus-visible + span{outline:2px solid var(--or);outline-offset:-2px}
+  .winbtns{display:inline-flex;gap:4px;align-items:center}
+  .winbtn{
+    width:19px;height:19px;display:grid;place-items:center;
+    border:1px solid rgba(36,52,71,.2);border-radius:5px;
+    background:var(--card);color:var(--muted);cursor:pointer;
+    font-size:.72rem;line-height:1;padding:0;
+  }
+  .winbtn:hover{border-color:var(--or);color:var(--or)}
+  .winbtn.active{background:var(--or);color:#fff;border-color:var(--or)}
   textarea{
     display:block;width:100%;min-height:380px;
     border:0;outline:none;resize:vertical;
@@ -354,7 +363,14 @@
 
 <div class="app" id="app">
   <div class="panel editor">
-    <div class="panel-head">Struktur (Text)</div>
+    <div class="panel-head">
+      <span>Struktur (Text)</span>
+      <div class="winbtns" aria-label="Editor-Größe">
+        <button type="button" class="winbtn" data-state="b" title="minimieren">—</button>
+        <button type="button" class="winbtn" data-state="normal" title="normal">▢</button>
+        <button type="button" class="winbtn" data-state="a" title="maximieren">■</button>
+      </div>
+    </div>
     <div class="editor-body">
     <textarea id="src" spellcheck="false"></textarea>
     <details class="agenda">
@@ -396,6 +412,11 @@
         <label><input type="radio" name="layout" value="horizontal" checked><span>horizontal</span></label>
         <label><input type="radio" name="layout" value="vertikal"><span>vertikal</span></label>
         <label><input type="radio" name="layout" value="kompakt"><span>kompakt</span></label>
+      </div>
+      <div class="winbtns" aria-label="Diagramm-Größe">
+        <button type="button" class="winbtn" data-state="a" title="minimieren">—</button>
+        <button type="button" class="winbtn" data-state="normal" title="normal">▢</button>
+        <button type="button" class="winbtn" data-state="b" title="maximieren">■</button>
       </div>
     </div>
     <div class="diagram"><ul class="tree" id="out"></ul></div>
@@ -570,9 +591,30 @@ function applyLayout(mode){
   out.classList.toggle('vertical', mode === 'vertikal');
   out.classList.toggle('kompakt', mode === 'kompakt');
   app.classList.toggle('side', mode !== 'horizontal');
+  applySplit();   /* Preset für die neue Orientierung neu setzen */
 }
 document.querySelectorAll('input[name="layout"]').forEach(radio => {
   radio.addEventListener('change', () => { if(radio.checked) applyLayout(radio.value); });
+});
+
+/* ---------- Min/Normal/Max je Bereich (Fenster-Buttons) ---------- */
+/* Zustand 'a' = Editor bevorzugt, 'b' = Diagramm bevorzugt, 'normal' = Default.
+   Maximieren des einen entspricht Minimieren des anderen. */
+let splitState = 'normal';
+function applySplit(){
+  if(app.classList.contains('side')){
+    app.style.removeProperty('--diagram-h');
+    app.style.setProperty('--col', splitState==='a' ? '72%' : splitState==='b' ? '20%' : '360px');
+  } else {
+    app.style.removeProperty('--col');
+    if(splitState==='a') app.style.setProperty('--diagram-h','160px');
+    else if(splitState==='b') app.style.setProperty('--diagram-h','72vh');
+    else app.style.removeProperty('--diagram-h');
+  }
+  document.querySelectorAll('.winbtn').forEach(b => b.classList.toggle('active', b.dataset.state===splitState));
+}
+document.querySelectorAll('.winbtn').forEach(b => {
+  b.addEventListener('click', () => { splitState = b.dataset.state; applySplit(); });
 });
 
 /* ---------- Splitter: Bereiche per Drag verteilen ---------- */
@@ -584,6 +626,9 @@ gutter.addEventListener('pointerdown', e => {
   gutter.classList.add('dragging');
   gutter.setPointerCapture(e.pointerId);
   document.body.style.userSelect = 'none';
+  /* Freies Ziehen hebt das aktive Preset auf */
+  splitState = 'custom';
+  document.querySelectorAll('.winbtn').forEach(b => b.classList.remove('active'));
   e.preventDefault();
 });
 gutter.addEventListener('pointermove', e => {
@@ -612,6 +657,7 @@ gutter.addEventListener('pointercancel', endDrag);
 const showc = document.getElementById('showc');
 showc.addEventListener('change', render);
 
+applySplit();   /* Startzustand: normal, markiert die normal-Buttons aktiv */
 src.value = INITIAL;
 render();
 </script>
