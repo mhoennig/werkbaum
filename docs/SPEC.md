@@ -134,16 +134,21 @@ ist grau (`#6B7A8C`) — kein Petrol mehr im Diagramm. Der Modus ändert nur die
   + halbe Knotenhöhe). Abzweige zielen auf den **Knoten**, nie auf die Mitte
   des Teilbaums.
 
-### Textexport des Diagramms
-Das Diagramm ist per Icon-Schaltfläche als einfacher, überall einsetzbarer
-ASCII-Baum in die Zwischenablage kopierbar. Format:
+### Grafikexport des Diagramms
+Das Diagramm ist per Icon-Schaltfläche als **Bild** in die Zwischenablage
+kopierbar (grafisches Format, in Dokumente/Chats einfügbar):
 
-- Eingerückter Baum mit `├─`/`└─` (all-of-Abzweige) bzw. `├◇`/`└◇`
-  (any-of-Alternativen); Fortsetzungsspalten mit `│`.
-- Je Knoten: `[Status] Label (Größe) @tags` — jeder Teil optional, Reihenfolge
-  wie hier. Der Status-Code entspricht §4 (`[ ]`, `[x]`, `[~]`, …).
+- Das gerenderte Diagramm wird aus der Live-Geometrie in ein eigenständiges
+  SVG (nur Formen + Text, keine externen Ressourcen) nachgezeichnet und als
+  **PNG** (`image/png`) in die Zwischenablage gelegt. Fällt der Bild-Clipboard
+  aus (fehlende `ClipboardItem`-Unterstützung), wird der **SVG-Quelltext**
+  kopiert (ebenfalls ein Grafikformat).
+- Übernommen werden Knotenfarben (Status §4), Größen-Badge, Tags und der
+  Geister-Knoten; die Verbindungslinien werden je Gate neu gezogen
+  (und = durchgezogen Tinte, oder = gestrichelt Grau) und treffen die Knoten
+  unabhängig vom Darstellungsmodus.
 - Es wird genau die **sichtbare** Struktur exportiert (der „verworfene
-  einblenden“-Filter wirkt auch hier). Mehrere Wurzeln durch Leerzeile getrennt.
+  einblenden“-Filter wirkt auch hier).
 
 ## 10. Beispiel (kanonisch)
 
