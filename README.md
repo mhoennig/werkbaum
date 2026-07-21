@@ -62,10 +62,13 @@ The workflow assembles a site folder: `frontend/index.html` is placed as
 `../` paths in the editor source are straightened only on the copy — the source
 file stays unchanged. `backend/` and the remaining `docs/` are not published.
 
-While assembling the site, the workflow also stamps the **micro version** into
-the footer from the workflow run number: `Werkbaum 1.0` becomes
-`Werkbaum 1.0.<run-number>`, incrementing by one on every deployment — with no
-commit back to the repo. Opened locally, the editor still shows `Werkbaum 1.0`.
+While assembling the site, the workflow also stamps the version into the footer:
+**major.minor** comes from the `VERSION` file (bumped by an explicit "bump
+commit"), and the **micro** part is the number of commits since that last bump —
+so it grows with every commit and resets to `0` right after a bump
+(`Werkbaum 1.0.0`, `1.0.1`, … then bump `VERSION` to `1.1` → `1.1.0`). Nothing is
+written back to the repo. Opened locally, the editor shows the source
+placeholder (`Werkbaum 1.0`).
 
 **One-time setup:** In the repo settings under **Pages**, select **Source** =
 "GitHub Actions". The repo must be **public** for this (GitHub Pages via Actions

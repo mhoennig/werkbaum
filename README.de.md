@@ -60,10 +60,13 @@ Der Workflow stellt einen Site-Ordner zusammen: `frontend/index.html` liegt als
 Quelldatei bleibt unverändert. `backend/` und die übrigen `docs/` werden nicht
 veröffentlicht.
 
-Beim Zusammenstellen setzt der Workflow zudem die **Micro-Version** im Footer
-aus der Run-Nummer: aus `Werkbaum 1.0` wird `Werkbaum 1.0.<Run-Nummer>` und
-steigt bei jedem Deployment um eins — ohne Commit zurück ins Repo. Lokal
-geöffnet zeigt der Editor weiterhin `Werkbaum 1.0`.
+Beim Zusammenstellen setzt der Workflow zudem die Versionsnummer im Footer:
+**Major.Minor** stammt aus der Datei `VERSION` (per bewusstem „Bump-Commit"
+gepflegt), die **Micro-Stelle** aus der Zahl der Commits seit diesem letzten
+Bump — sie steigt also mit jedem Commit und beginnt nach einem Bump wieder bei
+`0` (`Werkbaum 1.0.0`, `1.0.1`, … dann `VERSION` auf `1.1` bumpen → `1.1.0`). Es
+wird nichts ins Repo zurückgeschrieben. Lokal geöffnet zeigt der Editor den
+Platzhalter aus dem Quelltext (`Werkbaum 1.0`).
 
 **Einmalige Einrichtung:** In den Repo-Settings unter **Pages** als **Source**
 „GitHub Actions" wählen. Das Repo muss dafür **öffentlich** sein (GitHub Pages

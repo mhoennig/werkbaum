@@ -121,12 +121,16 @@ daneben. So bleibt die Quelle unverändert (lokal weiter per `file://` und
 Dev-Server nutzbar), und veröffentlicht wird nur das Nötige — `backend/` und die
 übrigen `docs/` bleiben außen vor.
 
-**Versionsnummer:** Die Micro-Version im Footer wird beim Build aus der
-GitHub-Actions-Run-Nummer gesetzt (`Werkbaum 1.0` → `Werkbaum 1.0.<run_number>`,
-per `sed` nur auf der Site-Kopie). Bewusst über die Run-Nummer statt über einen
-zurückgeschriebenen Commit/Tag: monoton steigend, ohne Extra-Commit und ohne
-selbstauslösenden Deploy-Zyklus. `1.0` bleibt die manuell gepflegte Basis
-(Major/Minor) und damit auch die Version beim lokalen Öffnen; nur die
-Micro-Stelle kommt aus der CI.
+**Versionsnummer:** `Major.Minor` steht in der Datei `VERSION` und wird per
+bewusstem **Bump-Commit** gepflegt; die **Micro-Stelle** leitet der Build aus
+der Anzahl der Commits seit dem letzten VERSION-Bump ab
+(`git rev-list --count <VERSION-Commit>..HEAD`) und ersetzt sie per `sed` nur
+auf der Site-Kopie im Footer. Bewusst aus der Commit-Historie statt aus der
+Run-Nummer (Vorentscheidung, verworfen): vollständig aus dem Repo
+reproduzierbar, monoton, ohne zurückgeschriebenen Commit/Tag und ohne
+selbstauslösenden Deploy-Zyklus. Die Micro-Stelle beginnt nach jedem Bump wieder
+bei 0 (SemVer-artig). Nötig ist ein vollständiger Klon (`fetch-depth: 0`), sonst
+zählt der flache CI-Klon nur einen Commit. `1.0` bleibt die Version beim lokalen
+Öffnen (Platzhalter im Quelltext).
 
 (Nummerierung: D15 war bereits für den kompakten Modus vergeben, daher D16.)
