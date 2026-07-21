@@ -27,7 +27,13 @@
       repeating-linear-gradient(0deg,transparent 0 23px,var(--grid) 23px 24px),
       repeating-linear-gradient(90deg,transparent 0 23px,var(--grid) 23px 24px),
       var(--paper);
-    height:100vh;overflow:hidden;
+    /* 100vh ist auf Mobilgeräten die *große* Viewport-Höhe (inkl. Fläche
+       hinter der unteren Browserleiste) — Footer/Editor-Titelzeile rutschen
+       dahinter. 100dvh = dynamische Viewport-Höhe, folgt der sichtbaren
+       Fläche. vh bleibt als Fallback für alte Browser. */
+    height:100vh;
+    height:100dvh;
+    overflow:hidden;
     display:flex;flex-direction:column;
     padding:24px 20px 12px;
   }
