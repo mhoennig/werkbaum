@@ -52,6 +52,7 @@
   body.fullscreen .site-footer{max-width:none}
   h1{font-size:1.25rem;font-weight:600;letter-spacing:-.01em}
   header p{margin-top:4px;color:var(--muted);font-size:.9rem}
+  .sub-short{display:none}                             /* Kurzfassung nur auf kleinem Bildschirm */
   .langsel{
     display:inline-flex;flex:0 0 auto;
     border:1px solid rgba(36,52,71,.2);border-radius:999px;overflow:hidden;
@@ -497,6 +498,10 @@
      820-px-Regel weiter oben. Die Legende bekommt einen eigenen Umschalter
      statt der dauerhaften „AGENDA“-Zeile. */
   body.mobile .winbtns{display:none}
+  /* Untertitel: Kurzfassung, garantiert einzeilig (Ellipsis als Sicherung) */
+  body.mobile .sub-full{display:none}
+  body.mobile .sub-short{display:inline}
+  body.mobile header p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* Editor immer gestapelt (Textarea oben, Legende darunter) */
   body.mobile .editor-body{flex-direction:column;align-items:stretch}
   body.mobile .agenda{border-left:0;border-top:1px dashed rgba(36,52,71,.18)}
@@ -548,7 +553,7 @@
     </div>
     </div>
   </div>
-  <p data-i18n="subtitle">Werkbaum – Ein Text-basierter WBS/Projektstrukturplan/Feature-Tree Diagramm-Editor.</p>
+  <p><span class="sub-full" data-i18n="subtitle">Werkbaum – Ein Text-basierter WBS/Projektstrukturplan/Feature-Tree/Requirements-Baum Diagramm-Editor.</span><span class="sub-short" data-i18n="subtitleShort">WBS, Feature- &amp; Requirements-Bäume als Text</span></p>
 </header>
 
 <div class="app" id="app">
@@ -1134,7 +1139,8 @@ document.getElementById('dlDiagramPng').addEventListener('click', async () => {
 /* ---------- Internationalisierung (DE/EN/ES/FR) ---------- */
 const I18N = {
   de: {
-    subtitle:"Werkbaum – Ein Text-basierter WBS/Projektstrukturplan/Feature-Tree Diagramm-Editor.",
+    subtitle:"Werkbaum – Ein Text-basierter WBS/Projektstrukturplan/Feature-Tree/Requirements-Baum Diagramm-Editor.",
+    subtitleShort:"WBS, Feature- & Requirements-Bäume als Text",
     imprint:"Impressum",
     legendTooltip:"Legende ein-/ausblenden",
     ghostTooltip:"Ab Größe M sollte ein Element weiter untergliedert werden.",
@@ -1167,7 +1173,8 @@ const I18N = {
     hint_people:"Personen mit @name — erscheinen unten rechts am Knoten."
   },
   en: {
-    subtitle:"Werkbaum – A text-based WBS / work breakdown structure / feature-tree diagram editor.",
+    subtitle:"Werkbaum – A text-based WBS / work breakdown structure / feature-tree / requirements-tree diagram editor.",
+    subtitleShort:"WBS, feature & requirements trees as text",
     imprint:"Imprint (Impressum)",
     legendTooltip:"Show/hide legend",
     ghostTooltip:"From size M upward, an item should be broken down further.",
@@ -1200,7 +1207,8 @@ const I18N = {
     hint_people:"People with @name — shown at the bottom-right of the node."
   },
   es: {
-    subtitle:"Werkbaum – Un editor de diagramas basado en texto para EDT / estructura de desglose del trabajo / árbol de características.",
+    subtitle:"Werkbaum – Un editor de diagramas basado en texto para EDT / estructura de desglose del trabajo / árbol de características / árbol de requisitos.",
+    subtitleShort:"EDT y árboles de características y requisitos",
     imprint:"Aviso legal (Impressum)",
     legendTooltip:"Mostrar u ocultar la leyenda",
     ghostTooltip:"A partir de la talla M, un elemento debería desglosarse más.",
@@ -1233,7 +1241,8 @@ const I18N = {
     hint_people:"Personas con @nombre — aparecen abajo a la derecha del nodo."
   },
   fr: {
-    subtitle:"Werkbaum – Un éditeur de diagrammes basé sur le texte pour WBS / organigramme des tâches / arbre de fonctionnalités.",
+    subtitle:"Werkbaum – Un éditeur de diagrammes basé sur le texte pour WBS / organigramme des tâches / arbre de fonctionnalités / arbre d'exigences.",
+    subtitleShort:"WBS, arbres de fonctionnalités et d'exigences",
     imprint:"Mentions légales (Impressum)",
     legendTooltip:"Afficher/masquer la légende",
     ghostTooltip:"À partir de la taille M, un élément devrait être décomposé davantage.",
@@ -1266,7 +1275,8 @@ const I18N = {
     hint_people:"Personnes avec @nom — affichées en bas à droite du nœud."
   },
   pl: {
-    subtitle:"Werkbaum – Edytor diagramów oparty na tekście: WBS / struktura podziału pracy / drzewo funkcji.",
+    subtitle:"Werkbaum – Edytor diagramów oparty na tekście: WBS / struktura podziału pracy / drzewo funkcji / drzewo wymagań.",
+    subtitleShort:"WBS, drzewa funkcji i wymagań jako tekst",
     imprint:"Nota prawna (Impressum)",
     legendTooltip:"Pokaż/ukryj legendę",
     ghostTooltip:"Od rozmiaru M element powinien być dalej podzielony.",
@@ -1299,7 +1309,8 @@ const I18N = {
     hint_people:"Osoby z @nazwa — pokazywane w prawym dolnym rogu węzła."
   },
   ru: {
-    subtitle:"Werkbaum – текстовый редактор диаграмм: СДР / структура декомпозиции работ / дерево функций.",
+    subtitle:"Werkbaum – текстовый редактор диаграмм: СДР / структура декомпозиции работ / дерево функций / дерево требований.",
+    subtitleShort:"СДР, деревья функций и требований",
     imprint:"Выходные данные (Impressum)",
     legendTooltip:"Показать/скрыть легенду",
     ghostTooltip:"Начиная с размера M элемент следует далее декомпозировать.",
@@ -1332,7 +1343,8 @@ const I18N = {
     hint_people:"Люди через @имя — показываются справа внизу узла."
   },
   hi: {
-    subtitle:"Werkbaum – टेक्स्ट-आधारित आरेख संपादक: WBS / कार्य विभाजन संरचना / फ़ीचर-ट्री।",
+    subtitle:"Werkbaum – टेक्स्ट-आधारित आरेख संपादक: WBS / कार्य विभाजन संरचना / फ़ीचर-ट्री / रिक्वायरमेंट-ट्री।",
+    subtitleShort:"WBS, फ़ीचर और रिक्वायरमेंट ट्री",
     imprint:"प्रकाशन विवरण (Impressum)",
     legendTooltip:"लेजेंड दिखाएँ/छिपाएँ",
     ghostTooltip:"आकार M से ऊपर किसी तत्व को और अधिक उप-विभाजित करना चाहिए।",
@@ -1365,7 +1377,8 @@ const I18N = {
     hint_people:"@नाम से व्यक्ति — नोड के नीचे-दाएँ दिखते हैं।"
   },
   zh: {
-    subtitle:"Werkbaum – 基于文本的图表编辑器：WBS / 工作分解结构 / 功能树。",
+    subtitle:"Werkbaum – 基于文本的图表编辑器：WBS / 工作分解结构 / 功能树 / 需求树。",
+    subtitleShort:"WBS、功能树与需求树",
     imprint:"法律声明（Impressum）",
     legendTooltip:"显示/隐藏图例",
     brandTooltip:"「Werkbaum」大致意为‘工作之树’——即工作分解结构（WBS）之树。",
@@ -1398,7 +1411,8 @@ const I18N = {
     hint_people:"用 @姓名 表示人员——显示在节点右下角。"
   },
   ja: {
-    subtitle:"Werkbaum – テキストベースの図エディター：WBS / 作業分解構成図 / フィーチャーツリー。",
+    subtitle:"Werkbaum – テキストベースの図エディター：WBS / 作業分解構成図 / フィーチャーツリー / 要件ツリー。",
+    subtitleShort:"WBS・機能ツリー・要件ツリー",
     imprint:"運営者情報（Impressum）",
     legendTooltip:"凡例を表示/非表示",
     brandTooltip:"「Werkbaum」はおおよそ『作業の木』の意味 — 作業分解構成図（WBS）のツリーです。",
