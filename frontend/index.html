@@ -32,8 +32,21 @@
     padding:24px 20px 12px;
   }
   header{max-width:1200px;width:100%;margin:0 auto 16px;flex:0 0 auto}
+  .header-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
   h1{font-size:1.25rem;font-weight:600;letter-spacing:-.01em}
   header p{margin-top:4px;color:var(--muted);font-size:.9rem}
+  .langsel{
+    display:inline-flex;flex:0 0 auto;
+    border:1px solid rgba(36,52,71,.2);border-radius:999px;overflow:hidden;
+  }
+  .langsel button{
+    border:0;background:var(--card);cursor:pointer;color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.04em;
+    padding:5px 10px;
+  }
+  .langsel button + button{border-left:1px solid rgba(36,52,71,.14)}
+  .langsel button:hover:not(.active){color:var(--or)}
+  .langsel button.active{background:var(--or);color:#fff}
   .site-footer{
     max-width:1200px;margin:28px auto 0;
     color:var(--muted);font-size:.78rem;text-align:center;
@@ -420,36 +433,44 @@
 <body>
 
 <header>
-  <h1 style="display:flex;align-items:center;gap:11px">
-    <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
-      <rect x="22" y="5" width="20" height="12" rx="3.5" fill="#243447"/>
-      <path d="M32 17 V22 M14 22 H50 M14 22 V27 M50 22 V27" fill="none" stroke="#243447" stroke-width="3"/>
-      <rect x="4" y="27" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
-      <rect x="40" y="27" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
-      <path d="M50 39 V46" fill="none" stroke="#0F766E" stroke-width="3" stroke-dasharray="4 4"/>
-      <rect x="40" y="46" width="20" height="12" rx="3.5" fill="#fff" stroke="#0F766E" stroke-width="3"/>
-    </svg>
-    <span>Werk<span style="color:var(--or)">baum</span></span>
-  </h1>
-  <p>Werkbaum – Ein Text-basierter WBS/Projektstrukturplan/Feature-Tree Diagramm-Editor.</p>
+  <div class="header-row">
+    <h1 style="display:flex;align-items:center;gap:11px">
+      <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+        <rect x="22" y="5" width="20" height="12" rx="3.5" fill="#243447"/>
+        <path d="M32 17 V22 M14 22 H50 M14 22 V27 M50 22 V27" fill="none" stroke="#243447" stroke-width="3"/>
+        <rect x="4" y="27" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+        <rect x="40" y="27" width="20" height="12" rx="3.5" fill="#fff" stroke="#243447" stroke-width="3"/>
+        <path d="M50 39 V46" fill="none" stroke="#0F766E" stroke-width="3" stroke-dasharray="4 4"/>
+        <rect x="40" y="46" width="20" height="12" rx="3.5" fill="#fff" stroke="#0F766E" stroke-width="3"/>
+      </svg>
+      <span>Werk<span style="color:var(--or)">baum</span></span>
+    </h1>
+    <div class="langsel" role="radiogroup" aria-label="Sprache / Language">
+      <button type="button" data-lang="de" title="Deutsch">DE</button>
+      <button type="button" data-lang="en" title="English">EN</button>
+      <button type="button" data-lang="es" title="Español">ES</button>
+      <button type="button" data-lang="fr" title="Français">FR</button>
+    </div>
+  </div>
+  <p data-i18n="subtitle">Werkbaum – Ein Text-basierter WBS/Projektstrukturplan/Feature-Tree Diagramm-Editor.</p>
 </header>
 
 <div class="app" id="app">
   <div class="panel editor">
     <div class="panel-head">
-      <span>Struktur (Text)</span>
-      <button type="button" class="copybtn" id="copy" title="Text in die Zwischenablage kopieren">kopieren</button>
-      <div class="winbtns" aria-label="Editor-Größe">
-        <button type="button" class="winbtn" data-state="b" title="minimieren">—</button>
-        <button type="button" class="winbtn" data-state="normal" title="normal">▢</button>
-        <button type="button" class="winbtn" data-state="a" title="maximieren">■</button>
+      <span data-i18n="editorTitle">Struktur (Text)</span>
+      <button type="button" class="copybtn" id="copy" data-i18n="copy" data-i18n-title="copyTitle" title="Text in die Zwischenablage kopieren">kopieren</button>
+      <div class="winbtns" aria-label="Editor">
+        <button type="button" class="winbtn" data-state="b" data-i18n-title="minimize" title="minimieren">—</button>
+        <button type="button" class="winbtn" data-state="normal" data-i18n-title="normal" title="normal">▢</button>
+        <button type="button" class="winbtn" data-state="a" data-i18n-title="maximize" title="maximieren">■</button>
       </div>
     </div>
     <div class="editor-body">
     <textarea id="src" spellcheck="false"></textarea>
     <details class="agenda">
-      <summary>Agenda</summary>
-    <div class="hint">
+      <summary data-i18n="agenda">Agenda</summary>
+    <div class="hint" id="hint">
       Einrückung (2 Leerzeichen oder Tab) definiert die Hierarchie.<br>
       <code>-</code>&nbsp; Teilpaket, alle erforderlich <em>(all of)</em><br>
       <code class="or-code">|</code>&nbsp; Alternative, eine wählen <em>(any of)</em><br>
@@ -478,36 +499,36 @@
 
   <div class="panel right">
     <div class="panel-head">
-      <span>Diagramm</span>
+      <span data-i18n="diagramTitle">Diagramm</span>
       <label class="switch">
-        <input type="checkbox" id="showc"><i></i>verworfene
+        <input type="checkbox" id="showc"><i></i><span data-i18n="discarded">verworfene</span>
       </label>
       <div class="seg" role="radiogroup" aria-label="Darstellung">
-        <label title="Horizontal – Organigramm, Diagramm über dem Editor">
-          <input type="radio" name="layout" value="horizontal" checked aria-label="Horizontal – Organigramm">
+        <label data-i18n-title="modeHorizontal" title="Horizontal – Organigramm, Diagramm über dem Editor">
+          <input type="radio" name="layout" value="horizontal" checked data-i18n-aria="modeHorizontal" aria-label="Horizontal – Organigramm">
           <span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="4" rx="1"/><rect x="2.5" y="17" width="6" height="4" rx="1"/><rect x="15.5" y="17" width="6" height="4" rx="1"/><path d="M12 7V13M5.5 13H18.5M5.5 13V17M18.5 13V17"/></svg></span>
         </label>
-        <label title="Kompakt – alles nach unten, platzsparend">
-          <input type="radio" name="layout" value="kompakt" aria-label="Kompakt – alles nach unten">
+        <label data-i18n-title="modeKompakt" title="Kompakt – alles nach unten, platzsparend">
+          <input type="radio" name="layout" value="kompakt" data-i18n-aria="modeKompakt" aria-label="Kompakt – alles nach unten">
           <span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="4" rx="1"/><path d="M6 7V20"/><path d="M6 11H10M6 17H10"/><rect x="10" y="9" width="9" height="4" rx="1"/><rect x="10" y="15" width="9" height="4" rx="1"/></svg></span>
         </label>
-        <label title="Vertikal – Baum nach rechts, Diagramm neben dem Editor">
-          <input type="radio" name="layout" value="vertikal" aria-label="Vertikal – Baum nach rechts">
+        <label data-i18n-title="modeVertikal" title="Vertikal – Baum nach rechts, Diagramm neben dem Editor">
+          <input type="radio" name="layout" value="vertikal" data-i18n-aria="modeVertikal" aria-label="Vertikal – Baum nach rechts">
           <span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="9.5" width="5" height="5" rx="1"/><rect x="16" y="3" width="6" height="4" rx="1"/><rect x="16" y="17" width="6" height="4" rx="1"/><path d="M7.5 12H12M12 5V19M12 5H16M12 19H16"/></svg></span>
         </label>
       </div>
-      <div class="winbtns" aria-label="Diagramm-Größe">
-        <button type="button" class="winbtn" data-state="a" title="minimieren">—</button>
-        <button type="button" class="winbtn" data-state="normal" title="normal">▢</button>
-        <button type="button" class="winbtn" data-state="b" title="maximieren">■</button>
+      <div class="winbtns" aria-label="Diagramm">
+        <button type="button" class="winbtn" data-state="a" data-i18n-title="minimize" title="minimieren">—</button>
+        <button type="button" class="winbtn" data-state="normal" data-i18n-title="normal" title="normal">▢</button>
+        <button type="button" class="winbtn" data-state="b" data-i18n-title="maximize" title="maximieren">■</button>
       </div>
     </div>
     <div class="diagram"><ul class="tree" id="out"></ul></div>
     <div class="warnings" id="warn"></div>
-    <div class="zoomctl" aria-label="Zoom (Strg/Cmd + Mausrad)">
-      <button type="button" id="zoomOut" title="verkleinern">−</button>
-      <button type="button" id="zoomReset" title="zurücksetzen">100&nbsp;%</button>
-      <button type="button" id="zoomIn" title="vergrößern">+</button>
+    <div class="zoomctl" data-i18n-aria="zoomAria" aria-label="Zoom (Strg/Cmd + Mausrad)">
+      <button type="button" id="zoomOut" data-i18n-title="zoomOut" title="verkleinern">−</button>
+      <button type="button" id="zoomReset" data-i18n-title="zoomReset" title="zurücksetzen">100&nbsp;%</button>
+      <button type="button" id="zoomIn" data-i18n-title="zoomIn" title="vergrößern">+</button>
     </div>
   </div>
 </div>
@@ -599,15 +620,13 @@ function visibleChildren(n){
   return n.children.filter(k => !k.status || k.status.key !== 'verworfen');
 }
 
-const GHOST = '<div class="ghost-node">Untergliederung fehlt</div>';
-
 function nodeHtml(n, extra){
   const need = needsBreakdown(n);
   const cls = ['node', extra || '', n.status ? 'st-' + n.status.key : '']
     .filter(Boolean).join(' ');
-  const title = n.status ? ` title="${n.status.name}"` : '';
+  const title = n.status ? ` title="${esc(t('st_' + n.status.key)).replace(/"/g,'&quot;')}"` : '';
   const tagsHtml = n.tags && n.tags.length
-    ? `<span class="tags">${n.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</span>`
+    ? `<span class="tags">${n.tags.map(tag => `<span class="tag">${esc(tag)}</span>`).join('')}</span>`
     : '';
   const inner = esc(n.label) +
                 (n.url ? '<span class="ext">↗</span>' : '') +
@@ -616,7 +635,8 @@ function nodeHtml(n, extra){
   const html = n.url
     ? `<a class="${cls}" href="${esc(n.url).replace(/"/g,'&quot;')}" target="_blank" rel="noopener"${title}>${inner}</a>`
     : `<div class="${cls}"${title}>${inner}</div>`;
-  return html + (need ? GHOST : '');
+  const ghost = `<div class="ghost-node">${esc(t('ghost'))}</div>`;
+  return html + (need ? ghost : '');
 }
 
 function renderChildren(node, warnings){
@@ -624,7 +644,7 @@ function renderChildren(node, warnings){
   if(!kids.length) return '';
   const types = new Set(kids.map(k => k.type));
   if(types.size > 1){
-    warnings.push(`Zeile ${kids[0].line}: Unter „${esc(node.label)}“ sind - und | gemischt — dargestellt nach dem ersten Kind.`);
+    warnings.push(t('mixedWarn', {line: kids[0].line, label: esc(node.label)}));
   }
   const gate = gateOf(kids);
   const items = kids.map(k => {
@@ -646,7 +666,7 @@ function render(){
   }
 
   if(!roots.length){
-    out.innerHTML = '<div class="empty">Noch keine Struktur — einfach lostippen.</div>';
+    out.innerHTML = `<div class="empty">${esc(t('empty'))}</div>`;
     warnBox.innerHTML = '';
     return;
   }
@@ -808,14 +828,158 @@ copyBtn.addEventListener('click', async () => {
     src.setSelectionRange(0, 0);
     src.blur();
   }
-  copyBtn.textContent = 'kopiert ✓';
+  copyBtn.textContent = t('copyDone');
   copyBtn.classList.add('done');
-  setTimeout(() => { copyBtn.textContent = 'kopieren'; copyBtn.classList.remove('done'); }, 1500);
+  setTimeout(() => { copyBtn.textContent = t('copy'); copyBtn.classList.remove('done'); }, 1500);
+});
+
+/* ---------- Internationalisierung (DE/EN/ES/FR) ---------- */
+const I18N = {
+  de: {
+    subtitle:"Werkbaum – Ein Text-basierter WBS/Projektstrukturplan/Feature-Tree Diagramm-Editor.",
+    editorTitle:"Struktur (Text)", diagramTitle:"Diagramm",
+    copy:"kopieren", copyDone:"kopiert ✓", copyTitle:"Text in die Zwischenablage kopieren",
+    minimize:"minimieren", normal:"normal", maximize:"maximieren",
+    agenda:"Agenda", discarded:"verworfene",
+    modeHorizontal:"Horizontal – Organigramm, Diagramm über dem Editor",
+    modeKompakt:"Kompakt – alles nach unten, platzsparend",
+    modeVertikal:"Vertikal – Baum nach rechts, Diagramm neben dem Editor",
+    zoomOut:"verkleinern", zoomReset:"zurücksetzen", zoomIn:"vergrößern",
+    zoomAria:"Zoom (Strg/Cmd + Mausrad)",
+    empty:"Noch keine Struktur — einfach lostippen.", ghost:"Untergliederung fehlt",
+    mixedWarn:"Zeile {line}: Unter „{label}“ sind - und | gemischt — dargestellt nach dem ersten Kind.",
+    st_idee:"Idee", st_geplant:"geplant", st_arbeit:"in Arbeit", st_durchstich:"Durchstich",
+    st_fertig:"fertig", st_prod:"in Produktion", st_verworfen:"verworfen",
+    hint_indent:"Einrückung (2 Leerzeichen oder Tab) definiert die Hierarchie.",
+    hint_all:"Teilpaket, alle erforderlich", hint_any:"Alternative, eine wählen",
+    hint_root:"Zeile ohne Zeichen = Wurzelknoten. Geschwister sollten dasselbe Zeichen tragen.",
+    hint_status:"Status als Kästchen nach dem Zeichen, z. B.",
+    hint_size:"Aufwand als T-Shirt-Größe in Klammern, Link einfach als URL anhängen:",
+    hint_break:"Ab (M) gilt: weiter untergliedern — fehlt die Untergliederung, erscheint ein Platzhalter im Diagramm.",
+    hint_comment:"Kommentare mit %% — als ganze Zeile oder am Zeilenende.",
+    hint_people:"Personen mit @name — erscheinen unten rechts am Knoten."
+  },
+  en: {
+    subtitle:"Werkbaum – A text-based WBS / work breakdown structure / feature-tree diagram editor.",
+    editorTitle:"Structure (text)", diagramTitle:"Diagram",
+    copy:"copy", copyDone:"copied ✓", copyTitle:"Copy text to clipboard",
+    minimize:"minimize", normal:"normal", maximize:"maximize",
+    agenda:"Legend", discarded:"discarded",
+    modeHorizontal:"Horizontal – org chart, diagram above the editor",
+    modeKompakt:"Compact – everything downward, space-saving",
+    modeVertikal:"Vertical – tree to the right, diagram beside the editor",
+    zoomOut:"zoom out", zoomReset:"reset", zoomIn:"zoom in",
+    zoomAria:"Zoom (Ctrl/Cmd + mouse wheel)",
+    empty:"No structure yet — just start typing.", ghost:"Breakdown missing",
+    mixedWarn:"Line {line}: under “{label}”, - and | are mixed — rendered by the first child.",
+    st_idee:"idea", st_geplant:"planned", st_arbeit:"in progress", st_durchstich:"walking skeleton",
+    st_fertig:"done", st_prod:"in production", st_verworfen:"discarded",
+    hint_indent:"Indentation (2 spaces or a tab) defines the hierarchy.",
+    hint_all:"sub-task, all required", hint_any:"alternative, choose one",
+    hint_root:"Line without a marker = root node. Siblings should share the same marker.",
+    hint_status:"Status as a checkbox after the marker, e.g.",
+    hint_size:"Effort as a T-shirt size in parentheses; add a link simply as a URL:",
+    hint_break:"From (M) on: break it down further — if the breakdown is missing, a placeholder appears in the diagram.",
+    hint_comment:"Comments with %% — whole line or at the end of a line.",
+    hint_people:"People with @name — shown at the bottom-right of the node."
+  },
+  es: {
+    subtitle:"Werkbaum – Un editor de diagramas basado en texto para EDT / estructura de desglose del trabajo / árbol de características.",
+    editorTitle:"Estructura (texto)", diagramTitle:"Diagrama",
+    copy:"copiar", copyDone:"copiado ✓", copyTitle:"Copiar el texto al portapapeles",
+    minimize:"minimizar", normal:"normal", maximize:"maximizar",
+    agenda:"Leyenda", discarded:"descartados",
+    modeHorizontal:"Horizontal – organigrama, diagrama sobre el editor",
+    modeKompakt:"Compacto – todo hacia abajo, ahorra espacio",
+    modeVertikal:"Vertical – árbol hacia la derecha, diagrama junto al editor",
+    zoomOut:"alejar", zoomReset:"restablecer", zoomIn:"acercar",
+    zoomAria:"Zoom (Ctrl/Cmd + rueda del ratón)",
+    empty:"Aún no hay estructura — simplemente empieza a escribir.", ghost:"Falta el desglose",
+    mixedWarn:"Línea {line}: bajo «{label}» se mezclan - y | — se representa según el primer hijo.",
+    st_idee:"idea", st_geplant:"planificado", st_arbeit:"en curso", st_durchstich:"prototipo funcional",
+    st_fertig:"terminado", st_prod:"en producción", st_verworfen:"descartado",
+    hint_indent:"La sangría (2 espacios o un tabulador) define la jerarquía.",
+    hint_all:"subtarea, todas obligatorias", hint_any:"alternativa, elige una",
+    hint_root:"Línea sin marcador = nodo raíz. Los hermanos deberían llevar el mismo marcador.",
+    hint_status:"Estado como casilla tras el marcador, p. ej.",
+    hint_size:"Esfuerzo como talla de camiseta entre paréntesis; añade un enlace simplemente como URL:",
+    hint_break:"A partir de (M): sigue desglosando — si falta el desglose, aparece un marcador de posición en el diagrama.",
+    hint_comment:"Comentarios con %% — línea completa o al final de la línea.",
+    hint_people:"Personas con @nombre — aparecen abajo a la derecha del nodo."
+  },
+  fr: {
+    subtitle:"Werkbaum – Un éditeur de diagrammes basé sur le texte pour WBS / organigramme des tâches / arbre de fonctionnalités.",
+    editorTitle:"Structure (texte)", diagramTitle:"Diagramme",
+    copy:"copier", copyDone:"copié ✓", copyTitle:"Copier le texte dans le presse-papiers",
+    minimize:"réduire", normal:"normal", maximize:"agrandir",
+    agenda:"Légende", discarded:"abandonnés",
+    modeHorizontal:"Horizontal – organigramme, diagramme au-dessus de l'éditeur",
+    modeKompakt:"Compact – tout vers le bas, gain de place",
+    modeVertikal:"Vertical – arbre vers la droite, diagramme à côté de l'éditeur",
+    zoomOut:"dézoomer", zoomReset:"réinitialiser", zoomIn:"zoomer",
+    zoomAria:"Zoom (Ctrl/Cmd + molette)",
+    empty:"Pas encore de structure — commencez à taper.", ghost:"Décomposition manquante",
+    mixedWarn:"Ligne {line} : sous « {label} », - et | sont mélangés — rendu selon le premier enfant.",
+    st_idee:"idée", st_geplant:"planifié", st_arbeit:"en cours", st_durchstich:"squelette fonctionnel",
+    st_fertig:"terminé", st_prod:"en production", st_verworfen:"abandonné",
+    hint_indent:"L'indentation (2 espaces ou une tabulation) définit la hiérarchie.",
+    hint_all:"sous-tâche, toutes requises", hint_any:"alternative, en choisir une",
+    hint_root:"Ligne sans marqueur = nœud racine. Les frères devraient porter le même marqueur.",
+    hint_status:"Statut sous forme de case après le marqueur, p. ex.",
+    hint_size:"Effort en taille de T-shirt entre parenthèses ; ajoutez un lien simplement comme URL :",
+    hint_break:"À partir de (M) : décomposer davantage — si la décomposition manque, un espace réservé apparaît dans le diagramme.",
+    hint_comment:"Commentaires avec %% — ligne entière ou en fin de ligne.",
+    hint_people:"Personnes avec @nom — affichées en bas à droite du nœud."
+  }
+};
+let lang = 'de';
+function t(key, vars){
+  let s = (I18N[lang] && I18N[lang][key]) ?? I18N.de[key] ?? key;
+  if(vars) for(const k in vars) s = s.split('{'+k+'}').join(vars[k]);
+  return s;
+}
+function buildHint(){
+  const chip = (key, code) => `<span class="chip st-${key}">${code}&nbsp;${esc(t('st_'+key))}</span>`;
+  return `${esc(t('hint_indent'))}<br>
+    <code>-</code>&nbsp; ${esc(t('hint_all'))} <em>(all of)</em><br>
+    <code class="or-code">|</code>&nbsp; ${esc(t('hint_any'))} <em>(any of)</em><br>
+    ${esc(t('hint_root'))}<br>
+    ${esc(t('hint_status'))} <code>- [~] Frontend</code>:
+    <div class="chips">
+      ${chip('idee','[?]')}
+      ${chip('geplant','[&nbsp;]')}
+      ${chip('arbeit','[~]')}
+      ${chip('durchstich','[/]')}
+      ${chip('fertig','[x]')}
+      ${chip('prod','[^]')}
+      ${chip('verworfen','[-]')}
+    </div>
+    ${esc(t('hint_size'))}<br>
+    <code>- [ ] Backend (L) https://…</code><br>
+    ${esc(t('hint_break'))}<br>
+    ${esc(t('hint_comment'))}
+    ${esc(t('hint_people'))}`;
+}
+function applyLang(l){
+  lang = l;
+  document.documentElement.lang = l;
+  document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-title]').forEach(el => el.title = t(el.dataset.i18nTitle));
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => el.setAttribute('aria-label', t(el.dataset.i18nAria)));
+  document.getElementById('hint').innerHTML = buildHint();
+  document.querySelectorAll('.langsel button').forEach(b => b.classList.toggle('active', b.dataset.lang===l));
+  render();
+  try{ localStorage.setItem('werkbaum-lang', l); }catch(_){}
+}
+document.querySelectorAll('.langsel button').forEach(b => {
+  b.addEventListener('click', () => applyLang(b.dataset.lang));
 });
 
 applySplit();   /* Startzustand: normal, markiert die normal-Buttons aktiv */
 src.value = INITIAL;
-render();
+let startLang = 'de';
+try{ startLang = localStorage.getItem('werkbaum-lang') || 'de'; }catch(_){}
+applyLang(I18N[startLang] ? startLang : 'de');   /* setzt Texte + rendert */
 </script>
 
 </body>
