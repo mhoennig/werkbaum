@@ -1,5 +1,5 @@
 <p align="left">
-  <img src="brand/logo.svg" width="72" alt="Werkbaum-Logo">
+  <img src="docs/brand/logo.svg" width="72" alt="Werkbaum-Logo">
 </p>
 
 # Werkbaum
