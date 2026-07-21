@@ -1,5 +1,7 @@
 import './style.css';
-import { SIZE_RANK, STATUS_BY_CODE, parse } from './parser.js';
+import { parse } from './parser.js';
+import { computeCheapSet } from './model.js';
+import { esc, renderTreeHtml } from './render.js';
 
 const INITIAL = `%% Project structure – Sprint 14
 [~] Website relaunch (XL) https://wiki.example.com/relaunch
@@ -26,113 +28,18 @@ const src  = document.getElementById('src');
 const out  = document.getElementById('out');
 const warnBox = document.getElementById('warn');
 
-function esc(s){
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-/* ---------- Renderer ---------- */
-function gateOf(children){
-  return children.length && children[0].type === 'or' ? 'or' : 'and';
-}
-
-function needsBreakdown(n){
-  if(n.status && n.status.key === 'verworfen') return false;
-  return !!n.size && SIZE_RANK[n.size] >= SIZE_RANK.M && !n.children.length;
-}
-
-function visibleChildren(n){
-  if(discardedShown()) return n.children;
-  return n.children.filter(k => !k.status || k.status.key !== 'verworfen');
-}
-
-/* ---------- Günstigster Pfad ----------
-   Markiert die Knoten, die für die günstigste Realisierung nötig sind:
-   all-of ⇒ alle Kinder nötig; any-of ⇒ nur die günstigste Alternative.
-   „Günstig" = kleinste rekursive Kosten (eigene T-Shirt-Größe + Kinder;
-   bei any-of das Minimum). Verworfene zählen nie mit — unabhängig vom
-   Einblenden-Toggle. Gleichstand ⇒ erste Alternative. Fehlende Größe = M. */
+/* Baum-/Kostenlogik (gateOf, needsBreakdown, visibleChildren, günstigster
+   Pfad) lebt headless in model.js, das HTML-Erzeugen in render.js. Hier bleibt
+   nur der UI-State des Günstigster-Pfad-Toggles (persistiert). */
 let cheapPathOn = true;
-const cheapSet = new Set();
-function pathChildren(n){
-  return n.children.filter(k => !k.status || k.status.key !== 'verworfen');
-}
-/* fehlende Größe wird als M interpretiert */
-function ownCost(n){ return SIZE_RANK[n.size || 'M'] + 1; }
-function cheapestCost(n){
-  const kids = pathChildren(n);
-  let c = ownCost(n);
-  if(kids.length){
-    if(gateOf(kids) === 'or') c += Math.min(...kids.map(cheapestCost));
-    else c += kids.reduce((s, k) => s + cheapestCost(k), 0);
-  }
-  return c;
-}
-function markCheapest(n){
-  cheapSet.add(n);
-  const kids = pathChildren(n);
-  if(!kids.length) return;
-  if(gateOf(kids) === 'or'){
-    let best = null, bc = Infinity;
-    for(const k of kids){ const c = cheapestCost(k); if(c < bc){ bc = c; best = k; } }
-    if(best) markCheapest(best);
-  } else {
-    for(const k of kids) markCheapest(k);
-  }
-}
-function cheapCls(n){
-  if(!(cheapPathOn && cheapSet.has(n))) return '';
-  /* Endknoten des Pfads: kein Kind liegt (mehr) auf dem günstigen Pfad */
-  const leaf = !pathChildren(n).some(k => cheapSet.has(k));
-  return leaf ? 'cheap cheap-leaf' : 'cheap';
-}
 
-function nodeHtml(n, extra){
-  const need = needsBreakdown(n);
-  const cls = ['node', extra || '', n.status ? 'st-' + n.status.key : '']
-    .filter(Boolean).join(' ');
-  const title = n.status ? ` title="${esc(t('st_' + n.status.key)).replace(/"/g,'&quot;')}"` : '';
-  const tagsHtml = n.tags && n.tags.length
-    ? `<span class="tags">${n.tags.map(tag => `<span class="tag">${esc(tag)}</span>`).join('')}</span>`
-    : '';
-  const implicitTip = esc(t('implicitSizeTooltip')).replace(/"/g,'&quot;');
-  const sizeBadge = n.size
-    ? `<span class="size">${n.size}</span>`
-    : (cheapPathOn ? `<span class="size implicit" title="${implicitTip}">M</span>` : '');
-  const inner = esc(n.label) +
-                (n.url ? '<span class="ext">↗</span>' : '') +
-                sizeBadge +
-                tagsHtml;
-  const html = n.url
-    ? `<a class="${cls}" href="${esc(n.url).replace(/"/g,'&quot;')}" target="_blank" rel="noopener"${title}>${inner}</a>`
-    : `<div class="${cls}"${title}>${inner}</div>`;
-  const ghostTip = esc(t('ghostTooltip')).replace(/"/g,'&quot;');
-  const ghost = `<div class="ghost-node" title="${ghostTip}">${esc(t('ghost'))}</div>`;
-  return html + (need ? ghost : '');
-}
-
-function renderChildren(node, warnings){
-  const kids = visibleChildren(node);
-  if(!kids.length) return '';
-  const types = new Set(kids.map(k => k.type));
-  if(types.size > 1){
-    warnings.push(t('mixedWarn', {line: kids[0].line, label: esc(node.label)}));
-  }
-  const gate = gateOf(kids);
-  const items = kids.map(k => {
-    const vk = visibleChildren(k);
-    const liCls = vk.length ? (gateOf(vk) === 'or' ? ' class="has-or"' : ' class="has-and"') : '';
-    return `<li${liCls}>` +
-           nodeHtml(k, cheapCls(k)) +
-           renderChildren(k, warnings) +
-           `</li>`;
-  }).join('');
-  return `<ul class="${gate}">${items}</ul>`;
-}
-
+/* ---------- Renderer (Anbindung an den DOM) ----------
+   parse -> Wurzeln filtern (verworfene) -> günstigen Pfad markieren ->
+   render.js baut den HTML-String -> in #out schreiben -> Pfadlinie zeichnen. */
 function render(){
   let {roots} = parse(src.value);
-  const warnings = [];
-  if(!discardedShown()){
+  const showDiscarded = discardedShown();
+  if(!showDiscarded){
     roots = roots.filter(r => !r.status || r.status.key !== 'verworfen');
   }
 
@@ -142,18 +49,13 @@ function render(){
     return;
   }
 
-  cheapSet.clear();
-  if(cheapPathOn) roots.forEach(markCheapest);
+  const cheapSet = cheapPathOn ? computeCheapSet(roots) : new Set();
   out.classList.toggle('cheap-on', cheapPathOn);
 
-  out.innerHTML = roots.map(root => {
-    const vk = visibleChildren(root);
-    const liCls = vk.length ? (gateOf(vk) === 'or' ? ' class="has-or"' : ' class="has-and"') : '';
-    return `<li${liCls}>` +
-           nodeHtml(root, ('root-node ' + cheapCls(root)).trim()) +
-           renderChildren(root, warnings) +
-           `</li>`;
-  }).join('');
+  const {html, warnings} = renderTreeHtml(roots, {
+    t, showDiscarded, cheapPath: cheapPathOn, cheapSet
+  });
+  out.innerHTML = html;
 
   warnBox.innerHTML = warnings.map(w => `<div>⚠ ${w}</div>`).join('');
   drawCheapPath();

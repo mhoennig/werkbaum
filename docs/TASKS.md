@@ -17,8 +17,13 @@ Abhaken beim Erledigen; neue Aufgaben unten anfügen.
       als Fixture; Randfälle: gemischte Gates, Tabs/ungleichmäßige Einrückung,
       URL mit `@`, mehrere Wurzeln, leere Labels, `%%` am Zeilenanfang/-ende.
       → `tests/parser.test.js` (18 Tests).
-- [ ] Renderer extrahieren (HTML-String-Erzeugung), Snapshot-Tests für
+- [x] Renderer extrahieren (HTML-String-Erzeugung), Snapshot-Tests für
       Normal- und Vertikalmodus sowie „Untergliederung fehlt“.
+      → `src/model.js` (Baum-/Kostenlogik) + `src/render.js` (`renderTreeHtml`,
+      headless); `app.js` reicht UI-State als Parameter herein.
+      `tests/render.test.js` (6 Tests, Snapshots). Anm.: der Modus
+      (horizontal/vertikal/kompakt) ist reine CSS-Container-Klasse und ändert
+      den Renderer-String nicht — ein Snapshot deckt alle drei Modi ab.
 - [ ] Warnungs-Modell vereinheitlichen (Zeilennummern, Typen).
 
 ## Phase 2 — Qualität

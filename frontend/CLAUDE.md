@@ -38,8 +38,16 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `var(--or)` nur noch für UI-Akzente/Logo (SPEC §9, D15).
 - Extraktionsreihenfolge im Parser nicht umstellen: Kommentar → Zeichen/
   Status → URL → Größe → Tags (sonst kollidiert `@` in URLs).
-- Günstigster Pfad: `markCheapest()`/`cheapestCost()` markieren die nötigen
-  Knoten (Klassen `cheap`, `cheap-leaf`); `drawCheapPath()` zeichnet nach jedem
+- Modulteilung (D19): `parser.js` (Text→Baum, headless), `model.js` (Baum-/
+  Kostenlogik: `gateOf`, `needsBreakdown`, `visibleChildren(n, showDiscarded)`,
+  `computeCheapSet`, `cheapCls`), `render.js` (HTML-String via
+  `renderTreeHtml(roots, {t, showDiscarded, cheapPath, cheapSet})`, headless),
+  `app.js` (DOM/Events/i18n/Persistenz/Export). Modell/Renderer bekommen UI-State
+  (verworfene einblenden, Pfad an/aus) als **Parameter** — keine Globals; nur
+  `cheapPathOn` lebt als UI-State in `app.js`. Tests: `tests/*.test.js`.
+- Günstigster Pfad: `markCheapest()`/`cheapestCost()` (in `model.js`) markieren
+  die nötigen Knoten (Klassen `cheap`, `cheap-leaf`); `drawCheapPath()` (app.js)
+  zeichnet nach jedem
   `render()` **und** nach `applyLayout()` zwei Overlay-SVGs in `#out` (hinten
   kräftige Linie, vorne abgetönte Kopie + Stationspunkte). Overlays erben den
   CSS-`zoom` von `#out`, Punkte in unskalierte `#out`-Koordinaten umrechnen
