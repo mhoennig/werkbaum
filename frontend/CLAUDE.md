@@ -58,6 +58,12 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Umbauten dieses Nesting mitprüfen.
 - „verworfen" ist per Default ausgeblendet; Filterlogik steckt in
   `visibleChildren()` und muss bei Renderer-Umbauten erhalten bleiben.
+- Barrierefreiheit (SPEC §9): `render.js` baut je Knoten einen sprechenden
+  `aria-label` (Label + Status + Aufwand + Zuständige + Link, lokalisiert via
+  `t`); die visuellen Badges (Größe, Tags, ↗) sind `aria-hidden`. Neue
+  Knoten-Eigenschaften dort in `nodeAria()` mitpflegen und dafür a11y-i18n-Keys
+  (`a11y*`) in **allen 9 Sprachen** anlegen. Knoten sind `tabindex="0"`
+  (Fokus = Lesereihenfolge), `#warn` ist eine Live-Region.
 - Zustand wird im `localStorage` gehalten (noch kein Backend): `werkbaum-lang`
   (Sprache), `werkbaum-src` (Editortext), `werkbaum-ui` (JSON: Modus,
   verworfene, günstigster Pfad, Split-Zustand inkl. `--col`/`--drow`, Zoom,

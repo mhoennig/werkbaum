@@ -16,29 +16,47 @@ import { gateOf, needsBreakdown, visibleChildren, cheapCls } from './model.js';
 export function esc(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+/* Escaping für Attributwerte (zusätzlich " -> &quot;). */
+function attr(s){ return esc(String(s)).replace(/"/g,'&quot;'); }
+
+/* Barrierefreier Name eines Knotens: Label + Status + Aufwand + Zuständige +
+   Link. Die visuellen Badges (Größe, Tags, ↗) sind aria-hidden — ihre
+   Information steckt hier, sonst würde der Screenreader Kryptisches („M",
+   „anna", „↗") vorlesen. */
+function nodeAria(n, opts){
+  const { t, cheapPath } = opts;
+  const parts = [n.label];
+  if(n.status) parts.push(t('a11yStatus', {status: t('st_' + n.status.key)}));
+  if(n.size) parts.push(t('a11ySize', {size: n.size}));
+  else if(cheapPath) parts.push(t('a11ySizeImplicit'));
+  if(n.tags && n.tags.length) parts.push(t('a11yTags', {names: n.tags.join(', ')}));
+  if(n.url) parts.push(t('a11yLink'));
+  return parts.join(', ');
+}
 
 function nodeHtml(n, extra, opts){
   const { t, cheapPath } = opts;
   const need = needsBreakdown(n);
   const cls = ['node', extra || '', n.status ? 'st-' + n.status.key : '']
     .filter(Boolean).join(' ');
-  const title = n.status ? ` title="${esc(t('st_' + n.status.key)).replace(/"/g,'&quot;')}"` : '';
+  const title = n.status ? ` title="${attr(t('st_' + n.status.key))}"` : '';
   const tagsHtml = n.tags && n.tags.length
-    ? `<span class="tags">${n.tags.map(tag => `<span class="tag">${esc(tag)}</span>`).join('')}</span>`
+    ? `<span class="tags" aria-hidden="true">${n.tags.map(tag => `<span class="tag">${esc(tag)}</span>`).join('')}</span>`
     : '';
-  const implicitTip = esc(t('implicitSizeTooltip')).replace(/"/g,'&quot;');
+  const implicitTip = attr(t('implicitSizeTooltip'));
   const sizeBadge = n.size
-    ? `<span class="size">${n.size}</span>`
-    : (cheapPath ? `<span class="size implicit" title="${implicitTip}">M</span>` : '');
+    ? `<span class="size" aria-hidden="true">${n.size}</span>`
+    : (cheapPath ? `<span class="size implicit" aria-hidden="true" title="${implicitTip}">M</span>` : '');
   const inner = esc(n.label) +
-                (n.url ? '<span class="ext">↗</span>' : '') +
+                (n.url ? '<span class="ext" aria-hidden="true">↗</span>' : '') +
                 sizeBadge +
                 tagsHtml;
+  const aria = ` aria-label="${attr(nodeAria(n, opts))}"`;
   const html = n.url
-    ? `<a class="${cls}" href="${esc(n.url).replace(/"/g,'&quot;')}" target="_blank" rel="noopener"${title}>${inner}</a>`
-    : `<div class="${cls}"${title}>${inner}</div>`;
-  const ghostTip = esc(t('ghostTooltip')).replace(/"/g,'&quot;');
-  const ghost = `<div class="ghost-node" title="${ghostTip}">${esc(t('ghost'))}</div>`;
+    ? `<a class="${cls}" href="${attr(n.url)}" target="_blank" rel="noopener"${aria}${title}>${inner}</a>`
+    : `<div class="${cls}" tabindex="0"${aria}${title}>${inner}</div>`;
+  const ghostTip = attr(t('ghostTooltip'));
+  const ghost = `<div class="ghost-node" aria-label="${ghostTip}" title="${ghostTip}">${esc(t('ghost'))}</div>`;
   return html + (need ? ghost : '');
 }
 

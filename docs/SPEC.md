@@ -222,6 +222,19 @@ Das Diagramm wird aus der Live-Geometrie in ein eigenständiges SVG (nur Formen
 - Es wird genau die **sichtbare** Struktur exportiert (der „verworfene
   einblenden“-Filter wirkt auch hier).
 
+### Barrierefreiheit
+Die visuell codierten Knoten-Eigenschaften werden für Screenreader in einem
+sprechenden **`aria-label`** je Knoten zusammengefasst — Label, Status, Aufwand
+(inkl. „(angenommen)“ beim impliziten M), Zuständige und ob der Knoten verlinkt
+ist —, alles in der aktuellen UI-Sprache. Die rein visuellen Beiwerke
+(Größen-Badge, Tags, ↗-Pfeil) sind `aria-hidden`, damit sie nicht kryptisch
+doppelt vorgelesen werden. **Alle** Knoten sind fokussierbar (`tabindex="0"`
+bzw. der Link selbst); die **Fokusreihenfolge entspricht der Dokument-/
+Lesereihenfolge** (Wurzeln, dann Kinder in Tiefe). Ein sichtbarer
+`:focus-visible`-Rahmen (Petrol) zeigt den Tastaturfokus. Der Warnungsbereich
+ist eine **Live-Region** (`role="status"`, `aria-live="polite"`), sodass neue
+Warnungen (z. B. gemischte Gates) angesagt werden.
+
 ## 10. Beispiel (kanonisch)
 
 ```

@@ -324,6 +324,9 @@
   }
   a.node{text-decoration:none;cursor:pointer}
   a.node:hover{box-shadow:0 2px 8px rgba(36,52,71,.22)}
+  /* Sichtbarer Tastatur-Fokus (Knoten sind fokussierbar: Fokusreihenfolge =
+     Lese-/Dokumentreihenfolge; Screenreader liest den aria-label). */
+  .node:focus-visible{outline:2px solid var(--or);outline-offset:2px;box-shadow:0 2px 8px rgba(36,52,71,.22)}
   .ext{font-size:.72em;margin-left:5px;opacity:.55}
   .size{
     position:absolute;top:-9px;right:-9px;

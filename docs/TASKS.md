@@ -31,7 +31,12 @@ Abhaken beim Erledigen; neue Aufgaben unten anfügen.
       Phase 2 (`unknownStatus`). `tests/warnings.test.js`.
 
 ## Phase 2 — Qualität
-- [ ] Barrierefreiheit: Fokusreihenfolge, aria-Labels für Status/Größe/Tags.
+- [x] Barrierefreiheit: Fokusreihenfolge, aria-Labels für Status/Größe/Tags.
+      → je Knoten ein sprechender `aria-label` (Label+Status+Aufwand+Zuständige+
+      Link, lokalisiert, neue `a11y*`-Keys in allen 9 Sprachen); visuelle Badges
+      `aria-hidden`; Knoten `tabindex="0"` (Fokus = Lesereihenfolge) mit
+      `:focus-visible`-Rahmen; `#warn` als Live-Region (`role=status`,
+      `aria-live=polite`). Snapshots aktualisiert.
 - [ ] Druck-Stylesheet (Diagramm ohne Editor-Panel).
 - [ ] Fehlertolerantes Parsen weiter ausbauen (unbekannte Statuszeichen melden).
 
