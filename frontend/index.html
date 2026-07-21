@@ -486,23 +486,15 @@
      wie in allen Modi. Gate-Codierung: und = durchgezogen dunkel (Tinte),
      oder = gestrichelt grau. */
 
-  /* ---------- Kleiner Bildschirm (Smartphone): nur ein Panel ----------
-     body.mobile wird per matchMedia (<=640px) gesetzt. Es ist immer genau
-     EIN Panel groß, das andere schrumpft auf seine Titelzeile und dient als
-     Umschalter (Tippen bringt es nach vorn). Splitter und Fenster-Buttons
-     entfallen; die Legende bekommt einen eigenen Umschalter statt der
-     dauerhaften „AGENDA“-Zeile. */
-  body.mobile .gutter{display:none}
+  /* ---------- Kleiner Bildschirm (Smartphone) ----------
+     body.mobile wird per matchMedia (<=640px) gesetzt. Standardmäßig ist ein
+     Bereich groß, der andere schrumpft auf seine Titelzeile und dient als
+     Umschalter (Tippen bringt ihn nach vorn). Die Min/Normal/Max-Buttons
+     entfallen; geteilt wird weiterhin über den **Splitter**, der sichtbar
+     bleibt. Das gestapelte Layout inkl. Gutter liefert bereits die
+     820-px-Regel weiter oben. Die Legende bekommt einen eigenen Umschalter
+     statt der dauerhaften „AGENDA“-Zeile. */
   body.mobile .winbtns{display:none}
-  body.mobile .app,
-  body.mobile .app.side{
-    grid-template-columns:minmax(0,1fr);
-    grid-template-areas:"diagram" "editor";
-  }
-  body.mobile .app.collapse-diagram,
-  body.mobile .app.side.collapse-diagram{grid-template-rows:auto minmax(0,1fr)}
-  body.mobile .app.collapse-editor,
-  body.mobile .app.side.collapse-editor{grid-template-rows:minmax(0,1fr) auto}
   /* Editor immer gestapelt (Textarea oben, Legende darunter) */
   body.mobile .editor-body{flex-direction:column;align-items:stretch}
   body.mobile .agenda{border-left:0;border-top:1px dashed rgba(36,52,71,.18)}

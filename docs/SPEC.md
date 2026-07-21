@@ -144,8 +144,9 @@ ist grau (`#6B7A8C`) — kein Petrol mehr im Diagramm. Der Modus ändert nur die
 ### Kleiner Bildschirm (mobil)
 Ab schmaler Breite (≤ 640 px, z. B. Smartphone) ist immer nur **ein** Bereich
 groß sichtbar — Diagramm **oder** Texteditor; der andere schrumpft auf seine
-Titelzeile und dient als Umschalter (Antippen bringt ihn nach vorn). Splitter
-und Min/Normal/Max-Buttons entfallen. Die **Legende** bekommt hier einen eigenen
+Titelzeile und dient als Umschalter (Antippen bringt ihn nach vorn). Die
+Min/Normal/Max-Buttons entfallen; geteilt wird weiterhin über den **Splitter**
+(Ziehen). Die **Legende** bekommt hier einen eigenen
 Umschalter im Editor-Kopf (statt der dauerhaften „AGENDA“-Zeile), damit sie
 zugeklappt keinen Platz kostet. Die **Sprachwahl** zeigt nur Englisch und die
 aktive Sprache plus „…“ (das alle Sprachen aufklappt). Voreinstellung auf
