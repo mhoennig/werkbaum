@@ -60,6 +60,11 @@ Der Workflow stellt einen Site-Ordner zusammen: `frontend/index.html` liegt als
 Quelldatei bleibt unverändert. `backend/` und die übrigen `docs/` werden nicht
 veröffentlicht.
 
+Beim Zusammenstellen setzt der Workflow zudem die **Micro-Version** im Footer
+aus der Run-Nummer: aus `Werkbaum 1.0` wird `Werkbaum 1.0.<Run-Nummer>` und
+steigt bei jedem Deployment um eins — ohne Commit zurück ins Repo. Lokal
+geöffnet zeigt der Editor weiterhin `Werkbaum 1.0`.
+
 **Einmalige Einrichtung:** In den Repo-Settings unter **Pages** als **Source**
 „GitHub Actions" wählen. Das Repo muss dafür **öffentlich** sein (GitHub Pages
 via Actions ist für private Repos nur mit kostenpflichtigem Plan verfügbar).

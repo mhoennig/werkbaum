@@ -49,11 +49,18 @@ jobs:
       # den MIT-Link im Footer). Die Editor-Quelle bleibt unverändert — die
       # ../-Pfade werden nur auf der Kopie im Site-Ordner geradegezogen, weil
       # sie von der Wurzel-URL aus sonst über die Site hinauszeigen würden.
+      # Zusätzlich wird die Micro-Version aus der Run-Nummer gesetzt: aus
+      # „Werkbaum 1.0" im Footer wird „Werkbaum 1.0.<run_number>". Die Nummer
+      # steigt bei jedem Workflow-Lauf monoton um 1, ganz ohne Commit zurück
+      # ins Repo (siehe README, Abschnitt „Deployment").
       - name: Site zusammenstellen
+        env:
+          BUILD_VERSION: "1.0.${{ github.run_number }}"
         run: |
           mkdir -p site/docs/brand
           sed -e 's#\.\./docs/brand/#docs/brand/#g' \
               -e 's#\.\./LICENSE#LICENSE#g' \
+              -e "s#>Werkbaum 1.0</a>#>Werkbaum ${BUILD_VERSION}</a>#" \
               frontend/index.html > site/index.html
           cp docs/brand/* site/docs/brand/
           cp LICENSE site/LICENSE
