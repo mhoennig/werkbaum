@@ -145,11 +145,16 @@ ist grau (`#6B7A8C`) — kein Petrol mehr im Diagramm. Der Modus ändert nur die
   (50 %-Höhe) weiterhin auf der Knotenmitte liegt.
 
 ### Kleiner Bildschirm (mobil)
-Ab schmaler Breite (≤ 640 px, z. B. Smartphone) ist immer nur **ein** Bereich
-groß sichtbar — Diagramm **oder** Texteditor; der andere schrumpft auf seine
-Titelzeile und dient als Umschalter (Antippen bringt ihn nach vorn). Die
-Min/Normal/Max-Buttons entfallen; geteilt wird weiterhin über den **Splitter**
-(Ziehen). Die **Legende** bekommt hier einen eigenen
+Ab schmaler Breite (≤ 640 px, z. B. Smartphone) werden Diagramm und Texteditor
+**gestapelt** und über den **Splitter** frei geteilt: Ziehen verteilt beliebig,
+jederzeit erneut verstellbar; die beiden **Titelzeilen bleiben dabei immer
+stehen** (jedes Panel schrumpft höchstens bis auf seine volle Titelzeile — die
+Zeilen-Minima entsprechen den gemessenen Kopfhöhen). Ein **Antippen einer
+Titelzeile klappt dieses Panel ganz aus** (das andere schrumpft auf seine
+Titelzeile). Es gibt hier kein diskretes Minimieren/Einrasten mehr (kein Snap,
+keine Min/Normal/Max-Buttons) — die Aufteilung ist durchgehend stufenlos.
+Voreinstellung ist Diagramm maximiert (Editor als Titelzeile). Die **Legende**
+bekommt hier einen eigenen
 Umschalter im Editor-Kopf (statt der dauerhaften „AGENDA“-Zeile), damit sie
 zugeklappt keinen Platz kostet. Der **Modus-Wähler** zeigt nur das aktive Icon
 und schaltet bei jedem Tippen reihum weiter (horizontal → kompakt → vertikal →

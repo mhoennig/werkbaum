@@ -561,6 +561,18 @@
      820-px-Regel weiter oben. Die Legende bekommt einen eigenen Umschalter
      statt der dauerhaften „AGENDA“-Zeile. */
   body.mobile .winbtns{display:none}
+  /* Mobil: freie Aufteilung per Splitter — beide Titelzeilen bleiben IMMER
+     stehen (Zeilen-Minimum --pmin ≈ Titelzeilenhöhe). Kein diskretes
+     Minimieren/Snap; ein zusammengeschobenes Panel schrumpft nur bis auf seine
+     volle Titelzeile (Körper flext auf 0, Panel ist overflow:hidden). Gilt auch
+     für den Seitenmodus, der auf Mobil ohnehin gestapelt ist. Der Drag setzt
+     --drow (JS klemmt), das Tippen auf eine Titelzeile maximiert das Panel. */
+  body.mobile .app,
+  body.mobile .app.side{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:minmax(var(--pmin-d,49px),var(--drow,60%)) 14px minmax(var(--pmin-e,44px),1fr);
+    grid-template-areas:"diagram" "gutter" "editor";
+  }
   /* Untertitel: Kurzfassung, garantiert einzeilig (Ellipsis als Sicherung) */
   body.mobile .sub-full{display:none}
   body.mobile .sub-short{display:inline}
@@ -1188,7 +1200,7 @@ function applyLayout(mode){
   out.classList.toggle('vertical', mode === 'vertikal');
   out.classList.toggle('kompakt', mode === 'kompakt');
   app.classList.toggle('side', mode !== 'horizontal');
-  applySplit();       /* Preset für die neue Orientierung neu setzen */
+  if(!isMobile()) applySplit();   /* Desktop: Preset neu setzen. Mobil: freie --drow-Aufteilung behalten */
   drawCheapPath();    /* Blatt-Positionen ändern sich mit dem Modus */
 }
 document.querySelectorAll('input[name="layout"]').forEach(radio => {
@@ -1222,6 +1234,25 @@ function applySplit(){
 }
 /* Setzt einen Minimier-Zustand während des Ziehens nur bei Änderung. */
 function snapTo(state){ if(splitState!==state){ splitState = state; applySplit(); } }
+
+/* ---------- Mobil: freie Aufteilung (kontinuierlich, kein Snap/Collapse) ----------
+   Beide Titelzeilen bleiben stehen: die Grid-Zeilen-Minima --pmin-d/--pmin-e
+   entsprechen den (gemessenen) Kopfzeilenhöhen. --drow steuert die Diagramm-
+   Höhe; das Tippen auf eine Titelzeile setzt sie auf ein Extrem. */
+function headPx(sel){ return Math.ceil(document.querySelector(sel).getBoundingClientRect().height); }
+function syncPanelMins(){
+  app.style.setProperty('--pmin-d', headPx('.panel.right .panel-head') + 'px');
+  app.style.setProperty('--pmin-e', headPx('.panel.editor .panel-head') + 'px');
+}
+function cssPx(name, fallback){ return parseFloat(getComputedStyle(app).getPropertyValue(name)) || fallback; }
+function mobileMinDrow(){ return cssPx('--pmin-d', 49); }
+function mobileMaxDrow(){ return app.getBoundingClientRect().height - 14 - cssPx('--pmin-e', 44); }
+function setMobileDrow(px, save){
+  const v = Math.max(mobileMinDrow(), Math.min(px, mobileMaxDrow()));
+  splitState = 'custom';
+  app.style.setProperty('--drow', v + 'px');
+  if(save) saveUI();
+}
 document.querySelectorAll('.winbtn').forEach(b => {
   b.addEventListener('click', e => {
     /* Fenster-Buttons sind maßgeblich: nicht zum Titelzeilen-Restore durchreichen */
@@ -1233,11 +1264,16 @@ document.querySelectorAll('.winbtn').forEach(b => {
 [editorPanel, diagramPanel].forEach(panel => {
   panel.querySelector('.panel-head').addEventListener('click', e => {
     if(e.target.closest('button, label, input')) return;   /* Bedienelemente behalten ihre Funktion */
+    if(isMobile()){
+      /* Tippen auf eine Titelzeile klappt DIESES Panel ganz aus (das andere
+         schrumpft auf seine Titelzeile) — funktioniert in jeder Aufteilung. */
+      clearCollapse();
+      setMobileDrow(panel === diagramPanel ? mobileMaxDrow() : 0, true);
+      return;
+    }
+    /* Desktop: nur ein minimiertes Panel per Titelzeile wiederherstellen. */
     if(!panel.classList.contains('collapsed')) return;
-    /* Klein: das getippte Panel nach vorn holen (das andere schrumpft);
-       sonst: zurück in die normale Zweiteilung. */
-    if(isMobile()) splitState = (panel === editorPanel) ? 'a' : 'b';
-    else splitState = 'normal';
+    splitState = 'normal';
     applySplit();
   });
 });
@@ -1262,6 +1298,12 @@ const SNAP = 72;
 gutter.addEventListener('pointermove', e => {
   if(!dragging) return;
   const rect = app.getBoundingClientRect();
+  if(isMobile()){
+    /* Frei ziehen; die Grid-Minima (--pmin) halten beide Titelzeilen sichtbar.
+       Kein Snap/Collapse — so bleibt der Splitter jederzeit beweglich. */
+    setMobileDrow(e.clientY - rect.top, false);
+    return;
+  }
   if(app.classList.contains('side')){
     const w = e.clientX - rect.left, maxw = rect.width - 14;
     if(w <= SNAP)               snapTo('b');            /* Editor auf Titelzeile */
@@ -1290,8 +1332,12 @@ function endDrag(e){
 }
 gutter.addEventListener('pointerup', endDrag);
 gutter.addEventListener('pointercancel', endDrag);
-/* Doppelklick auf den Splitter stellt die normale Aufteilung wieder her. */
-gutter.addEventListener('dblclick', () => { splitState = 'normal'; applySplit(); });
+/* Doppelklick auf den Splitter stellt die normale Aufteilung wieder her
+   (auf Mobil: Diagramm maximiert). */
+gutter.addEventListener('dblclick', () => {
+  if(isMobile()){ clearCollapse(); setMobileDrow(mobileMaxDrow(), true); return; }
+  splitState = 'normal'; applySplit();
+});
 
 /* ---------- Zoom für das Diagramm ---------- */
 /* CSS-`zoom` skaliert die Layout-Box, dadurch greifen die Scrollbalken
@@ -1904,6 +1950,7 @@ const LAYOUT_MODES = ['horizontal','kompakt','vertikal'];
 seg.addEventListener('click', e => {
   if(!isMobile()) return;
   e.preventDefault();
+  e.stopPropagation();   /* nicht zum Titelzeilen-Maximieren durchreichen */
   const cur = document.querySelector('input[name="layout"]:checked').value;
   const next = LAYOUT_MODES[(LAYOUT_MODES.indexOf(cur) + 1) % LAYOUT_MODES.length];
   const r = document.querySelector('input[name="layout"][value="' + next + '"]');
@@ -1915,8 +1962,13 @@ function applyMobile(){
   document.body.classList.toggle('mobile', m);
   if(m) collapseLangsel();   /* Sprachleiste eingeklappt starten (Overlay-Logik) */
   if(!m) return;
-  /* Nur ein Panel sichtbar: normal/custom passen nicht — auf Diagramm (b). */
-  if(splitState !== 'a' && splitState !== 'b'){ splitState = 'b'; applySplit(); }
+  /* Freie Aufteilung (kontinuierlich): kein Desktop-Collapse. Ist noch keine
+     Aufteilung gesetzt (frisch oder Alt-Preset), Diagramm maximieren (Editor
+     bleibt als Titelzeile); eine gespeicherte --drow bleibt erhalten. */
+  clearCollapse();
+  syncPanelMins();   /* Grid-Minima = aktuelle Kopfzeilenhöhen */
+  if(app.style.getPropertyValue('--drow')) splitState = 'custom';
+  else setMobileDrow(mobileMaxDrow(), true);
   /* Default Vollbild auf kleinem Bildschirm — nur ohne gespeicherte Wahl. */
   if(!hadStoredUI && !document.body.classList.contains('fullscreen')){
     document.body.classList.add('fullscreen');

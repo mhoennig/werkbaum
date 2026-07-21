@@ -138,10 +138,18 @@ exakt der deployte Commit (`…/commit/<sha>`, im Build via `git rev-parse HEAD`
 (Nummerierung: D15 war bereits für den kompakten Modus vergeben, daher D16.)
 
 ## D17 — Kleiner Bildschirm: ein Bereich, kompakte Legende & Sprachwahl
-Auf schmalen Viewports (≤ 640 px) ist für beide Bereiche kein Platz. Daher ist
-immer nur **ein** Bereich groß (Diagramm oder Editor); der andere schrumpft auf
-seine Titelzeile und dient als Umschalter (Antippen bringt ihn nach vorn); die
-Fenster-Buttons entfallen, der **Splitter bleibt** (Teilen per Ziehen möglich).
+Auf schmalen Viewports (≤ 640 px) ist für beide Bereiche kein Platz. Diagramm
+und Editor werden gestapelt und über den **Splitter stufenlos** geteilt (frei
+ziehbar, jederzeit erneut verstellbar); die beiden **Titelzeilen bleiben immer
+stehen** (Grid-Zeilen-Minima = gemessene Kopfhöhen), ein **Tipp auf eine
+Titelzeile klappt dieses Panel ganz aus**. Das frühere diskrete Modell (Snap in
+Minimier-Zustände 'a'/'b') führte auf dem Smartphone zu zwei Fehlern: nach dem
+ersten Ziehen rastete der Splitter in eine feste Aufteilung und war nicht mehr
+zu bewegen (die Titelzeile im Snap-Rand fing jeden weiteren Zug ab), und der
+Titelzeilen-Tap funktionierte nur im `collapsed`-Zustand — nach einem freien Zug
+also gar nicht. Deshalb auf Mobil ein **kontinuierliches** Modell ohne Snap/
+Collapse (`--drow` frei geklemmt, Tap setzt sie aufs Extrem); Desktop behält das
+diskrete Modell samt Fenster-Buttons.
 Die Legende wird von der Bereichs-
 Umschaltung **entkoppelt** und über einen eigenen Umschalter im Editor-Kopf
 gesteuert — das dauerhafte „AGENDA“-Band kostet sonst zu viel Höhe. Die

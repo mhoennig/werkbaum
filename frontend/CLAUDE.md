@@ -42,9 +42,13 @@ Diagramm rechts, Toggles für transponierte Ansicht und verworfene Elemente).
   während `restoring===true` nichts, damit das Wiederherstellen nicht sofort
   zurückschreibt. Fehlender `werkbaum-src` fällt auf `INITIAL` zurück, ein
   leerer String bleibt jedoch leer.
-- Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) schaltet auf
-  Ein-Bereich-Ansicht (Diagramm **oder** Editor, Umschalten per Titelzeile),
-  eigenen Legenden-Umschalter (`#legendBtn`) und schlanke Sprachwahl; Default
-  Vollbild. Layout-CSS hängt an `body.mobile`, nicht an einer eigenen
+- Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) stapelt
+  Diagramm/Editor mit **stufenlosem** Splitter (kein Snap/Collapse wie auf
+  Desktop): der Gutter-Drag ruft `setMobileDrow()` (klemmt `--drow` zwischen den
+  Kopfhöhen `--pmin-d`/`--pmin-e`, per `syncPanelMins()` gemessen), ein Tipp auf
+  eine Titelzeile maximiert das Panel. `applyLayout` ruft auf Mobil **kein**
+  `applySplit` (das würde `--drow` löschen). Dazu eigener Legenden-Umschalter
+  (`#legendBtn`), schlanke Sprachwahl, Download-Overlay; Default Vollbild +
+  Diagramm maximiert. Layout-CSS hängt an `body.mobile`, nicht an einer eigenen
   `@media`-Regel — beide Seiten müssen denselben 640-px-Schwellwert nutzen
   (SPEC §9, D17).
