@@ -6,6 +6,8 @@
 
 [English](README.md) · **Deutsch**
 
+**▶ Live ausprobieren: <https://mhoennig.github.io/werkbaum/>** (jeweils neueste veröffentlichte Version)
+
 Eine textuelle, Markdown-artige Notation für Projektstrukturpläne
 (Work Breakdown Structure) mit Und/Oder-Zerlegung — und ein Live-Editor,
 der sie als Diagramm rendert.
@@ -32,7 +34,8 @@ der sie als Diagramm rendert.
 
 ![Werkbaum-Editor: Live-Diagramm oben, Textnotation darunter, mit Statusfarben, T-Shirt-Größen, Tags und Export-Schaltflächen](docs/screenshot.png)
 
-`frontend/index.html` im Browser öffnen — links Text bearbeiten, rechts entsteht das
+Den [gehosteten Editor](https://mhoennig.github.io/werkbaum/) öffnen — oder
+`frontend/index.html` im Browser — links Text bearbeiten, rechts entsteht das
 Diagramm live. Toggles: transponierte (schmale) Darstellung, verworfene
 Elemente einblenden.
 

@@ -6,6 +6,8 @@
 
 **English** · [Deutsch](README.de.md)
 
+**▶ Try it live: <https://mhoennig.github.io/werkbaum/>** (latest deployed version)
+
 A textual, Markdown-like notation for work breakdown structures with
 and/or decomposition — plus a live editor that renders it as a diagram.
 
@@ -31,9 +33,10 @@ and/or decomposition — plus a live editor that renders it as a diagram.
 
 ![Werkbaum editor: live diagram on top, text notation below, with status colours, T-shirt sizes, tags and export buttons](docs/screenshot.png)
 
-Open `frontend/index.html` in the browser — edit text on the left, the
-diagram is built live on the right. Toggles: transposed (narrow) layout,
-show discarded elements.
+Open the [hosted editor](https://mhoennig.github.io/werkbaum/) — or
+`frontend/index.html` in the browser — edit text on the left, the diagram is
+built live on the right. Toggles: transposed (narrow) layout, show discarded
+elements.
 
 ## Project documents
 
