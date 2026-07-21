@@ -14,7 +14,12 @@ Diagramm rechts, Toggles für transponierte Ansicht und verworfene Elemente).
 ## Stolperfallen
 - Abzweig-Linien zielen auf die **Knotenmitte** (fester 23-px-Offset,
   `line-height: 1.3`), nicht auf die Mitte des Teilbaums — bei Layout-
-  Änderungen beide Modi (normal + „schmal (vertikal)") prüfen.
+  Änderungen alle drei Modi (horizontal/vertikal/kompakt) prüfen.
+  Vertikal + kompakt teilen die transponierte Basis-CSS; nur vertikal
+  bekommt den Rechts-Ausgang für „all of“, kompakt führt auch „all of“
+  nach unten. Any-of ist in allen Modi grau: Linien gestrichelt grau und
+  Alternative-Rahmen grau (Basis-CSS `ul.or`). Kein Petrol im Diagramm mehr;
+  `var(--or)` nur noch für UI-Akzente/Logo (SPEC §9, D15).
 - Extraktionsreihenfolge im Parser nicht umstellen: Kommentar → Zeichen/
   Status → URL → Größe → Tags (sonst kollidiert `@` in URLs).
 - „verworfen" ist per Default ausgeblendet; Filterlogik steckt in

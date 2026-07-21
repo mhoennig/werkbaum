@@ -93,20 +93,35 @@ Codiert als Checkbox nach dem Zeichen (Erweiterung der Markdown-Task-Syntax):
 
 ## 9. Darstellung
 
-### Normalmodus
-- **all of:** Kinder nebeneinander, klassischer Organigramm-Fächer,
-  durchgezogene Linien (Tinte `#41556E`).
-- **any of:** Alternativen untereinander; durchgezogene vertikale Linie links
-  unterhalb des Parents, **gestrichelte** Abzweige zu den Alternativen
-  (Petrol `#0F766E`). Alternative-Knoten mit petrolfarbenem Rahmen.
+Drei Modi, umschaltbar über „horizontal / vertikal / kompakt“. Der Modus wählt
+zugleich die Seitenanordnung: **horizontal** stellt Diagramm über den Editor
+(volle Breite), **vertikal** und **kompakt** stellen Editor und Diagramm
+nebeneinander (schmales Diagramm rechts).
 
-### Transponierter Modus (Toggle „schmal (vertikal)“)
+**Linienführung (in allen Modi gleich):** all-of-Linien durchgezogen in Tinte
+(`#41556E`); any-of-Linien — Haupt-/Sammelleiste **und** Abzweige — durchgehend
+**gestrichelt in Grau** (`#6B7A8C`). Auch der **Rahmen der Alternative-Knoten**
+ist grau (`#6B7A8C`) — kein Petrol mehr im Diagramm. Der Modus ändert nur die
+**Anordnung**, nicht die Linienfarbe.
+
+### Horizontal (Normalmodus)
+- **all of:** Kinder nebeneinander, klassischer Organigramm-Fächer.
+- **any of:** Alternativen untereinander; gestrichelte graue Sammelleiste links
+  unterhalb des Parents, gestrichelte graue Abzweige zu den Alternativen.
+
+### Vertikal (transponiert)
 - **all of:** Linie tritt **rechts auf halber Höhe** aus dem Parent aus
   (entspricht Richtung LR), vertikale Sammelleiste, durchgezogene Abzweige;
   Kinder rechts eingerückt untereinander.
-- **any of:** unverändert — Austritt **unten links**, gestrichelte Abzweige.
+- **any of:** Austritt **unten links**, gestrichelte graue Abzweige.
 - Merkregel: Austrittsseite codiert das Gate (rechts = und, unten = oder),
   Linienstil bestätigt es.
+
+### Kompakt (transponiert, platzsparend)
+- **Beide Gates** laufen **unten links** aus dem Parent heraus, Kinder
+  untereinander — kein Rechts-Fächer, dadurch minimale Breite.
+- Das Gate wird hier allein über den **Linienstil** codiert (siehe D15):
+  und = durchgezogen (Tinte), oder = gestrichelt (Grau).
 
 ### Geometrie-Invarianten
 - Knoten haben feste Zeilenhöhe (`line-height: 1.3`), damit Abzweige

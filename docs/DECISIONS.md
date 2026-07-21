@@ -83,3 +83,22 @@ Notation nicht; es speichert den Text als Ganzes und bedient Integrationen
 über explizite Metadaten. Wird Backend-Parsen später doch erforderlich,
 gilt: docs/SPEC.md ist normativ, beide Parser testen gegen dieselben
 Fixtures (SPEC §10) — es darf keine zweite, abweichende Grammatik entstehen.
+
+## D15 — Kompakter Modus + graue Any-of-Linien in allen Modi
+Der vertikale Modus (D9) lässt „all of“ rechts austreten — formal sauber,
+aber breit. Der zusätzliche Modus **kompakt** führt beide Gates nach unten
+(minimale Breite) und unterscheidet sie nur noch über den Linienstil:
+durchgezogen = und, gestrichelt = oder. Auswahl dreistufig
+„horizontal/vertikal/kompakt“ statt Toggle, da es nun drei sich
+ausschließende Darstellungen sind.
+
+Zugleich wird das **Petrol im Diagramm ganz aufgegeben**: die any-of-Linien
+(Sammelleiste *und* Abzweige) und auch der **Rahmen der Alternative-Knoten**
+sind in **allen** Modi **gestrichelt bzw. gerahmt in Grau** (`#6B7A8C`). Die
+frühere durchgezogene Petrol-Sammelleiste und der petrolfarbene Knotenrahmen
+entfallen. Begründung: Das Gate ist bereits durch den Linienstil (gestrichelt)
+und die Anordnung codiert; die zusätzliche Signalfarbe wirkte laut und ließ die
+durchgezogene Hauptlinie optisch mit „all of“ konkurrieren. Grau tritt zurück,
+die gestrichelte Führung bleibt eindeutig. D12/BRAND — „durchgezogen = und,
+gestrichelt = oder“ — gilt für das **Markenzeichen** unverändert (Logo behält
+Petrol); im **Diagramm** trägt allein der Linienstil die Gate-Codierung.

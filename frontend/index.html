@@ -109,6 +109,20 @@
   }
   .switch input:checked + i{background:var(--or)}
   .switch input:checked + i::before{left:15px}
+  .seg{
+    display:inline-flex;align-items:stretch;
+    border:1px solid rgba(36,52,71,.2);border-radius:999px;overflow:hidden;
+  }
+  .seg label{display:flex;cursor:pointer}
+  .seg input{position:absolute;opacity:0;width:0;height:0}
+  .seg span{
+    padding:4px 12px;
+    font-family:'IBM Plex Sans',sans-serif;font-size:.75rem;color:var(--muted);
+    transition:background .15s,color .15s;
+  }
+  .seg label + label span{border-left:1px solid rgba(36,52,71,.14)}
+  .seg input:checked + span{background:var(--or);color:#fff}
+  .seg input:focus-visible + span{outline:2px solid var(--or);outline-offset:-2px}
   textarea{
     display:block;width:100%;min-height:380px;
     border:0;outline:none;resize:vertical;
@@ -213,7 +227,7 @@
   ul.and>li:last-child::before{border-right:2px solid var(--line);border-radius:0 6px 0 0}
   ul.and>li:first-child::after{border-radius:6px 0 0 0}
 
-  /* --- ANY OF: durchgezogene Linie links, gestrichelte Abzweige --- */
+  /* --- ANY OF: durchgehend gestrichelte graue Linien (Haupt- + Abzweige) --- */
   li.has-or{align-items:flex-start}
   ul.or{
     display:flex;flex-direction:column;
@@ -222,19 +236,19 @@
     padding-top:14px;
   }
   ul.or::before{
-    content:'';position:absolute;top:0;left:9px;height:14px;border-left:2px solid var(--or);
+    content:'';position:absolute;top:0;left:9px;height:14px;border-left:2px dashed var(--muted);
   }
   ul.or>li{position:relative;align-items:flex-start;padding:5px 0 5px 30px}
   /* Abzweig auf Höhe der Knoten-Mitte (5px li-Padding + halbe Knotenhöhe), nicht Mitte des Teilbaums */
   ul.or>li::before{
-    content:'';position:absolute;left:9px;top:23px;width:21px;border-top:2px dashed var(--or);
+    content:'';position:absolute;left:9px;top:23px;width:21px;border-top:2px dashed var(--muted);
   }
   ul.or>li::after{
-    content:'';position:absolute;left:9px;top:0;height:100%;border-left:2px solid var(--or);
+    content:'';position:absolute;left:9px;top:0;height:100%;border-left:2px dashed var(--muted);
   }
   ul.or>li:last-child::after{height:23px}
   ul.or .node{
-    border-color:var(--or);
+    border-color:var(--muted);
     box-shadow:none;
     font-weight:400;
   }
@@ -265,24 +279,26 @@
   .chip.st-prod      {background:#DBEAF8;border-color:#85ACD7}
   .chip.st-verworfen{background:#F1F2F4;border-color:#B3BAC2;border-style:dashed;color:var(--muted);text-decoration:line-through}
 
-  /* ---------- Vertikal-Modus (transponiert) ---------- */
-  .tree.vertical{margin:0}
-  .tree.vertical li{align-items:flex-start}
-  .tree.vertical ul.and{flex-direction:column;align-items:flex-start;padding-top:14px}
-  .tree.vertical ul.and::before{left:9px;height:14px}
-  .tree.vertical ul.and>li{padding:5px 0 5px 30px}
-  .tree.vertical ul.and>li::before{
+  /* ---------- Transponierte Modi (vertikal + kompakt) ---------- */
+  /* Gemeinsame Basis: Kinder untereinander, Sammelleiste links,
+     Abzweig auf Knotenmitte (23-px-Offset). */
+  .tree.vertical, .tree.kompakt{margin:0}
+  .tree.vertical li, .tree.kompakt li{align-items:flex-start}
+  .tree.vertical ul.and, .tree.kompakt ul.and{flex-direction:column;align-items:flex-start;padding-top:14px}
+  .tree.vertical ul.and::before, .tree.kompakt ul.and::before{left:9px;height:14px}
+  .tree.vertical ul.and>li, .tree.kompakt ul.and>li{padding:5px 0 5px 30px}
+  .tree.vertical ul.and>li::before, .tree.kompakt ul.and>li::before{
     left:9px;right:auto;top:23px;width:21px;height:0;
     border:0;border-top:2px solid var(--line);border-radius:0;
   }
-  .tree.vertical ul.and>li::after{
+  .tree.vertical ul.and>li::after, .tree.kompakt ul.and>li::after{
     left:9px;right:auto;top:0;width:0;height:100%;
     border:0;border-left:2px solid var(--line);border-radius:0;
   }
-  .tree.vertical ul.and>li:last-child::after{height:23px}
+  .tree.vertical ul.and>li:last-child::after, .tree.kompakt ul.and>li:last-child::after{height:23px}
 
-  /* All-of transponiert: Linie läuft rechts aus dem Überknoten heraus (wie Richtung LR),
-     Any-of bleibt unten-links — dadurch klar unterscheidbare Austrittsseiten */
+  /* Nur vertikal: All-of tritt rechts aus dem Überknoten heraus (wie Richtung LR),
+     Any-of bleibt unten-links — klar unterscheidbare Austrittsseiten, aber breit. */
   .tree.vertical li.has-and{flex-direction:row;align-items:flex-start}
   .tree.vertical li.has-and>ul.and{padding-top:0}
   .tree.vertical li.has-and>ul.and::before{
@@ -291,6 +307,11 @@
   }
   .tree.vertical li.has-and>ul.and>li:first-child::after{top:17px;height:calc(100% - 17px)}
   .tree.vertical li.has-and>ul.and>li:only-child::after{top:17px;height:6px}
+
+  /* Kompakt: auch All-of läuft nach unten (spart Breite) — kein Rechts-Fächer.
+     Die graue, gestrichelte Any-of-Führung kommt aus der Basis und gilt hier
+     wie in allen Modi. Gate-Codierung: und = durchgezogen dunkel (Tinte),
+     oder = gestrichelt grau. */
 </style>
 </head>
 <body>
@@ -307,7 +328,7 @@
     </svg>
     <span>Werk<span style="color:var(--or)">baum</span></span>
   </h1>
-  <p>Struktur als Text bearbeiten — das Diagramm entsteht live. Umschalter „vertikal“ ordnet Editor und Diagramm nebeneinander an.</p>
+  <p>Struktur als Text bearbeiten — das Diagramm entsteht live. Darstellung „horizontal / vertikal / kompakt“ wählt Anordnung und Linienführung.</p>
 </header>
 
 <div class="app" id="app">
@@ -348,9 +369,11 @@
       <label class="switch">
         <input type="checkbox" id="showc"><i></i>verworfene
       </label>
-      <label class="switch">
-        <input type="checkbox" id="vert"><i></i>vertikal
-      </label>
+      <div class="seg" role="radiogroup" aria-label="Darstellung">
+        <label><input type="radio" name="layout" value="horizontal" checked><span>horizontal</span></label>
+        <label><input type="radio" name="layout" value="vertikal"><span>vertikal</span></label>
+        <label><input type="radio" name="layout" value="kompakt"><span>kompakt</span></label>
+      </div>
     </div>
     <div class="diagram"><ul class="tree" id="out"></ul></div>
     <div class="warnings" id="warn"></div>
@@ -520,10 +543,13 @@ src.addEventListener('keydown', e => {
 src.addEventListener('input', render);
 
 const app = document.getElementById('app');
-const vert = document.getElementById('vert');
-vert.addEventListener('change', () => {
-  out.classList.toggle('vertical', vert.checked);
-  app.classList.toggle('side', vert.checked);
+function applyLayout(mode){
+  out.classList.toggle('vertical', mode === 'vertikal');
+  out.classList.toggle('kompakt', mode === 'kompakt');
+  app.classList.toggle('side', mode !== 'horizontal');
+}
+document.querySelectorAll('input[name="layout"]').forEach(radio => {
+  radio.addEventListener('change', () => { if(radio.checked) applyLayout(radio.value); });
 });
 
 const showc = document.getElementById('showc');
