@@ -150,3 +150,26 @@ Sprachleiste zeigt nur Englisch + aktive Sprache + „…“. Voreinstellung ist
 `matchMedia`), damit CSS und JS denselben Schwellwert teilen; die Vollbild-
 Voreinstellung greift nur, wenn noch **keine** gespeicherte Nutzerwahl vorliegt
 (eine bewusste Abschaltung bleibt so erhalten, siehe localStorage-Persistenz).
+
+## D18 — Günstigsten Pfad per Inversion zeigen, fehlende Größe = M
+Der kostengünstigste Weg durch den Baum wird hervorgehoben (Umschalter im
+Diagramm-Kopf, Default an, Zustand persistiert). Nötig sind bei **all of** alle
+Kinder, bei **any of** nur die günstigste Alternative (kleinste rekursive
+Kosten; Gleichstand ⇒ erste).
+
+**Darstellung per Inversion, nicht per Betonung:** Getestet wurde zuerst ein
+doppelt dicker Rand an den nötigen Knoten. Da der Baum aber fast überall all-of
+ist, war damit *fast alles* dick umrandet — das Signal lag ohnehin nur in der
+*Abwesenheit* des Rands bei den ausgeschlossenen Alternativen. Deshalb wird
+invertiert: die **nicht benötigten** Knoten (nicht-gewählte any-of-Alternativen
+samt Teilbaum) treten zurück (blass, entsättigt), der Pfad hebt sich von selbst
+ab. Kein Zusatzrahmen, weil die Knoten-Ecken (Größe, Tags, ↗) schon dicht sind.
+
+**Fehlende T-Shirt-Größe wird für die Kostenschätzung als `M` gewertet** — die
+kleinste Größe mit Untergliederungspflicht (§5/D8), also die konservative
+Annahme „mindestens M". Damit sind auch ungrößte Alternativen vergleichbar.
+Wo `M` nur implizit angenommen ist, zeigt der Knoten ein **invertiertes**
+Größen-Badge (weiß mit Petrol-Rand statt gefüllt) samt Tooltip, damit die
+Annahme sichtbar und von einer echten `(M)`-Angabe unterscheidbar bleibt. Die
+Größen-Semantik in SPEC §5 bleibt unberührt (die Wertung gilt nur der
+Pfad-Kostenrechnung).

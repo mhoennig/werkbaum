@@ -354,6 +354,13 @@
   }
   .root-node{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600;padding:9px 20px}
 
+  /* Günstigster Pfad (Inversion): nicht benötigte Knoten (nicht-gewählte
+     any-of-Alternativen samt Teilbaum) treten zurück (blass, entsättigt);
+     der günstige Pfad hebt sich dadurch von allein ab. */
+  .cheap-on .node:not(.cheap){opacity:.32;filter:saturate(.4)}
+  /* implizit als M angenommene Größe: invertiertes Badge (weiß statt petrol) */
+  .size.implicit{background:var(--card);color:var(--or);border-color:var(--or)}
+
   /* --- ALL OF: Kinder nebeneinander, durchgezogener Verteiler --- */
   ul.and{display:flex;align-items:flex-start;position:relative;padding-top:14px}
   ul.and::before{
@@ -610,6 +617,9 @@
       <button type="button" class="copybtn togglebtn" id="showc" aria-pressed="false" data-i18n-title="discardedTooltip" data-i18n-aria="discardedTooltip" title="Verworfene Knoten samt Teilbaum ein-/ausblenden" aria-label="Verworfene Knoten samt Teilbaum ein-/ausblenden">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2" stroke-dasharray="3 2.5"/><path d="M7 12h10"/></svg>
       </button>
+      <button type="button" class="copybtn togglebtn" id="cheapBtn" aria-pressed="true" data-i18n-title="cheapTooltip" data-i18n-aria="cheapTooltip" title="Günstigsten Pfad hervorheben – nicht benötigte Alternativen treten zurück" aria-label="Günstigsten Pfad hervorheben – nicht benötigte Alternativen treten zurück">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M7.5 6H14a3 3 0 0 1 0 6H10a3 3 0 0 0 0 6h6.5"/></svg>
+      </button>
       <div class="seg" role="radiogroup" aria-label="Darstellung">
         <label data-i18n-title="modeHorizontal" title="Horizontal – Organigramm, Diagramm über dem Editor">
           <input type="radio" name="layout" value="horizontal" checked data-i18n-aria="modeHorizontal" aria-label="Horizontal – Organigramm">
@@ -737,6 +747,42 @@ function visibleChildren(n){
   return n.children.filter(k => !k.status || k.status.key !== 'verworfen');
 }
 
+/* ---------- Günstigster Pfad ----------
+   Markiert die Knoten, die für die günstigste Realisierung nötig sind:
+   all-of ⇒ alle Kinder nötig; any-of ⇒ nur die günstigste Alternative.
+   „Günstig" = kleinste rekursive Kosten (eigene T-Shirt-Größe + Kinder;
+   bei any-of das Minimum). Verworfene zählen nie mit — unabhängig vom
+   Einblenden-Toggle. Gleichstand ⇒ erste Alternative. Fehlende Größe = M. */
+let cheapPathOn = true;
+const cheapSet = new Set();
+function pathChildren(n){
+  return n.children.filter(k => !k.status || k.status.key !== 'verworfen');
+}
+/* fehlende Größe wird als M interpretiert */
+function ownCost(n){ return SIZE_RANK[n.size || 'M'] + 1; }
+function cheapestCost(n){
+  const kids = pathChildren(n);
+  let c = ownCost(n);
+  if(kids.length){
+    if(gateOf(kids) === 'or') c += Math.min(...kids.map(cheapestCost));
+    else c += kids.reduce((s, k) => s + cheapestCost(k), 0);
+  }
+  return c;
+}
+function markCheapest(n){
+  cheapSet.add(n);
+  const kids = pathChildren(n);
+  if(!kids.length) return;
+  if(gateOf(kids) === 'or'){
+    let best = null, bc = Infinity;
+    for(const k of kids){ const c = cheapestCost(k); if(c < bc){ bc = c; best = k; } }
+    if(best) markCheapest(best);
+  } else {
+    for(const k of kids) markCheapest(k);
+  }
+}
+function cheapCls(n){ return cheapPathOn && cheapSet.has(n) ? 'cheap' : ''; }
+
 function nodeHtml(n, extra){
   const need = needsBreakdown(n);
   const cls = ['node', extra || '', n.status ? 'st-' + n.status.key : '']
@@ -745,9 +791,13 @@ function nodeHtml(n, extra){
   const tagsHtml = n.tags && n.tags.length
     ? `<span class="tags">${n.tags.map(tag => `<span class="tag">${esc(tag)}</span>`).join('')}</span>`
     : '';
+  const implicitTip = esc(t('implicitSizeTooltip')).replace(/"/g,'&quot;');
+  const sizeBadge = n.size
+    ? `<span class="size">${n.size}</span>`
+    : (cheapPathOn ? `<span class="size implicit" title="${implicitTip}">M</span>` : '');
   const inner = esc(n.label) +
                 (n.url ? '<span class="ext">↗</span>' : '') +
-                (n.size ? `<span class="size">${n.size}</span>` : '') +
+                sizeBadge +
                 tagsHtml;
   const html = n.url
     ? `<a class="${cls}" href="${esc(n.url).replace(/"/g,'&quot;')}" target="_blank" rel="noopener"${title}>${inner}</a>`
@@ -769,7 +819,7 @@ function renderChildren(node, warnings){
     const vk = visibleChildren(k);
     const liCls = vk.length ? (gateOf(vk) === 'or' ? ' class="has-or"' : ' class="has-and"') : '';
     return `<li${liCls}>` +
-           nodeHtml(k) +
+           nodeHtml(k, cheapCls(k)) +
            renderChildren(k, warnings) +
            `</li>`;
   }).join('');
@@ -789,11 +839,15 @@ function render(){
     return;
   }
 
+  cheapSet.clear();
+  if(cheapPathOn) roots.forEach(markCheapest);
+  out.classList.toggle('cheap-on', cheapPathOn);
+
   out.innerHTML = roots.map(root => {
     const vk = visibleChildren(root);
     const liCls = vk.length ? (gateOf(vk) === 'or' ? ' class="has-or"' : ' class="has-and"') : '';
     return `<li${liCls}>` +
-           nodeHtml(root, 'root-node') +
+           nodeHtml(root, ('root-node ' + cheapCls(root)).trim()) +
            renderChildren(root, warnings) +
            `</li>`;
   }).join('');
@@ -1096,6 +1150,15 @@ function discardedShown(){ return showc.getAttribute('aria-pressed') === 'true';
 function setDiscarded(on){ showc.setAttribute('aria-pressed', on ? 'true' : 'false'); }
 showc.addEventListener('click', () => { setDiscarded(!discardedShown()); render(); saveUI(); });
 
+/* Günstigster-Pfad-Hervorhebung an/aus */
+const cheapBtn = document.getElementById('cheapBtn');
+cheapBtn.addEventListener('click', () => {
+  cheapPathOn = !cheapPathOn;
+  cheapBtn.setAttribute('aria-pressed', cheapPathOn ? 'true' : 'false');
+  render();
+  saveUI();
+});
+
 /* ---------- In die Zwischenablage kopieren ---------- */
 async function writeClipboard(text){
   try{ await navigator.clipboard.writeText(text); return; }catch(_){}
@@ -1145,6 +1208,8 @@ const I18N = {
     legendTooltip:"Legende ein-/ausblenden",
     ghostTooltip:"Ab Größe M sollte ein Element weiter untergliedert werden.",
     discardedTooltip:"Verworfene Knoten samt Teilbaum ein-/ausblenden",
+    cheapTooltip:"Günstigsten Pfad hervorheben – nicht benötigte Alternativen treten zurück",
+    implicitSizeTooltip:"Keine Größe angegeben – für die Kostenschätzung als M angenommen",
     fullscreenTooltip:"Vollbild – Panels nutzen die ganze Fensterbreite",
     brandTooltip:"„Werkbaum“ bedeutet so viel wie ‚Werk-Baum‘ — der Baum des Projektstrukturplans (WBS).",
     editorTitle:"Struktur (Text)", diagramTitle:"Diagramm",
@@ -1179,6 +1244,8 @@ const I18N = {
     legendTooltip:"Show/hide legend",
     ghostTooltip:"From size M upward, an item should be broken down further.",
     discardedTooltip:"Show/hide discarded nodes and their subtree",
+    cheapTooltip:"Highlight the cheapest path – unneeded alternatives recede",
+    implicitSizeTooltip:"No size given – assumed as M for the cost estimate",
     fullscreenTooltip:"Full screen – panels use the full window width",
     brandTooltip:"“Werkbaum” means roughly ‘work tree’ — the tree of the work breakdown structure (WBS).",
     editorTitle:"Structure (text)", diagramTitle:"Diagram",
@@ -1213,6 +1280,8 @@ const I18N = {
     legendTooltip:"Mostrar u ocultar la leyenda",
     ghostTooltip:"A partir de la talla M, un elemento debería desglosarse más.",
     discardedTooltip:"Mostrar u ocultar los nodos descartados y su subárbol",
+    cheapTooltip:"Resaltar la ruta más económica: las alternativas no necesarias se atenúan",
+    implicitSizeTooltip:"Sin tamaño indicado: se asume M para el cálculo de costes",
     fullscreenTooltip:"Pantalla completa – los paneles usan todo el ancho de la ventana",
     brandTooltip:"«Werkbaum» significa algo así como ‘árbol de trabajo’ — el árbol de la estructura de desglose del trabajo (EDT).",
     editorTitle:"Estructura (texto)", diagramTitle:"Diagrama",
@@ -1247,6 +1316,8 @@ const I18N = {
     legendTooltip:"Afficher/masquer la légende",
     ghostTooltip:"À partir de la taille M, un élément devrait être décomposé davantage.",
     discardedTooltip:"Afficher/masquer les nœuds abandonnés et leur sous-arbre",
+    cheapTooltip:"Mettre en évidence le chemin le moins coûteux – les alternatives inutiles s'estompent",
+    implicitSizeTooltip:"Aucune taille indiquée – considérée comme M pour l'estimation des coûts",
     fullscreenTooltip:"Plein écran – les panneaux occupent toute la largeur de la fenêtre",
     brandTooltip:"« Werkbaum » signifie à peu près « arbre de travail » — l’arbre de l’organigramme des tâches (WBS).",
     editorTitle:"Structure (texte)", diagramTitle:"Diagramme",
@@ -1281,6 +1352,8 @@ const I18N = {
     legendTooltip:"Pokaż/ukryj legendę",
     ghostTooltip:"Od rozmiaru M element powinien być dalej podzielony.",
     discardedTooltip:"Pokaż/ukryj odrzucone węzły wraz z poddrzewem",
+    cheapTooltip:"Wyróżnij najtańszą ścieżkę – niepotrzebne alternatywy są przygaszone",
+    implicitSizeTooltip:"Nie podano rozmiaru – przyjęto M do szacowania kosztów",
     fullscreenTooltip:"Pełny ekran – panele wykorzystują całą szerokość okna",
     brandTooltip:"„Werkbaum” znaczy mniej więcej ‚drzewo pracy’ — drzewo struktury podziału pracy (WBS).",
     editorTitle:"Struktura (tekst)", diagramTitle:"Diagram",
@@ -1315,6 +1388,8 @@ const I18N = {
     legendTooltip:"Показать/скрыть легенду",
     ghostTooltip:"Начиная с размера M элемент следует далее декомпозировать.",
     discardedTooltip:"Показать/скрыть отклонённые узлы вместе с поддеревом",
+    cheapTooltip:"Выделить самый дешёвый путь — ненужные альтернативы приглушаются",
+    implicitSizeTooltip:"Размер не указан — для оценки затрат принят как M",
     fullscreenTooltip:"Полный экран – панели занимают всю ширину окна",
     brandTooltip:"«Werkbaum» примерно означает ‚дерево работ’ — дерево структуры декомпозиции работ (СДР).",
     editorTitle:"Структура (текст)", diagramTitle:"Диаграмма",
@@ -1349,6 +1424,8 @@ const I18N = {
     legendTooltip:"लेजेंड दिखाएँ/छिपाएँ",
     ghostTooltip:"आकार M से ऊपर किसी तत्व को और अधिक उप-विभाजित करना चाहिए।",
     discardedTooltip:"अस्वीकृत नोड्स और उनके उप-वृक्ष दिखाएँ/छिपाएँ",
+    cheapTooltip:"सबसे किफ़ायती पथ को उजागर करें – अनावश्यक विकल्प मंद हो जाते हैं",
+    implicitSizeTooltip:"कोई आकार नहीं दिया गया – लागत अनुमान के लिए M माना गया",
     fullscreenTooltip:"पूर्ण स्क्रीन – पैनल पूरी विंडो चौड़ाई का उपयोग करते हैं",
     brandTooltip:"„Werkbaum“ का अर्थ लगभग ‚कार्य-वृक्ष‘ है — कार्य विभाजन संरचना (WBS) का वृक्ष।",
     editorTitle:"संरचना (टेक्स्ट)", diagramTitle:"आरेख",
@@ -1384,6 +1461,8 @@ const I18N = {
     brandTooltip:"「Werkbaum」大致意为‘工作之树’——即工作分解结构（WBS）之树。",
     fullscreenTooltip:"全屏——面板占据整个窗口宽度",
     discardedTooltip:"显示/隐藏已放弃的节点及其子树",
+    cheapTooltip:"突出显示成本最低的路径——不需要的备选项将淡化",
+    implicitSizeTooltip:"未指定尺寸——成本估算时按 M 计",
     ghostTooltip:"从 M 号起，元素应进一步细分。",
     editorTitle:"结构（文本）", diagramTitle:"图表",
     copy:"复制", copyDone:"已复制 ✓", copyTooltip:"将文本复制到剪贴板",
@@ -1418,6 +1497,8 @@ const I18N = {
     brandTooltip:"「Werkbaum」はおおよそ『作業の木』の意味 — 作業分解構成図（WBS）のツリーです。",
     fullscreenTooltip:"全画面 — パネルがウィンドウ幅いっぱいを使用",
     discardedTooltip:"破棄したノードとその下位ツリーを表示/非表示",
+    cheapTooltip:"最も低コストの経路を強調 – 不要な選択肢は控えめに表示",
+    implicitSizeTooltip:"サイズ未指定 – コスト見積もりのため M として扱う",
     ghostTooltip:"サイズ M 以上の要素はさらに分解すべきです。",
     editorTitle:"構造（テキスト）", diagramTitle:"ダイアグラム",
     copy:"コピー", copyDone:"コピーしました ✓", copyTooltip:"テキストをクリップボードにコピー",
@@ -1529,6 +1610,7 @@ function saveUI(){
     localStorage.setItem(LS_UI, JSON.stringify({
       mode: modeEl ? modeEl.value : 'horizontal',
       discarded: discardedShown(),
+      cheapPath: cheapPathOn,
       split: splitState,
       col: app.style.getPropertyValue('--col') || null,
       drow: app.style.getPropertyValue('--drow') || null,
@@ -1549,6 +1631,10 @@ function restoreState(){
   if(modeEl) modeEl.checked = true;
   if(ui){
     if(typeof ui.discarded === 'boolean') setDiscarded(ui.discarded);
+    if(typeof ui.cheapPath === 'boolean'){
+      cheapPathOn = ui.cheapPath;
+      cheapBtn.setAttribute('aria-pressed', cheapPathOn ? 'true' : 'false');
+    }
     if(typeof ui.zoom === 'number') zoom = ui.zoom;
     if(ui.split) splitState = ui.split;
     if(ui.fullscreen){

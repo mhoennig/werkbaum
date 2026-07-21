@@ -155,6 +155,27 @@ und die aktive Sprache plus „…“ (das alle Sprachen aufklappt). Der **Unter
 wird auf eine garantiert einzeilige Kurzfassung reduziert. Voreinstellung auf
 kleinem Bildschirm ist **Vollbild** (siehe D17).
 
+### Günstigster Pfad (Kosten-Hervorhebung)
+Ein Umschalter (Icon-Button im Diagramm-Kopf, Voreinstellung **an**, Zustand
+persistiert) hebt den kostengünstigsten Weg durch den Baum hervor. Ermittelt
+werden die für die günstigste Realisierung **nötigen** Knoten:
+
+- **all of:** alle Kinder sind nötig.
+- **any of:** nur die **günstigste** Alternative ist nötig. „Günstig" =
+  kleinste rekursive Kosten (eigene T-Shirt-Größe plus — je Gate — Summe bzw.
+  Minimum der Kinder). Bei Gleichstand gewinnt die **erste** Alternative.
+- Verworfene Knoten zählen nie mit (unabhängig vom „verworfene einblenden"-
+  Filter).
+- **Fehlende Größe wird als `M` gewertet** (nur für diese Kostenschätzung; die
+  SPEC-Semantik der Größen in §5 bleibt unberührt).
+
+Darstellung per **Inversion**: nicht benötigte Knoten (nicht-gewählte
+any-of-Alternativen samt Teilbaum) treten zurück (blass, entsättigt); der
+günstige Pfad hebt sich dadurch von selbst ab — kein zusätzlicher Rahmen an den
+ohnehin dichten Knoten-Ecken. Wo die Größe **implizit** als `M` angenommen wird,
+zeigt der Knoten ein **invertiertes** Größen-Badge (weiß mit petrolfarbenem
+Rand/Text statt gefüllt) mit erläuterndem Tooltip. Siehe D18.
+
 ### Grafikexport des Diagramms
 Das Diagramm wird aus der Live-Geometrie in ein eigenständiges SVG (nur Formen
 + Text, keine externen Ressourcen) nachgezeichnet. Zwei Icon-Schaltflächen:
