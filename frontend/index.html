@@ -43,8 +43,10 @@
   .fsbtn svg{display:block}
   .fsbtn:hover{border-color:var(--or);color:var(--or)}
   .fsbtn.active{background:var(--or);color:#fff;border-color:var(--or)}
-  /* Vollbild: Panels nutzen die ganze Fensterbreite (kein linker/rechter Rand). */
-  body.fullscreen{padding-left:0;padding-right:0}
+  /* Vollbild: Panels nutzen fast die ganze Fensterbreite; es bleibt ein
+     schmaler Rand (halber Panel-Zwischenraum = 7 px), damit es nicht gedrängt
+     wirkt. */
+  body.fullscreen{padding-left:7px;padding-right:7px}
   body.fullscreen header,
   body.fullscreen .app,
   body.fullscreen .site-footer{max-width:none}
