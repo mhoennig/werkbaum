@@ -74,7 +74,8 @@ Codiert als Checkbox nach dem Zeichen (Erweiterung der Markdown-Task-Syntax):
   `#B45309`). Der angedeutete Unterpunkt genügt als Hinweis; eine zusätzliche
   Umrandung des Knotens gibt es nicht.
 - Ausnahme: verworfene Elemente lösen die Regel nie aus.
-- Anzeige: dunkles Badge oben rechts an der Knoten-Ecke.
+- Anzeige: petrolfarbenes Badge (`--or`, `#0F766E`) mit weißer Schrift oben
+  rechts an der Knoten-Ecke.
 
 ## 6. Links
 
