@@ -4,6 +4,8 @@
 
 # Werkbaum
 
+**Deutsch** · [English](README.en.md)
+
 Eine textuelle, Markdown-artige Notation für Projektstrukturpläne
 (Work Breakdown Structure) mit Und/Oder-Zerlegung — und ein Live-Editor,
 der sie als Diagramm rendert.
