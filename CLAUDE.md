@@ -20,7 +20,7 @@ Integrations-Backend.
 
 ## Querschnitts-Konventionen
 - Doku auf Deutsch. Die Editor-UI ist mehrsprachig (DE/EN/ES/FR direkt,
-  PL/RU/HI hinter dem „…“-Aufklapper des Umschalters oben rechts);
+  PL/RU/HI/ZH/JA hinter dem „…“-Aufklapper des Umschalters oben rechts);
   **Deutsch ist die Quellsprache** — neue UI-Texte zuerst auf Deutsch im
   `I18N`-Objekt (frontend/index.html) anlegen, dann in alle Sprachen
   übersetzen.

@@ -494,6 +494,8 @@
       <button type="button" class="lang-extra" data-lang="pl" title="Polski">PL</button>
       <button type="button" class="lang-extra" data-lang="ru" title="Русский">RU</button>
       <button type="button" class="lang-extra" data-lang="hi" title="हिन्दी">HI</button>
+      <button type="button" class="lang-extra" data-lang="zh" title="中文">中</button>
+      <button type="button" class="lang-extra" data-lang="ja" title="日本語">日</button>
       <button type="button" id="langMore" class="langmore" aria-expanded="false" data-i18n-title="langMore" data-i18n-aria="langMore" title="weitere Sprachen" aria-label="weitere Sprachen">…</button>
     </div>
     </div>
@@ -1232,6 +1234,64 @@ const I18N = {
     hint_break:"(M) से आगे: और विभाजित करें — विभाजन न होने पर आरेख में प्लेसहोल्डर दिखता है।",
     hint_comment:"%% से टिप्पणियाँ — पूरी पंक्ति या पंक्ति के अंत में।",
     hint_people:"@नाम से व्यक्ति — नोड के नीचे-दाएँ दिखते हैं।"
+  },
+  zh: {
+    subtitle:"Werkbaum – 基于文本的图表编辑器：WBS / 工作分解结构 / 功能树。",
+    brandTooltip:"「Werkbaum」大致意为‘工作之树’——即工作分解结构（WBS）之树。",
+    fullscreenTooltip:"全屏——面板占据整个窗口宽度",
+    discardedTooltip:"显示/隐藏已放弃的节点及其子树",
+    ghostTooltip:"从 M 号起，元素应进一步细分。",
+    editorTitle:"结构（文本）", diagramTitle:"图表",
+    copy:"复制", copyDone:"已复制 ✓", copyTooltip:"将文本复制到剪贴板",
+    copyDiagramTooltip:"将图表作为 PNG 图片复制到剪贴板",
+    minimize:"最小化", normal:"正常", maximize:"最大化",
+    agenda:"图例", discarded:"已放弃",
+    modeHorizontal:"横向——组织结构图，图表在编辑器上方",
+    modeKompakt:"紧凑——全部向下，节省空间",
+    modeVertikal:"纵向——树向右展开，图表在编辑器旁边",
+    zoomOut:"缩小", zoomReset:"重置", zoomIn:"放大",
+    zoomAria:"缩放（Ctrl/Cmd + 鼠标滚轮）", langMore:"更多语言",
+    empty:"还没有结构——直接开始输入吧。", ghost:"缺少细分",
+    mixedWarn:"第 {line} 行：在「{label}」下 - 与 | 混用——按第一个子项渲染。",
+    st_idee:"想法", st_geplant:"已计划", st_arbeit:"进行中", st_durchstich:"可运行骨架",
+    st_fertig:"已完成", st_prod:"已上线", st_verworfen:"已放弃",
+    hint_indent:"缩进（2 个空格或制表符）定义层级。",
+    hint_all:"子任务，全部必需", hint_any:"备选项，择其一",
+    hint_root:"无标记的行 = 根节点。同级应使用相同的标记。",
+    hint_status:"在标记后用方框表示状态，例如",
+    hint_size:"用括号中的 T 恤尺码表示工作量；链接直接作为 URL 附加：",
+    hint_break:"从 (M) 起：继续细分——若缺少细分，图表中会出现占位符。",
+    hint_comment:"用 %% 注释——整行或行尾。",
+    hint_people:"用 @姓名 表示人员——显示在节点右下角。"
+  },
+  ja: {
+    subtitle:"Werkbaum – テキストベースの図エディター：WBS / 作業分解構成図 / フィーチャーツリー。",
+    brandTooltip:"「Werkbaum」はおおよそ『作業の木』の意味 — 作業分解構成図（WBS）のツリーです。",
+    fullscreenTooltip:"全画面 — パネルがウィンドウ幅いっぱいを使用",
+    discardedTooltip:"破棄したノードとその下位ツリーを表示/非表示",
+    ghostTooltip:"サイズ M 以上の要素はさらに分解すべきです。",
+    editorTitle:"構造（テキスト）", diagramTitle:"ダイアグラム",
+    copy:"コピー", copyDone:"コピーしました ✓", copyTooltip:"テキストをクリップボードにコピー",
+    copyDiagramTooltip:"ダイアグラムを PNG 画像としてクリップボードにコピー",
+    minimize:"最小化", normal:"標準", maximize:"最大化",
+    agenda:"凡例", discarded:"破棄",
+    modeHorizontal:"横 — 組織図、ダイアグラムはエディターの上",
+    modeKompakt:"コンパクト — すべて下方向、省スペース",
+    modeVertikal:"縦 — ツリーを右へ、ダイアグラムはエディターの横",
+    zoomOut:"縮小", zoomReset:"リセット", zoomIn:"拡大",
+    zoomAria:"ズーム（Ctrl/Cmd + マウスホイール）", langMore:"その他の言語",
+    empty:"まだ構造がありません — 入力を始めてください。", ghost:"分解がありません",
+    mixedWarn:"{line} 行目：「{label}」の下で - と | が混在 — 最初の子に従って表示。",
+    st_idee:"アイデア", st_geplant:"計画済み", st_arbeit:"作業中", st_durchstich:"ウォーキングスケルトン",
+    st_fertig:"完了", st_prod:"本番稼働", st_verworfen:"破棄",
+    hint_indent:"インデント（スペース2つまたはタブ）で階層を定義します。",
+    hint_all:"サブタスク、すべて必須", hint_any:"選択肢、1つを選ぶ",
+    hint_root:"マーカーのない行 = ルートノード。兄弟は同じマーカーを使うべきです。",
+    hint_status:"マーカーの後にチェックボックスで状態、例：",
+    hint_size:"工数は括弧内の T シャツサイズで；リンクは URL としてそのまま追加：",
+    hint_break:"(M) 以上：さらに分解 — 分解がないと図にプレースホルダーが表示されます。",
+    hint_comment:"%% でコメント — 行全体または行末。",
+    hint_people:"@名前 で担当者 — ノードの右下に表示されます。"
   }
 };
 let lang = 'de';
@@ -1280,7 +1340,7 @@ function applyLang(l){
 }
 const langsel = document.querySelector('.langsel');
 const langMore = document.getElementById('langMore');
-const LANG_EXTRA = ['pl','ru','hi'];
+const LANG_EXTRA = ['pl','ru','hi','zh','ja'];
 langMore.addEventListener('click', () => {
   const exp = langsel.classList.toggle('expanded');
   langMore.setAttribute('aria-expanded', String(exp));
