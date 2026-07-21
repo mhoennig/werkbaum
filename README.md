@@ -1,67 +1,71 @@
 <p>
-  <img src="docs/brand/logo.svg" width="72" alt="Werkbaum-Logo">
+  <img src="docs/brand/logo.svg" width="72" alt="Werkbaum logo">
 </p>
 
 # Werkbaum
 
-**Deutsch** · [English](README.en.md)
+**English** · [Deutsch](README.de.md)
 
-Eine textuelle, Markdown-artige Notation für Projektstrukturpläne
-(Work Breakdown Structure) mit Und/Oder-Zerlegung — und ein Live-Editor,
-der sie als Diagramm rendert.
+A textual, Markdown-like notation for work breakdown structures with
+and/or decomposition — plus a live editor that renders it as a diagram.
 
 ```
 [~] Werkbaum (XL) https://wiki.example.de/relaunch
-  - [~] Dokumentenspeicher
-    | [x] Textdatei mit Copy+Paste im Frontend (S)
+  - [~] Document store
+    | [x] Text file with copy+paste in the frontend (S)
         - [x] Parser
-        - [x] Texteingabefeld im Frontend
+        - [x] Text input field in the frontend
     | [ ] Backend
-  - [~] Darstellung/Rendern (XL)
+  - [~] Display/rendering (XL)
     - [/] H (S) @anna
-    - [ ] CMS-Anbindung (M)
+    - [ ] CMS integration (M)
       | [ ] WordPress
       | [?] Headless CMS
 ```
 
-`-` = Pflicht-Teilpaket (all of, im Diagramm nebeneinander) ·
-`|` = Alternative (any of, untereinander) · `[…]` = Status ·
-`(M)` = T-Shirt-Aufwand · `@name` = Zuständigkeit · `%%` = Kommentar.
+`-` = mandatory sub-package (all of, side by side in the diagram) ·
+`|` = alternative (any of, stacked) · `[…]` = status ·
+`(M)` = T-shirt effort · `@name` = responsibility · `%%` = comment.
 
-## Nutzung
+## Usage
 
-`frontend/index.html` im Browser öffnen — links Text bearbeiten, rechts entsteht das
-Diagramm live. Toggles: transponierte (schmale) Darstellung, verworfene
-Elemente einblenden.
+![Werkbaum editor: live diagram on top, text notation below, with status colours, T-shirt sizes, tags and export buttons](docs/screenshot.png)
 
-## Projektdokumente
+Open `frontend/index.html` in the browser — edit text on the left, the
+diagram is built live on the right. Toggles: transposed (narrow) layout,
+show discarded elements.
 
-- `frontend/` — Editor · `backend/` — Kotlin/Spring (Gerüst folgt, siehe backend/README.md)
-- `docs/SPEC.md` — verbindliche Sprachdefinition
-- `docs/DECISIONS.md` — Design-Entscheidungen mit Begründung
-- `docs/ROADMAP.md` — Mermaid-Plugin, Taiga-Integration, Tenzu
-- `docs/TASKS.md` — offene Aufgaben (Checkboxen)
-- `docs/brand/BRAND.md` — Logo, Wortbild, Anwendungsregeln
-- `docs/design/` — Design-Herleitung der Marke
-- `CLAUDE.md` — Projektkontext für Claude Code
+## Project documents
+
+- `frontend/` — editor · `backend/` — Kotlin/Spring (scaffold to follow, see backend/README.md)
+- `docs/SPEC.md` — normative language definition
+- `docs/DECISIONS.md` — design decisions with rationale
+- `docs/ROADMAP.md` — Mermaid plugin, Taiga integration, Tenzu
+- `docs/TASKS.md` — open tasks (checkboxes)
+- `docs/brand/BRAND.md` — logo, wordmark, usage rules
+- `docs/design/` — design derivation of the brand
+- `CLAUDE.md` — project context for Claude Code
+
+> **Note:** The detailed project documentation under `docs/` is maintained in
+> German, the project's source language (see `CLAUDE.md`). This README is
+> available in [English](README.md) and [German](README.de.md).
 
 ## Deployment
 
-Der Editor wird per GitHub Actions als statische Seite auf **GitHub Pages**
-veröffentlicht (Workflow: `.github/workflows/pages.yml`). Ausgelöst bei jedem
-Push auf `main` sowie manuell (`workflow_dispatch`).
+The editor is published as a static page on **GitHub Pages** via GitHub
+Actions (workflow: `.github/workflows/pages.yml`). Triggered on every push to
+`main` and manually (`workflow_dispatch`).
 
-Der Workflow stellt einen Site-Ordner zusammen: `frontend/index.html` liegt als
-`index.html` an der Wurzel-URL, dazu die vom Editor referenzierten Dateien
-(`docs/brand/` fürs Favicon, `LICENSE` für den MIT-Link im Footer). Die
-`../`-Pfade der Editor-Quelle werden dabei nur auf der Kopie geradegezogen — die
-Quelldatei bleibt unverändert. `backend/` und die übrigen `docs/` werden nicht
-veröffentlicht.
+The workflow assembles a site folder: `frontend/index.html` is placed as
+`index.html` at the root URL, along with the files the editor references
+(`docs/brand/` for the favicon, `LICENSE` for the MIT link in the footer). The
+`../` paths in the editor source are straightened only on the copy — the source
+file stays unchanged. `backend/` and the remaining `docs/` are not published.
 
-**Einmalige Einrichtung:** In den Repo-Settings unter **Pages** als **Source**
-„GitHub Actions" wählen. Das Repo muss dafür **öffentlich** sein (GitHub Pages
-via Actions ist für private Repos nur mit kostenpflichtigem Plan verfügbar).
+**One-time setup:** In the repo settings under **Pages**, select **Source** =
+"GitHub Actions". The repo must be **public** for this (GitHub Pages via Actions
+is only available for private repos on a paid plan).
 
-## Lizenz
+## License
 
-MIT — siehe [LICENSE](LICENSE). © 2026 Michael Hönnig.
+MIT — see [LICENSE](LICENSE). © 2026 Michael Hönnig.
