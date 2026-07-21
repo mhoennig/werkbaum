@@ -217,14 +217,16 @@
   .winbtn:hover{border-color:var(--or);color:var(--or)}
   .winbtn.active{background:var(--or);color:#fff;border-color:var(--or)}
   .copybtn{
-    font-family:'IBM Plex Sans',sans-serif;
-    font-size:.72rem;text-transform:none;letter-spacing:0;
     color:var(--muted);background:var(--card);
     border:1px solid rgba(36,52,71,.2);border-radius:6px;
-    padding:2px 9px;cursor:pointer;
-    display:inline-flex;align-items:center;gap:5px;
+    padding:3px 6px;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
   }
   .copybtn:hover,.copybtn.done{border-color:var(--or);color:var(--or)}
+  .copybtn svg{display:block;width:15px;height:15px}
+  .copybtn .ic-done{display:none}
+  .copybtn.done .ic-copy{display:none}
+  .copybtn.done .ic-done{display:block}
   textarea{
     display:block;width:100%;min-height:0;
     border:0;outline:none;resize:none;
@@ -467,7 +469,10 @@
   <div class="panel editor">
     <div class="panel-head">
       <span data-i18n="editorTitle">Struktur (Text)</span>
-      <button type="button" class="copybtn" id="copy" data-i18n="copy" data-i18n-title="copyTitle" title="Text in die Zwischenablage kopieren">kopieren</button>
+      <button type="button" class="copybtn" id="copy" data-i18n-title="copyTitle" data-i18n-aria="copyTitle" title="Text in die Zwischenablage kopieren" aria-label="Text in die Zwischenablage kopieren">
+        <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <svg class="ic-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+      </button>
       <div class="winbtns" aria-label="Editor">
         <button type="button" class="winbtn" data-state="b" data-i18n-title="minimize" title="minimieren">—</button>
         <button type="button" class="winbtn" data-state="normal" data-i18n-title="normal" title="normal">▢</button>
@@ -840,9 +845,14 @@ copyBtn.addEventListener('click', async () => {
     src.setSelectionRange(0, 0);
     src.blur();
   }
-  copyBtn.textContent = t('copyDone');
   copyBtn.classList.add('done');
-  setTimeout(() => { copyBtn.textContent = t('copy'); copyBtn.classList.remove('done'); }, 1500);
+  copyBtn.title = t('copyDone');
+  copyBtn.setAttribute('aria-label', t('copyDone'));
+  setTimeout(() => {
+    copyBtn.classList.remove('done');
+    copyBtn.title = t('copyTitle');
+    copyBtn.setAttribute('aria-label', t('copyTitle'));
+  }, 1500);
 });
 
 /* ---------- Internationalisierung (DE/EN/ES/FR) ---------- */
