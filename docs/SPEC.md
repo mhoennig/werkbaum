@@ -64,6 +64,11 @@ Codiert als Checkbox nach dem Zeichen (Erweiterung der Markdown-Task-Syntax):
 - `x` auch als `X` zulässig.
 - Verworfene Knoten (inkl. Teilbaum) sind per Default **ausgeblendet**;
   Toggle „verworfene einblenden“ zeigt sie.
+- **Fehlertoleranz:** Ein unbekanntes Zeichen in der Statusbox (z. B. `[z]`)
+  wird nicht verschluckt: Der Knoten erscheint **neutral** und es wird eine
+  Warnung `unknownStatus` mit Zeilennummer gemeldet — die Zeile geht nicht
+  verloren, Folgezeilen bleiben unberührt. (Eine mehrzeichige Klammer wie
+  `[xyz]` ist keine Statusbox und bleibt Teil des Labels.)
 
 ## 5. Aufwand (T-Shirt-Größen)
 

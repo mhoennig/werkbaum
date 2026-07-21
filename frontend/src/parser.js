@@ -31,10 +31,13 @@ export function parse(text){
   text.split('\n').forEach((raw, i) => {
     raw = raw.replace(/%%.*$/, '');   /* %%-Kommentare entfernen (Mermaid-Konvention) */
     if(!raw.trim()) return;
-    const m = raw.match(/^([ \t]*)([-|])?\s*(?:\[([ ?~xX^\/-])]\s*)?(.*)$/);
+    /* Statusbox tolerant erfassen: irgendein einzelnes Zeichen in [ ] an der
+       Statusposition. Gültige Codes -> Status; unbekannte -> Warnung + neutral
+       (fehlertolerant: die Zeile geht nicht verloren). */
+    const m = raw.match(/^([ \t]*)([-|])?\s*(?:\[([^\]])\]\s*)?(.*)$/);
     const width = m[1].replace(/\t/g,'  ').length;
     const type  = m[2] === '|' ? 'or' : 'and';
-    const status = m[3] ? STATUS_BY_CODE[m[3].toLowerCase()] : null;
+    const boxChar = m[3];   // undefined, wenn keine Statusbox
 
     let rest = m[4], url = null, size = null;
     const tags = [];
@@ -43,6 +46,12 @@ export function parse(text){
     rest = rest.replace(/@([\p{L}\p{N}._-]+)/gu, (s, g) => { tags.push(g); return ''; });
     const label = rest.replace(/\s+/g, ' ').trim();
     if(!label) return;
+
+    let status = null;
+    if(boxChar != null){
+      status = STATUS_BY_CODE[boxChar.toLowerCase()] || null;
+      if(!status) warnings.push({type:'unknownStatus', line:i+1, code:boxChar});
+    }
 
     while(stack.length > 1 && stack[stack.length-1].width >= width) stack.pop();
     const parent = stack[stack.length-1].node;

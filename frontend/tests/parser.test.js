@@ -139,6 +139,44 @@ describe('parse — Randfälle', () => {
   });
 });
 
+describe('parse — fehlertolerant: unbekannte Statuszeichen', () => {
+  it('meldet unbekannten Code, stellt Knoten neutral dar, Label bleibt sauber', () => {
+    const {roots, warnings} = parse('- [z] Aufgabe');
+    expect(roots).toHaveLength(1);
+    expect(roots[0].status).toBeNull();
+    expect(roots[0].label).toBe('Aufgabe');          // Box aus dem Label entfernt
+    expect(warnings).toEqual([{type: 'unknownStatus', line: 1, code: 'z'}]);
+  });
+
+  it('bricht nachfolgende Zeilen nicht (Geschwister/Kinder bleiben heil)', () => {
+    const {roots, warnings} = parse('- [z] Kaputt\n- [x] Heil\n  - [~] Kind');
+    expect(roots.map(r => r.label)).toEqual(['Kaputt', 'Heil']);
+    expect(roots[1].status.key).toBe('fertig');
+    expect(roots[1].children[0].status.key).toBe('arbeit');
+    expect(warnings).toEqual([{type: 'unknownStatus', line: 1, code: 'z'}]);
+  });
+
+  it('gültige Codes (inkl. X) lösen keine Warnung aus', () => {
+    const {warnings} = parse('- [X] a\n- [ ] b\n- [~] c\n- [/] d\n- [^] e\n- [-] f\n- [?] g');
+    expect(warnings).toEqual([]);
+  });
+
+  it('mehrzeichige Klammern sind keine Statusbox — kein Fehlalarm', () => {
+    const {roots, warnings} = parse('- [xyz] Text');
+    expect(warnings).toEqual([]);
+    expect(roots[0].label).toBe('[xyz] Text');       // bleibt im Label
+    expect(roots[0].status).toBeNull();
+  });
+
+  it('sammelt mehrere unbekannte Codes mit ihren Zeilennummern', () => {
+    const {warnings} = parse('- [x] ok\n- [q] eins\n- [ ] ok\n- [w] zwei');
+    expect(warnings).toEqual([
+      {type: 'unknownStatus', line: 2, code: 'q'},
+      {type: 'unknownStatus', line: 4, code: 'w'},
+    ]);
+  });
+});
+
 describe('Vokabular-Exporte', () => {
   it('SIZE_RANK ist aufsteigend geordnet (SPEC §5)', () => {
     expect(SIZE_RANK).toEqual({ XS: 0, S: 1, M: 2, L: 3, XL: 4, XXL: 5 });

@@ -38,6 +38,12 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `var(--or)` nur noch für UI-Akzente/Logo (SPEC §9, D15).
 - Extraktionsreihenfolge im Parser nicht umstellen: Kommentar → Zeichen/
   Status → URL → Größe → Tags (sonst kollidiert `@` in URLs).
+- Fehlertoleranz (SPEC §4): der Parser erfasst die Statusbox als *beliebiges*
+  Einzelzeichen `\[([^\]])\]` und validiert gegen `STATUS_BY_CODE`; unbekannte
+  Codes → `parse().warnings` als `{type:'unknownStatus', line, code}`, Knoten
+  neutral. `render()` in app.js führt Parser- und Renderer-Warnungen zusammen
+  (nach Zeile sortiert) und zeigt sie via `formatWarning` (warnings.js). Neue
+  Warnungstypen dort + i18n-Key in allen 9 Sprachen ergänzen.
 - Modulteilung (D19): `parser.js` (Text→Baum, headless), `model.js` (Baum-/
   Kostenlogik: `gateOf`, `needsBreakdown`, `visibleChildren(n, showDiscarded)`,
   `computeCheapSet`, `cheapCls`), `render.js` (HTML-String via

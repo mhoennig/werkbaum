@@ -41,7 +41,12 @@ Abhaken beim Erledigen; neue Aufgaben unten anfügen.
       → `@media print` in `style.css`: blendet Kopf/Editor/Splitter/Bedien-
       elemente/Warnungen/Footer aus, Diagramm füllt die Seite; Statusfarben via
       `print-color-adjust:exact`, `break-inside:avoid`, Pfad-Overlay inklusive.
-- [ ] Fehlertolerantes Parsen weiter ausbauen (unbekannte Statuszeichen melden).
+- [x] Fehlertolerantes Parsen weiter ausbauen (unbekannte Statuszeichen melden).
+      → Parser erfasst die Statusbox als beliebiges Einzelzeichen, validiert
+      gegen `STATUS_BY_CODE`; unbekannte Codes → `unknownStatus`-Warnung (Zeile +
+      Code), Knoten neutral, Folgezeilen unberührt. `render()` führt Parser- +
+      Renderer-Warnungen zusammen. i18n `unknownStatusWarn` in allen 9 Sprachen.
+      `tests/parser.test.js` (5 neue Tests).
 
 ## Deployment
 - [x] GitHub-Pages-Workflow angelegt (`.github/workflows/pages.yml`,

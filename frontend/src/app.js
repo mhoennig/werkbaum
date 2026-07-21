@@ -38,26 +38,28 @@ let cheapPathOn = true;
    parse -> Wurzeln filtern (verworfene) -> günstigen Pfad markieren ->
    render.js baut den HTML-String -> in #out schreiben -> Pfadlinie zeichnen. */
 function render(){
-  let {roots} = parse(src.value);
+  const parsed = parse(src.value);
+  let roots = parsed.roots;
   const showDiscarded = discardedShown();
   if(!showDiscarded){
     roots = roots.filter(r => !r.status || r.status.key !== 'verworfen');
   }
 
+  /* Warnungen aus Parser (unbekannte Statuszeichen) + Renderer (gemischte
+     Gates) zusammenführen, nach Zeile sortiert anzeigen. */
+  let warnings = parsed.warnings;
+
   if(!roots.length){
     out.innerHTML = `<div class="empty">${esc(t('empty'))}</div>`;
-    warnBox.innerHTML = '';
-    return;
+  } else {
+    const cheapSet = cheapPathOn ? computeCheapSet(roots) : new Set();
+    out.classList.toggle('cheap-on', cheapPathOn);
+    const r = renderTreeHtml(roots, {t, showDiscarded, cheapPath: cheapPathOn, cheapSet});
+    out.innerHTML = r.html;
+    warnings = warnings.concat(r.warnings);
   }
 
-  const cheapSet = cheapPathOn ? computeCheapSet(roots) : new Set();
-  out.classList.toggle('cheap-on', cheapPathOn);
-
-  const {html, warnings} = renderTreeHtml(roots, {
-    t, showDiscarded, cheapPath: cheapPathOn, cheapSet
-  });
-  out.innerHTML = html;
-
+  warnings = warnings.slice().sort((a, b) => (a.line || 0) - (b.line || 0));
   warnBox.innerHTML = warnings.map(w => `<div>⚠ ${formatWarning(w, t)}</div>`).join('');
   drawCheapPath();
 }
@@ -561,6 +563,7 @@ const I18N = {
     mixedWarn:"Zeile {line}: Unter „{label}“ sind - und | gemischt — dargestellt nach dem ersten Kind.",
     st_idee:"Idee", st_geplant:"geplant", st_arbeit:"in Arbeit", st_durchstich:"Durchstich",
     st_fertig:"fertig", st_prod:"in Produktion", st_verworfen:"verworfen",
+    unknownStatusWarn:"Zeile {line}: unbekanntes Statuszeichen „{code}“ — als neutral dargestellt.",
     a11yStatus:"Status: {status}", a11ySize:"Aufwand: {size}", a11ySizeImplicit:"Aufwand: M (angenommen)", a11yTags:"Zuständig: {names}", a11yLink:"verlinkt",
     hint_indent:"Einrückung (2 Leerzeichen oder Tab) definiert die Hierarchie.",
     hint_all:"Teilpaket, alle erforderlich", hint_any:"Alternative, eine wählen",
@@ -599,6 +602,7 @@ const I18N = {
     mixedWarn:"Line {line}: under “{label}”, - and | are mixed — rendered by the first child.",
     st_idee:"idea", st_geplant:"planned", st_arbeit:"in progress", st_durchstich:"walking skeleton",
     st_fertig:"done", st_prod:"in production", st_verworfen:"discarded",
+    unknownStatusWarn:"Line {line}: unknown status code “{code}” — shown as neutral.",
     a11yStatus:"Status: {status}", a11ySize:"Effort: {size}", a11ySizeImplicit:"Effort: M (assumed)", a11yTags:"Assigned: {names}", a11yLink:"has link",
     hint_indent:"Indentation (2 spaces or a tab) defines the hierarchy.",
     hint_all:"sub-task, all required", hint_any:"alternative, choose one",
@@ -637,6 +641,7 @@ const I18N = {
     mixedWarn:"Línea {line}: bajo «{label}» se mezclan - y | — se representa según el primer hijo.",
     st_idee:"idea", st_geplant:"planificado", st_arbeit:"en curso", st_durchstich:"prototipo funcional",
     st_fertig:"terminado", st_prod:"en producción", st_verworfen:"descartado",
+    unknownStatusWarn:"Línea {line}: código de estado desconocido «{code}» — mostrado como neutral.",
     a11yStatus:"Estado: {status}", a11ySize:"Esfuerzo: {size}", a11ySizeImplicit:"Esfuerzo: M (asumido)", a11yTags:"Responsable: {names}", a11yLink:"con enlace",
     hint_indent:"La sangría (2 espacios o un tabulador) define la jerarquía.",
     hint_all:"subtarea, todas obligatorias", hint_any:"alternativa, elige una",
@@ -675,6 +680,7 @@ const I18N = {
     mixedWarn:"Ligne {line} : sous « {label} », - et | sont mélangés — rendu selon le premier enfant.",
     st_idee:"idée", st_geplant:"planifié", st_arbeit:"en cours", st_durchstich:"squelette fonctionnel",
     st_fertig:"terminé", st_prod:"en production", st_verworfen:"abandonné",
+    unknownStatusWarn:"Ligne {line} : code de statut inconnu « {code} » — affiché comme neutre.",
     a11yStatus:"Statut : {status}", a11ySize:"Effort : {size}", a11ySizeImplicit:"Effort : M (supposé)", a11yTags:"Responsable : {names}", a11yLink:"avec lien",
     hint_indent:"L'indentation (2 espaces ou une tabulation) définit la hiérarchie.",
     hint_all:"sous-tâche, toutes requises", hint_any:"alternative, en choisir une",
@@ -713,6 +719,7 @@ const I18N = {
     mixedWarn:"Wiersz {line}: pod „{label}” mieszają się - i | — renderowane według pierwszego dziecka.",
     st_idee:"pomysł", st_geplant:"zaplanowane", st_arbeit:"w toku", st_durchstich:"działający szkielet",
     st_fertig:"gotowe", st_prod:"w produkcji", st_verworfen:"odrzucone",
+    unknownStatusWarn:"Wiersz {line}: nieznany znak statusu „{code}” — pokazany jako neutralny.",
     a11yStatus:"Status: {status}", a11ySize:"Nakład: {size}", a11ySizeImplicit:"Nakład: M (założony)", a11yTags:"Przypisano: {names}", a11yLink:"z linkiem",
     hint_indent:"Wcięcie (2 spacje lub tabulator) definiuje hierarchię.",
     hint_all:"podzadanie, wszystkie wymagane", hint_any:"alternatywa, wybierz jedną",
@@ -751,6 +758,7 @@ const I18N = {
     mixedWarn:"Строка {line}: под «{label}» смешаны - и | — отображается по первому потомку.",
     st_idee:"идея", st_geplant:"запланировано", st_arbeit:"в работе", st_durchstich:"сквозной прототип",
     st_fertig:"готово", st_prod:"в эксплуатации", st_verworfen:"отклонено",
+    unknownStatusWarn:"Строка {line}: неизвестный код статуса «{code}» — показан как нейтральный.",
     a11yStatus:"Статус: {status}", a11ySize:"Оценка: {size}", a11ySizeImplicit:"Оценка: M (предполагается)", a11yTags:"Ответственные: {names}", a11yLink:"со ссылкой",
     hint_indent:"Отступ (2 пробела или табуляция) задаёт иерархию.",
     hint_all:"подзадача, все обязательны", hint_any:"альтернатива, выберите одну",
@@ -789,6 +797,7 @@ const I18N = {
     mixedWarn:"पंक्ति {line}: „{label}“ के अंतर्गत - और | मिश्रित हैं — पहले चाइल्ड के अनुसार दिखाया गया।",
     st_idee:"विचार", st_geplant:"नियोजित", st_arbeit:"प्रगति पर", st_durchstich:"कार्यशील ढाँचा",
     st_fertig:"पूर्ण", st_prod:"उत्पादन में", st_verworfen:"अस्वीकृत",
+    unknownStatusWarn:"पंक्ति {line}: अज्ञात स्थिति कोड „{code}“ — तटस्थ रूप में दिखाया गया।",
     a11yStatus:"स्थिति: {status}", a11ySize:"आकार: {size}", a11ySizeImplicit:"आकार: M (अनुमानित)", a11yTags:"जिम्मेदार: {names}", a11yLink:"लिंक सहित",
     hint_indent:"इंडेंट (2 स्पेस या टैब) पदानुक्रम तय करता है।",
     hint_all:"उप-कार्य, सभी आवश्यक", hint_any:"विकल्प, एक चुनें",
@@ -827,6 +836,7 @@ const I18N = {
     mixedWarn:"第 {line} 行：在「{label}」下 - 与 | 混用——按第一个子项渲染。",
     st_idee:"想法", st_geplant:"已计划", st_arbeit:"进行中", st_durchstich:"可运行骨架",
     st_fertig:"已完成", st_prod:"已上线", st_verworfen:"已放弃",
+    unknownStatusWarn:"第 {line} 行：未知状态代码“{code}”——显示为中性。",
     a11yStatus:"状态：{status}", a11ySize:"工作量：{size}", a11ySizeImplicit:"工作量：M（假定）", a11yTags:"负责人：{names}", a11yLink:"含链接",
     hint_indent:"缩进（2 个空格或制表符）定义层级。",
     hint_all:"子任务，全部必需", hint_any:"备选项，择其一",
@@ -865,6 +875,7 @@ const I18N = {
     mixedWarn:"{line} 行目：「{label}」の下で - と | が混在 — 最初の子に従って表示。",
     st_idee:"アイデア", st_geplant:"計画済み", st_arbeit:"作業中", st_durchstich:"ウォーキングスケルトン",
     st_fertig:"完了", st_prod:"本番稼働", st_verworfen:"破棄",
+    unknownStatusWarn:"{line} 行目: 不明なステータス記号「{code}」— 中立として表示。",
     a11yStatus:"ステータス: {status}", a11ySize:"規模: {size}", a11ySizeImplicit:"規模: M（想定）", a11yTags:"担当: {names}", a11yLink:"リンクあり",
     hint_indent:"インデント（スペース2つまたはタブ）で階層を定義します。",
     hint_all:"サブタスク、すべて必須", hint_any:"選択肢、1つを選ぶ",
