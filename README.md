@@ -1,4 +1,4 @@
-<p align="left">
+<p>
   <img src="docs/brand/logo.svg" width="72" alt="Werkbaum-Logo">
 </p>
 
