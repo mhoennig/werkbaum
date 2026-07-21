@@ -69,10 +69,13 @@ Codiert als Checkbox nach dem Zeichen (Erweiterung der Markdown-Task-Syntax):
 
 - Werte: `XS < S < M < L < XL < XXL`, notiert in Klammern, z. B. `(L)`.
 - **Untergliederungsregel:** Ab `(M)` muss ein Element weiter zerlegt sein.
-  Ein Element ≥ M **ohne Kinder** erhält einen Geister-Knoten
-  „Untergliederung fehlt“ an gestrichelter Linie darunter (in `--warn`,
-  `#B45309`). Der angedeutete Unterpunkt genügt als Hinweis; eine zusätzliche
-  Umrandung des Knotens gibt es nicht.
+  Ein Element ≥ M **ohne Kinder** erhält einen Geister-Knoten an gestrichelter
+  Linie darunter (in `--warn`, `#B45309`). Sein Label ist knapp „…“; die
+  Erklärung („Ab Größe M sollte ein Element weiter untergliedert werden.“)
+  steht im Tooltip — der ausgeschriebene Text machte die Zelle sonst breiter
+  als der Knoten und verschob gestapelte Geschwister. Der angedeutete
+  Unterpunkt genügt als Hinweis; eine zusätzliche Umrandung des Knotens gibt es
+  nicht.
 - Ausnahme: verworfene Elemente lösen die Regel nie aus.
 - Anzeige: petrolfarbenes Badge (`--or`, `#0F766E`) mit weißer Schrift oben
   rechts an der Knoten-Ecke.
@@ -174,7 +177,18 @@ any-of-Alternativen samt Teilbaum) treten zurück (blass, entsättigt); der
 günstige Pfad hebt sich dadurch von selbst ab — kein zusätzlicher Rahmen an den
 ohnehin dichten Knoten-Ecken. Wo die Größe **implizit** als `M` angenommen wird,
 zeigt der Knoten ein **invertiertes** Größen-Badge (weiß mit petrolfarbenem
-Rand/Text statt gefüllt) mit erläuterndem Tooltip. Siehe D18.
+Rand/Text statt gefüllt) mit erläuterndem Tooltip.
+
+Zusätzlich fädelt eine **gestrichelte, geschwungene Petrol-Linie** durch die
+**Endknoten (Blätter)** des Pfads (Katmull-Rom-Spline in Dokument-Reihenfolge,
+in allen Modi). Die kräftige Linie liegt **hinter** den Knoten (nur in den
+Lücken voll sichtbar), eine **abgetönte Kopie** davor deutet den Verlauf beim
+Durchschreiten eines Knotens nur schwach an. An jedem echten Endknoten sitzt ein
+großer, **blasser Petrol-Stationspunkt** (U-Bahn-Plan-Prinzip: der Knotentext
+bleibt lesbar) — nur **durchquerte** Fremd- oder Zwischenknoten tragen keinen
+Punkt, sodass eindeutig bleibt, welche Knoten auf dem Pfad **enden**. Linie,
+abgetönte Kopie und Punkte erscheinen bei aktivem Umschalter auch im
+Grafikexport. Siehe D18.
 
 ### Grafikexport des Diagramms
 Das Diagramm wird aus der Live-Geometrie in ein eigenständiges SVG (nur Formen

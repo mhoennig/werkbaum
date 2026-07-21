@@ -22,6 +22,16 @@ Diagramm rechts, Toggles für transponierte Ansicht und verworfene Elemente).
   `var(--or)` nur noch für UI-Akzente/Logo (SPEC §9, D15).
 - Extraktionsreihenfolge im Parser nicht umstellen: Kommentar → Zeichen/
   Status → URL → Größe → Tags (sonst kollidiert `@` in URLs).
+- Günstigster Pfad: `markCheapest()`/`cheapestCost()` markieren die nötigen
+  Knoten (Klassen `cheap`, `cheap-leaf`); `drawCheapPath()` zeichnet nach jedem
+  `render()` **und** nach `applyLayout()` zwei Overlay-SVGs in `#out` (hinten
+  kräftige Linie, vorne abgetönte Kopie + Stationspunkte). Overlays erben den
+  CSS-`zoom` von `#out`, Punkte in unskalierte `#out`-Koordinaten umrechnen
+  (`/zoom`). `diagramToSvg()` zeichnet dieselbe Linie/Punkte nach (SPEC §9, D18).
+- Zerlegt eine any-of-Alternative selbst all-of, wird der Teilbaum **nur
+  horizontal** schmal transponiert (`ul.or>li.has-and>ul.and`, siehe D18) —
+  sonst schiebt der breite Fächer den Elternbaum nach rechts. Bei Layout-
+  Umbauten dieses Nesting mitprüfen.
 - „verworfen" ist per Default ausgeblendet; Filterlogik steckt in
   `visibleChildren()` und muss bei Renderer-Umbauten erhalten bleiben.
 - Zustand wird im `localStorage` gehalten (noch kein Backend): `werkbaum-lang`

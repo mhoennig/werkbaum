@@ -302,7 +302,7 @@
   .panel.collapsed .zoomctl{display:none}
 
   /* ---------- Baum ---------- */
-  .tree{width:max-content;margin:0 auto;list-style:none}
+  .tree{width:max-content;margin:0 auto;list-style:none;position:relative}
   .tree ul{list-style:none}
   .tree li{display:flex;flex-direction:column;align-items:center;position:relative}
   .tree > li + li{margin-top:36px}
@@ -360,6 +360,19 @@
   .cheap-on .node:not(.cheap){opacity:.32;filter:saturate(.4)}
   /* implizit als M angenommene Größe: invertiertes Badge (weiß statt petrol) */
   .size.implicit{background:var(--card);color:var(--or);border-color:var(--or)}
+  /* Günstigster-Pfad-Linie: gestrichelt, geschwungen, petrol — fädelt durch
+     die Endknoten (Blätter) des Pfads. Zwei Overlays in #out (erben dessen
+     zoom): die kräftige Linie liegt HINTER den Knoten (nur in den Lücken
+     sichtbar), eine abgetönte Kopie liegt DAVOR (deutet den Verlauf beim
+     Durchschreiten von Knoten nur schwach an). Kleine Stationspunkte an den
+     Blättern zeigen, welche Knoten wirklich auf dem Pfad enden — durchquerte
+     Fremdknoten tragen keinen Punkt. Reihenfolge im DOM steuert vorn/hinten. */
+  .cheap-overlay{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+  .cheap-path{fill:none;stroke:var(--or);stroke-width:2.5;stroke-linecap:round;
+              stroke-dasharray:8 6;opacity:.9}
+  .cheap-path.faint{opacity:.2}
+  /* Stationspunkt: groß, aber blass gefüllt — der Knotentext bleibt lesbar */
+  .cheap-dot{fill:var(--or);fill-opacity:.2;stroke:var(--or);stroke-opacity:.35;stroke-width:1.5}
 
   /* --- ALL OF: Kinder nebeneinander, durchgezogener Verteiler --- */
   ul.and{display:flex;align-items:flex-start;position:relative;padding-top:14px}
@@ -401,6 +414,27 @@
     content:'';position:absolute;left:9px;top:0;height:100%;border-left:2px dashed var(--muted);
   }
   ul.or>li:last-child::after{height:23px}
+  /* all-of-Teilbaum UNTER einer any-of-Alternative (nur horizontal):
+     schmal transponiert stapeln — Kinder untereinander mit linkem, solidem
+     Verteiler (wie im kompakten Modus), statt breitem Fächer. Sonst zwingt der
+     breite Fächer ein Zentrieren, das den Alternativknoten (und damit den
+     ganzen Elternbaum) weit nach rechts schiebt. Passt zugleich stilistisch
+     zur gestapelten any-of-Spalte darüber. Vertikal/kompakt haben ihre eigene
+     `ul.and`-Behandlung und bleiben unberührt. */
+  .tree:not(.vertical):not(.kompakt) ul.or>li.has-and>ul.and{
+    flex-direction:column;align-items:flex-start;padding-top:14px;
+  }
+  .tree:not(.vertical):not(.kompakt) ul.or>li.has-and>ul.and::before{left:9px;height:14px}
+  .tree:not(.vertical):not(.kompakt) ul.or>li.has-and>ul.and>li{padding:5px 0 5px 30px}
+  .tree:not(.vertical):not(.kompakt) ul.or>li.has-and>ul.and>li::before{
+    left:9px;right:auto;top:23px;width:21px;height:0;
+    border:0;border-top:2px solid var(--line);border-radius:0;
+  }
+  .tree:not(.vertical):not(.kompakt) ul.or>li.has-and>ul.and>li::after{
+    left:9px;right:auto;top:0;width:0;height:100%;
+    border:0;border-left:2px solid var(--line);border-radius:0;
+  }
+  .tree:not(.vertical):not(.kompakt) ul.or>li.has-and>ul.and>li:last-child::after{height:23px}
   ul.or .node{
     border-color:var(--muted);
     box-shadow:none;
@@ -669,7 +703,12 @@ const INITIAL = `%% Project structure – Sprint 14
     - [x] Audience analysis (S)
     - [x] Sitemap (XS)
   - [~] Implementation (XL)
-    - [/] Frontend (S) https://git.example.com/frontend @anna
+    - [~] Frontend (M) https://git.example.com/frontend @anna
+      | [ ] PWA (S)
+      | [ ] Web+Nativ
+        - [/] Web (S)
+        - [ ] Android (M)
+        - [ ] iOS (M)
     - [ ] Backend (L) @ben @carla
     - [ ] CMS integration (M)
       | [ ] WordPress
@@ -781,7 +820,12 @@ function markCheapest(n){
     for(const k of kids) markCheapest(k);
   }
 }
-function cheapCls(n){ return cheapPathOn && cheapSet.has(n) ? 'cheap' : ''; }
+function cheapCls(n){
+  if(!(cheapPathOn && cheapSet.has(n))) return '';
+  /* Endknoten des Pfads: kein Kind liegt (mehr) auf dem günstigen Pfad */
+  const leaf = !pathChildren(n).some(k => cheapSet.has(k));
+  return leaf ? 'cheap cheap-leaf' : 'cheap';
+}
 
 function nodeHtml(n, extra){
   const need = needsBreakdown(n);
@@ -853,6 +897,64 @@ function render(){
   }).join('');
 
   warnBox.innerHTML = warnings.map(w => `<div>⚠ ${w}</div>`).join('');
+  drawCheapPath();
+}
+
+/* ---------- Günstigster-Pfad-Linie ----------
+   Eine gestrichelte, geschwungene Petrol-Linie fädelt durch die Endknoten
+   (Blätter) des günstigen Pfads. Das Overlay-SVG liegt in #out und erbt damit
+   dessen CSS-`zoom`; die Punkte werden in unskalierte #out-Koordinaten
+   umgerechnet (getBoundingClientRect / zoom). Neu gezeichnet nach jedem
+   render() und nach Moduswechsel (applyLayout ruft nicht render). */
+const SVGNS = 'http://www.w3.org/2000/svg';
+function catmullRom(p){
+  if(p.length < 2) return '';
+  if(p.length === 2) return `M${p[0].x.toFixed(1)},${p[0].y.toFixed(1)} L${p[1].x.toFixed(1)},${p[1].y.toFixed(1)}`;
+  let d = `M${p[0].x.toFixed(1)},${p[0].y.toFixed(1)}`;
+  for(let i = 0; i < p.length - 1; i++){
+    const p0 = p[i-1] || p[i], p1 = p[i], p2 = p[i+1], p3 = p[i+2] || p2;
+    const c1x = p1.x + (p2.x - p0.x)/6, c1y = p1.y + (p2.y - p0.y)/6;
+    const c2x = p2.x - (p3.x - p1.x)/6, c2y = p2.y - (p3.y - p1.y)/6;
+    d += ` C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+  }
+  return d;
+}
+function svgEl(name, attrs){
+  const e = document.createElementNS(SVGNS, name);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function overlaySvg(cls, w, h){
+  const svg = svgEl('svg', {class:'cheap-overlay ' + cls, width:w, height:h,
+    viewBox:`0 0 ${w.toFixed(1)} ${h.toFixed(1)}`});
+  return svg;
+}
+function drawCheapPath(){
+  out.querySelectorAll('svg.cheap-overlay').forEach(e => e.remove());
+  if(!cheapPathOn) return;
+  const leaves = [...out.querySelectorAll('.node.cheap-leaf')];   /* Dokument-Reihenfolge = Lese-Reihenfolge */
+  if(leaves.length < 2) return;
+  const outRect = out.getBoundingClientRect();
+  const z = zoom || 1;
+  if(!outRect.width || !outRect.height) return;                   /* Panel eingeklappt */
+  const pts = leaves.map(el => {
+    const r = el.getBoundingClientRect();
+    return {x:(r.left + r.width/2 - outRect.left)/z, y:(r.top + r.height/2 - outRect.top)/z};
+  });
+  const w = outRect.width/z, h = outRect.height/z;
+  const d = catmullRom(pts);
+
+  /* kräftige Linie HINTER die Knoten (als erstes Kind → hinterste Paint-Ebene) */
+  const back = overlaySvg('cheap-back', w, h);
+  back.appendChild(svgEl('path', {class:'cheap-path', d}));
+  out.insertBefore(back, out.firstChild);
+
+  /* davor: abgetönte Kopie (deutet den Verlauf über Knoten an) + Stationspunkte */
+  const front = overlaySvg('cheap-front', w, h);
+  front.appendChild(svgEl('path', {class:'cheap-path faint', d}));
+  pts.forEach(p => front.appendChild(
+    svgEl('circle', {class:'cheap-dot', cx:p.x.toFixed(1), cy:p.y.toFixed(1), r:10})));
+  out.appendChild(front);
 }
 
 /* ---------- Diagramm als Grafik (SVG → PNG) ---------- */
@@ -873,6 +975,11 @@ function diagramToSvg(){
             cx:r.left+ox+r.width/2, cy:r.top+oy+r.height/2, r:r.right+ox, b:r.bottom+oy}; };
   const parts = [`<rect x="0" y="0" width="${W}" height="${H}" fill="#ffffff"/>`];
   const nodes = [...out.querySelectorAll('.node')];
+  const cheapPts = cheapPathOn
+    ? [...out.querySelectorAll('.node.cheap-leaf')].map(el => { const b = R(el); return {x:b.cx, y:b.cy}; })
+    : [];
+  const cheapLine = op =>
+    `<path d="${catmullRom(cheapPts)}" fill="none" stroke="#0F766E" stroke-width="2.5" stroke-dasharray="8 6" stroke-linecap="round" opacity="${op}"/>`;
 
   /* 1) Verbindungslinien (hinter den Knoten) */
   const seg = (x1,y1,x2,y2,stroke,dash) =>
@@ -909,6 +1016,9 @@ function diagramToSvg(){
     }
   });
 
+  /* 1b) Günstigster-Pfad: kräftige Linie hinter den Knoten */
+  if(cheapPts.length >= 2) parts.push(cheapLine('0.9'));
+
   /* 2) Badge/Pille (Größe, Tags) */
   const drawBadge = (el, fill, textColor, strokeColor) => {
     const b = R(el);
@@ -933,6 +1043,13 @@ function diagramToSvg(){
       drawBadge(tg, t.backgroundColor, t.color, t.borderTopColor);
     });
   });
+
+  /* 3b) Günstigster-Pfad: abgetönte Kopie über den Knoten + Stationspunkte */
+  if(cheapPts.length >= 2){
+    parts.push(cheapLine('0.2'));
+    cheapPts.forEach(p => parts.push(
+      `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="10" fill="#0F766E" fill-opacity="0.2" stroke="#0F766E" stroke-opacity="0.35" stroke-width="1.5"/>`));
+  }
 
   /* 4) Geister-Knoten „Untergliederung fehlt“ */
   out.querySelectorAll('.ghost-node').forEach(g => {
@@ -1020,7 +1137,8 @@ function applyLayout(mode){
   out.classList.toggle('vertical', mode === 'vertikal');
   out.classList.toggle('kompakt', mode === 'kompakt');
   app.classList.toggle('side', mode !== 'horizontal');
-  applySplit();   /* Preset für die neue Orientierung neu setzen */
+  applySplit();       /* Preset für die neue Orientierung neu setzen */
+  drawCheapPath();    /* Blatt-Positionen ändern sich mit dem Modus */
 }
 document.querySelectorAll('input[name="layout"]').forEach(radio => {
   radio.addEventListener('change', () => { if(radio.checked) applyLayout(radio.value); });
@@ -1224,7 +1342,7 @@ const I18N = {
     modeVertikal:"Vertikal – Baum nach rechts, Diagramm neben dem Editor",
     zoomOut:"verkleinern", zoomReset:"zurücksetzen", zoomIn:"vergrößern",
     zoomAria:"Zoom (Strg/Cmd + Mausrad)", langMore:"weitere Sprachen",
-    empty:"Noch keine Struktur — einfach lostippen.", ghost:"Untergliederung fehlt",
+    empty:"Noch keine Struktur — einfach lostippen.", ghost:"…",
     mixedWarn:"Zeile {line}: Unter „{label}“ sind - und | gemischt — dargestellt nach dem ersten Kind.",
     st_idee:"Idee", st_geplant:"geplant", st_arbeit:"in Arbeit", st_durchstich:"Durchstich",
     st_fertig:"fertig", st_prod:"in Produktion", st_verworfen:"verworfen",
@@ -1260,7 +1378,7 @@ const I18N = {
     modeVertikal:"Vertical – tree to the right, diagram beside the editor",
     zoomOut:"zoom out", zoomReset:"reset", zoomIn:"zoom in",
     zoomAria:"Zoom (Ctrl/Cmd + mouse wheel)", langMore:"more languages",
-    empty:"No structure yet — just start typing.", ghost:"Breakdown missing",
+    empty:"No structure yet — just start typing.", ghost:"…",
     mixedWarn:"Line {line}: under “{label}”, - and | are mixed — rendered by the first child.",
     st_idee:"idea", st_geplant:"planned", st_arbeit:"in progress", st_durchstich:"walking skeleton",
     st_fertig:"done", st_prod:"in production", st_verworfen:"discarded",
@@ -1296,7 +1414,7 @@ const I18N = {
     modeVertikal:"Vertical – árbol hacia la derecha, diagrama junto al editor",
     zoomOut:"alejar", zoomReset:"restablecer", zoomIn:"acercar",
     zoomAria:"Zoom (Ctrl/Cmd + rueda del ratón)", langMore:"más idiomas",
-    empty:"Aún no hay estructura — simplemente empieza a escribir.", ghost:"Falta el desglose",
+    empty:"Aún no hay estructura — simplemente empieza a escribir.", ghost:"…",
     mixedWarn:"Línea {line}: bajo «{label}» se mezclan - y | — se representa según el primer hijo.",
     st_idee:"idea", st_geplant:"planificado", st_arbeit:"en curso", st_durchstich:"prototipo funcional",
     st_fertig:"terminado", st_prod:"en producción", st_verworfen:"descartado",
@@ -1332,7 +1450,7 @@ const I18N = {
     modeVertikal:"Vertical – arbre vers la droite, diagramme à côté de l'éditeur",
     zoomOut:"dézoomer", zoomReset:"réinitialiser", zoomIn:"zoomer",
     zoomAria:"Zoom (Ctrl/Cmd + molette)", langMore:"plus de langues",
-    empty:"Pas encore de structure — commencez à taper.", ghost:"Décomposition manquante",
+    empty:"Pas encore de structure — commencez à taper.", ghost:"…",
     mixedWarn:"Ligne {line} : sous « {label} », - et | sont mélangés — rendu selon le premier enfant.",
     st_idee:"idée", st_geplant:"planifié", st_arbeit:"en cours", st_durchstich:"squelette fonctionnel",
     st_fertig:"terminé", st_prod:"en production", st_verworfen:"abandonné",
@@ -1368,7 +1486,7 @@ const I18N = {
     modeVertikal:"Pionowo – drzewo w prawo, diagram obok edytora",
     zoomOut:"pomniejsz", zoomReset:"resetuj", zoomIn:"powiększ",
     zoomAria:"Powiększenie (Ctrl/Cmd + kółko myszy)", langMore:"więcej języków",
-    empty:"Brak struktury — zacznij pisać.", ghost:"Brak podziału",
+    empty:"Brak struktury — zacznij pisać.", ghost:"…",
     mixedWarn:"Wiersz {line}: pod „{label}” mieszają się - i | — renderowane według pierwszego dziecka.",
     st_idee:"pomysł", st_geplant:"zaplanowane", st_arbeit:"w toku", st_durchstich:"działający szkielet",
     st_fertig:"gotowe", st_prod:"w produkcji", st_verworfen:"odrzucone",
@@ -1404,7 +1522,7 @@ const I18N = {
     modeVertikal:"Вертикально – дерево вправо, диаграмма рядом с редактором",
     zoomOut:"уменьшить", zoomReset:"сбросить", zoomIn:"увеличить",
     zoomAria:"Масштаб (Ctrl/Cmd + колесо мыши)", langMore:"ещё языки",
-    empty:"Пока нет структуры — просто начните печатать.", ghost:"Нет декомпозиции",
+    empty:"Пока нет структуры — просто начните печатать.", ghost:"…",
     mixedWarn:"Строка {line}: под «{label}» смешаны - и | — отображается по первому потомку.",
     st_idee:"идея", st_geplant:"запланировано", st_arbeit:"в работе", st_durchstich:"сквозной прототип",
     st_fertig:"готово", st_prod:"в эксплуатации", st_verworfen:"отклонено",
@@ -1440,7 +1558,7 @@ const I18N = {
     modeVertikal:"लंबवत – पेड़ दाईं ओर, संपादक के बगल में आरेख",
     zoomOut:"ज़ूम आउट", zoomReset:"रीसेट करें", zoomIn:"ज़ूम इन",
     zoomAria:"ज़ूम (Ctrl/Cmd + माउस-व्हील)", langMore:"और भाषाएँ",
-    empty:"अभी कोई संरचना नहीं — बस टाइप करना शुरू करें।", ghost:"विभाजन अनुपस्थित",
+    empty:"अभी कोई संरचना नहीं — बस टाइप करना शुरू करें।", ghost:"…",
     mixedWarn:"पंक्ति {line}: „{label}“ के अंतर्गत - और | मिश्रित हैं — पहले चाइल्ड के अनुसार दिखाया गया।",
     st_idee:"विचार", st_geplant:"नियोजित", st_arbeit:"प्रगति पर", st_durchstich:"कार्यशील ढाँचा",
     st_fertig:"पूर्ण", st_prod:"उत्पादन में", st_verworfen:"अस्वीकृत",
@@ -1476,7 +1594,7 @@ const I18N = {
     modeVertikal:"纵向——树向右展开，图表在编辑器旁边",
     zoomOut:"缩小", zoomReset:"重置", zoomIn:"放大",
     zoomAria:"缩放（Ctrl/Cmd + 鼠标滚轮）", langMore:"更多语言",
-    empty:"还没有结构——直接开始输入吧。", ghost:"缺少细分",
+    empty:"还没有结构——直接开始输入吧。", ghost:"…",
     mixedWarn:"第 {line} 行：在「{label}」下 - 与 | 混用——按第一个子项渲染。",
     st_idee:"想法", st_geplant:"已计划", st_arbeit:"进行中", st_durchstich:"可运行骨架",
     st_fertig:"已完成", st_prod:"已上线", st_verworfen:"已放弃",
@@ -1512,7 +1630,7 @@ const I18N = {
     modeVertikal:"縦 — ツリーを右へ、ダイアグラムはエディターの横",
     zoomOut:"縮小", zoomReset:"リセット", zoomIn:"拡大",
     zoomAria:"ズーム（Ctrl/Cmd + マウスホイール）", langMore:"その他の言語",
-    empty:"まだ構造がありません — 入力を始めてください。", ghost:"分解がありません",
+    empty:"まだ構造がありません — 入力を始めてください。", ghost:"…",
     mixedWarn:"{line} 行目：「{label}」の下で - と | が混在 — 最初の子に従って表示。",
     st_idee:"アイデア", st_geplant:"計画済み", st_arbeit:"作業中", st_durchstich:"ウォーキングスケルトン",
     st_fertig:"完了", st_prod:"本番稼働", st_verworfen:"破棄",

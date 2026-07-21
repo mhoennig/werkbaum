@@ -173,3 +173,23 @@ Größen-Badge (weiß mit Petrol-Rand statt gefüllt) samt Tooltip, damit die
 Annahme sichtbar und von einer echten `(M)`-Angabe unterscheidbar bleibt. Die
 Größen-Semantik in SPEC §5 bleibt unberührt (die Wertung gilt nur der
 Pfad-Kostenrechnung).
+
+**Pfad-Linie + Stationspunkte (U-Bahn-Plan):** Zusätzlich zur Inversion fädelt
+eine gestrichelte, geschwungene Petrol-Linie durch die **Endknoten** des Pfads.
+Sie liegt **hinter** den Knoten (kräftig in den Lücken), mit einer **abgetönten
+Kopie davor** (deutet den Verlauf beim Durchschreiten eines Knotens nur an —
+Alternative zum harten „über allem"). Problem dabei: läuft die Linie durch
+Fremd-/Zwischenknoten, ist nicht unterscheidbar, ob diese dazugehören
+(besonders im kompakten Modus). Lösung: ein **blasser, großer Stationspunkt**
+nur an den echten Blättern — durchquerte Knoten bleiben punktlos. Blass+groß
+statt klein+satt, damit der Knotentext lesbar bleibt. Alles auch im
+Grafikexport (hinten/vorne-Schichtung nachgezeichnet).
+
+**Layout: all-of unter any-of (horizontal).** Zerlegt eine any-of-Alternative
+selbst wieder all-of (z. B. „Web+Nativ" → Web + Android + iOS), würde der
+breite horizontale Fächer den Alternativknoten zentrieren und samt Elternbaum
+weit nach rechts schieben. Deshalb wird dieser Teilbaum **nur horizontal**
+schmal **transponiert** gestapelt (Kinder untereinander, linker solider
+Verteiler — wie im kompakten Modus), passend zur gestapelten any-of-Spalte
+darüber. Vertikal/kompakt haben ihre eigene `ul.and`-Behandlung und bleiben
+unberührt.
