@@ -11,6 +11,12 @@ Desktop.ini
 *.iws
 out/
 
+# === Claude Code ===
+# launch.json wird für die Preview automatisch neu erzeugt; lokale Overrides
+# ebenso lokal halten. Geteilte Konfig (settings.json, commands/…) darf rein.
+.claude/launch.json
+.claude/settings.local.json
+
 # === Editoren ===
 .vscode/
 *.swp
