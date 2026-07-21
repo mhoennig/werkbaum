@@ -463,7 +463,7 @@
         <path d="M50 39 V46" fill="none" stroke="#0F766E" stroke-width="3" stroke-dasharray="4 4"/>
         <rect x="40" y="46" width="20" height="12" rx="3.5" fill="#fff" stroke="#0F766E" stroke-width="3"/>
       </svg>
-      <span>Werk<span style="color:var(--or)">baum</span></span>
+      <span data-i18n-title="brandTooltip" title="„Werkbaum“ bedeutet so viel wie ‚Werk-Baum‘ — der Baum des Projektstrukturplans (WBS).">Werk<span style="color:var(--or)">baum</span></span>
     </h1>
     <div class="langsel" role="radiogroup" aria-label="Sprache / Language">
       <button type="button" data-lang="de" title="Deutsch">DE</button>
@@ -924,6 +924,7 @@ document.getElementById('copyDiagram').addEventListener('click', async () => {
 const I18N = {
   de: {
     subtitle:"Werkbaum – Ein Text-basierter WBS/Projektstrukturplan/Feature-Tree Diagramm-Editor.",
+    brandTooltip:"„Werkbaum“ bedeutet so viel wie ‚Werk-Baum‘ — der Baum des Projektstrukturplans (WBS).",
     editorTitle:"Struktur (Text)", diagramTitle:"Diagramm",
     copy:"kopieren", copyDone:"kopiert ✓", copyTooltip:"Text in die Zwischenablage kopieren",
     copyDiagramTooltip:"Diagramm als Textbaum kopieren",
@@ -949,6 +950,7 @@ const I18N = {
   },
   en: {
     subtitle:"Werkbaum – A text-based WBS / work breakdown structure / feature-tree diagram editor.",
+    brandTooltip:"“Werkbaum” means roughly ‘work tree’ — the tree of the work breakdown structure (WBS).",
     editorTitle:"Structure (text)", diagramTitle:"Diagram",
     copy:"copy", copyDone:"copied ✓", copyTooltip:"Copy text to clipboard",
     copyDiagramTooltip:"Copy diagram as a text tree",
@@ -974,6 +976,7 @@ const I18N = {
   },
   es: {
     subtitle:"Werkbaum – Un editor de diagramas basado en texto para EDT / estructura de desglose del trabajo / árbol de características.",
+    brandTooltip:"«Werkbaum» significa algo así como ‘árbol de trabajo’ — el árbol de la estructura de desglose del trabajo (EDT).",
     editorTitle:"Estructura (texto)", diagramTitle:"Diagrama",
     copy:"copiar", copyDone:"copiado ✓", copyTooltip:"Copiar el texto al portapapeles",
     copyDiagramTooltip:"Copiar el diagrama como árbol de texto",
@@ -999,6 +1002,7 @@ const I18N = {
   },
   fr: {
     subtitle:"Werkbaum – Un éditeur de diagrammes basé sur le texte pour WBS / organigramme des tâches / arbre de fonctionnalités.",
+    brandTooltip:"« Werkbaum » signifie à peu près « arbre de travail » — l’arbre de l’organigramme des tâches (WBS).",
     editorTitle:"Structure (texte)", diagramTitle:"Diagramme",
     copy:"copier", copyDone:"copié ✓", copyTooltip:"Copier le texte dans le presse-papiers",
     copyDiagramTooltip:"Copier le diagramme en arbre de texte",
@@ -1024,6 +1028,7 @@ const I18N = {
   },
   pl: {
     subtitle:"Werkbaum – Edytor diagramów oparty na tekście: WBS / struktura podziału pracy / drzewo funkcji.",
+    brandTooltip:"„Werkbaum” znaczy mniej więcej ‚drzewo pracy’ — drzewo struktury podziału pracy (WBS).",
     editorTitle:"Struktura (tekst)", diagramTitle:"Diagram",
     copy:"kopiuj", copyDone:"skopiowano ✓", copyTooltip:"Kopiuj tekst do schowka",
     copyDiagramTooltip:"Kopiuj diagram jako drzewo tekstowe",
@@ -1049,6 +1054,7 @@ const I18N = {
   },
   ru: {
     subtitle:"Werkbaum – текстовый редактор диаграмм: СДР / структура декомпозиции работ / дерево функций.",
+    brandTooltip:"«Werkbaum» примерно означает ‚дерево работ’ — дерево структуры декомпозиции работ (СДР).",
     editorTitle:"Структура (текст)", diagramTitle:"Диаграмма",
     copy:"копировать", copyDone:"скопировано ✓", copyTooltip:"Скопировать текст в буфер обмена",
     copyDiagramTooltip:"Скопировать диаграмму как текстовое дерево",
@@ -1074,6 +1080,7 @@ const I18N = {
   },
   hi: {
     subtitle:"Werkbaum – टेक्स्ट-आधारित आरेख संपादक: WBS / कार्य विभाजन संरचना / फ़ीचर-ट्री।",
+    brandTooltip:"„Werkbaum“ का अर्थ लगभग ‚कार्य-वृक्ष‘ है — कार्य विभाजन संरचना (WBS) का वृक्ष।",
     editorTitle:"संरचना (टेक्स्ट)", diagramTitle:"आरेख",
     copy:"कॉपी करें", copyDone:"कॉपी हो गया ✓", copyTooltip:"टेक्स्ट को क्लिपबोर्ड पर कॉपी करें",
     copyDiagramTooltip:"आरेख को टेक्स्ट-ट्री के रूप में कॉपी करें",
