@@ -432,10 +432,17 @@
     left:0;top:50%;width:9px;height:0;
     border-left:0;border-top:2px solid var(--line);
   }
-  /* Sammelleiste nur von erster bis letzter Kindmitte (23-px-Offset);
-     mittlere Kinder tragen die volle Höhe (Basis), Rand-Kinder halbieren. */
+  /* Abzweig trifft die tatsächliche Knotenmitte des Kindes:
+     Blatt- und Any-of-Kinder sitzen oben (Offset 23 px), all-of-Zwischenknoten
+     sind selbst vertikal zentriert (50 %). Ohne diese Unterscheidung liefen die
+     Linien zu zentrierten Zwischenknoten ins Leere. Die Enden der Sammelleiste
+     folgen demselben Abzweigpunkt des jeweiligen Rand-Kindes. */
   .tree.vertical li.has-and>ul.and>li:first-child::after{top:23px;height:calc(100% - 23px)}
   .tree.vertical li.has-and>ul.and>li:only-child::after{border:0}
+  .tree.vertical li.has-and>ul.and>li.has-and::before{top:50%}
+  .tree.vertical li.has-and>ul.and>li.has-and:first-child::after{top:50%;height:50%}
+  .tree.vertical li.has-and>ul.and>li.has-and:last-child::after{top:0;height:50%}
+  .tree.vertical li.has-and>ul.and>li.has-and:only-child::after{border:0}
 
   /* Kompakt: auch All-of läuft nach unten (spart Breite) — kein Rechts-Fächer.
      Die graue, gestrichelte Any-of-Führung kommt aus der Basis und gilt hier
