@@ -33,12 +33,48 @@
   h1{font-size:1.25rem;font-weight:600;letter-spacing:-.01em}
   header p{margin-top:4px;color:var(--muted);font-size:.9rem}
 
+  /* Horizontal (Toggle aus): Diagramm oben, Editor unten — je volle Breite.
+     Vertikal (Toggle an, .side): Editor links, Diagramm rechts. */
   .app{
     max-width:1200px;margin:0 auto;
-    display:grid;grid-template-columns:360px 1fr;gap:20px;
+    display:grid;grid-template-columns:1fr;gap:20px;
+    grid-template-areas:"diagram" "editor";
     align-items:start;
   }
-  @media (max-width:820px){ .app{grid-template-columns:1fr} }
+  .app.side{
+    grid-template-columns:360px 1fr;
+    grid-template-areas:"editor diagram";
+  }
+  .panel.editor{grid-area:editor}
+  .panel.right{grid-area:diagram}
+  @media (max-width:820px){
+    .app.side{grid-template-columns:1fr;grid-template-areas:"editor" "diagram"}
+  }
+
+  /* Editor-Innenaufbau: Textarea + aufklappbare Agenda.
+     Horizontal nebeneinander, vertikal (.side) untereinander. */
+  .editor-body{display:flex;align-items:stretch}
+  .editor-body textarea{flex:1 1 auto;min-width:0}
+  .agenda{
+    flex:0 0 auto;
+    border-left:1px dashed rgba(36,52,71,.18);
+    display:flex;flex-direction:column;
+  }
+  .agenda[open]{width:300px}
+  .agenda>summary{
+    list-style:none;cursor:pointer;white-space:nowrap;
+    padding:10px 16px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+    display:flex;align-items:center;gap:7px;
+  }
+  .agenda>summary::-webkit-details-marker{display:none}
+  .agenda>summary::before{content:'▸';display:inline-block;transition:transform .15s}
+  .agenda[open]>summary::before{transform:rotate(90deg)}
+  .agenda .hint{border-top:0;overflow:auto}
+  .side .editor-body{flex-direction:column;align-items:stretch}
+  .side .agenda{border-left:0;border-top:1px dashed rgba(36,52,71,.18)}
+  .side .agenda[open]{width:auto}
 
   .panel{
     background:var(--card);
@@ -271,13 +307,16 @@
     </svg>
     <span>Werk<span style="color:var(--or)">baum</span></span>
   </h1>
-  <p>Links die textuelle Struktur bearbeiten — rechts entsteht das Diagramm live.</p>
+  <p>Struktur als Text bearbeiten — das Diagramm entsteht live. Umschalter „vertikal“ ordnet Editor und Diagramm nebeneinander an.</p>
 </header>
 
-<div class="app">
-  <div class="panel">
+<div class="app" id="app">
+  <div class="panel editor">
     <div class="panel-head">Struktur (Text)</div>
+    <div class="editor-body">
     <textarea id="src" spellcheck="false"></textarea>
+    <details class="agenda">
+      <summary>Agenda</summary>
     <div class="hint">
       Einrückung (2 Leerzeichen oder Tab) definiert die Hierarchie.<br>
       <code>-</code>&nbsp; Teilpaket, alle erforderlich <em>(all of)</em><br>
@@ -298,6 +337,8 @@
       Ab <code>(M)</code> gilt: weiter untergliedern — fehlt die Untergliederung, erscheint ein Platzhalter im Diagramm.<br>
       Kommentare mit <code>%%</code> — als ganze Zeile oder am Zeilenende.
       Personen mit <code>@name</code> — erscheinen unten rechts am Knoten.
+    </div>
+    </details>
     </div>
   </div>
 
@@ -478,9 +519,11 @@ src.addEventListener('keydown', e => {
 
 src.addEventListener('input', render);
 
+const app = document.getElementById('app');
 const vert = document.getElementById('vert');
 vert.addEventListener('change', () => {
   out.classList.toggle('vertical', vert.checked);
+  app.classList.toggle('side', vert.checked);
 });
 
 const showc = document.getElementById('showc');
