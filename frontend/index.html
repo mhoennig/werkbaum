@@ -81,6 +81,8 @@
   .panel.collapsed .copybtn,
   .panel.collapsed .switch,
   .panel.collapsed .seg{display:none}
+  .panel.collapsed .panel-head{cursor:pointer}
+  .panel.collapsed .panel-head>span{cursor:pointer}
   /* Gestapelt: kollabiertes Panel = Titelzeile (auto), anderes füllt. */
   .app:not(.side).collapse-diagram{grid-template-rows:auto 14px minmax(0,1fr)}
   .app:not(.side).collapse-editor{grid-template-rows:minmax(0,1fr) 14px auto}
@@ -697,6 +699,13 @@ function applySplit(){
 document.querySelectorAll('.winbtn').forEach(b => {
   b.addEventListener('click', () => { splitState = b.dataset.state; applySplit(); });
 });
+/* Klick auf die Titelzeile eines minimierten Panels stellt es wieder her. */
+[editorPanel, diagramPanel].forEach(panel => {
+  panel.querySelector('.panel-head').addEventListener('click', e => {
+    if(e.target.closest('button, label, input')) return;   /* Bedienelemente behalten ihre Funktion */
+    if(panel.classList.contains('collapsed')){ splitState = 'normal'; applySplit(); }
+  });
+});
 
 /* ---------- Splitter: Bereiche per Drag verteilen ---------- */
 const gutter = document.getElementById('gutter');
@@ -737,6 +746,8 @@ function endDrag(e){
 }
 gutter.addEventListener('pointerup', endDrag);
 gutter.addEventListener('pointercancel', endDrag);
+/* Doppelklick auf den Splitter stellt die normale Aufteilung wieder her. */
+gutter.addEventListener('dblclick', () => { splitState = 'normal'; applySplit(); });
 
 /* ---------- Zoom für das Diagramm ---------- */
 /* CSS-`zoom` skaliert die Layout-Box, dadurch greifen die Scrollbalken
