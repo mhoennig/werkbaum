@@ -572,6 +572,9 @@
         <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <svg class="ic-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
       </button>
+      <button type="button" class="copybtn" id="dlDiagram" data-i18n-title="downloadDiagramTooltip" data-i18n-aria="downloadDiagramTooltip" title="Diagramm als SVG-Datei herunterladen" aria-label="Diagramm als SVG-Datei herunterladen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 11l4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+      </button>
       <div class="winbtns" aria-label="Diagramm">
         <button type="button" class="winbtn" data-state="a" data-i18n-title="minimize" title="minimieren">—</button>
         <button type="button" class="winbtn" data-state="normal" data-i18n-title="normal" title="normal">▢</button>
@@ -863,6 +866,18 @@ async function copyDiagramImage(){
   }
   await writeClipboard(svg);   /* Fallback: SVG-Quelltext (ebenfalls Grafik) */
 }
+/* Als Datei speichern (SVG, Vektor). Verlässlicher Weg z. B. für LibreOffice
+   Writer: Einfügen → Bild → die Datei; das Bild-Clipboard aus dem Browser
+   erkennt LibreOffice nicht zuverlässig. */
+function downloadDiagramSvg(){
+  const {svg} = diagramToSvg();
+  const blob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n` + svg], {type:'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'werkbaum-diagramm.svg';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 /* Tab-Taste rückt ein statt den Fokus zu wechseln */
 src.addEventListener('keydown', e => {
@@ -1029,6 +1044,12 @@ document.getElementById('copyDiagram').addEventListener('click', async () => {
   await copyDiagramImage();
   flashCopied(document.getElementById('copyDiagram'), 'copyDiagramTooltip');
 });
+document.getElementById('dlDiagram').addEventListener('click', () => {
+  downloadDiagramSvg();
+  const b = document.getElementById('dlDiagram');   /* kurzer Petrol-Blitz, Tooltip bleibt */
+  b.classList.add('done');
+  setTimeout(() => b.classList.remove('done'), 1500);
+});
 
 /* ---------- Internationalisierung (DE/EN/ES/FR) ---------- */
 const I18N = {
@@ -1041,6 +1062,7 @@ const I18N = {
     editorTitle:"Struktur (Text)", diagramTitle:"Diagramm",
     copy:"kopieren", copyDone:"kopiert ✓", copyTooltip:"Text in die Zwischenablage kopieren",
     copyDiagramTooltip:"Diagramm als PNG-Bild in die Zwischenablage kopieren",
+    downloadDiagramTooltip:"Diagramm als SVG-Datei herunterladen (z. B. für LibreOffice: Einfügen → Bild)",
     minimize:"minimieren", normal:"normal", maximize:"maximieren",
     agenda:"Agenda", discarded:"verworfene",
     modeHorizontal:"Horizontal – Organigramm, Diagramm über dem Editor",
@@ -1070,6 +1092,7 @@ const I18N = {
     editorTitle:"Structure (text)", diagramTitle:"Diagram",
     copy:"copy", copyDone:"copied ✓", copyTooltip:"Copy text to clipboard",
     copyDiagramTooltip:"Copy diagram as a PNG image to the clipboard",
+    downloadDiagramTooltip:"Download diagram as an SVG file (e.g. for LibreOffice: Insert → Image)",
     minimize:"minimize", normal:"normal", maximize:"maximize",
     agenda:"Legend", discarded:"discarded",
     modeHorizontal:"Horizontal – org chart, diagram above the editor",
@@ -1099,6 +1122,7 @@ const I18N = {
     editorTitle:"Estructura (texto)", diagramTitle:"Diagrama",
     copy:"copiar", copyDone:"copiado ✓", copyTooltip:"Copiar el texto al portapapeles",
     copyDiagramTooltip:"Copiar el diagrama como imagen PNG al portapapeles",
+    downloadDiagramTooltip:"Descargar el diagrama como archivo SVG (p. ej. para LibreOffice: Insertar → Imagen)",
     minimize:"minimizar", normal:"normal", maximize:"maximizar",
     agenda:"Leyenda", discarded:"descartados",
     modeHorizontal:"Horizontal – organigrama, diagrama sobre el editor",
@@ -1128,6 +1152,7 @@ const I18N = {
     editorTitle:"Structure (texte)", diagramTitle:"Diagramme",
     copy:"copier", copyDone:"copié ✓", copyTooltip:"Copier le texte dans le presse-papiers",
     copyDiagramTooltip:"Copier le diagramme comme image PNG dans le presse-papiers",
+    downloadDiagramTooltip:"Télécharger le diagramme en fichier SVG (p. ex. pour LibreOffice : Insertion → Image)",
     minimize:"réduire", normal:"normal", maximize:"agrandir",
     agenda:"Légende", discarded:"abandonnés",
     modeHorizontal:"Horizontal – organigramme, diagramme au-dessus de l'éditeur",
@@ -1157,6 +1182,7 @@ const I18N = {
     editorTitle:"Struktura (tekst)", diagramTitle:"Diagram",
     copy:"kopiuj", copyDone:"skopiowano ✓", copyTooltip:"Kopiuj tekst do schowka",
     copyDiagramTooltip:"Kopiuj diagram jako obraz PNG do schowka",
+    downloadDiagramTooltip:"Pobierz diagram jako plik SVG (np. dla LibreOffice: Wstaw → Obraz)",
     minimize:"minimalizuj", normal:"normalny", maximize:"maksymalizuj",
     agenda:"Legenda", discarded:"odrzucone",
     modeHorizontal:"Poziomo – schemat organizacyjny, diagram nad edytorem",
@@ -1186,6 +1212,7 @@ const I18N = {
     editorTitle:"Структура (текст)", diagramTitle:"Диаграмма",
     copy:"копировать", copyDone:"скопировано ✓", copyTooltip:"Скопировать текст в буфер обмена",
     copyDiagramTooltip:"Скопировать диаграмму как изображение PNG в буфер обмена",
+    downloadDiagramTooltip:"Скачать диаграмму как файл SVG (напр. для LibreOffice: Вставка → Изображение)",
     minimize:"свернуть", normal:"обычный", maximize:"развернуть",
     agenda:"Легенда", discarded:"отклонённые",
     modeHorizontal:"Горизонтально – оргсхема, диаграмма над редактором",
@@ -1215,6 +1242,7 @@ const I18N = {
     editorTitle:"संरचना (टेक्स्ट)", diagramTitle:"आरेख",
     copy:"कॉपी करें", copyDone:"कॉपी हो गया ✓", copyTooltip:"टेक्स्ट को क्लिपबोर्ड पर कॉपी करें",
     copyDiagramTooltip:"आरेख को PNG छवि के रूप में क्लिपबोर्ड पर कॉपी करें",
+    downloadDiagramTooltip:"आरेख को SVG फ़ाइल के रूप में डाउनलोड करें (जैसे LibreOffice: सम्मिलित करें → छवि)",
     minimize:"छोटा करें", normal:"सामान्य", maximize:"बड़ा करें",
     agenda:"लेजेंड", discarded:"अस्वीकृत",
     modeHorizontal:"क्षैतिज – संगठन-चार्ट, संपादक के ऊपर आरेख",
@@ -1244,6 +1272,7 @@ const I18N = {
     editorTitle:"结构（文本）", diagramTitle:"图表",
     copy:"复制", copyDone:"已复制 ✓", copyTooltip:"将文本复制到剪贴板",
     copyDiagramTooltip:"将图表作为 PNG 图片复制到剪贴板",
+    downloadDiagramTooltip:"将图表下载为 SVG 文件（例如用于 LibreOffice：插入 → 图像）",
     minimize:"最小化", normal:"正常", maximize:"最大化",
     agenda:"图例", discarded:"已放弃",
     modeHorizontal:"横向——组织结构图，图表在编辑器上方",
@@ -1273,6 +1302,7 @@ const I18N = {
     editorTitle:"構造（テキスト）", diagramTitle:"ダイアグラム",
     copy:"コピー", copyDone:"コピーしました ✓", copyTooltip:"テキストをクリップボードにコピー",
     copyDiagramTooltip:"ダイアグラムを PNG 画像としてクリップボードにコピー",
+    downloadDiagramTooltip:"ダイアグラムを SVG ファイルとしてダウンロード（例：LibreOffice の 挿入 → 画像）",
     minimize:"最小化", normal:"標準", maximize:"最大化",
     agenda:"凡例", discarded:"破棄",
     modeHorizontal:"横 — 組織図、ダイアグラムはエディターの上",

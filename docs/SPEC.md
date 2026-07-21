@@ -135,17 +135,18 @@ ist grau (`#6B7A8C`) — kein Petrol mehr im Diagramm. Der Modus ändert nur die
   des Teilbaums.
 
 ### Grafikexport des Diagramms
-Das Diagramm ist per Icon-Schaltfläche als **Bild** in die Zwischenablage
-kopierbar (grafisches Format, in Dokumente/Chats einfügbar):
+Das Diagramm wird aus der Live-Geometrie in ein eigenständiges SVG (nur Formen
++ Text, keine externen Ressourcen) nachgezeichnet. Zwei Icon-Schaltflächen:
 
-- Das gerenderte Diagramm wird aus der Live-Geometrie in ein eigenständiges
-  SVG (nur Formen + Text, keine externen Ressourcen) nachgezeichnet und als
-  **PNG** in die Zwischenablage gelegt. Es werden zwei Flavors geschrieben:
-  `image/png` (das eigentliche Bild) und `text/html` mit eingebettetem PNG
-  (`<img src="data:image/png;…">`) — Office-Programme wie LibreOffice Writer
-  bevorzugen den HTML-Flavor und betten das Bild dann korrekt ein. Fällt der
-  Bild-Clipboard ganz aus (fehlende `ClipboardItem`-Unterstützung), wird der
-  **SVG-Quelltext** kopiert (ebenfalls ein Grafikformat).
+- **Kopieren** — als **PNG** in die Zwischenablage. Es werden zwei Flavors
+  geschrieben: `image/png` (das eigentliche Bild) und `text/html` mit
+  eingebettetem PNG. Fällt der Bild-Clipboard ganz aus (fehlende
+  `ClipboardItem`-Unterstützung), wird der **SVG-Quelltext** kopiert.
+- **Herunterladen** — als **SVG-Datei** (`werkbaum-diagramm.svg`, Vektor).
+  Verlässlicher Weg für Programme, die das Browser-Bild-Clipboard nicht
+  erkennen (z. B. LibreOffice Writer: Einfügen → Bild → Datei). Das
+  Browser-Clipboard erlaubt nur `image/png`/Text als Bildtypen, kein SVG —
+  daher der Datei-Weg für Vektor.
 - Übernommen werden Knotenfarben (Status §4), Größen-Badge, Tags und der
   Geister-Knoten; die Verbindungslinien werden je Gate neu gezogen
   (und = durchgezogen Tinte, oder = gestrichelt Grau) und treffen die Knoten
