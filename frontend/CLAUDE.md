@@ -31,6 +31,11 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
 - Design: Farben/Typografie beibehalten (CSS-Variablen, IBM Plex);
   Statusfarben sind in SPEC §4 normiert. Marke nach ../brand/BRAND.md;
   Pastelltöne nie im Logo.
+- IBM Plex ist **lokal eingebettet** (`src/fonts/*.woff2`, `@font-face` in
+  `style.css`), **nicht** von Google Fonts geladen — kein externer Request,
+  keine IP an Dritte (Datenschutz, D20). Keinen `googleapis`-`<link>` wieder
+  einführen. Neue Schnitte: `woff2` per `npm pack @fontsource/…` beziehen (keine
+  Projekt-Abhängigkeit, Dateien einchecken) und `@font-face` ergänzen.
 
 ## Stolperfallen
 - Abzweig-Linien zielen auf die **Knotenmitte** (fester 23-px-Offset,

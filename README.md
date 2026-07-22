@@ -150,4 +150,6 @@ is only available for private repos on a paid plan).
 
 ## License
 
-MIT — see [LICENSE](LICENSE). © 2026 Michael Hönnig.
+MIT — see [LICENSE](LICENSE). © 2026 Michael Hönnig. The bundled IBM Plex fonts
+are under the SIL Open Font License 1.1 (see [LICENSE](LICENSE) and
+`frontend/src/fonts/OFL.txt`).

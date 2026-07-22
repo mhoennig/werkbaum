@@ -149,4 +149,6 @@ via Actions ist für private Repos nur mit kostenpflichtigem Plan verfügbar).
 
 ## Lizenz
 
-MIT — siehe [LICENSE](LICENSE). © 2026 Michael Hönnig.
+MIT — siehe [LICENSE](LICENSE). © 2026 Michael Hönnig. Die mitgelieferten
+IBM-Plex-Schriften stehen unter der SIL Open Font License 1.1 (siehe
+[LICENSE](LICENSE) und `frontend/src/fonts/OFL.txt`).

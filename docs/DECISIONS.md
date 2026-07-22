@@ -285,3 +285,32 @@ aktiv).
 liest `../docs/brand/favicon.svg` und ersetzt den `<link rel="icon">` durch eine
 `data:`-URI — so bleibt die Brand-Quelle unverändert und die Ausgabe eine
 einzige Datei.)
+
+## D20 — Schriften lokal einbetten statt von Google Fonts laden
+Die Seite lud IBM Plex Sans/Mono über einen `<link>` von `fonts.googleapis.com`
+(zzgl. Font-Dateien von `fonts.gstatic.com`). Das überträgt bei **jedem**
+Seitenaufruf die **IP-Adresse des Besuchers an Google (USA)** — ohne
+Einwilligung und ohne Notwendigkeit (vgl. LG München I, 3 O 17493/20). Das
+widerspricht einer datensparsamen Datenschutzerklärung ohne Drittanbieter-
+Einbindung und zugleich dem Selbstverständnis aus D19/SPEC §9 („keine externen
+Ressourcen").
+
+**Entscheidung: Schriften self-hosten.** Die tatsächlich genutzten Schnitte
+(Sans 400/500/600, Mono 400/500) liegen als `woff2` unter
+`frontend/src/fonts/`, eingebunden per `@font-face` in `style.css` mit
+`font-display:swap`. Bezogen aus den OFL-lizenzierten `@fontsource`-Paketen
+(nur per `npm pack` gezogen — **keine** neue Projekt-Abhängigkeit; die Dateien
+sind eingecheckte Assets), Lizenztext in `fonts/OFL.txt`. Subsets **latin +
+latin-ext** mit den `unicode-range`-Werten von fontsource decken DE/EN/ES/FR/PL;
+nicht-lateinische UI-Sprachen (RU/HI/ZH/JA) fielen schon vorher auf `system-ui`
+zurück (IBM Plex latin enthält diese Schriftsysteme nicht), also keine
+Regression. Der Dev-Server liefert die `woff2` lokal aus; `vite build` inlint
+sie als `data:font/woff2`-URIs in die eine `dist/index.html` (D19) — der
+deployte Stand macht damit **keinen** externen Request mehr (verifiziert: 0
+Treffer `googleapis`/`gstatic`, 10 inline-`woff2`). Kostet ~204 KB Fonts
+(dist 89 → 320 KB, gzip ~208 KB) — bewusst in Kauf genommen für Datenschutz und
+Standalone-Tauglichkeit (`file://`).
+
+Verworfene Alternative: Google-Link ersatzlos streichen und nur die System-
+Schrift (`system-ui`) nutzen — spart die 204 KB, gibt aber die einheitliche
+Markentypografie (IBM Plex, BRAND) auf.

@@ -19,3 +19,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+Third-party components
+
+This project bundles the IBM Plex Sans and IBM Plex Mono fonts
+(frontend/src/fonts/*.woff2), Copyright 2019 IBM Corp., licensed under the
+SIL Open Font License 1.1 — not under the MIT License above. The full font
+license is in frontend/src/fonts/OFL.txt and at https://scripts.sil.org/OFL.
