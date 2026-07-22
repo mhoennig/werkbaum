@@ -6,7 +6,7 @@
 
 **English** · [Deutsch](README.de.md)
 
-**▶ Try it live: <https://mhoennig.github.io/werkbaum/>** (latest deployed version)
+**▶ Try it live: <https://werkbaum.javagil.de>** (stable) · <https://mhoennig.github.io/werkbaum/> (latest build 🚧)
 
 A textual, Markdown-like notation for work breakdown structures with
 and/or decomposition — plus a live editor that renders it as a diagram.
@@ -33,7 +33,7 @@ and/or decomposition — plus a live editor that renders it as a diagram.
 
 ![Werkbaum editor: live diagram on top, text notation below, with status colours, T-shirt sizes, tags and export buttons](docs/screenshot.png)
 
-Open the [hosted editor](https://mhoennig.github.io/werkbaum/) — edit text on
+Open the [hosted editor](https://werkbaum.javagil.de) — edit text on
 the left, the diagram is built live on the right. Toggles: transposed (narrow)
 layout, show discarded elements.
 
