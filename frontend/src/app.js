@@ -89,9 +89,8 @@ function svgEl(name, attrs){
   return e;
 }
 function overlaySvg(cls, w, h){
-  const svg = svgEl('svg', {class:'cheap-overlay ' + cls, width:w, height:h,
+  return svgEl('svg', {class:'cheap-overlay ' + cls, width:w, height:h,
     viewBox:`0 0 ${w.toFixed(1)} ${h.toFixed(1)}`});
-  return svg;
 }
 function drawCheapPath(){
   out.querySelectorAll('svg.cheap-overlay').forEach(e => e.remove());
