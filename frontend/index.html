@@ -46,7 +46,7 @@
 <div class="app" id="app">
   <div class="panel editor">
     <div class="panel-head">
-      <span data-i18n="editorTitle">Struktur (Text)</span>
+      <span id="editorTitle" data-i18n="editorTitle">Struktur (Text)</span>
       <button type="button" class="copybtn" id="copy" data-i18n-title="copyTooltip" data-i18n-aria="copyTooltip" title="Text in die Zwischenablage kopieren" aria-label="Text in die Zwischenablage kopieren">
         <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <svg class="ic-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
@@ -61,7 +61,7 @@
       </div>
     </div>
     <div class="editor-body">
-    <textarea id="src" spellcheck="false"></textarea>
+    <textarea id="src" spellcheck="false" aria-labelledby="editorTitle"></textarea>
     <details class="agenda">
       <summary data-i18n="agenda">Agenda</summary>
     <div class="hint" id="hint">
@@ -149,6 +149,6 @@
 
 <footer class="site-footer"><a href="https://github.com/mhoennig/werkbaum" target="_blank" rel="noopener">Werkbaum</a>&nbsp;<a class="ver" href="https://github.com/mhoennig/werkbaum/commits/main" target="_blank" rel="noopener">1.0</a> – © 2026 <a href="https://michael.hoennig.de" target="_blank" rel="noopener">Michael Hönnig</a> · <span class="vibe" title="Fable 5 and Opus 4.8">Built with Claude Code</span> – <a href="../LICENSE" target="_blank" rel="noopener">MIT-License</a> · <a href="https://michael.hoennig.de/imprint.html" target="_blank" rel="noopener" data-i18n="imprint">Impressum</a></footer>
 
-<script type="module" src="/src/app.js"></script>
+<script type="module" src="./src/app.js"></script>
 </body>
 </html>
