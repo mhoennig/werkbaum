@@ -91,9 +91,14 @@ sed "${SED_ARGS[@]}" frontend/dist/index.html > "$STAGE/index.html"
 cp LICENSE "$STAGE/LICENSE"
 
 # ---- 3) Spiegeln (--delete: nichts Altes bleibt am Ziel) ----
+# --chmod=D755,F644 erzwingt web-taugliche Rechte am Ziel, unabhängig von den
+# lokalen Rechten: `mktemp -d` legt $STAGE mit 0700 an, und `rsync -a` würde
+# diesen Modus sonst auf das Ziel-Verzeichnis übertragen — dann kann der
+# Webserver es nicht betreten (Apache 403 „unable to read htaccess file“).
+RSYNC_OPTS=(-avz --delete --chmod=D755,F644)
 if [ "$YES" -ne 1 ]; then
   echo "==> Vorschau (rsync --dry-run --delete) nach ${TARGET}:"
-  rsync -avz --delete --dry-run "$STAGE"/ "$TARGET"
+  rsync "${RSYNC_OPTS[@]}" --dry-run "$STAGE"/ "$TARGET"
   printf '==> Wirklich spiegeln? --delete löscht am Ziel alles Fremde. [y/N] '
   read -r ANS
   case "$ANS" in
@@ -103,5 +108,5 @@ if [ "$YES" -ne 1 ]; then
 fi
 
 echo "==> rsync -> ${TARGET}"
-rsync -avz --delete "$STAGE"/ "$TARGET"
+rsync "${RSYNC_OPTS[@]}" "$STAGE"/ "$TARGET"
 echo "==> Fertig."
