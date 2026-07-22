@@ -135,6 +135,19 @@ zählt der flache CI-Klon nur einen Commit. `1.0` bleibt die Version beim lokale
 Links**: „Werkbaum" → Repo-Startseite, die Versionsnummer (`<a class="ver">`) →
 exakt der deployte Commit (`…/commit/<sha>`, im Build via `git rev-parse HEAD`).
 
+**Latest-Build-Hinweis:** Der Pages-Deploy ist der jeweils frischeste
+Entwicklungsstand und kann Fehler enthalten; die *eigentliche* (stabile) Instanz
+läuft woanders. Damit nur diese Veröffentlichung als „latest build" markiert ist,
+injiziert der Workflow — nach demselben Muster wie Version/LICENSE, also **nur auf
+der Site-Kopie** — hinter dem Titel (`</h1>`, im Bundle eindeutiger Anker) ein
+kleines Symbol mit Tooltip (`<span class="build-badge">🚧</span>`, zweisprachiger
+`title`). Die Quelle bleibt unberührt: ein schlichter `npm run build` (z. B. für
+die stabile Instanz) erzeugt die Datei **ohne** Hinweis. Bewusst nicht als
+i18n-UI-Text im `I18N`-Objekt, weil es kein Produkt-Feature ist, sondern
+Deploy-Metainformation genau dieser Pipeline (D14: die Quelle nicht um
+Deploy-Spezifika erweitern). Umgesetzt mit literalen UTF-8-Zeichen im
+`sed`-Replacement (kein `#`/`&`, sonst kollidiert der Delimiter).
+
 (Nummerierung: D15 war bereits für den kompakten Modus vergeben, daher D16.)
 
 ## D17 — Kleiner Bildschirm: ein Bereich, kompakte Legende & Sprachwahl
