@@ -55,6 +55,35 @@ npm run build        # -> frontend/dist/index.html (single self-contained file)
 The built `dist/index.html` inlines all JS, CSS and the favicon, so **that** file
 does open standalone via `file://` and is what gets deployed.
 
+### Build hint & your own production install
+
+Non-production builds carry a small hint next to the title (symbol + tooltip) so
+it's clear this is **not** the stable instance:
+
+- **Dev server** (`npm run dev`) → 🔧 "Preview – local development build"
+- **Default build** (`npm run build`, incl. the GitHub Pages deploy) → 🚧
+  "Latest build – may still be buggy"
+
+For **your own production install** the hint is switched off:
+
+```bash
+cd frontend
+npm ci                # or: npm install
+npm run build:prod    # -> frontend/dist/index.html WITHOUT the hint
+```
+
+`build:prod` runs Vite in mode `prod`; `frontend/.env.prod` sets
+`VITE_BUILD_BADGE=none`, so the badge code is tree-shaken away entirely (it isn't
+even present in the output source). Drop the resulting `dist/index.html` onto your
+web space/server (standalone, `file://`-capable). Details: `app.js`
+(`mountBuildBadge`), `docs/DECISIONS.md` D16.
+
+Two things otherwise handled only by the Pages workflow, to fix up yourself when
+self-hosting: the footer **MIT-License** link is relative to `../LICENSE` (place
+that file one level above `index.html`, or adjust the link), and the **version
+number** stays the source placeholder `1.0` (the workflow otherwise replaces it
+from `VERSION` + commit count).
+
 ## Project documents
 
 - `frontend/` — editor · `backend/` — Kotlin/Spring (scaffold to follow, see backend/README.md)

@@ -50,6 +50,8 @@
   body.fullscreen .app,
   body.fullscreen .site-footer{max-width:none}
   h1{font-size:1.25rem;font-weight:600;letter-spacing:-.01em}
+  /* Build-Hinweis hinter dem Titel (nur nicht-produktive Builds, siehe app.js) */
+  .build-badge{margin-left:.45em;font-size:.58em;line-height:1;vertical-align:middle;cursor:help;user-select:none;text-decoration:none}
   header p{margin-top:4px;color:var(--muted);font-size:.9rem}
   .sub-short{display:none}                             /* Kurzfassung nur auf kleinem Bildschirm */
   .langsel{

@@ -15,8 +15,13 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   in **eine** self-contained `dist/index.html` — die bleibt `file://`-tauglich
   (D16) und ist die Deploy-Artefakt-Quelle (Pages-Workflow, siehe README).
 - `npm --prefix frontend test` — Vitest (`tests/**/*.test.js`).
-- `node_modules/` und `dist/` sind ge-`.gitignore`-t; `package-lock.json` ist
-  eingecheckt (der Workflow nutzt `npm ci`).
+- `npm --prefix frontend run build:prod` — Produktions-Build **ohne** den
+  Build-Hinweis hinter dem Titel (Vite-Modus `prod`, `.env.prod` setzt
+  `VITE_BUILD_BADGE=none`). Nur die echte produktive Installation nutzt diesen
+  Weg; Dev-Server (🔧) und Default-`build` (🚧, u. a. Pages-Deploy) zeigen den
+  Hinweis. Logik: `mountBuildBadge()` in `app.js` (D16).
+- `node_modules/` und `dist/` sind ge-`.gitignore`-t; `.env.prod` und
+  `package-lock.json` sind eingecheckt (der Workflow nutzt `npm ci`).
 
 ## Konventionen
 - Vanilla HTML/CSS/JS, ES-Module; keine Frameworks. Testwerkzeug: Vitest.

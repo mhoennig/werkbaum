@@ -56,6 +56,36 @@ npm run build        # -> frontend/dist/index.html (eine self-contained Datei)
 Die gebaute `dist/index.html` inlint JS, CSS und Favicon — **diese** Datei öffnet
 also standalone per `file://` und ist zugleich das, was deployt wird.
 
+### Build-Hinweis & eigene Produktions-Installation
+
+Nicht-produktive Builds tragen hinter dem Titel einen kleinen Hinweis (Symbol +
+Tooltip), damit klar ist, dass es **nicht** die stabile Instanz ist:
+
+- **Dev-Server** (`npm run dev`) → 🔧 „Vorschau – lokaler Entwicklungsstand"
+- **Default-Build** (`npm run build`, u. a. der GitHub-Pages-Deploy) → 🚧
+  „Aktueller Entwicklungsstand (latest build) – kann noch Fehler enthalten"
+
+Für die **eigene produktive Installation** wird der Hinweis abgeschaltet:
+
+```bash
+cd frontend
+npm ci                # oder: npm install
+npm run build:prod    # -> frontend/dist/index.html OHNE Hinweis
+```
+
+`build:prod` läuft im Vite-Modus `prod`; `frontend/.env.prod` setzt dabei
+`VITE_BUILD_BADGE=none`, wodurch der Badge-Code komplett wegoptimiert wird (er
+steht dann nicht einmal mehr im Quelltext der Ausgabe). Die entstandene
+`dist/index.html` legst du standalone auf deinen Webspace/Server (`file://`-
+tauglich). Steuerung im Detail: `app.js` (`mountBuildBadge`), `docs/DECISIONS.md`
+D16.
+
+Zwei Dinge, die sonst nur der Pages-Workflow erledigt und die du im Eigenbetrieb
+selbst geradeziehst: der Footer-Link **MIT-License** zeigt relativ auf
+`../LICENSE` (lege die Datei eine Ebene über `index.html` ab oder passe den Link
+an), und die **Versionsnummer** bleibt der Quelltext-Platzhalter `1.0` (der
+Workflow ersetzt ihn sonst aus `VERSION` + Commit-Zahl).
+
 ## Projektdokumente
 
 - `frontend/` — Editor · `backend/` — Kotlin/Spring (Gerüst folgt, siehe backend/README.md)

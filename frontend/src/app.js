@@ -1103,3 +1103,36 @@ let startLang = 'de';
 try{ startLang = localStorage.getItem('werkbaum-lang') || 'de'; }catch(_){}
 applyLang(I18N[startLang] ? startLang : 'de');   /* setzt Texte + rendert */
 applyMobile();   /* Mobil-Verhalten (nach Sprache/Restore) anwenden */
+
+/* ---------- Build-Hinweis (Vorschau/Dev + „latest build") ----------
+   Kennzeichnet einen nicht-produktiven Build mit einem kleinen Symbol samt
+   Tooltip hinter dem Titel. Gesteuert per Vite-Env `VITE_BUILD_BADGE`; ohne
+   Vorgabe entscheidet der Modus:
+     Dev-Server (`npm run dev`)      -> import.meta.env.DEV -> 'dev' (🔧 Vorschau)
+     Default-Build (`npm run build`) -> Voreinstellung        -> 'latest' (🚧)
+     `npm run build:prod`            -> .env.prod: none        -> KEIN Badge
+   So trägt einzig die echte Produktions-Installation keinen Hinweis. Bewusst
+   kein I18N-Text (Deploy-Metainfo, nicht Produkt-Feature; D14/D16) — der
+   Tooltip ist knapp zweisprachig (DE · EN). */
+function mountBuildBadge(){
+  const kind = import.meta.env.VITE_BUILD_BADGE
+    || (import.meta.env.DEV ? 'dev' : 'latest');
+  if(kind === 'none') return;
+  const BADGES = {
+    dev:    {icon:'🔧', label:'Preview build (local dev)',
+             title:'Vorschau – lokaler Entwicklungsstand · Preview (local dev build)'},
+    latest: {icon:'🚧', label:'Latest build – may be buggy',
+             title:'Aktueller Entwicklungsstand (latest build) – kann noch Fehler enthalten · Latest development build – may still be buggy'},
+  };
+  const b = BADGES[kind];
+  const h1 = document.querySelector('header h1');
+  if(!b || !h1) return;
+  const el = document.createElement('span');
+  el.className = 'build-badge';
+  el.setAttribute('role', 'img');
+  el.setAttribute('aria-label', b.label);
+  el.title = b.title;
+  el.textContent = b.icon;
+  h1.appendChild(el);
+}
+mountBuildBadge();

@@ -52,7 +52,7 @@ Abhaken beim Erledigen; neue Aufgaben unten anfügen.
 - [x] GitHub-Pages-Workflow angelegt (`.github/workflows/pages.yml`,
       siehe docs/DECISIONS.md D16).
 
-## Phase 3 — Integrationen (siehe docs/ROADMAP.md)
+## Phase 3 — Integrationen (siehe [ROADMAP](ROADMAP.md))
 - [ ] Backend-Gerüst per Spring Initializr in `backend/` anlegen
       (Kotlin, Gradle Kotlin DSL, JDK 21; Konventionen: backend/CLAUDE.md).
 - [ ] SVG-Renderer (Layout-Engine) als gemeinsame Basis für Export und
