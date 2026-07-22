@@ -46,7 +46,21 @@ Umzug Taiga → Tenzu nur den API-Adapter betrifft.
 
 ## Kleinere Ideen
 - Deterministische Pastellfarbe pro `@name` (Personen wiedererkennen).
-- SVG/PNG-Export für Präsentationen.
 - Sichtbare Anmerkungen am Knoten (eigene Syntax, getrennt von `%%`).
 - Aufwands-Rollup: Größen der Kinder aggregieren und mit Parent vergleichen.
+  (Größen sind ordinal, nicht additiv — `S+S ≠ M`; braucht erst eine
+  Mapping-Konvention, z. B. Story-Point-Werte hinter den Größen.)
+- Nutzen/Wert je Knoten (Gegenstück zur Kosten-Größe): eigenes Attribut für den
+  erwarteten Nutzen; erlaubt Nutzen/Kosten-Priorisierung (WSJF-artig) statt
+  reiner Kostenminimierung. Rollt analog zum Aufwands-Rollup hoch.
+  (Syntax offen — SPEC-first; `(…)`/`@`/`#`/`%%` sind belegt, es braucht ein
+  eigenes kollisionsfreies Zeichen.)
+- Gestaffelter „günstigster Pfad" (Ausbaustufen): die Pfad-Rechnung (D18)
+  status-bewusst machen — `fertig`/`prod` gelten als erledigt (Hintergrund),
+  hervorgehoben wird nur der günstigste noch **offene** Rest (aktuelle Front).
+  Ist eine Alternativen-Gruppe komplett realisiert, springt der Pfad zur
+  nächsten, per Nutzen gewählten Ausbaustufe weiter (Regel: erst die Kette auf
+  `fertig`, dann die nächste Stufe). Baut auf Nutzen + Aufwands-Rollup auf und
+  erweitert D18 (heute rein statisch/kostenminimierend) um Nutzen- und
+  Status-/Zeitachse.
 - Attribut-Syntax für Termine/Meilensteine.
