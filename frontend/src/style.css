@@ -47,6 +47,9 @@
     --or:#0F766E;
     --warn:#B45309;
     --r:8px;
+    /* Exakte sichtbare Höhe; JS überschreibt sie auf documentElement aus
+       window.visualViewport.height (setViewportHeight). Default = Fallback. */
+    --app-height:100dvh;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{
@@ -56,18 +59,21 @@
       repeating-linear-gradient(0deg,transparent 0 23px,var(--grid) 23px 24px),
       repeating-linear-gradient(90deg,transparent 0 23px,var(--grid) 23px 24px),
       var(--paper);
-    /* Mobile Viewport-Höhe: 100vh ist die *große* Höhe (inkl. Fläche hinter
-       der unteren Browserleiste) — Footer/Editor-Titelzeile rutschen dahinter.
-       100dvh folgt der sichtbaren Fläche, versagt aber bei Browsern mit
-       Overlay-Leiste (z. B. Brave). Deshalb setzt JS zusätzlich --app-height
-       aus window.visualViewport.height (die wirklich sichtbare Höhe). Reihen-
-       folge = Fallback-Kaskade: vh → dvh → exakte JS-Höhe. */
+    /* Mobile Viewport-Höhe: 100vh ist die *große* Höhe (inkl. Fläche hinter der
+       unteren Browserleiste) — Footer/Editor-Titelzeile rutschen dahinter. Wo der
+       Browser die dvh-Einheit kennt, übersteuert der @supports-Block unten auf
+       --app-height (von JS aus window.visualViewport gesetzt, Default 100dvh) —
+       das folgt der wirklich sichtbaren Fläche (auch bei Overlay-Leisten wie in
+       Brave). Bewusst per @supports getrennt statt gestapelter height-Zeilen,
+       damit keine „height wird überschrieben"-Warnung entsteht. */
     height:100vh;
-    height:100dvh;
-    height:var(--app-height, 100dvh);
     overflow:hidden;
     display:flex;flex-direction:column;
     padding:24px 20px 12px;
+  }
+  /* dvh-fähige Browser: exakte sichtbare Höhe statt 100vh (siehe body oben). */
+  @supports (height:100dvh){
+    body{height:var(--app-height,100dvh)}
   }
   header{max-width:1200px;width:100%;margin:0 auto 16px;flex:0 0 auto}
   .header-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
@@ -120,6 +126,11 @@
      Vertikal (Toggle an, .side): Editor links, Diagramm rechts.
      Zwischen beiden liegt ein verschiebbarer Gutter (Splitter). */
   .app{
+    /* Defaults der laufzeit-gesetzten Custom-Properties (JS setzt sie als
+       Inline-Style: --col/--drow per Splitter, --pmin-d/-e per syncPanelMins).
+       Werte = die bisherigen var()-Fallbacks; die JS-Erkennung „hat der Nutzer
+       gezogen?" liest app.style (Inline) und bleibt davon unberührt. */
+    --col:360px;--drow:60%;--pmin-d:49px;--pmin-e:44px;
     max-width:1200px;width:100%;margin:0 auto;
     flex:1 1 auto;min-height:0;
     display:grid;gap:0;
