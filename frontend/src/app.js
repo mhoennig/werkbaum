@@ -538,6 +538,7 @@ const I18N = {
     subtitle:"Werkbaum – Ein Text-basierter WBS/Projektstrukturplan/Feature-Tree/Requirements-Baum Diagramm-Editor.",
     subtitleShort:"WBS, Feature- & Requirements-Bäume als Text",
     imprint:"Impressum",
+    privacy:"Datenschutz",
     legendTooltip:"Legende ein-/ausblenden",
     ghostTooltip:"Ab Größe M sollte ein Element weiter untergliedert werden.",
     discardedTooltip:"Verworfene Knoten samt Teilbaum ein-/ausblenden",
@@ -577,6 +578,7 @@ const I18N = {
     subtitle:"Werkbaum – A text-based WBS / work breakdown structure / feature-tree / requirements-tree diagram editor.",
     subtitleShort:"WBS, feature & requirements trees as text",
     imprint:"Imprint (Impressum)",
+    privacy:"Privacy",
     legendTooltip:"Show/hide legend",
     ghostTooltip:"From size M upward, an item should be broken down further.",
     discardedTooltip:"Show/hide discarded nodes and their subtree",
@@ -616,6 +618,7 @@ const I18N = {
     subtitle:"Werkbaum – Un editor de diagramas basado en texto para EDT / estructura de desglose del trabajo / árbol de características / árbol de requisitos.",
     subtitleShort:"EDT y árboles de características y requisitos",
     imprint:"Aviso legal (Impressum)",
+    privacy:"Privacidad",
     legendTooltip:"Mostrar u ocultar la leyenda",
     ghostTooltip:"A partir de la talla M, un elemento debería desglosarse más.",
     discardedTooltip:"Mostrar u ocultar los nodos descartados y su subárbol",
@@ -655,6 +658,7 @@ const I18N = {
     subtitle:"Werkbaum – Un éditeur de diagrammes basé sur le texte pour WBS / organigramme des tâches / arbre de fonctionnalités / arbre d'exigences.",
     subtitleShort:"WBS, arbres de fonctionnalités et d'exigences",
     imprint:"Mentions légales (Impressum)",
+    privacy:"Confidentialité",
     legendTooltip:"Afficher/masquer la légende",
     ghostTooltip:"À partir de la taille M, un élément devrait être décomposé davantage.",
     discardedTooltip:"Afficher/masquer les nœuds abandonnés et leur sous-arbre",
@@ -694,6 +698,7 @@ const I18N = {
     subtitle:"Werkbaum – Edytor diagramów oparty na tekście: WBS / struktura podziału pracy / drzewo funkcji / drzewo wymagań.",
     subtitleShort:"WBS, drzewa funkcji i wymagań jako tekst",
     imprint:"Nota prawna (Impressum)",
+    privacy:"Prywatność",
     legendTooltip:"Pokaż/ukryj legendę",
     ghostTooltip:"Od rozmiaru M element powinien być dalej podzielony.",
     discardedTooltip:"Pokaż/ukryj odrzucone węzły wraz z poddrzewem",
@@ -733,6 +738,7 @@ const I18N = {
     subtitle:"Werkbaum – текстовый редактор диаграмм: СДР / структура декомпозиции работ / дерево функций / дерево требований.",
     subtitleShort:"СДР, деревья функций и требований",
     imprint:"Выходные данные (Impressum)",
+    privacy:"Конфиденциальность",
     legendTooltip:"Показать/скрыть легенду",
     ghostTooltip:"Начиная с размера M элемент следует далее декомпозировать.",
     discardedTooltip:"Показать/скрыть отклонённые узлы вместе с поддеревом",
@@ -772,6 +778,7 @@ const I18N = {
     subtitle:"Werkbaum – टेक्स्ट-आधारित आरेख संपादक: WBS / कार्य विभाजन संरचना / फ़ीचर-ट्री / रिक्वायरमेंट-ट्री।",
     subtitleShort:"WBS, फ़ीचर और रिक्वायरमेंट ट्री",
     imprint:"प्रकाशन विवरण (Impressum)",
+    privacy:"गोपनीयता",
     legendTooltip:"लेजेंड दिखाएँ/छिपाएँ",
     ghostTooltip:"आकार M से ऊपर किसी तत्व को और अधिक उप-विभाजित करना चाहिए।",
     discardedTooltip:"अस्वीकृत नोड्स और उनके उप-वृक्ष दिखाएँ/छिपाएँ",
@@ -811,6 +818,7 @@ const I18N = {
     subtitle:"Werkbaum – 基于文本的图表编辑器：WBS / 工作分解结构 / 功能树 / 需求树。",
     subtitleShort:"WBS、功能树与需求树",
     imprint:"法律声明（Impressum）",
+    privacy:"隐私",
     legendTooltip:"显示/隐藏图例",
     brandTooltip:"「Werkbaum」大致意为‘工作之树’——即工作分解结构（WBS）之树。",
     fullscreenTooltip:"全屏——面板占据整个窗口宽度",
@@ -850,6 +858,7 @@ const I18N = {
     subtitle:"Werkbaum – テキストベースの図エディター：WBS / 作業分解構成図 / フィーチャーツリー / 要件ツリー。",
     subtitleShort:"WBS・機能ツリー・要件ツリー",
     imprint:"運営者情報（Impressum）",
+    privacy:"プライバシー",
     legendTooltip:"凡例を表示/非表示",
     brandTooltip:"「Werkbaum」はおおよそ『作業の木』の意味 — 作業分解構成図（WBS）のツリーです。",
     fullscreenTooltip:"全画面 — パネルがウィンドウ幅いっぱいを使用",
@@ -921,6 +930,12 @@ function applyLang(l){
   document.querySelectorAll('[data-i18n-title]').forEach(el => el.title = t(el.dataset.i18nTitle));
   document.querySelectorAll('[data-i18n-aria]').forEach(el => el.setAttribute('aria-label', t(el.dataset.i18nAria)));
   document.getElementById('hint').innerHTML = buildHint();
+  /* Datenschutzerklärung gibt es nur DE + EN: deutsche UI -> deutsche Fassung,
+     alle anderen Sprachen -> englische Fassung (Art. 12 DSGVO: verständlich). */
+  const privacyLink = document.getElementById('privacyLink');
+  if(privacyLink) privacyLink.href = l==='de'
+    ? 'https://michael.hoennig.de/datenschutzerklaerung.html'
+    : 'https://michael.hoennig.de/privacy-policy.html';
   document.querySelectorAll('.langsel button[data-lang]').forEach(b => b.classList.toggle('active', b.dataset.lang===l));
   /* Ist eine aufklappbare Sprache aktiv, den erweiterten Bereich offen halten.
      Auf kleinem Bildschirm nicht — dort bleibt die Leiste schlank (EN + aktive
