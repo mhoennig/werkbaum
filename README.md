@@ -87,18 +87,24 @@ from `VERSION` + commit count).
 **Easier: `scripts/deploy-prod.sh`.** The script runs exactly that prod build
 **and** both fix-ups (drop `LICENSE` alongside + straighten the link, footer
 version + commit link just like the Pages workflow) and mirrors the result to a
-server via rsync/SSH. The target path is the only required argument:
+server via rsync/SSH:
 
 ```bash
-scripts/deploy-prod.sh mih00@mih00.hostsharing.net:~/doms/javagil.de/subs-ssl/werkbaum/
+scripts/deploy-prod.sh mih00@mih00.hostsharing.net:~/doms/werkbaum.javagil.de/htdocs-ssl
 ```
+
+The target is either this argument or — with no argument — the `DEPLOY_TARGET`
+variable from the **git-ignored** file `scripts/deploy.env` (template:
+`scripts/deploy.env.example`, copy it once and fill in the path). An argument
+takes precedence.
 
 Without `-y` it first shows a `--dry-run` preview and asks for confirmation.
 `rsync --delete` ensures **nothing old** is left at the target — so the target
-directory is treated as exclusive to Werkbaum. (Hostsharing: for a **subdomain**
-like `werkbank.javagil.de` under the parent domain `javagil.de` the web directory
-is `…/subs-ssl/<name>/`; a directly-served domain would live under
-`…/htdocs-ssl/`.)
+directory is treated as exclusive to Werkbaum (an in-flight Let's Encrypt
+challenge under `.well-known/` is spared via `--filter=protect`, and web-friendly
+755/644 permissions are enforced). (Hostsharing: a **directly-served** domain is
+served from `…/htdocs-ssl/`; as a **subdomain** under another domain the web
+directory would be `…/subs-ssl/<name>/`.)
 
 ## Project documents
 

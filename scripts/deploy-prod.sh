@@ -9,15 +9,19 @@
 # nichts Altes stehen.
 #
 # Verwendung:
-#   scripts/deploy-prod.sh [-y] <rsync-ziel>
+#   scripts/deploy-prod.sh [-y] [rsync-ziel]
 #
 #   -y   ohne Rückfrage spiegeln (sonst erst Vorschau via --dry-run + Nachfrage)
 #
-# Beispiel (Hostsharing, Subdomain werkbank.javagil.de unter der Domain
-# javagil.de — deshalb `subs-ssl/`; wäre die Domain direkt aufgeschaltet, läge
-# das Web-Verzeichnis in `htdocs-ssl/`):
+# Das Ziel ist entweder das Argument ODER — wenn keins angegeben ist — die
+# Variable DEPLOY_TARGET aus der git-ignorierten Datei scripts/deploy.env
+# (Vorlage: scripts/deploy.env.example). Ein Argument hat Vorrang.
 #
-#   scripts/deploy-prod.sh mih00@mih00.hostsharing.net:~/doms/javagil.de/subs-ssl/werkbaum/
+# Beispiel (Hostsharing, direkt aufgeschaltete Domain werkbaum.javagil.de —
+# Web-Verzeichnis in `htdocs-ssl/`; als Subdomain unter einer anderen Domain
+# läge es stattdessen in `subs-ssl/<name>/`):
+#
+#   scripts/deploy-prod.sh mih00@mih00.hostsharing.net:~/doms/werkbaum.javagil.de/htdocs-ssl
 #
 # ACHTUNG: Das Zielverzeichnis wird als exklusiv für Werkbaum angenommen —
 # `--delete` entfernt dort ALLES, was nicht zum Bundle gehört.
@@ -43,15 +47,30 @@ for arg in "$@"; do
   esac
 done
 
-if [ -z "$TARGET" ]; then
-  echo "Usage: $0 [-y] <rsync-ziel>" >&2
-  echo "  z.B. $0 mih00@mih00.hostsharing.net:~/doms/javagil.de/subs-ssl/werkbaum/" >&2
-  exit 2
-fi
-
 # ---- Repo-Wurzel (Skript ist unter scripts/) ----
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+
+# ---- Ziel: Argument hat Vorrang, sonst scripts/deploy.env (git-ignoriert) ----
+ENV_FILE="$ROOT/scripts/deploy.env"
+if [ -z "$TARGET" ] && [ -f "$ENV_FILE" ]; then
+  # Bewusst NICHT via `source` lesen: bash würde bei `host:~/pfad` das ~ nach dem
+  # ':' LOKAL expandieren. Stattdessen roh auslesen (letzte Definition gewinnt),
+  # trailing Whitespace/CR und umgebende Quotes strippen — das ~ bleibt so für
+  # die Remote-Seite erhalten.
+  TARGET="$(sed -n -E 's/^[[:space:]]*DEPLOY_TARGET[[:space:]]*=[[:space:]]*//p' "$ENV_FILE" \
+            | tail -1 | sed -E 's/[[:space:]]+$//')"
+  TARGET="${TARGET#\"}"; TARGET="${TARGET%\"}"
+  TARGET="${TARGET#\'}"; TARGET="${TARGET%\'}"
+  [ -n "$TARGET" ] && echo "==> Ziel aus scripts/deploy.env: ${TARGET}"
+fi
+
+if [ -z "$TARGET" ]; then
+  echo "Usage: $0 [-y] <rsync-ziel>" >&2
+  echo "  oder DEPLOY_TARGET in scripts/deploy.env setzen (Vorlage: scripts/deploy.env.example)" >&2
+  echo "  z.B. $0 mih00@mih00.hostsharing.net:~/doms/werkbaum.javagil.de/htdocs-ssl" >&2
+  exit 2
+fi
 
 # ---- 1) Prod-Build (ohne Build-Hinweis) ----
 if [ ! -d frontend/node_modules ]; then

@@ -89,18 +89,24 @@ Workflow ersetzt ihn sonst aus `VERSION` + Commit-Zahl).
 **Bequemer: `scripts/deploy-prod.sh`.** Das Skript macht genau den obigen
 Prod-Build **und** die beiden Nacharbeiten (LICENSE danebenlegen + Link
 geradeziehen, Footer-Version + Commit-Link wie beim Pages-Workflow) und spiegelt
-das Ergebnis per rsync/SSH auf einen Server. Zielpfad als einziges Pflichtargument:
+das Ergebnis per rsync/SSH auf einen Server:
 
 ```bash
-scripts/deploy-prod.sh mih00@mih00.hostsharing.net:~/doms/javagil.de/subs-ssl/werkbaum/
+scripts/deploy-prod.sh mih00@mih00.hostsharing.net:~/doms/werkbaum.javagil.de/htdocs-ssl
 ```
+
+Das Ziel ist entweder dieses Argument oder — ohne Argument — die Variable
+`DEPLOY_TARGET` aus der **git-ignorierten** Datei `scripts/deploy.env` (Vorlage:
+`scripts/deploy.env.example`, einmal kopieren und den Pfad eintragen). Ein
+Argument hat Vorrang.
 
 Ohne `-y` zeigt es zuerst eine `--dry-run`-Vorschau und fragt nach. `rsync
 --delete` sorgt dafür, dass am Ziel **nichts Altes** stehen bleibt — das
-Zielverzeichnis gilt also als exklusiv für Werkbaum. (Hostsharing: für eine
-**Subdomain** wie `werkbank.javagil.de` unter der aufgeschalteten Domain
-`javagil.de` ist das Web-Verzeichnis `…/subs-ssl/<name>/`; eine direkt
-aufgeschaltete Domain läge unter `…/htdocs-ssl/`.)
+Zielverzeichnis gilt also als exklusiv für Werkbaum (eine laufende Let's-Encrypt-
+Challenge unter `.well-known/` wird per `--filter=protect` ausgenommen, web-
+taugliche Rechte 755/644 werden erzwungen). (Hostsharing: eine **direkt
+aufgeschaltete** Domain liefert aus `…/htdocs-ssl/`; als **Subdomain** unter einer
+anderen Domain läge das Web-Verzeichnis in `…/subs-ssl/<name>/`.)
 
 ## Projektdokumente
 

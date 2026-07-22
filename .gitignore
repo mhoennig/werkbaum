@@ -60,6 +60,8 @@ frontend/dist/
 .env
 .env.local
 *.local
+# Deploy-Ziel (scripts/deploy-prod.sh) — lokal halten; Vorlage .example bleibt drin
+scripts/deploy.env
 
 # === Temporäres ===
 tmp/
