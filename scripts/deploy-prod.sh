@@ -14,8 +14,8 @@
 #   -y   ohne Rückfrage spiegeln (sonst erst Vorschau via --dry-run + Nachfrage)
 #
 # Das Ziel ist entweder das Argument ODER — wenn keins angegeben ist — die
-# Variable DEPLOY_TARGET aus der git-ignorierten Datei scripts/deploy.env
-# (Vorlage: scripts/deploy.env.example). Ein Argument hat Vorrang.
+# Variable DEPLOY_TARGET aus der git-ignorierten Datei .env im Repo-Wurzelordner
+# (Vorlage: .env.example). Ein Argument hat Vorrang.
 #
 # Beispiel (Hostsharing, direkt aufgeschaltete Domain werkbaum.javagil.de —
 # Web-Verzeichnis in `htdocs-ssl/`; als Subdomain unter einer anderen Domain
@@ -51,8 +51,8 @@ done
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-# ---- Ziel: Argument hat Vorrang, sonst scripts/deploy.env (git-ignoriert) ----
-ENV_FILE="$ROOT/scripts/deploy.env"
+# ---- Ziel: Argument hat Vorrang, sonst DEPLOY_TARGET aus .env (git-ignoriert) ----
+ENV_FILE="$ROOT/.env"
 if [ -z "$TARGET" ] && [ -f "$ENV_FILE" ]; then
   # Bewusst NICHT via `source` lesen: bash würde bei `host:~/pfad` das ~ nach dem
   # ':' LOKAL expandieren. Stattdessen roh auslesen (letzte Definition gewinnt),
@@ -62,12 +62,12 @@ if [ -z "$TARGET" ] && [ -f "$ENV_FILE" ]; then
             | tail -1 | sed -E 's/[[:space:]]+$//')"
   TARGET="${TARGET#\"}"; TARGET="${TARGET%\"}"
   TARGET="${TARGET#\'}"; TARGET="${TARGET%\'}"
-  [ -n "$TARGET" ] && echo "==> Ziel aus scripts/deploy.env: ${TARGET}"
+  [ -n "$TARGET" ] && echo "==> Ziel aus .env: ${TARGET}"
 fi
 
 if [ -z "$TARGET" ]; then
   echo "Usage: $0 [-y] <rsync-ziel>" >&2
-  echo "  oder DEPLOY_TARGET in scripts/deploy.env setzen (Vorlage: scripts/deploy.env.example)" >&2
+  echo "  oder DEPLOY_TARGET in .env setzen (Vorlage: .env.example)" >&2
   echo "  z.B. $0 mih00@mih00.hostsharing.net:~/doms/werkbaum.javagil.de/htdocs-ssl" >&2
   exit 2
 fi

@@ -94,8 +94,8 @@ scripts/deploy-prod.sh mih00@mih00.hostsharing.net:~/doms/werkbaum.javagil.de/ht
 ```
 
 The target is either this argument or — with no argument — the `DEPLOY_TARGET`
-variable from the **git-ignored** file `scripts/deploy.env` (template:
-`scripts/deploy.env.example`, copy it once and fill in the path). An argument
+variable from the **git-ignored** file `.env` (template:
+`.env.example`, copy it once and fill in the path). An argument
 takes precedence.
 
 Without `-y` it first shows a `--dry-run` preview and asks for confirmation.

@@ -96,8 +96,8 @@ scripts/deploy-prod.sh mih00@mih00.hostsharing.net:~/doms/werkbaum.javagil.de/ht
 ```
 
 Das Ziel ist entweder dieses Argument oder — ohne Argument — die Variable
-`DEPLOY_TARGET` aus der **git-ignorierten** Datei `scripts/deploy.env` (Vorlage:
-`scripts/deploy.env.example`, einmal kopieren und den Pfad eintragen). Ein
+`DEPLOY_TARGET` aus der **git-ignorierten** Datei `.env` (Vorlage:
+`.env.example`, einmal kopieren und den Pfad eintragen). Ein
 Argument hat Vorrang.
 
 Ohne `-y` zeigt es zuerst eine `--dry-run`-Vorschau und fragt nach. `rsync

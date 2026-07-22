@@ -57,11 +57,10 @@ frontend/node_modules/
 frontend/dist/
 
 # === Geheimnisse / lokale Umgebung ===
+# .env hält u. a. DEPLOY_TARGET für scripts/deploy-prod.sh (Vorlage: .env.example)
 .env
 .env.local
 *.local
-# Deploy-Ziel (scripts/deploy-prod.sh) — lokal halten; Vorlage .example bleibt drin
-scripts/deploy.env
 
 # === Temporäres ===
 tmp/
