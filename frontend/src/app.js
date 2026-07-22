@@ -443,22 +443,40 @@ gutter.addEventListener('dblclick', () => {
 /* CSS-`zoom` skaliert die Layout-Box, dadurch greifen die Scrollbalken
    des Diagramm-Containers korrekt (anders als transform: scale). */
 const ZMIN = 0.3, ZMAX = 3, ZSTEP = 0.1;
+const ZOOM_COLLAPSE_DELAY = 3000;  /* 3 Sekunden */
 let zoom = 1;
+let zoomCollapseTimeout;
+
+function resetZoomCollapseTimeout(){
+  const zoomctl = document.querySelector('.zoomctl');
+  if(!zoomctl) return;
+  clearTimeout(zoomCollapseTimeout);
+  zoomctl.classList.remove('collapsed');
+  zoomCollapseTimeout = setTimeout(() => {
+    zoomctl.classList.add('collapsed');
+  }, ZOOM_COLLAPSE_DELAY);
+}
+
 function applyZoom(){
   zoom = Math.min(ZMAX, Math.max(ZMIN, Math.round(zoom * 100) / 100));
   out.style.zoom = zoom;
   document.getElementById('zoomReset').textContent = Math.round(zoom * 100) + ' %';
+  resetZoomCollapseTimeout();
   saveUI();
 }
 document.getElementById('zoomIn').addEventListener('click', () => { zoom += ZSTEP; applyZoom(); });
 document.getElementById('zoomOut').addEventListener('click', () => { zoom -= ZSTEP; applyZoom(); });
 document.getElementById('zoomReset').addEventListener('click', () => { zoom = 1; applyZoom(); });
+document.querySelector('.zoomctl').addEventListener('click', (e) => {
+  if(e.target.closest('#zoomToggle')) resetZoomCollapseTimeout();
+});
 diagramEl.addEventListener('wheel', e => {
   if(!(e.ctrlKey || e.metaKey)) return;   /* Strg/Cmd + Mausrad zoomt */
   e.preventDefault();
   zoom += (e.deltaY < 0 ? ZSTEP : -ZSTEP);
   applyZoom();
 }, {passive:false});
+resetZoomCollapseTimeout();  /* Initialer Timeout beim Laden */
 
 const showc = document.getElementById('showc');
 function discardedShown(){ return showc.getAttribute('aria-pressed') === 'true'; }
