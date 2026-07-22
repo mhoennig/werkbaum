@@ -95,7 +95,12 @@ cp LICENSE "$STAGE/LICENSE"
 # lokalen Rechten: `mktemp -d` legt $STAGE mit 0700 an, und `rsync -a` würde
 # diesen Modus sonst auf das Ziel-Verzeichnis übertragen — dann kann der
 # Webserver es nicht betreten (Apache 403 „unable to read htaccess file“).
-RSYNC_OPTS=(-avz --delete --chmod=D755,F644)
+# --filter='protect /.well-known/***' bewahrt am Ziel liegende ACME-Challenge-
+# Dateien (Let's-Encrypt-Erneuerung) vor dem --delete, obwohl sie nicht in der
+# Quelle liegen — sonst könnte ein Deploy eine laufende Zertifikatserneuerung
+# abräumen. Bedient Hostsharing die Challenge außerhalb des Docroots, ist es ein
+# No-op.
+RSYNC_OPTS=(-avz --delete --chmod=D755,F644 --filter='protect /.well-known/***')
 if [ "$YES" -ne 1 ]; then
   echo "==> Vorschau (rsync --dry-run --delete) nach ${TARGET}:"
   rsync "${RSYNC_OPTS[@]}" --dry-run "$STAGE"/ "$TARGET"
