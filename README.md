@@ -84,6 +84,22 @@ that file one level above `index.html`, or adjust the link), and the **version
 number** stays the source placeholder `1.0` (the workflow otherwise replaces it
 from `VERSION` + commit count).
 
+**Easier: `scripts/deploy-prod.sh`.** The script runs exactly that prod build
+**and** both fix-ups (drop `LICENSE` alongside + straighten the link, footer
+version + commit link just like the Pages workflow) and mirrors the result to a
+server via rsync/SSH. The target path is the only required argument:
+
+```bash
+scripts/deploy-prod.sh mih00@mih00.hostsharing.net:~/doms/javagil.de/subs-ssl/werkbaum/
+```
+
+Without `-y` it first shows a `--dry-run` preview and asks for confirmation.
+`rsync --delete` ensures **nothing old** is left at the target — so the target
+directory is treated as exclusive to Werkbaum. (Hostsharing: for a **subdomain**
+like `werkbank.javagil.de` under the parent domain `javagil.de` the web directory
+is `…/subs-ssl/<name>/`; a directly-served domain would live under
+`…/htdocs-ssl/`.)
+
 ## Project documents
 
 - `frontend/` — editor · `backend/` — Kotlin/Spring (scaffold to follow, see backend/README.md)

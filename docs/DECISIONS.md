@@ -159,6 +159,16 @@ stabil wirkenden. Bewusst **kein** i18n-UI-Text im `I18N`-Objekt (kein
 Produkt-Feature, sondern Build-Metainformation; D14) — der `title` ist knapp
 zweisprachig (DE · EN).
 
+**Self-hosted Deploy (`scripts/deploy-prod.sh`):** Für eine eigene produktive
+Installation (nicht GitHub Pages) baut das Skript per `npm run build:prod`
+(badge-frei), stellt lokal dasselbe zusammen wie der Pages-Workflow (LICENSE
+danebenlegen + `../LICENSE`-Link geradeziehen, Footer-Version + Commit-Link) und
+spiegelt es per `rsync --delete` über SSH ins Zielverzeichnis (nichts Altes bleibt
+stehen). Die Zusammenstell-Schritte (dieselben drei `sed`-Regeln) liegen bewusst
+in **beiden** — Workflow und Skript —, weil GitHub Pages die `dist/` selbst baut
+und der SSH-Weg keinen Pages-Runner hat; bei Änderungen an den `sed`-Regeln beide
+Stellen nachziehen (Anker `<a class="ver">` / `../LICENSE`).
+
 (Nummerierung: D15 war bereits für den kompakten Modus vergeben, daher D16.)
 
 ## D17 — Kleiner Bildschirm: ein Bereich, kompakte Legende & Sprachwahl

@@ -86,6 +86,22 @@ selbst geradeziehst: der Footer-Link **MIT-License** zeigt relativ auf
 an), und die **Versionsnummer** bleibt der Quelltext-Platzhalter `1.0` (der
 Workflow ersetzt ihn sonst aus `VERSION` + Commit-Zahl).
 
+**Bequemer: `scripts/deploy-prod.sh`.** Das Skript macht genau den obigen
+Prod-Build **und** die beiden Nacharbeiten (LICENSE danebenlegen + Link
+geradeziehen, Footer-Version + Commit-Link wie beim Pages-Workflow) und spiegelt
+das Ergebnis per rsync/SSH auf einen Server. Zielpfad als einziges Pflichtargument:
+
+```bash
+scripts/deploy-prod.sh mih00@mih00.hostsharing.net:~/doms/javagil.de/subs-ssl/werkbaum/
+```
+
+Ohne `-y` zeigt es zuerst eine `--dry-run`-Vorschau und fragt nach. `rsync
+--delete` sorgt dafür, dass am Ziel **nichts Altes** stehen bleibt — das
+Zielverzeichnis gilt also als exklusiv für Werkbaum. (Hostsharing: für eine
+**Subdomain** wie `werkbank.javagil.de` unter der aufgeschalteten Domain
+`javagil.de` ist das Web-Verzeichnis `…/subs-ssl/<name>/`; eine direkt
+aufgeschaltete Domain läge unter `…/htdocs-ssl/`.)
+
 ## Projektdokumente
 
 - `frontend/` — Editor · `backend/` — Kotlin/Spring (Gerüst folgt, siehe backend/README.md)
