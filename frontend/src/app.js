@@ -1193,104 +1193,44 @@ mountBuildBadge();
   }
 })();
 
-/* ---------- Service Worker für Update-Detection ---------- */
-if('serviceWorker' in navigator){
-  const swCode = `
-    self.addEventListener('install', (e) => self.skipWaiting());
-    self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
-
-    self.addEventListener('message', async (e) => {
-      if(e.data?.type === 'CHECK_UPDATE') {
-        try {
-          const response = await fetch(self.location.href, { cache: 'no-store' });
-          const newContent = await response.text();
-          const stored = await getStored();
-          if(stored && stored !== newContent) {
-            notifyClients({ type: 'UPDATE_AVAILABLE' });
-          }
-          await storeContent(newContent);
-        } catch(err) { console.error('Update-Check:', err); }
-      }
-    });
-
-    function notifyClients(msg) {
-      self.clients.matchAll().then(clients => clients.forEach(c => c.postMessage(msg)));
-    }
-
-    async function getStored() {
-      try {
-        const db = await new Promise((r, x) => {
-          const req = indexedDB.open('werkbaum-updates', 1);
-          req.onerror = () => x(req.error);
-          req.onsuccess = () => r(req.result);
-          req.onupgradeneeded = (e) => {
-            if(!e.target.result.objectStoreNames.contains('content')) {
-              e.target.result.createObjectStore('content', { keyPath: 'id' });
-            }
-          };
-        });
-        return new Promise((r, x) => {
-          const t = db.transaction('content', 'readonly');
-          const req = t.objectStore('content').get('index');
-          req.onerror = () => x(req.error);
-          req.onsuccess = () => r(req.result?.data);
-        });
-      } catch(e) { return null; }
-    }
-
-    async function storeContent(content) {
-      try {
-        const db = await new Promise((r, x) => {
-          const req = indexedDB.open('werkbaum-updates', 1);
-          req.onerror = () => x(req.error);
-          req.onsuccess = () => r(req.result);
-        });
-        return new Promise((r, x) => {
-          const t = db.transaction('content', 'readwrite');
-          const req = t.objectStore('content').put({ id: 'index', data: content });
-          req.onerror = () => x(req.error);
-          req.onsuccess = () => r();
-        });
-      } catch(e) {}
-    }
-  `;
-
-  const blob = new Blob([swCode], { type: 'application/javascript' });
-  const swUrl = URL.createObjectURL(blob);
-
-  navigator.serviceWorker.register(swUrl).then((registration) => {
-    /* Starte erste Prüfung nach 2 Sekunden */
-    setTimeout(() => {
-      if(registration.active) registration.active.postMessage({ type: 'CHECK_UPDATE' });
-    }, 2000);
-
-    /* Periodisch auf Updates prüfen (jede 5 Minuten) */
-    setInterval(() => {
-      if(registration.active) registration.active.postMessage({ type: 'CHECK_UPDATE' });
-    }, 300000);
-  }).catch((error) => {
-    console.error('Service Worker Registration fehlgeschlagen:', error);
-  });
-
-  /* Höre auf Update-Benachrichtigungen vom Service Worker */
-  navigator.serviceWorker.addEventListener('message', (event) => {
-    if(event.data?.type === 'UPDATE_AVAILABLE'){
+/* ---------- Update-Detection (Client-seitig, einfach & zuverlässig) ---------- */
+async function checkForUpdates(){
+  try {
+    const resp = await fetch('?' + new Date().getTime(), { cache: 'no-store' });
+    const html = await resp.text();
+    /* Einfacher Check: Suche nach der Build-Badge (existiert nur in Nicht-Prod).
+       Wenn sich der Badge ändert oder der Content sich ändert, ist eine neue Version da. */
+    const stored = localStorage.getItem('werkbaum-html-hash');
+    const hash = html.substring(0, 200) + html.substring(html.length - 200); /* First & last 200 chars */
+    if(stored && stored !== hash){
       localStorage.setItem('werkbaum-update-available', 'true');
-      checkAndShowUpdateNotification();
+      if(!document.hidden) checkAndShowUpdateNotification();
     }
-  });
-
-  /* Prüfe auf Update wenn User zur App zurückkommt */
-  document.addEventListener('visibilitychange', () => {
-    if(!document.hidden && localStorage.getItem('werkbaum-update-available')){
-      checkAndShowUpdateNotification();
-    }
-  });
-
-  /* Prüfe beim Laden */
-  if(!document.hidden && localStorage.getItem('werkbaum-update-available')){
-    checkAndShowUpdateNotification();
+    localStorage.setItem('werkbaum-html-hash', hash);
+  } catch(err) {
+    /* Offline oder Fehler — ignorieren */
   }
+}
+
+/* Erste Prüfung nach 3 Sekunden */
+setTimeout(checkForUpdates, 3000);
+
+/* Periodisch prüfen (jede 60 Sekunden statt 5 Minuten = schneller Feedback) */
+setInterval(checkForUpdates, 60000);
+
+/* Prüfe wenn User zur App zurückkommt */
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden){
+    checkForUpdates();
+    if(localStorage.getItem('werkbaum-update-available')){
+      checkAndShowUpdateNotification();
+    }
+  }
+});
+
+/* Prüfe beim Laden, falls Update bereits verfügbar */
+if(!document.hidden && localStorage.getItem('werkbaum-update-available')){
+  checkAndShowUpdateNotification();
 }
 
 function checkAndShowUpdateNotification(){
