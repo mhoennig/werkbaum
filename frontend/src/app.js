@@ -1196,45 +1196,48 @@ mountBuildBadge();
 /* ---------- Update-Detection (Client-seitig, einfach & zuverlässig) ---------- */
 async function checkForUpdates(){
   try {
-    /* Cache-Busting: HEAD-Request zuerst, um Last-Modified/ETag zu prüfen */
-    const headResp = await fetch(location.href, { method: 'HEAD', cache: 'no-store' });
-    if(!headResp.ok) throw new Error(`HTTP ${headResp.status}`);
-
-    const lastModified = headResp.headers.get('last-modified');
-    const etag = headResp.headers.get('etag');
-    const storedETag = localStorage.getItem('werkbaum-etag');
-    const storedModified = localStorage.getItem('werkbaum-last-modified');
-
-    /* Wenn ETag/Last-Modified gleich, ist nichts geändert */
-    if((etag && etag === storedETag) || (lastModified && lastModified === storedModified)){
-      logUpdate('✓ Alles aktuell');
-      return;
-    }
-
-    /* Neue Version: Vollständiges HTML fetchen */
-    const resp = await fetch(location.href, { cache: 'no-store' });
+    /* Fetch HTML mit Cache-Busting via Timestamp */
+    const resp = await fetch(location.href + '?t=' + new Date().getTime(), { cache: 'no-store' });
     if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
     const html = await resp.text();
+    const lastModified = resp.headers.get('last-modified');
+    const etag = resp.headers.get('etag');
 
     /* Prüfe auf echte Änderung via Content-Hash */
     const stored = localStorage.getItem('werkbaum-html-hash');
     const hash = html.substring(0, 300) + html.substring(html.length - 300);
 
-    if(stored && stored !== hash){
+    /* Vergleich: ETag/Last-Modified ODER Content-Hash */
+    const storedETag = localStorage.getItem('werkbaum-etag');
+    const storedModified = localStorage.getItem('werkbaum-last-modified');
+    const headersSame = (etag && etag === storedETag) || (lastModified && lastModified === storedModified);
+    const contentSame = stored && stored === hash;
+
+    if(headersSame || contentSame){
+      if(!stored) {
+        logUpdate('✓ Erste Prüfung – Hash gespeichert');
+      } else {
+        logUpdate('✓ Alles aktuell');
+      }
+    } else if(stored && !contentSame) {
       localStorage.setItem('werkbaum-update-available', 'true');
       logUpdate('✅ NEUE VERSION ERKANNT!');
       if(!document.hidden) checkAndShowUpdateNotification();
     } else if(!stored) {
       logUpdate('✓ Erste Prüfung – Hash gespeichert');
-    } else {
-      logUpdate('✓ Headers änderten sich, aber Content gleich');
     }
 
     localStorage.setItem('werkbaum-html-hash', hash);
     if(etag) localStorage.setItem('werkbaum-etag', etag);
     if(lastModified) localStorage.setItem('werkbaum-last-modified', lastModified);
   } catch(err) {
-    logUpdate('⚠ ' + (err.message || 'Unbekannter Fehler'));
+    const msg = err.message || err.toString();
+    if(msg.includes('Failed to fetch')) {
+      logUpdate('⚠ Netzwerk offline / CORS-Block');
+    } else {
+      logUpdate('⚠ ' + msg.substring(0, 30));
+    }
   }
 }
 
