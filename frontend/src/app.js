@@ -1192,3 +1192,149 @@ mountBuildBadge();
     updateButtonVisibility(); /* Initial call */
   }
 })();
+
+/* ---------- Service Worker für Update-Detection ---------- */
+if('serviceWorker' in navigator){
+  /* Service Worker als Blob registrieren (Single-File-App) */
+  const swCode = `
+    const CACHE_NAME = 'werkbaum-v1';
+    self.addEventListener('install', (e) => self.skipWaiting());
+    self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+
+    self.addEventListener('message', async (e) => {
+      if(e.data?.type === 'CHECK_UPDATE') {
+        try {
+          const response = await fetch(self.location.href, { cache: 'no-store' });
+          const newContent = await response.text();
+          const stored = await getStored();
+          if(stored && stored !== newContent) {
+            notifyClients({ type: 'UPDATE_AVAILABLE' });
+          }
+          await storeContent(newContent);
+        } catch(err) { console.error('Update-Check:', err); }
+      }
+    });
+
+    function notifyClients(msg) {
+      self.clients.matchAll().then(clients =>
+        clients.forEach(c => c.postMessage(msg))
+      );
+    }
+
+    async function getStored() {
+      try {
+        const db = await new Promise((r, x) => {
+          const req = indexedDB.open('werkbaum-updates', 1);
+          req.onerror = () => x(req.error);
+          req.onsuccess = () => r(req.result);
+          req.onupgradeneeded = (e) => {
+            if(!e.target.result.objectStoreNames.contains('content')) {
+              e.target.result.createObjectStore('content', { keyPath: 'id' });
+            }
+          };
+        });
+        return new Promise((r, x) => {
+          const t = db.transaction('content', 'readonly');
+          const req = t.objectStore('content').get('index');
+          req.onerror = () => x(req.error);
+          req.onsuccess = () => r(req.result?.data);
+        });
+      } catch(e) { return null; }
+    }
+
+    async function storeContent(content) {
+      try {
+        const db = await new Promise((r, x) => {
+          const req = indexedDB.open('werkbaum-updates', 1);
+          req.onerror = () => x(req.error);
+          req.onsuccess = () => r(req.result);
+        });
+        return new Promise((r, x) => {
+          const t = db.transaction('content', 'readwrite');
+          const req = t.objectStore('content').put({ id: 'index', data: content });
+          req.onerror = () => x(req.error);
+          req.onsuccess = () => r();
+        });
+      } catch(e) {}
+    }
+  `;
+
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  const swUrl = URL.createObjectURL(blob);
+
+  navigator.serviceWorker.register(swUrl).then((registration) => {
+    /* Periodisch auf Updates prüfen */
+    setInterval(() => {
+      if(registration.active){
+        registration.active.postMessage({ type: 'CHECK_UPDATE' });
+      }
+    }, 60000); /* Jede Minute */
+
+    /* Starte erste Prüfung nach 5 Sekunden */
+    setTimeout(() => {
+      if(registration.active){
+        registration.active.postMessage({ type: 'CHECK_UPDATE' });
+      }
+    }, 5000);
+  }).catch((error) => {
+    console.error('Service Worker Registration fehlgeschlagen:', error);
+  });
+
+  /* Höre auf Update-Benachrichtigungen vom Service Worker */
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if(event.data && event.data.type === 'UPDATE_AVAILABLE'){
+      showUpdateNotification();
+    }
+  });
+}
+
+function showUpdateNotification(){
+  /* Entferne alte Benachrichtigung, falls vorhanden */
+  const existingNotif = document.getElementById('updateNotification');
+  if(existingNotif) existingNotif.remove();
+
+  /* Erstelle Benachrichtigungselement */
+  const notif = document.createElement('div');
+  notif.id = 'updateNotification';
+  notif.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--or, #0F766E);
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    z-index: 1000;
+    font-size: 14px;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  `;
+
+  notif.innerHTML = `
+    <span>📦 Neue Version verfügbar</span>
+    <button id="updateBtn" style="
+      background: white;
+      color: var(--or, #0F766E);
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 13px;
+    ">Jetzt laden</button>
+  `;
+
+  document.body.insertBefore(notif, document.body.firstChild);
+
+  document.getElementById('updateBtn').addEventListener('click', () => {
+    window.location.reload();
+  });
+
+  /* Auto-dismiss nach 30 Sekunden wenn nicht geklickt */
+  setTimeout(() => {
+    if(notif.parentNode) notif.remove();
+  }, 30000);
+}
