@@ -1214,11 +1214,18 @@ async function checkForUpdates(){
     const headersSame = (etag && etag === storedETag) || (lastModified && lastModified === storedModified);
     const contentSame = stored && stored === hash;
 
-    if(headersSame || contentSame){
+    if(contentSame && headersSame){
       if(!stored) {
         logUpdate('✓ Erste Prüfung – Hash gespeichert');
       } else {
         logUpdate('✓ Alles aktuell');
+      }
+    } else if(contentSame && !headersSame){
+      /* Content gleich, aber Headers geändert – wahrscheinlich nur Build-Metadaten */
+      if(!stored) {
+        logUpdate('✓ Erste Prüfung – Hash gespeichert');
+      } else {
+        logUpdate('⚙ Metadaten geändert, aber Inhalt gleich');
       }
     } else if(stored && !contentSame) {
       localStorage.setItem('werkbaum-update-available', 'true');
