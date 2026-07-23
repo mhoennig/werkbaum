@@ -314,3 +314,18 @@ Standalone-Tauglichkeit (`file://`).
 Verworfene Alternative: Google-Link ersatzlos streichen und nur die System-
 Schrift (`system-ui`) nutzen — spart die 204 KB, gibt aber die einheitliche
 Markentypografie (IBM Plex, BRAND) auf.
+
+## D21 — UI-Default-Sprache aus der Browsersprache, Fallback Deutsch
+Ohne gespeicherte Nutzerwahl (`werkbaum-lang`) richtet sich die Anzeige­sprache
+nach der **Browsersprache**: die erste aus `navigator.languages`, für die eine
+Übersetzung existiert (nur der Primär-Subtag zählt, `de-AT`→`de`,
+`zh-Hans-CN`→`zh`); trifft keine zu, bleibt **Deutsch** der Fallback
+(`detectLang()` in `app.js`). Zuvor war der Default fest `'de'`, unabhängig vom
+Browser.
+
+Begründung: Ein spanisch- oder englischsprachiger Erstbesucher sah bislang ohne
+Not eine deutsche Oberfläche. Die Erkennung greift auch **nach dem Reset**
+(löscht `werkbaum-lang`, lädt neu → selber Pfad). **Deutsch bleibt Quellsprache**
+(CLAUDE: neue UI-Texte zuerst auf Deutsch) — das betrifft die Autoren-/Pflege­
+seite und ist unabhängig vom Anzeige-Default für Besucher. Eine bewusste
+Sprachwahl überschreibt die Erkennung dauerhaft (Persistenz in `werkbaum-lang`).

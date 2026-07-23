@@ -1146,8 +1146,21 @@ function applyMobile(){
 mqMobile.addEventListener('change', applyMobile);
 
 restoreState();   /* Editortext + GUI-Zustand aus dem Browser wiederherstellen */
+
+/* Default-Sprache: gespeicherte Wahl, sonst die erste vom Browser gemeldete
+   Sprache (navigator.languages), die wir übersetzt haben — sonst Deutsch.
+   Nur der Primär-Subtag zählt (z. B. "de-AT" -> "de", "zh-Hans" -> "zh"). */
+function detectLang(){
+  const cands = (navigator.languages && navigator.languages.length)
+    ? navigator.languages : [navigator.language];
+  for(const c of cands){
+    const primary = (c || '').toLowerCase().split('-')[0];
+    if(I18N[primary]) return primary;
+  }
+  return 'de';
+}
 let startLang = 'de';
-try{ startLang = localStorage.getItem('werkbaum-lang') || 'de'; }catch(_){}
+try{ startLang = localStorage.getItem('werkbaum-lang') || detectLang(); }catch(_){ startLang = detectLang(); }
 applyLang(I18N[startLang] ? startLang : 'de');   /* setzt Texte + rendert */
 applyMobile();   /* Mobil-Verhalten (nach Sprache/Restore) anwenden */
 
