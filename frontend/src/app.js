@@ -1170,23 +1170,25 @@ function mountBuildBadge(){
 mountBuildBadge();
 
 /* ---------- Editor-Panel: Copy & Agenda Buttons nur sichtbar wenn Panel offen genug ---------- */
-const editorPanel = document.querySelector('.panel.editor');
-const editorHead = editorPanel?.querySelector('.panel-head');
-const editorBody = editorPanel?.querySelector('.editor-body');
-const copyBtn = document.getElementById('copy');
-const legendBtn = document.getElementById('legendBtn');
+(function() {
+  const editorPanelEl = document.querySelector('.panel.editor');
+  const editorHeadEl = editorPanelEl?.querySelector('.panel-head');
+  const editorBodyEl = editorPanelEl?.querySelector('.editor-body');
+  const copyBtnEl = document.getElementById('copy');
+  const legendBtnEl = document.getElementById('legendBtn');
 
-if(editorBody && editorHead && copyBtn && legendBtn){
-  const updateButtonVisibility = () => {
-    const headHeight = editorHead.offsetHeight;
-    const bodyHeight = editorBody.offsetHeight;
-    /* Buttons nur sichtbar wenn mindestens Titelzeilenhöhe sichtbar ist */
-    const shouldShow = bodyHeight >= headHeight;
-    copyBtn.style.display = shouldShow ? 'block' : 'none';
-    legendBtn.style.display = shouldShow ? 'block' : 'none';
-  };
+  if(editorBodyEl && editorHeadEl && copyBtnEl && legendBtnEl){
+    const updateButtonVisibility = () => {
+      const headHeight = editorHeadEl.offsetHeight;
+      const bodyHeight = editorBodyEl.offsetHeight;
+      /* Buttons nur sichtbar wenn mindestens Titelzeilenhöhe sichtbar ist */
+      const shouldShow = bodyHeight >= headHeight;
+      copyBtnEl.style.display = shouldShow ? 'block' : 'none';
+      legendBtnEl.style.display = shouldShow ? 'block' : 'none';
+    };
 
-  const resizeObserver = new ResizeObserver(updateButtonVisibility);
-  resizeObserver.observe(editorBody);
-  updateButtonVisibility(); /* Initial call */
-}
+    const resizeObserver = new ResizeObserver(updateButtonVisibility);
+    resizeObserver.observe(editorBodyEl);
+    updateButtonVisibility(); /* Initial call */
+  }
+})();
