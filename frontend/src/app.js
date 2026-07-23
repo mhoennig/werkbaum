@@ -12,7 +12,7 @@ const INITIAL = `%% Project structure – Sprint 14
   - [~] Implementation (XL)
     - [~] Frontend (M) https://git.example.com/frontend @anna
       | [ ] PWA (S)
-      | [ ] Web+Nativ
+      | [ ] Web+Native
         - [/] Web (S)
         - [ ] Android (M)
         - [ ] iOS (M)
