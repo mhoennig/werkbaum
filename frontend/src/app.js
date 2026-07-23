@@ -1403,17 +1403,27 @@ document.addEventListener('DOMContentLoaded', () => {
   if(!footer) return;
 
   const resetBtn = document.createElement('button');
-  resetBtn.textContent = '🔄';
+  resetBtn.textContent = '🔄 Reset';
   resetBtn.title = 'App auf Defaults zurücksetzen (alle Einstellungen + Editor löschen)';
   resetBtn.style.cssText = `
     background: none;
-    border: none;
+    border: 1px solid var(--muted, #999);
     color: var(--muted, #999);
     cursor: pointer;
-    font-size: 14px;
-    padding: 0 4px;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 3px;
     vertical-align: middle;
+    transition: all 0.2s ease;
   `;
+  resetBtn.addEventListener('mouseenter', () => {
+    resetBtn.style.borderColor = 'var(--or, #0F766E)';
+    resetBtn.style.color = 'var(--or, #0F766E)';
+  });
+  resetBtn.addEventListener('mouseleave', () => {
+    resetBtn.style.borderColor = 'var(--muted, #999)';
+    resetBtn.style.color = 'var(--muted, #999)';
+  });
   resetBtn.addEventListener('click', resetToDefaults);
 
   /* Einfügen nach der Versionsnummer */
