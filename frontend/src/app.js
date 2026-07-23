@@ -554,7 +554,7 @@ document.addEventListener('click', e => {
 const I18N = {
   de: {
     subtitle:"Werkbaum – PSP / Lean Pathfinding · Editor für Projektstrukturpläne (auch Feature-Tree- & Requirements-Editor)",
-    subtitleShort:"PSP · Lean Pathfinding Editor",
+    subtitleShort:"PSP-Editor mit Lean Pathfinding",
     imprint:"Impressum",
     privacy:"Datenschutz",
     legendTooltip:"Legende ein-/ausblenden",
@@ -594,7 +594,7 @@ const I18N = {
   },
   en: {
     subtitle:"Werkbaum – Work Breakdown Structure / Lean Pathfinding · Project structure editor (also feature-tree & requirements)",
-    subtitleShort:"WBS · Lean Pathfinding Editor",
+    subtitleShort:"WBS editor with Lean Pathfinding",
     imprint:"Imprint (Impressum)",
     privacy:"Privacy",
     legendTooltip:"Show/hide legend",
@@ -634,7 +634,7 @@ const I18N = {
   },
   es: {
     subtitle:"Werkbaum – EDT / Lean Pathfinding · Editor de estructura de proyectos (también árboles de características y requisitos)",
-    subtitleShort:"EDT · Editor Lean Pathfinding",
+    subtitleShort:"Editor EDT con Lean Pathfinding",
     imprint:"Aviso legal (Impressum)",
     privacy:"Privacidad",
     legendTooltip:"Mostrar u ocultar la leyenda",
@@ -674,7 +674,7 @@ const I18N = {
   },
   fr: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · Éditeur de structure de projet (aussi pour arbres de fonctionnalités et d'exigences)",
-    subtitleShort:"WBS · Éditeur Lean Pathfinding",
+    subtitleShort:"Éditeur WBS avec Lean Pathfinding",
     imprint:"Mentions légales (Impressum)",
     privacy:"Confidentialité",
     legendTooltip:"Afficher/masquer la légende",
@@ -714,7 +714,7 @@ const I18N = {
   },
   pl: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · Edytor struktury projektów (również dla drzew funkcji i wymagań)",
-    subtitleShort:"WBS · Edytor Lean Pathfinding",
+    subtitleShort:"Edytor WBS z Lean Pathfinding",
     imprint:"Nota prawna (Impressum)",
     privacy:"Prywatność",
     legendTooltip:"Pokaż/ukryj legendę",
@@ -754,7 +754,7 @@ const I18N = {
   },
   ru: {
     subtitle:"Werkbaum – СДР / Lean Pathfinding · Редактор структуры проектов (также для деревьев функций и требований)",
-    subtitleShort:"СДР · Редактор Lean Pathfinding",
+    subtitleShort:"Редактор СДР с Lean Pathfinding",
     imprint:"Выходные данные (Impressum)",
     privacy:"Конфиденциальность",
     legendTooltip:"Показать/скрыть легенду",
@@ -794,7 +794,7 @@ const I18N = {
   },
   hi: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · परियोजना संरचना संपादक (फ़ीचर और रिक्वायरमेंट ट्री के लिए भी)",
-    subtitleShort:"WBS · Lean Pathfinding संपादक",
+    subtitleShort:"WBS संपादक Lean Pathfinding के साथ",
     imprint:"प्रकाशन विवरण (Impressum)",
     privacy:"गोपनीयता",
     legendTooltip:"लेजेंड दिखाएँ/छिपाएँ",
@@ -834,7 +834,7 @@ const I18N = {
   },
   zh: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · 项目结构编辑器（也支持功能树和需求树）",
-    subtitleShort:"WBS · Lean Pathfinding 编辑器",
+    subtitleShort:"WBS 编辑器和 Lean Pathfinding",
     imprint:"法律声明（Impressum）",
     privacy:"隐私",
     legendTooltip:"显示/隐藏图例",
@@ -874,7 +874,7 @@ const I18N = {
   },
   ja: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · プロジェクト構造エディター（フィーチャーツリーと要件ツリーにも対応）",
-    subtitleShort:"WBS · Lean Pathfinding エディター",
+    subtitleShort:"WBS エディター & Lean Pathfinding",
     imprint:"運営者情報（Impressum）",
     privacy:"プライバシー",
     legendTooltip:"凡例を表示/非表示",
