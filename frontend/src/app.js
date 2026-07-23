@@ -1272,84 +1272,34 @@ function showUpdateDebug(){
       font-size: 11px;
       font-family: monospace;
       max-width: 240px;
-      max-height: 150px;
+      max-height: 120px;
       overflow-y: auto;
       z-index: 999;
       border: 1px solid #0F766E;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+      cursor: pointer;
     `;
-    panel.title = 'Update Debug Panel – für Testing';
+    panel.title = 'Update Debug Panel – Klick zum Schließen';
     document.body.appendChild(panel);
-
-    /* Log-Text Container */
-    const logText = document.createElement('div');
-    logText.id = 'updateDebugLog';
-    logText.style.cssText = `flex: 1; overflow-y: auto; cursor: auto;`;
-    logText.addEventListener('click', e => e.stopPropagation());
-    panel.appendChild(logText);
-
-    /* Reset-Button */
-    const resetBtn = document.createElement('button');
-    resetBtn.textContent = '🔄 Reset';
-    resetBtn.title = 'App auf Defaults zurücksetzen (alle Einstellungen + Editor löschen)';
-    resetBtn.style.cssText = `
-      background: rgba(15, 118, 110, 0.2);
-      border: 1px solid #0F766E;
-      color: #0F766E;
-      cursor: pointer;
-      font-size: 10px;
-      padding: 3px 6px;
-      border-radius: 3px;
-      font-family: monospace;
-      transition: all 0.2s ease;
-    `;
-    resetBtn.addEventListener('mouseenter', () => {
-      resetBtn.style.background = 'rgba(15, 118, 110, 0.4)';
-    });
-    resetBtn.addEventListener('mouseleave', () => {
-      resetBtn.style.background = 'rgba(15, 118, 110, 0.2)';
-    });
-    resetBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      resetToDefaults();
-    });
-    panel.appendChild(resetBtn);
-
-    /* Close-Button */
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = '✕ Close';
-    closeBtn.style.cssText = `
-      background: rgba(15, 118, 110, 0.2);
-      border: 1px solid #0F766E;
-      color: #0F766E;
-      cursor: pointer;
-      font-size: 10px;
-      padding: 3px 6px;
-      border-radius: 3px;
-      font-family: monospace;
-      transition: all 0.2s ease;
-    `;
-    closeBtn.addEventListener('mouseenter', () => {
-      closeBtn.style.background = 'rgba(15, 118, 110, 0.4)';
-    });
-    closeBtn.addEventListener('mouseleave', () => {
-      closeBtn.style.background = 'rgba(15, 118, 110, 0.2)';
-    });
-    closeBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      panel.remove();
-    });
-    panel.appendChild(closeBtn);
+    panel.addEventListener('click', () => panel.remove());
   }
-
   const log = localStorage.getItem('werkbaum-update-log') || '';
-  const logText = panel.querySelector('#updateDebugLog');
-  if(logText) {
-    logText.textContent = log ? log.split('\n').slice(-6).join('\n') : 'Keine Einträge';
-  }
+  panel.textContent = log ? log.split('\n').slice(-6).join('\n') : 'Keine Einträge';
 }
+
+/* Reset-Button im Header neben Fullscreen */
+document.addEventListener('DOMContentLoaded', () => {
+  const fsToggle = document.getElementById('fsToggle');
+  if(!fsToggle) return;
+
+  const resetBtn = document.createElement('button');
+  resetBtn.textContent = '🔄';
+  resetBtn.className = 'fsbtn';
+  resetBtn.title = 'App auf Defaults zurücksetzen (für Testing)';
+  resetBtn.setAttribute('aria-label', 'App zurücksetzen');
+  resetBtn.addEventListener('click', resetToDefaults);
+
+  fsToggle.parentNode.insertBefore(resetBtn, fsToggle.nextSibling);
+});
 
 /* Erste Prüfung nach 2 Sekunden */
 setTimeout(() => {
