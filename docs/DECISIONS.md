@@ -348,6 +348,13 @@ skaliert und passt zum bereits etablierten Overlay-Idiom (Sprache/Download, D17)
 Auf kleinem Bildschirm öffnet dasselbe Menü als absolut positioniertes Overlay
 unter der Titelzeile.
 
+**Umbenennen inline, nicht per `window.prompt`.** Das Umbenennen ersetzt den
+Namen des aktiven Dokuments im Menü durch ein Textfeld (Enter bestätigt, Esc
+bricht ab, Fokusverlust bestätigt). Grund: `window.prompt` ist in manchen
+Browser-Kontexten unterdrückt/deaktiviert — dort „funktionierte Umbenennen
+nicht". Das Inline-Feld hängt an keiner nativen Dialog-API und ist zudem die
+rundere UX.
+
 **Vereinbarkeit mit D14 (Text ist das führende Format):** Jedes Dokument ist nur
 ein Notationstext plus `name` (Metadatum) — **kein** erfundenes Strukturformat.
 Damit ist das Modell vorwärtskompatibel zum geplanten Persistenz-/Taiga-Backend
@@ -355,11 +362,27 @@ Damit ist das Modell vorwärtskompatibel zum geplanten Persistenz-/Taiga-Backend
 1:1 auf „mehrere gespeicherte Notationstexte mit Name/id" ab; der localStorage-
 Array ist der client-seitige Platzhalter, bis das Backend existiert.
 
-**Migration & Reset:** Fehlt `werkbaum-docs`, wird der bestehende Einzeltext
-(oder `INITIAL`) verlustfrei in **ein** Dokument gepackt (Name in der erkannten
-UI-Sprache, `docDefaultName`). Der Reset löscht wie bisher alle `werkbaum-*`-
-Schlüssel → beim nächsten Laden greift dieselbe Migration. Wird das letzte
-Dokument gelöscht, entsteht wieder das Beispiel-Dokument (INITIAL). Die
-GUI-Ansichts-Einstellungen (Modus, Zoom, Aufteilung; `werkbaum-ui`) bleiben
+**Beispiel-Dokument mit reservierter id + festem englischem Namen.** Das
+Beispiel trägt die reservierte id `example` und heißt fest **„Example"** —
+**unabhängig von der UI-Sprache** (nicht lokalisiert), passend dazu, dass der
+Beispieltext selbst nur noch englisch ist (breiteres Publikum). Die reservierte
+id macht den Reset **zielgenau** (siehe unten). Alt-Zustände aus der ersten
+Fassung (zufällige id, lokalisierter Name „Beispiel"/…) werden beim Laden
+**adoptiert**: Ein noch **unverändertes** erstes Dokument (`text === INITIAL`)
+bekommt nachträglich `id: example` und den Namen „Example"; echte, bereits
+bearbeitete Inhalte werden nie adoptiert.
+
+**Migration:** Fehlt `werkbaum-docs`, wird der bestehende Einzeltext (oder
+`INITIAL`) verlustfrei in **ein** Beispiel-Dokument gepackt. Wird das letzte
+Dokument gelöscht, entsteht wieder das Beispiel-Dokument (INITIAL).
+
+**Reset ist auf das Beispiel begrenzt.** Der Reset (Debug-Knopf, nur außerhalb
+des Prod-Builds) setzt **nur das Beispiel-Dokument** auf `INITIAL`/„Example"
+zurück und verwirft die Ansichts-/Metadaten-Schlüssel (`werkbaum-ui`,
+`werkbaum-lang`, Update-Flags) — **alle anderen Dokumente bleiben unangetastet**.
+Zuvor löschte er pauschal **alle** `werkbaum-*`-Schlüssel und damit auch fremde
+Dokumente; das war zu grob, sobald man mehrere Dokumente pflegt.
+
+Die GUI-Ansichts-Einstellungen (Modus, Zoom, Aufteilung; `werkbaum-ui`) bleiben
 bewusst **global** über alle Dokumente — pro-Dokument-Ansichtszustand wäre eine
 spätere Erweiterung.

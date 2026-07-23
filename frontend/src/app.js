@@ -574,8 +574,8 @@ const I18N = {
     editorTitle:"Struktur (Text)", diagramTitle:"Diagramm",
     docSwitchTooltip:"Dokument wählen oder verwalten", docMenuAria:"Dokumente",
     docNew:"Neues Dokument", docRename:"Umbenennen", docDelete:"Löschen",
-    docDefaultName:"Beispiel", docNewName:"Unbenannt",
-    docRenamePrompt:"Dokument umbenennen:", docDeleteConfirm:"Dokument „{name}“ löschen?",
+    docNewName:"Unbenannt",
+    docDeleteConfirm:"Dokument „{name}“ löschen?",
     copy:"kopieren", copyDone:"kopiert ✓", copyTooltip:"Text in die Zwischenablage kopieren",
     copyDiagramTooltip:"Diagramm als PNG-Bild in die Zwischenablage kopieren",
     downloadDiagramTooltip:"Diagramm als SVG-Datei herunterladen (z. B. für LibreOffice: Einfügen → Bild)",
@@ -619,8 +619,8 @@ const I18N = {
     editorTitle:"Structure (text)", diagramTitle:"Diagram",
     docSwitchTooltip:"Choose or manage document", docMenuAria:"Documents",
     docNew:"New document", docRename:"Rename", docDelete:"Delete",
-    docDefaultName:"Example", docNewName:"Untitled",
-    docRenamePrompt:"Rename document:", docDeleteConfirm:"Delete document “{name}”?",
+    docNewName:"Untitled",
+    docDeleteConfirm:"Delete document “{name}”?",
     copy:"copy", copyDone:"copied ✓", copyTooltip:"Copy text to clipboard",
     copyDiagramTooltip:"Copy diagram as a PNG image to the clipboard",
     downloadDiagramTooltip:"Download diagram as an SVG file (e.g. for LibreOffice: Insert → Image)",
@@ -664,8 +664,8 @@ const I18N = {
     editorTitle:"Estructura (texto)", diagramTitle:"Diagrama",
     docSwitchTooltip:"Elegir o gestionar documento", docMenuAria:"Documentos",
     docNew:"Nuevo documento", docRename:"Renombrar", docDelete:"Eliminar",
-    docDefaultName:"Ejemplo", docNewName:"Sin título",
-    docRenamePrompt:"Renombrar documento:", docDeleteConfirm:"¿Eliminar el documento «{name}»?",
+    docNewName:"Sin título",
+    docDeleteConfirm:"¿Eliminar el documento «{name}»?",
     copy:"copiar", copyDone:"copiado ✓", copyTooltip:"Copiar el texto al portapapeles",
     copyDiagramTooltip:"Copiar el diagrama como imagen PNG al portapapeles",
     downloadDiagramTooltip:"Descargar el diagrama como archivo SVG (p. ej. para LibreOffice: Insertar → Imagen)",
@@ -709,8 +709,8 @@ const I18N = {
     editorTitle:"Structure (texte)", diagramTitle:"Diagramme",
     docSwitchTooltip:"Choisir ou gérer le document", docMenuAria:"Documents",
     docNew:"Nouveau document", docRename:"Renommer", docDelete:"Supprimer",
-    docDefaultName:"Exemple", docNewName:"Sans titre",
-    docRenamePrompt:"Renommer le document :", docDeleteConfirm:"Supprimer le document « {name} » ?",
+    docNewName:"Sans titre",
+    docDeleteConfirm:"Supprimer le document « {name} » ?",
     copy:"copier", copyDone:"copié ✓", copyTooltip:"Copier le texte dans le presse-papiers",
     copyDiagramTooltip:"Copier le diagramme comme image PNG dans le presse-papiers",
     downloadDiagramTooltip:"Télécharger le diagramme en fichier SVG (p. ex. pour LibreOffice : Insertion → Image)",
@@ -754,8 +754,8 @@ const I18N = {
     editorTitle:"Struktura (tekst)", diagramTitle:"Diagram",
     docSwitchTooltip:"Wybierz lub zarządzaj dokumentem", docMenuAria:"Dokumenty",
     docNew:"Nowy dokument", docRename:"Zmień nazwę", docDelete:"Usuń",
-    docDefaultName:"Przykład", docNewName:"Bez nazwy",
-    docRenamePrompt:"Zmień nazwę dokumentu:", docDeleteConfirm:"Usunąć dokument „{name}”?",
+    docNewName:"Bez nazwy",
+    docDeleteConfirm:"Usunąć dokument „{name}”?",
     copy:"kopiuj", copyDone:"skopiowano ✓", copyTooltip:"Kopiuj tekst do schowka",
     copyDiagramTooltip:"Kopiuj diagram jako obraz PNG do schowka",
     downloadDiagramTooltip:"Pobierz diagram jako plik SVG (np. dla LibreOffice: Wstaw → Obraz)",
@@ -799,8 +799,8 @@ const I18N = {
     editorTitle:"Структура (текст)", diagramTitle:"Диаграмма",
     docSwitchTooltip:"Выбрать документ или управлять им", docMenuAria:"Документы",
     docNew:"Новый документ", docRename:"Переименовать", docDelete:"Удалить",
-    docDefaultName:"Пример", docNewName:"Без названия",
-    docRenamePrompt:"Переименовать документ:", docDeleteConfirm:"Удалить документ «{name}»?",
+    docNewName:"Без названия",
+    docDeleteConfirm:"Удалить документ «{name}»?",
     copy:"копировать", copyDone:"скопировано ✓", copyTooltip:"Скопировать текст в буфер обмена",
     copyDiagramTooltip:"Скопировать диаграмму как изображение PNG в буфер обмена",
     downloadDiagramTooltip:"Скачать диаграмму как файл SVG (напр. для LibreOffice: Вставка → Изображение)",
@@ -844,8 +844,8 @@ const I18N = {
     editorTitle:"संरचना (टेक्स्ट)", diagramTitle:"आरेख",
     docSwitchTooltip:"दस्तावेज़ चुनें या प्रबंधित करें", docMenuAria:"दस्तावेज़",
     docNew:"नया दस्तावेज़", docRename:"नाम बदलें", docDelete:"हटाएँ",
-    docDefaultName:"उदाहरण", docNewName:"बिना शीर्षक",
-    docRenamePrompt:"दस्तावेज़ का नाम बदलें:", docDeleteConfirm:"दस्तावेज़ „{name}“ हटाएँ?",
+    docNewName:"बिना शीर्षक",
+    docDeleteConfirm:"दस्तावेज़ „{name}“ हटाएँ?",
     copy:"कॉपी करें", copyDone:"कॉपी हो गया ✓", copyTooltip:"टेक्स्ट को क्लिपबोर्ड पर कॉपी करें",
     copyDiagramTooltip:"आरेख को PNG छवि के रूप में क्लिपबोर्ड पर कॉपी करें",
     downloadDiagramTooltip:"आरेख को SVG फ़ाइल के रूप में डाउनलोड करें (जैसे LibreOffice: सम्मिलित करें → छवि)",
@@ -889,8 +889,8 @@ const I18N = {
     editorTitle:"结构（文本）", diagramTitle:"图表",
     docSwitchTooltip:"选择或管理文档", docMenuAria:"文档",
     docNew:"新建文档", docRename:"重命名", docDelete:"删除",
-    docDefaultName:"示例", docNewName:"未命名",
-    docRenamePrompt:"重命名文档：", docDeleteConfirm:"删除文档“{name}”？",
+    docNewName:"未命名",
+    docDeleteConfirm:"删除文档“{name}”？",
     copy:"复制", copyDone:"已复制 ✓", copyTooltip:"将文本复制到剪贴板",
     copyDiagramTooltip:"将图表作为 PNG 图片复制到剪贴板",
     downloadDiagramTooltip:"将图表下载为 SVG 文件（例如用于 LibreOffice：插入 → 图像）",
@@ -934,8 +934,8 @@ const I18N = {
     editorTitle:"構造（テキスト）", diagramTitle:"ダイアグラム",
     docSwitchTooltip:"ドキュメントを選択・管理", docMenuAria:"ドキュメント",
     docNew:"新規ドキュメント", docRename:"名前を変更", docDelete:"削除",
-    docDefaultName:"例", docNewName:"無題",
-    docRenamePrompt:"ドキュメントの名前を変更:", docDeleteConfirm:"ドキュメント「{name}」を削除しますか？",
+    docNewName:"無題",
+    docDeleteConfirm:"ドキュメント「{name}」を削除しますか？",
     copy:"コピー", copyDone:"コピーしました ✓", copyTooltip:"テキストをクリップボードにコピー",
     copyDiagramTooltip:"ダイアグラムを PNG 画像としてクリップボードにコピー",
     downloadDiagramTooltip:"ダイアグラムを SVG ファイルとしてダウンロード（例：LibreOffice の 挿入 → 画像）",
@@ -1072,6 +1072,11 @@ let hadStoredUI = false;  /* gab es beim Laden schon gespeicherte GUI-Einstellun
    nur ein Notationstext + Name (Metadatum) — kein eigenes Strukturformat (D14).
    Der aktive Text wird zusätzlich in LS_SRC gespiegelt (Abwärtskompatibilität
    + Migration bestehender Einzeltexte). */
+/* Das Beispiel-Dokument trägt eine reservierte id und einen festen englischen
+   Namen: So trifft der Reset genau dieses eine Dokument (D22) und der Name ist
+   unabhängig von der UI-Sprache englisch — wie der Beispieltext selbst (breiteres
+   Publikum). */
+const EXAMPLE_ID = 'example', EXAMPLE_NAME = 'Example';
 let docs = [];          /* [{id, name, text}] */
 let activeId = null;
 function uid(){ return 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
@@ -1100,11 +1105,20 @@ function loadDocs(){
      !arr.every(d => d && typeof d.id === 'string' && typeof d.text === 'string')){
     let legacy = null;
     try{ legacy = localStorage.getItem(LS_SRC); }catch(_){}
-    arr = [{ id: uid(), name: t('docDefaultName'), text: (legacy !== null) ? legacy : INITIAL }];
+    arr = [{ id: EXAMPLE_ID, name: EXAMPLE_NAME, text: (legacy !== null) ? legacy : INITIAL }];
   }
   docs = arr;
   let a = null;
   try{ a = localStorage.getItem(LS_ACTIVE); }catch(_){}
+  /* Alt-Zustand (erste Version: zufällige id, lokalisierter Name): ein noch
+     unverändertes Beispiel-Dokument bekommt nachträglich die reservierte id und
+     den englischen Namen, damit Namensfix und Reset auch dort greifen. Nur bei
+     unverändertem Text (=== INITIAL), um echte Nutzerinhalte nie zu adoptieren. */
+  if(!docs.some(d => d.id === EXAMPLE_ID) && docs[0] && docs[0].text === INITIAL){
+    if(a === docs[0].id) a = EXAMPLE_ID;
+    docs[0].id = EXAMPLE_ID;
+    docs[0].name = EXAMPLE_NAME;
+  }
   activeId = docs.some(d => d.id === a) ? a : docs[0].id;
 }
 function saveSrc(){
@@ -1171,16 +1185,37 @@ function updateDocName(){
   const d = activeDoc();
   if(docNameEl) docNameEl.textContent = d ? d.name : '';
 }
+let renamingId = null;   /* id des gerade inline umbenannten Dokuments (oder null) */
 function renderDocMenu(){
-  docList.innerHTML = docs.map(d =>
-    `<button type="button" class="docitem" role="menuitemradio" data-id="${d.id}" ` +
-    `aria-checked="${d.id === activeId ? 'true' : 'false'}">` +
-    `<span class="doccheck" aria-hidden="true">✓</span>` +
-    `<span class="docitem-name">${esc(d.name)}</span></button>`
-  ).join('');
+  docList.innerHTML = docs.map(d => {
+    if(d.id === renamingId){
+      /* Inline-Umbenennen direkt im Menü (kein window.prompt — das ist in
+         manchen Browser-Kontexten unterdrückt). Wert/Handler unten in JS. */
+      return `<div class="docitem editing"><span class="doccheck" aria-hidden="true"></span>` +
+             `<input type="text" class="docrename"></div>`;
+    }
+    return `<button type="button" class="docitem" role="menuitemradio" data-id="${d.id}" ` +
+      `aria-checked="${d.id === activeId ? 'true' : 'false'}">` +
+      `<span class="doccheck" aria-hidden="true">✓</span>` +
+      `<span class="docitem-name">${esc(d.name)}</span></button>`;
+  }).join('');
+  if(renamingId){
+    const inp = docList.querySelector('.docrename');
+    const d = docs.find(x => x.id === renamingId);
+    if(inp && d){
+      inp.setAttribute('aria-label', t('docRename'));
+      inp.value = d.name;
+      inp.focus(); inp.select();
+      inp.addEventListener('keydown', e => {
+        if(e.key === 'Enter'){ e.preventDefault(); commitRename(); }
+        else if(e.key === 'Escape'){ e.preventDefault(); cancelRename(); }
+      });
+      inp.addEventListener('blur', commitRename);
+    }
+  }
 }
 function openDocMenu(){ renderDocMenu(); docMenu.hidden = false; docTrigger.setAttribute('aria-expanded', 'true'); }
-function closeDocMenu(){ docMenu.hidden = true; docTrigger.setAttribute('aria-expanded', 'false'); }
+function closeDocMenu(){ renamingId = null; docMenu.hidden = true; docTrigger.setAttribute('aria-expanded', 'false'); }
 function toggleDocMenu(){ docMenu.hidden ? openDocMenu() : closeDocMenu(); }
 /* Beim Wechseln/Anlegen/Löschen zuerst den aktuellen Editortext ins aktive
    Dokument sichern, dann das Ziel laden und neu rendern. */
@@ -1203,30 +1238,32 @@ function newDoc(){
   src.focus();
 }
 function renameDoc(){
-  const d = activeDoc();
-  if(!d) return;
-  const name = window.prompt(t('docRenamePrompt'), d.name);
-  if(name === null) return;
-  const trimmed = name.trim();
-  if(!trimmed) return;
-  d.name = trimmed;
-  persistDocs();
-  updateDocName();
+  if(!activeDoc()) return;
+  renamingId = activeId;   /* aktives Dokument inline umbenennen */
   renderDocMenu();
 }
+function commitRename(){
+  if(!renamingId) return;
+  const inp = docList.querySelector('.docrename');
+  const d = docs.find(x => x.id === renamingId);
+  const val = inp ? inp.value.trim() : '';
+  renamingId = null;
+  if(d && val){ d.name = val; persistDocs(); updateDocName(); }
+  renderDocMenu();
+}
+function cancelRename(){ renamingId = null; renderDocMenu(); }
 function deleteDoc(){
   const d = activeDoc();
   if(!d) return;
   if(!window.confirm(t('docDeleteConfirm', {name: d.name}))) return;
   docs = docs.filter(x => x.id !== d.id);
-  if(!docs.length) docs = [{ id: uid(), name: t('docDefaultName'), text: INITIAL }];
+  if(!docs.length) docs = [{ id: EXAMPLE_ID, name: EXAMPLE_NAME, text: INITIAL }];
   activeId = docs[0].id;
   loadActiveIntoEditor();
   persistDocs();
   closeDocMenu();
 }
-/* Dokumente laden + aktiven Text in den Editor holen. Nach applyLang aufgerufen,
-   damit der migrierte Standardname in der erkannten UI-Sprache steht. */
+/* Dokumente laden + aktiven Text in den Editor holen (nach applyLang). */
 function initDocs(){
   restoring = true;
   loadDocs();
@@ -1610,19 +1647,27 @@ function checkAndShowUpdateNotification(){
 /* ---------- Reset-Funktion für Testing ---------- */
 function resetToDefaults(){
   const confirmed = confirm(
-    'Wirklich alles auf Defaults zurücksetzen?\n\n' +
-    '⚠️ Der Editor-Inhalt und alle Einstellungen werden gelöscht.\n' +
-    'Diese Aktion kann nicht rückgängig gemacht werden.'
+    'Beispiel-Dokument und Einstellungen zurücksetzen?\n\n' +
+    'Das Beispiel-Dokument wird auf den Ausgangstext zurückgesetzt, die\n' +
+    'Ansichts-Einstellungen (Modus, Zoom, Aufteilung, Sprache) verworfen.\n' +
+    'Alle anderen Dokumente bleiben unangetastet.'
   );
 
   if(!confirmed) return;
 
-  /* Lösche alle Werkbaum-Einträge aus localStorage */
-  const keysToDelete = Array.from({length: localStorage.length}, (_, i) => localStorage.key(i))
-    .filter(k => k && k.startsWith('werkbaum-'));
+  /* Nicht-Dokument-Zustand auf Defaults (UI, Sprache, Update-Flags) — die
+     Dokumentenliste (werkbaum-docs) bleibt erhalten (D22). */
+  ['werkbaum-ui','werkbaum-lang','werkbaum-html-hash','werkbaum-update-available','werkbaum-update-log']
+    .forEach(k => { try{ localStorage.removeItem(k); }catch(_){} });
 
-  keysToDelete.forEach(k => localStorage.removeItem(k));
-  logUpdate('🔄 Alle Einstellungen zurückgesetzt');
+  /* Nur das Beispiel-Dokument auf den Ausgangstext zurücksetzen; existiert es
+     nicht (mehr), wird es neu angelegt. Andere Dokumente bleiben unberührt. */
+  const ex = docs.find(d => d.id === EXAMPLE_ID);
+  if(ex){ ex.text = INITIAL; ex.name = EXAMPLE_NAME; }
+  else { docs.unshift({ id: EXAMPLE_ID, name: EXAMPLE_NAME, text: INITIAL }); }
+  activeId = EXAMPLE_ID;
+  persistDocs();
+  logUpdate('🔄 Beispiel-Dokument und Einstellungen zurückgesetzt');
 
   /* Kurze Verzögerung, damit Logging sichtbar wird, dann reload */
   setTimeout(() => {

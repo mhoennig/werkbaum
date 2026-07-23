@@ -90,15 +90,26 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   zurückschreibt.
 - Dokumente (D22): mehrere umschaltbare Notationstexte. `loadDocs()` migriert bei
   fehlendem `werkbaum-docs` den bestehenden `werkbaum-src` (oder `INITIAL`) in
-  **ein** Dokument; `initDocs()` (Aufruf **nach** `applyLang`, damit der
-  Standardname in der erkannten UI-Sprache steht) holt den aktiven Text in den
-  Editor. `saveSrc()` schreibt den Editortext ins aktive Dokument. Der Wähler ist
-  ein Dropdown in der Editor-Titelzeile (`#docTrigger`/`#docMenu`, ersetzt die
-  frühere feste „Struktur (Text)"-Beschriftung); Wechseln/Neu/Umbenennen/Löschen
-  in `switchDoc/newDoc/renameDoc/deleteDoc`. Jedes Dokument ist nur Text + Name
-  (kein Strukturformat, D14) — vorwärtskompatibel zum Backend (D13). Ansichts-
-  State (`werkbaum-ui`) bleibt global über alle Dokumente. Ein leerer Editortext
-  bleibt leer; das letzte gelöschte Dokument wird als `INITIAL` neu gesät.
+  **ein** Dokument; `initDocs()` (Aufruf **nach** `applyLang`) holt den aktiven
+  Text in den Editor. `saveSrc()` schreibt den Editortext ins aktive Dokument.
+  Der Wähler ist ein Dropdown in der Editor-Titelzeile (`#docTrigger`/`#docMenu`,
+  ersetzt die frühere feste „Struktur (Text)"-Beschriftung); Wechseln/Neu/
+  Umbenennen/Löschen in `switchDoc/newDoc/renameDoc/deleteDoc`. Jedes Dokument ist
+  nur Text + Name (kein Strukturformat, D14) — vorwärtskompatibel zum Backend
+  (D13). Ansichts-State (`werkbaum-ui`) bleibt global über alle Dokumente. Ein
+  leerer Editortext bleibt leer.
+- Beispiel-Dokument (D22): reservierte id `EXAMPLE_ID = 'example'`, fester
+  englischer Name `EXAMPLE_NAME = 'Example'` (nicht lokalisiert). `loadDocs()`
+  adoptiert einen Alt-Zustand (zufällige id, „Beispiel") nur, wenn dessen
+  `text === INITIAL` (nie echte Nutzerinhalte). `resetToDefaults()` setzt **nur**
+  das Beispiel-Dokument (id `example`) auf `INITIAL`/„Example" zurück und verwirft
+  `werkbaum-ui`/`werkbaum-lang`/Update-Flags — **andere Dokumente bleiben stehen**
+  (nicht mehr pauschal alle `werkbaum-*` löschen!). Das letzte gelöschte Dokument
+  wird als Beispiel neu gesät.
+- Umbenennen ist **inline** (kein `window.prompt` — in manchen Browser-Kontexten
+  unterdrückt): `renameDoc()` setzt `renamingId`, `renderDocMenu()` rendert dann
+  ein `<input class="docrename">` (Enter = `commitRename`, Esc = `cancelRename`,
+  Blur = commit). Doc-Namen sind Nutzerdaten und werden **nicht** übersetzt.
 - Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) stapelt
   Diagramm/Editor mit **stufenlosem** Splitter (kein Snap/Collapse wie auf
   Desktop): der Gutter-Drag ruft `setMobileDrow()` (klemmt `--drow` zwischen den
