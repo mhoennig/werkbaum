@@ -1197,31 +1197,81 @@ mountBuildBadge();
 async function checkForUpdates(){
   try {
     const resp = await fetch('?' + new Date().getTime(), { cache: 'no-store' });
+    if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const html = await resp.text();
     /* Einfacher Check: Suche nach der Build-Badge (existiert nur in Nicht-Prod).
        Wenn sich der Badge ändert oder der Content sich ändert, ist eine neue Version da. */
     const stored = localStorage.getItem('werkbaum-html-hash');
     const hash = html.substring(0, 200) + html.substring(html.length - 200); /* First & last 200 chars */
-    if(stored && stored !== hash){
+    const isNewVersion = stored && stored !== hash;
+    if(isNewVersion){
       localStorage.setItem('werkbaum-update-available', 'true');
+      logUpdate('✅ Neue Version erkannt!');
       if(!document.hidden) checkAndShowUpdateNotification();
+    } else if(stored) {
+      logUpdate('✓ Alles aktuell');
     }
     localStorage.setItem('werkbaum-html-hash', hash);
   } catch(err) {
-    /* Offline oder Fehler — ignorieren */
+    logUpdate('⚠ Fehler: ' + (err.message || 'Unbekannt'));
   }
 }
 
-/* Erste Prüfung nach 3 Sekunden */
-setTimeout(checkForUpdates, 3000);
+function logUpdate(msg){
+  const now = new Date().toLocaleTimeString('de-DE');
+  const log = (localStorage.getItem('werkbaum-update-log') || '').split('\n').slice(-9);
+  log.push(`[${now}] ${msg}`);
+  localStorage.setItem('werkbaum-update-log', log.join('\n'));
+}
 
-/* Periodisch prüfen (jede 60 Sekunden statt 5 Minuten = schneller Feedback) */
-setInterval(checkForUpdates, 60000);
+/* Debug-Panel anzeigen (nur wenn localStorage Update-Log da ist) */
+function showUpdateDebug(){
+  let panel = document.getElementById('updateDebugPanel');
+  if(!panel){
+    panel = document.createElement('div');
+    panel.id = 'updateDebugPanel';
+    panel.style.cssText = `
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.8);
+      color: #0F766E;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: monospace;
+      max-width: 200px;
+      max-height: 100px;
+      overflow-y: auto;
+      z-index: 999;
+      border: 1px solid #0F766E;
+      cursor: pointer;
+    `;
+    panel.title = 'Update Debug Panel – Klick zum Schließen';
+    document.body.appendChild(panel);
+    panel.addEventListener('click', () => panel.remove());
+  }
+  const log = localStorage.getItem('werkbaum-update-log') || '';
+  panel.textContent = log ? log.split('\n').slice(-6).join('\n') : 'Keine Einträge';
+}
+
+/* Erste Prüfung nach 2 Sekunden */
+setTimeout(() => {
+  checkForUpdates();
+  showUpdateDebug();
+}, 2000);
+
+/* Periodisch prüfen (alle 15 Sekunden während Tests, produktiv dann auf 60s ändern) */
+setInterval(() => {
+  checkForUpdates();
+  showUpdateDebug();
+}, 15000);
 
 /* Prüfe wenn User zur App zurückkommt */
 document.addEventListener('visibilitychange', () => {
   if(!document.hidden){
     checkForUpdates();
+    showUpdateDebug();
     if(localStorage.getItem('werkbaum-update-available')){
       checkAndShowUpdateNotification();
     }
