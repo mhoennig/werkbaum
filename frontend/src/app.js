@@ -1363,3 +1363,54 @@ function checkAndShowUpdateNotification(){
     notif.remove();
   });
 }
+
+/* ---------- Reset-Funktion für Testing ---------- */
+function resetToDefaults(){
+  const confirmed = confirm(
+    'Wirklich alles auf Defaults zurücksetzen?\n\n' +
+    '⚠️ Der Editor-Inhalt und alle Einstellungen werden gelöscht.\n' +
+    'Diese Aktion kann nicht rückgängig gemacht werden.'
+  );
+
+  if(!confirmed) return;
+
+  /* Lösche alle Werkbaum-Einträge aus localStorage */
+  const keysToDelete = Array.from({length: localStorage.length}, (_, i) => localStorage.key(i))
+    .filter(k => k && k.startsWith('werkbaum-'));
+
+  keysToDelete.forEach(k => localStorage.removeItem(k));
+  logUpdate('🔄 Alle Einstellungen zurückgesetzt');
+
+  /* Kurze Verzögerung, damit Logging sichtbar wird, dann reload */
+  setTimeout(() => {
+    window.location.reload();
+  }, 500);
+}
+
+/* Reset-Button im Footer hinzufügen */
+document.addEventListener('DOMContentLoaded', () => {
+  const footer = document.querySelector('.site-footer');
+  if(!footer) return;
+
+  const resetBtn = document.createElement('button');
+  resetBtn.textContent = '🔄';
+  resetBtn.title = 'App auf Defaults zurücksetzen (alle Einstellungen + Editor löschen)';
+  resetBtn.style.cssText = `
+    background: none;
+    border: none;
+    color: var(--muted, #999);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 4px;
+    vertical-align: middle;
+  `;
+  resetBtn.addEventListener('click', resetToDefaults);
+
+  /* Einfügen nach der Versionsnummer */
+  const verLink = footer.querySelector('.ver');
+  if(verLink && verLink.nextSibling) {
+    verLink.parentNode.insertBefore(resetBtn, verLink.nextSibling.nextSibling);
+  } else {
+    footer.insertBefore(resetBtn, footer.firstChild);
+  }
+});
