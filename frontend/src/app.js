@@ -1195,9 +1195,7 @@ mountBuildBadge();
 
 /* ---------- Service Worker für Update-Detection ---------- */
 if('serviceWorker' in navigator){
-  /* Service Worker als Blob registrieren (Single-File-App) */
   const swCode = `
-    const CACHE_NAME = 'werkbaum-v1';
     self.addEventListener('install', (e) => self.skipWaiting());
     self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
 
@@ -1216,9 +1214,7 @@ if('serviceWorker' in navigator){
     });
 
     function notifyClients(msg) {
-      self.clients.matchAll().then(clients =>
-        clients.forEach(c => c.postMessage(msg))
-      );
+      self.clients.matchAll().then(clients => clients.forEach(c => c.postMessage(msg)));
     }
 
     async function getStored() {
@@ -1263,37 +1259,44 @@ if('serviceWorker' in navigator){
   const swUrl = URL.createObjectURL(blob);
 
   navigator.serviceWorker.register(swUrl).then((registration) => {
-    /* Periodisch auf Updates prüfen */
-    setInterval(() => {
-      if(registration.active){
-        registration.active.postMessage({ type: 'CHECK_UPDATE' });
-      }
-    }, 60000); /* Jede Minute */
-
-    /* Starte erste Prüfung nach 5 Sekunden */
+    /* Starte erste Prüfung nach 2 Sekunden */
     setTimeout(() => {
-      if(registration.active){
-        registration.active.postMessage({ type: 'CHECK_UPDATE' });
-      }
-    }, 5000);
+      if(registration.active) registration.active.postMessage({ type: 'CHECK_UPDATE' });
+    }, 2000);
+
+    /* Periodisch auf Updates prüfen (jede 5 Minuten) */
+    setInterval(() => {
+      if(registration.active) registration.active.postMessage({ type: 'CHECK_UPDATE' });
+    }, 300000);
   }).catch((error) => {
     console.error('Service Worker Registration fehlgeschlagen:', error);
   });
 
   /* Höre auf Update-Benachrichtigungen vom Service Worker */
   navigator.serviceWorker.addEventListener('message', (event) => {
-    if(event.data && event.data.type === 'UPDATE_AVAILABLE'){
-      showUpdateNotification();
+    if(event.data?.type === 'UPDATE_AVAILABLE'){
+      localStorage.setItem('werkbaum-update-available', 'true');
+      checkAndShowUpdateNotification();
     }
   });
+
+  /* Prüfe auf Update wenn User zur App zurückkommt */
+  document.addEventListener('visibilitychange', () => {
+    if(!document.hidden && localStorage.getItem('werkbaum-update-available')){
+      checkAndShowUpdateNotification();
+    }
+  });
+
+  /* Prüfe beim Laden */
+  if(!document.hidden && localStorage.getItem('werkbaum-update-available')){
+    checkAndShowUpdateNotification();
+  }
 }
 
-function showUpdateNotification(){
-  /* Entferne alte Benachrichtigung, falls vorhanden */
+function checkAndShowUpdateNotification(){
   const existingNotif = document.getElementById('updateNotification');
-  if(existingNotif) existingNotif.remove();
+  if(existingNotif) return; /* Schon angezeigt */
 
-  /* Erstelle Benachrichtigungselement */
   const notif = document.createElement('div');
   notif.id = 'updateNotification';
   notif.style.cssText = `
@@ -1315,26 +1318,36 @@ function showUpdateNotification(){
 
   notif.innerHTML = `
     <span>📦 Neue Version verfügbar</span>
-    <button id="updateBtn" style="
-      background: white;
-      color: var(--or, #0F766E);
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: 500;
-      font-size: 13px;
-    ">Jetzt laden</button>
+    <div style="display: flex; gap: 8px;">
+      <button class="dismissBtn" style="
+        background: transparent;
+        color: white;
+        border: 1px solid white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+      ">Später</button>
+      <button class="updateBtn" style="
+        background: white;
+        color: var(--or, #0F766E);
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 12px;
+      ">Jetzt laden</button>
+    </div>
   `;
 
   document.body.insertBefore(notif, document.body.firstChild);
 
-  document.getElementById('updateBtn').addEventListener('click', () => {
+  notif.querySelector('.updateBtn').addEventListener('click', () => {
     window.location.reload();
   });
 
-  /* Auto-dismiss nach 30 Sekunden wenn nicht geklickt */
-  setTimeout(() => {
-    if(notif.parentNode) notif.remove();
-  }, 30000);
+  notif.querySelector('.dismissBtn').addEventListener('click', () => {
+    notif.remove();
+  });
 }
