@@ -1397,40 +1397,50 @@ function resetToDefaults(){
   }, 500);
 }
 
-/* Reset-Button im Footer hinzufügen */
-document.addEventListener('DOMContentLoaded', () => {
-  const footer = document.querySelector('.site-footer');
-  if(!footer) return;
+/* Update-Benachrichtigung-Symbol im Footer (rechts neben Version) */
+function updateFooterUpdateIcon(){
+  let icon = document.getElementById('footerUpdateIcon');
+  const hasUpdate = localStorage.getItem('werkbaum-update-available');
 
-  const resetBtn = document.createElement('button');
-  resetBtn.textContent = '🔄 Reset';
-  resetBtn.title = 'App auf Defaults zurücksetzen (alle Einstellungen + Editor löschen)';
-  resetBtn.style.cssText = `
-    background: none;
-    border: 1px solid var(--muted, #999);
-    color: var(--muted, #999);
-    cursor: pointer;
-    font-size: 12px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    vertical-align: middle;
-    transition: all 0.2s ease;
-  `;
-  resetBtn.addEventListener('mouseenter', () => {
-    resetBtn.style.borderColor = 'var(--or, #0F766E)';
-    resetBtn.style.color = 'var(--or, #0F766E)';
-  });
-  resetBtn.addEventListener('mouseleave', () => {
-    resetBtn.style.borderColor = 'var(--muted, #999)';
-    resetBtn.style.color = 'var(--muted, #999)';
-  });
-  resetBtn.addEventListener('click', resetToDefaults);
+  if(hasUpdate && !icon){
+    const footer = document.querySelector('.site-footer');
+    if(!footer) return;
 
-  /* Einfügen nach der Versionsnummer */
-  const verLink = footer.querySelector('.ver');
-  if(verLink && verLink.nextSibling) {
-    verLink.parentNode.insertBefore(resetBtn, verLink.nextSibling.nextSibling);
-  } else {
-    footer.insertBefore(resetBtn, footer.firstChild);
+    icon = document.createElement('button');
+    icon.id = 'footerUpdateIcon';
+    icon.textContent = '📦';
+    icon.title = 'Neue Version verfügbar — klick um Benachrichtigung zu zeigen';
+    icon.style.cssText = `
+      background: none;
+      border: none;
+      color: var(--or, #0F766E);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0 4px;
+      vertical-align: middle;
+      transition: transform 0.2s ease;
+    `;
+    icon.addEventListener('mouseenter', () => {
+      icon.style.transform = 'scale(1.2)';
+    });
+    icon.addEventListener('mouseleave', () => {
+      icon.style.transform = 'scale(1)';
+    });
+    icon.addEventListener('click', checkAndShowUpdateNotification);
+
+    const verLink = footer.querySelector('.ver');
+    if(verLink && verLink.nextSibling) {
+      verLink.parentNode.insertBefore(icon, verLink.nextSibling);
+    }
+  } else if(!hasUpdate && icon){
+    icon.remove();
   }
-});
+}
+
+/* Icon beim Laden und bei Update-Erkennung aktualisieren */
+document.addEventListener('DOMContentLoaded', updateFooterUpdateIcon);
+const originalCheckAndShowUpdateNotification = checkAndShowUpdateNotification;
+checkAndShowUpdateNotification = function(){
+  originalCheckAndShowUpdateNotification.call(this);
+  updateFooterUpdateIcon();
+};
