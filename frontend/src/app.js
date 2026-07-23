@@ -1355,6 +1355,7 @@ function checkAndShowUpdateNotification(){
   document.body.insertBefore(notif, document.body.firstChild);
 
   notif.querySelector('.updateBtn').addEventListener('click', () => {
+    localStorage.removeItem('werkbaum-update-available');
     window.location.reload();
   });
 
