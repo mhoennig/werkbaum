@@ -1168,3 +1168,25 @@ function mountBuildBadge(){
   h1.appendChild(el);
 }
 mountBuildBadge();
+
+/* ---------- Editor-Panel: Copy & Agenda Buttons nur sichtbar wenn Panel offen genug ---------- */
+const editorPanel = document.querySelector('.panel.editor');
+const editorHead = editorPanel?.querySelector('.panel-head');
+const editorBody = editorPanel?.querySelector('.editor-body');
+const copyBtn = document.getElementById('copy');
+const legendBtn = document.getElementById('legendBtn');
+
+if(editorBody && editorHead && copyBtn && legendBtn){
+  const updateButtonVisibility = () => {
+    const headHeight = editorHead.offsetHeight;
+    const bodyHeight = editorBody.offsetHeight;
+    /* Buttons nur sichtbar wenn mindestens Titelzeilenhöhe sichtbar ist */
+    const shouldShow = bodyHeight >= headHeight;
+    copyBtn.style.display = shouldShow ? 'block' : 'none';
+    legendBtn.style.display = shouldShow ? 'block' : 'none';
+  };
+
+  const resizeObserver = new ResizeObserver(updateButtonVisibility);
+  resizeObserver.observe(editorBody);
+  updateButtonVisibility(); /* Initial call */
+}
