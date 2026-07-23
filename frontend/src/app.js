@@ -1229,50 +1229,49 @@ mountBuildBadge();
    ALLEN Builds aktiv. */
 const isProdBuild = import.meta.env.VITE_BUILD_BADGE === 'none';
 
+/* Kompakter, deterministischer Hash (cyrb53) über den GESAMTEN HTML-Text.
+   Wichtig: Der frühere Ansatz „erste 300 + letzte 300 Zeichen" verfehlte JEDE
+   Änderung — die Seite ist eine self-contained Datei (D19), der komplette
+   App-Code UND die Footer-Version liegen als inline-Bundle in der MITTE, also
+   außerhalb des abgetasteten Fensters. Anfang/Ende sind Build-übergreifend
+   identisch. Nur ein Hash über den vollen Text erkennt neue Deployments. */
+function hashContent(str){
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for(let i = 0; i < str.length; i++){
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1>>>0)).toString(36);
+}
+
 async function checkForUpdates(){
   try {
     /* Fetch HTML mit Cache-Busting via Timestamp */
     const resp = await fetch(location.href + '?t=' + new Date().getTime(), { cache: 'no-store' });
     if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
+    /* Voller Content-Hash ist die alleinige Wahrheit. ETag/Last-Modified werden
+       bewusst NICHT mehr herangezogen: GitHub Pages liefert je Cache-Knoten
+       unterschiedliche ETags für identischen Inhalt und löste damit die
+       irreführende Meldung „Metadaten geändert, aber Inhalt gleich" aus. */
     const html = await resp.text();
-    const lastModified = resp.headers.get('last-modified');
-    const etag = resp.headers.get('etag');
-
-    /* Prüfe auf echte Änderung via Content-Hash */
+    const hash = hashContent(html);
     const stored = localStorage.getItem('werkbaum-html-hash');
-    const hash = html.substring(0, 300) + html.substring(html.length - 300);
 
-    /* Vergleich: ETag/Last-Modified ODER Content-Hash */
-    const storedETag = localStorage.getItem('werkbaum-etag');
-    const storedModified = localStorage.getItem('werkbaum-last-modified');
-    const headersSame = (etag && etag === storedETag) || (lastModified && lastModified === storedModified);
-    const contentSame = stored && stored === hash;
-
-    if(contentSame && headersSame){
-      if(!stored) {
-        logUpdate('✓ Erste Prüfung – Hash gespeichert');
-      } else {
-        logUpdate('✓ Alles aktuell');
-      }
-    } else if(contentSame && !headersSame){
-      /* Content gleich, aber Headers geändert – wahrscheinlich nur Build-Metadaten */
-      if(!stored) {
-        logUpdate('✓ Erste Prüfung – Hash gespeichert');
-      } else {
-        logUpdate('⚙ Metadaten geändert, aber Inhalt gleich');
-      }
-    } else if(stored && !contentSame) {
+    if(!stored){
+      logUpdate('✓ Erste Prüfung – Hash gespeichert');
+    } else if(hash === stored){
+      logUpdate('✓ Alles aktuell');
+    } else {
       localStorage.setItem('werkbaum-update-available', 'true');
       logUpdate('✅ NEUE VERSION ERKANNT!');
       if(!document.hidden) checkAndShowUpdateNotification();
-    } else if(!stored) {
-      logUpdate('✓ Erste Prüfung – Hash gespeichert');
     }
 
     localStorage.setItem('werkbaum-html-hash', hash);
-    if(etag) localStorage.setItem('werkbaum-etag', etag);
-    if(lastModified) localStorage.setItem('werkbaum-last-modified', lastModified);
   } catch(err) {
     const msg = err.message || err.toString();
     if(msg.includes('Failed to fetch')) {
