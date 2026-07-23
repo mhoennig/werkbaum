@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # Volle Historie: die Micro-Version wird aus der Commit-Anzahl
           # abgeleitet (Standard wäre ein flacher Klon mit nur einem Commit).
@@ -43,7 +43,7 @@ jobs:
       # hinter dem Titel automatisch in sich (app.js/mountBuildBadge, D16) — der
       # Pages-Deploy ist bewusst der latest build. Nur `build:prod` ließe ihn weg.
       - name: Node einrichten
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: npm
@@ -86,10 +86,10 @@ jobs:
           cp LICENSE site/LICENSE
 
       - name: Pages-Konfiguration
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Artefakt hochladen
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
@@ -102,4 +102,4 @@ jobs:
     steps:
       - name: Auf GitHub Pages deployen
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
