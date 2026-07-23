@@ -182,9 +182,10 @@ describe('Vokabular-Exporte', () => {
     expect(SIZE_RANK).toEqual({ XS: 0, S: 1, M: 2, L: 3, XL: 4, XXL: 5 });
   });
 
-  it('STATUS_BY_CODE deckt alle sieben Codes ab (SPEC §4)', () => {
+  it('STATUS_BY_CODE deckt alle acht Codes ab (SPEC §4)', () => {
     expect(Object.keys(STATUS_BY_CODE).sort())
-      .toEqual([' ', '-', '/', '?', '^', 'x', '~'].sort());
+      .toEqual([' ', '!', '-', '/', '?', '^', 'x', '~'].sort());
     expect(STATUS_BY_CODE['-'].key).toBe('verworfen');
+    expect(STATUS_BY_CODE['!'].key).toBe('highrisk');
   });
 });

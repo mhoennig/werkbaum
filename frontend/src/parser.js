@@ -15,7 +15,8 @@ export const STATUS_BY_CODE = {
   '/': {key:'durchstich', name:'Durchstich – funktionsbereit, Feinarbeiten offen'},
   'x': {key:'fertig',     name:'fertig'},
   '^': {key:'prod',       name:'in Produktion'},
-  '-': {key:'verworfen', name:'verworfen'}
+  '-': {key:'verworfen', name:'verworfen'},
+  '!': {key:'highrisk',   name:'High Risk – Aufwand unklar'}
 };
 
 /* Parst den Notationstext zu { roots, warnings }.

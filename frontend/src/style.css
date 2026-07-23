@@ -512,6 +512,7 @@
   .node.st-durchstich{background:#FBF2CE;border-color:#D9BE63;color:var(--ink)}
   .node.st-fertig    {background:#DCF1DE;border-color:#86C293;color:var(--ink)}
   .node.st-prod      {background:#DBEAF8;border-color:#85ACD7;color:var(--ink)}
+  .node.st-highrisk  {background:#FFE5CC;border-color:#F97316;color:var(--ink)}
   .node.st-verworfen{
     background:#F1F2F4;border-color:#B3BAC2;border-style:dashed;
     color:var(--muted);text-decoration:line-through;box-shadow:none;
@@ -529,6 +530,7 @@
   .chip.st-durchstich{background:#FBF2CE;border-color:#D9BE63}
   .chip.st-fertig    {background:#DCF1DE;border-color:#86C293}
   .chip.st-prod      {background:#DBEAF8;border-color:#85ACD7}
+  .chip.st-highrisk  {background:#FFE5CC;border-color:#F97316}
   .chip.st-verworfen{background:#F1F2F4;border-color:#B3BAC2;border-style:dashed;color:var(--muted);text-decoration:line-through}
 
   /* ---------- Transponierte Modi (vertikal + kompakt) ---------- */
