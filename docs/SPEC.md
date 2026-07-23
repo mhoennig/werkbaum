@@ -59,9 +59,16 @@ Codiert als Checkbox nach dem Zeichen (Erweiterung der Markdown-Task-Syntax):
 | `[x]` | fertig | fertig | abgeschlossen | `#DCF1DE` (pastellgrün) | `#86C293` |
 | `[^]` | prod | in Produktion | deployed/live | `#DBEAF8` (pastellblau) | `#85ACD7` |
 | `[-]` | verworfen | verworfen | bewusst nicht weiterverfolgt | `#F1F2F4`, gestrichelter Rahmen, Text durchgestrichen | `#B3BAC2` |
+| `[!]` | highrisk | High Risk | Aufwand noch unklar, hohes Risiko | `#FFE5CC` (orange) | `#F97316` |
 
 - Ohne Statusbox: neutraler Knoten (weiß).
 - `x` auch als `X` zulässig.
+- **High-Risk-Kennzeichnung:** Der `[!]`-Knoten trägt zusätzlich zur orangen
+  Färbung ein **Warndreieck** (⚠, in `#F97316`) als kleines Badge an der oberen
+  linken Ecke — Tooltip „High Risk – Aufwand noch unklar." Das Badge erscheint
+  auch im Grafikexport. (Mnemonik: `!` = Achtung. Ob `[!]` später zusätzlich zum
+  Fertigstellungsstatus stehen darf, ist offen; vorerst ist es ein eigener
+  Status wie die übrigen.)
 - Verworfene Knoten (inkl. Teilbaum) sind per Default **ausgeblendet**;
   Toggle „verworfene einblenden“ zeigt sie.
 - **Fehlertoleranz:** Ein unbekanntes Zeichen in der Statusbox (z. B. `[z]`)

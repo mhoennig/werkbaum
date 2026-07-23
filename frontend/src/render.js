@@ -47,8 +47,14 @@ function nodeHtml(n, extra, opts){
   const sizeBadge = n.size
     ? `<span class="size" aria-hidden="true">${n.size}</span>`
     : (cheapPath ? `<span class="size implicit" aria-hidden="true" title="${implicitTip}">M</span>` : '');
+  /* High-Risk: Warndreieck (⚠, Textpräsentation via VS15) an der oberen linken
+     Ecke. aria-hidden — die Information steckt bereits im Status des aria-label. */
+  const riskMark = n.status && n.status.key === 'highrisk'
+    ? `<span class="risk" aria-hidden="true" title="${attr(t('riskTooltip'))}">⚠︎</span>`
+    : '';
   const inner = esc(n.label) +
                 (n.url ? '<span class="ext" aria-hidden="true">↗</span>' : '') +
+                riskMark +
                 sizeBadge +
                 tagsHtml;
   const aria = ` aria-label="${attr(nodeAria(n, opts))}"`;

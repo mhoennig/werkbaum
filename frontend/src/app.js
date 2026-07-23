@@ -16,7 +16,7 @@ const INITIAL = `%% Project structure – Sprint 14
         - [/] Web (S)
         - [ ] Android (M)
         - [ ] iOS (M)
-    - [ ] Backend (L) @ben @carla
+    - [!] Backend (L) @ben @carla
     - [ ] CMS integration (M)
       | [ ] WordPress
       | [?] Headless CMS
@@ -195,10 +195,16 @@ function diagramToSvg(){
     const dashed = cs.borderTopStyle === 'dashed';
     parts.push(`<rect x="${b.x.toFixed(1)}" y="${b.y.toFixed(1)}" width="${b.w.toFixed(1)}" height="${b.h.toFixed(1)}" rx="8" fill="${cs.backgroundColor}" stroke="${cs.borderTopColor}" stroke-width="${parseFloat(cs.borderTopWidth)||1.5}"${dashed?' stroke-dasharray="4 3"':''}/>`);
     const clone = node.cloneNode(true);
-    clone.querySelectorAll('.size,.tags,.ext').forEach(e => e.remove());
+    clone.querySelectorAll('.size,.tags,.ext,.risk').forEach(e => e.remove());
     const label = clone.textContent.replace(/\s+/g,' ').trim();
     const deco = cs.textDecorationLine.includes('line-through') ? ' text-decoration="line-through"' : '';
     parts.push(`<text x="${b.cx.toFixed(1)}" y="${(b.cy+5).toFixed(1)}" text-anchor="middle" fill="${cs.color}" font-size="14" font-weight="${cs.fontWeight}"${deco}>${esc(label)}</text>`);
+    const riskEl = node.querySelector('.risk');
+    if(riskEl){
+      const rb = R(riskEl);
+      parts.push(`<circle cx="${rb.cx.toFixed(1)}" cy="${rb.cy.toFixed(1)}" r="${(Math.min(rb.w,rb.h)/2).toFixed(1)}" fill="#ffffff" stroke="#F97316" stroke-width="1.5"/>`);
+      parts.push(`<text x="${rb.cx.toFixed(1)}" y="${(rb.cy+3.5).toFixed(1)}" text-anchor="middle" fill="#F97316" font-size="10">⚠︎</text>`);
+    }
     const sizeEl = node.querySelector('.size');
     if(sizeEl) drawBadge(sizeEl, '#0F766E', '#ffffff');
     node.querySelectorAll('.tag').forEach(tg => {
@@ -559,6 +565,7 @@ const I18N = {
     privacy:"Datenschutz",
     legendTooltip:"Legende ein-/ausblenden",
     ghostTooltip:"Ab Größe M sollte ein Element weiter untergliedert werden.",
+    riskTooltip:"High Risk – Aufwand noch unklar.",
     discardedTooltip:"Verworfene Knoten samt Teilbaum ein-/ausblenden",
     cheapTooltip:"Günstigsten Pfad hervorheben – nicht benötigte Alternativen treten zurück",
     implicitSizeTooltip:"Keine Größe angegeben – für die Kostenschätzung als M angenommen",
@@ -599,6 +606,7 @@ const I18N = {
     privacy:"Privacy",
     legendTooltip:"Show/hide legend",
     ghostTooltip:"From size M upward, an item should be broken down further.",
+    riskTooltip:"High risk – effort still unclear.",
     discardedTooltip:"Show/hide discarded nodes and their subtree",
     cheapTooltip:"Highlight the cheapest path – unneeded alternatives recede",
     implicitSizeTooltip:"No size given – assumed as M for the cost estimate",
@@ -639,6 +647,7 @@ const I18N = {
     privacy:"Privacidad",
     legendTooltip:"Mostrar u ocultar la leyenda",
     ghostTooltip:"A partir de la talla M, un elemento debería desglosarse más.",
+    riskTooltip:"Alto riesgo – esfuerzo aún incierto.",
     discardedTooltip:"Mostrar u ocultar los nodos descartados y su subárbol",
     cheapTooltip:"Resaltar la ruta más económica: las alternativas no necesarias se atenúan",
     implicitSizeTooltip:"Sin tamaño indicado: se asume M para el cálculo de costes",
@@ -679,6 +688,7 @@ const I18N = {
     privacy:"Confidentialité",
     legendTooltip:"Afficher/masquer la légende",
     ghostTooltip:"À partir de la taille M, un élément devrait être décomposé davantage.",
+    riskTooltip:"Risque élevé – effort encore incertain.",
     discardedTooltip:"Afficher/masquer les nœuds abandonnés et leur sous-arbre",
     cheapTooltip:"Mettre en évidence le chemin le moins coûteux – les alternatives inutiles s'estompent",
     implicitSizeTooltip:"Aucune taille indiquée – considérée comme M pour l'estimation des coûts",
@@ -719,6 +729,7 @@ const I18N = {
     privacy:"Prywatność",
     legendTooltip:"Pokaż/ukryj legendę",
     ghostTooltip:"Od rozmiaru M element powinien być dalej podzielony.",
+    riskTooltip:"Wysokie ryzyko – nakład jeszcze niejasny.",
     discardedTooltip:"Pokaż/ukryj odrzucone węzły wraz z poddrzewem",
     cheapTooltip:"Wyróżnij najtańszą ścieżkę – niepotrzebne alternatywy są przygaszone",
     implicitSizeTooltip:"Nie podano rozmiaru – przyjęto M do szacowania kosztów",
@@ -759,6 +770,7 @@ const I18N = {
     privacy:"Конфиденциальность",
     legendTooltip:"Показать/скрыть легенду",
     ghostTooltip:"Начиная с размера M элемент следует далее декомпозировать.",
+    riskTooltip:"Высокий риск – оценка ещё не ясна.",
     discardedTooltip:"Показать/скрыть отклонённые узлы вместе с поддеревом",
     cheapTooltip:"Выделить самый дешёвый путь — ненужные альтернативы приглушаются",
     implicitSizeTooltip:"Размер не указан — для оценки затрат принят как M",
@@ -799,6 +811,7 @@ const I18N = {
     privacy:"गोपनीयता",
     legendTooltip:"लेजेंड दिखाएँ/छिपाएँ",
     ghostTooltip:"आकार M से ऊपर किसी तत्व को और अधिक उप-विभाजित करना चाहिए।",
+    riskTooltip:"उच्च जोखिम – प्रयास अभी अस्पष्ट।",
     discardedTooltip:"अस्वीकृत नोड्स और उनके उप-वृक्ष दिखाएँ/छिपाएँ",
     cheapTooltip:"सबसे किफ़ायती पथ को उजागर करें – अनावश्यक विकल्प मंद हो जाते हैं",
     implicitSizeTooltip:"कोई आकार नहीं दिया गया – लागत अनुमान के लिए M माना गया",
@@ -844,6 +857,7 @@ const I18N = {
     cheapTooltip:"突出显示成本最低的路径——不需要的备选项将淡化",
     implicitSizeTooltip:"未指定尺寸——成本估算时按 M 计",
     ghostTooltip:"从 M 号起，元素应进一步细分。",
+    riskTooltip:"高风险 – 工作量尚不明确。",
     editorTitle:"结构（文本）", diagramTitle:"图表",
     copy:"复制", copyDone:"已复制 ✓", copyTooltip:"将文本复制到剪贴板",
     copyDiagramTooltip:"将图表作为 PNG 图片复制到剪贴板",
@@ -884,6 +898,7 @@ const I18N = {
     cheapTooltip:"最も低コストの経路を強調 – 不要な選択肢は控えめに表示",
     implicitSizeTooltip:"サイズ未指定 – コスト見積もりのため M として扱う",
     ghostTooltip:"サイズ M 以上の要素はさらに分解すべきです。",
+    riskTooltip:"高リスク – 規模はまだ不明。",
     editorTitle:"構造（テキスト）", diagramTitle:"ダイアグラム",
     copy:"コピー", copyDone:"コピーしました ✓", copyTooltip:"テキストをクリップボードにコピー",
     copyDiagramTooltip:"ダイアグラムを PNG 画像としてクリップボードにコピー",
@@ -1194,6 +1209,13 @@ mountBuildBadge();
 })();
 
 /* ---------- Update-Detection (Client-seitig, einfach & zuverlässig) ---------- */
+/* Test-Hilfen (Debug-Panel + Reset-Button) nur AUSSERHALB des Prod-Builds:
+   im Prod-Build (`build:prod` -> VITE_BUILD_BADGE==='none') eliminiert esbuild
+   den Zweig als toten Code — analog zum Build-Badge (D16). Dev-Server (🔧) und
+   Default-/Pages-Build (🚧) behalten sie. Der Update-Check + Banner bleibt in
+   ALLEN Builds aktiv. */
+const isProdBuild = import.meta.env.VITE_BUILD_BADGE === 'none';
+
 async function checkForUpdates(){
   try {
     /* Fetch HTML mit Cache-Busting via Timestamp */
@@ -1255,8 +1277,9 @@ function logUpdate(msg){
   localStorage.setItem('werkbaum-update-log', log.join('\n'));
 }
 
-/* Debug-Panel anzeigen (nur wenn localStorage Update-Log da ist) */
+/* Debug-Panel anzeigen (Test-Hilfe; im Prod-Build unterdrückt) */
 function showUpdateDebug(){
+  if(isProdBuild) return;
   let panel = document.getElementById('updateDebugPanel');
   if(!panel){
     panel = document.createElement('div');
@@ -1286,8 +1309,8 @@ function showUpdateDebug(){
   panel.textContent = log ? log.split('\n').slice(-6).join('\n') : 'Keine Einträge';
 }
 
-/* Reset-Button im Header neben Fullscreen */
-document.addEventListener('DOMContentLoaded', () => {
+/* Reset-Button im Header neben Fullscreen (Test-Hilfe; im Prod-Build weggelassen) */
+if(!isProdBuild) document.addEventListener('DOMContentLoaded', () => {
   const fsToggle = document.getElementById('fsToggle');
   if(!fsToggle) return;
 
