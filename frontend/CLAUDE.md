@@ -81,13 +81,24 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   (`a11y*`) in **allen 9 Sprachen** anlegen. Knoten sind `tabindex="0"`
   (Fokus = Lesereihenfolge), `#warn` ist eine Live-Region.
 - Zustand wird im `localStorage` gehalten (noch kein Backend): `werkbaum-lang`
-  (Sprache), `werkbaum-src` (Editortext), `werkbaum-ui` (JSON: Modus,
-  verworfene, günstigster Pfad, Split-Zustand inkl. `--col`/`--drow`, Zoom,
-  Vollbild). Neue
+  (Sprache), `werkbaum-docs` (JSON-Array der Dokumente `[{id,name,text}]`),
+  `werkbaum-active` (id des aktiven Dokuments), `werkbaum-src` (Spiegel des
+  aktiven Texts, Abwärtskompatibilität), `werkbaum-ui` (JSON: Modus, verworfene,
+  günstigster Pfad, Split-Zustand inkl. `--col`/`--drow`, Zoom, Vollbild). Neue
   GUI-Einstellungen in `saveUI()`/`restoreState()` mitführen; `saveUI` liefert
   während `restoring===true` nichts, damit das Wiederherstellen nicht sofort
-  zurückschreibt. Fehlender `werkbaum-src` fällt auf `INITIAL` zurück, ein
-  leerer String bleibt jedoch leer.
+  zurückschreibt.
+- Dokumente (D22): mehrere umschaltbare Notationstexte. `loadDocs()` migriert bei
+  fehlendem `werkbaum-docs` den bestehenden `werkbaum-src` (oder `INITIAL`) in
+  **ein** Dokument; `initDocs()` (Aufruf **nach** `applyLang`, damit der
+  Standardname in der erkannten UI-Sprache steht) holt den aktiven Text in den
+  Editor. `saveSrc()` schreibt den Editortext ins aktive Dokument. Der Wähler ist
+  ein Dropdown in der Editor-Titelzeile (`#docTrigger`/`#docMenu`, ersetzt die
+  frühere feste „Struktur (Text)"-Beschriftung); Wechseln/Neu/Umbenennen/Löschen
+  in `switchDoc/newDoc/renameDoc/deleteDoc`. Jedes Dokument ist nur Text + Name
+  (kein Strukturformat, D14) — vorwärtskompatibel zum Backend (D13). Ansichts-
+  State (`werkbaum-ui`) bleibt global über alle Dokumente. Ein leerer Editortext
+  bleibt leer; das letzte gelöschte Dokument wird als `INITIAL` neu gesät.
 - Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) stapelt
   Diagramm/Editor mit **stufenlosem** Splitter (kein Snap/Collapse wie auf
   Desktop): der Gutter-Drag ruft `setMobileDrow()` (klemmt `--drow` zwischen den

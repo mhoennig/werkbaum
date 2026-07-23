@@ -46,7 +46,18 @@
 <div class="app" id="app">
   <div class="panel editor">
     <div class="panel-head">
-      <span data-i18n="editorTitle">Struktur (Text)</span>
+      <span class="doctrigger" id="docTrigger" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" data-i18n-title="docSwitchTooltip" data-i18n-aria="docSwitchTooltip" title="Dokument wählen oder verwalten" aria-label="Dokument wählen oder verwalten">
+        <span class="docname" id="docName"></span>
+        <svg class="doc-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </span>
+      <div class="docmenu" id="docMenu" role="menu" data-i18n-aria="docMenuAria" aria-label="Dokumente" hidden>
+        <div class="docmenu-list" id="docList"></div>
+        <div class="docmenu-actions">
+          <button type="button" class="docact" id="docNew" data-i18n="docNew">Neues Dokument</button>
+          <button type="button" class="docact" id="docRename" data-i18n="docRename">Umbenennen</button>
+          <button type="button" class="docact docdel" id="docDelete" data-i18n="docDelete">Löschen</button>
+        </div>
+      </div>
       <button type="button" class="copybtn" id="copy" data-i18n-title="copyTooltip" data-i18n-aria="copyTooltip" title="Text in die Zwischenablage kopieren" aria-label="Text in die Zwischenablage kopieren">
         <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <svg class="ic-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>

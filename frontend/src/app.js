@@ -572,6 +572,10 @@ const I18N = {
     fullscreenTooltip:"Vollbild – Panels nutzen die ganze Fensterbreite",
     brandTooltip:"„Werkbaum“ bedeutet so viel wie ‚Werk-Baum‘ — der Baum des Projektstrukturplans (WBS).",
     editorTitle:"Struktur (Text)", diagramTitle:"Diagramm",
+    docSwitchTooltip:"Dokument wählen oder verwalten", docMenuAria:"Dokumente",
+    docNew:"Neues Dokument", docRename:"Umbenennen", docDelete:"Löschen",
+    docDefaultName:"Beispiel", docNewName:"Unbenannt",
+    docRenamePrompt:"Dokument umbenennen:", docDeleteConfirm:"Dokument „{name}“ löschen?",
     copy:"kopieren", copyDone:"kopiert ✓", copyTooltip:"Text in die Zwischenablage kopieren",
     copyDiagramTooltip:"Diagramm als PNG-Bild in die Zwischenablage kopieren",
     downloadDiagramTooltip:"Diagramm als SVG-Datei herunterladen (z. B. für LibreOffice: Einfügen → Bild)",
@@ -613,6 +617,10 @@ const I18N = {
     fullscreenTooltip:"Full screen – panels use the full window width",
     brandTooltip:"“Werkbaum” means roughly ‘work tree’ — the tree of the work breakdown structure (WBS).",
     editorTitle:"Structure (text)", diagramTitle:"Diagram",
+    docSwitchTooltip:"Choose or manage document", docMenuAria:"Documents",
+    docNew:"New document", docRename:"Rename", docDelete:"Delete",
+    docDefaultName:"Example", docNewName:"Untitled",
+    docRenamePrompt:"Rename document:", docDeleteConfirm:"Delete document “{name}”?",
     copy:"copy", copyDone:"copied ✓", copyTooltip:"Copy text to clipboard",
     copyDiagramTooltip:"Copy diagram as a PNG image to the clipboard",
     downloadDiagramTooltip:"Download diagram as an SVG file (e.g. for LibreOffice: Insert → Image)",
@@ -654,6 +662,10 @@ const I18N = {
     fullscreenTooltip:"Pantalla completa – los paneles usan todo el ancho de la ventana",
     brandTooltip:"«Werkbaum» significa algo así como ‘árbol de trabajo’ — el árbol de la estructura de desglose del trabajo (EDT).",
     editorTitle:"Estructura (texto)", diagramTitle:"Diagrama",
+    docSwitchTooltip:"Elegir o gestionar documento", docMenuAria:"Documentos",
+    docNew:"Nuevo documento", docRename:"Renombrar", docDelete:"Eliminar",
+    docDefaultName:"Ejemplo", docNewName:"Sin título",
+    docRenamePrompt:"Renombrar documento:", docDeleteConfirm:"¿Eliminar el documento «{name}»?",
     copy:"copiar", copyDone:"copiado ✓", copyTooltip:"Copiar el texto al portapapeles",
     copyDiagramTooltip:"Copiar el diagrama como imagen PNG al portapapeles",
     downloadDiagramTooltip:"Descargar el diagrama como archivo SVG (p. ej. para LibreOffice: Insertar → Imagen)",
@@ -695,6 +707,10 @@ const I18N = {
     fullscreenTooltip:"Plein écran – les panneaux occupent toute la largeur de la fenêtre",
     brandTooltip:"« Werkbaum » signifie à peu près « arbre de travail » — l’arbre de l’organigramme des tâches (WBS).",
     editorTitle:"Structure (texte)", diagramTitle:"Diagramme",
+    docSwitchTooltip:"Choisir ou gérer le document", docMenuAria:"Documents",
+    docNew:"Nouveau document", docRename:"Renommer", docDelete:"Supprimer",
+    docDefaultName:"Exemple", docNewName:"Sans titre",
+    docRenamePrompt:"Renommer le document :", docDeleteConfirm:"Supprimer le document « {name} » ?",
     copy:"copier", copyDone:"copié ✓", copyTooltip:"Copier le texte dans le presse-papiers",
     copyDiagramTooltip:"Copier le diagramme comme image PNG dans le presse-papiers",
     downloadDiagramTooltip:"Télécharger le diagramme en fichier SVG (p. ex. pour LibreOffice : Insertion → Image)",
@@ -736,6 +752,10 @@ const I18N = {
     fullscreenTooltip:"Pełny ekran – panele wykorzystują całą szerokość okna",
     brandTooltip:"„Werkbaum” znaczy mniej więcej ‚drzewo pracy’ — drzewo struktury podziału pracy (WBS).",
     editorTitle:"Struktura (tekst)", diagramTitle:"Diagram",
+    docSwitchTooltip:"Wybierz lub zarządzaj dokumentem", docMenuAria:"Dokumenty",
+    docNew:"Nowy dokument", docRename:"Zmień nazwę", docDelete:"Usuń",
+    docDefaultName:"Przykład", docNewName:"Bez nazwy",
+    docRenamePrompt:"Zmień nazwę dokumentu:", docDeleteConfirm:"Usunąć dokument „{name}”?",
     copy:"kopiuj", copyDone:"skopiowano ✓", copyTooltip:"Kopiuj tekst do schowka",
     copyDiagramTooltip:"Kopiuj diagram jako obraz PNG do schowka",
     downloadDiagramTooltip:"Pobierz diagram jako plik SVG (np. dla LibreOffice: Wstaw → Obraz)",
@@ -777,6 +797,10 @@ const I18N = {
     fullscreenTooltip:"Полный экран – панели занимают всю ширину окна",
     brandTooltip:"«Werkbaum» примерно означает ‚дерево работ’ — дерево структуры декомпозиции работ (СДР).",
     editorTitle:"Структура (текст)", diagramTitle:"Диаграмма",
+    docSwitchTooltip:"Выбрать документ или управлять им", docMenuAria:"Документы",
+    docNew:"Новый документ", docRename:"Переименовать", docDelete:"Удалить",
+    docDefaultName:"Пример", docNewName:"Без названия",
+    docRenamePrompt:"Переименовать документ:", docDeleteConfirm:"Удалить документ «{name}»?",
     copy:"копировать", copyDone:"скопировано ✓", copyTooltip:"Скопировать текст в буфер обмена",
     copyDiagramTooltip:"Скопировать диаграмму как изображение PNG в буфер обмена",
     downloadDiagramTooltip:"Скачать диаграмму как файл SVG (напр. для LibreOffice: Вставка → Изображение)",
@@ -818,6 +842,10 @@ const I18N = {
     fullscreenTooltip:"पूर्ण स्क्रीन – पैनल पूरी विंडो चौड़ाई का उपयोग करते हैं",
     brandTooltip:"„Werkbaum“ का अर्थ लगभग ‚कार्य-वृक्ष‘ है — कार्य विभाजन संरचना (WBS) का वृक्ष।",
     editorTitle:"संरचना (टेक्स्ट)", diagramTitle:"आरेख",
+    docSwitchTooltip:"दस्तावेज़ चुनें या प्रबंधित करें", docMenuAria:"दस्तावेज़",
+    docNew:"नया दस्तावेज़", docRename:"नाम बदलें", docDelete:"हटाएँ",
+    docDefaultName:"उदाहरण", docNewName:"बिना शीर्षक",
+    docRenamePrompt:"दस्तावेज़ का नाम बदलें:", docDeleteConfirm:"दस्तावेज़ „{name}“ हटाएँ?",
     copy:"कॉपी करें", copyDone:"कॉपी हो गया ✓", copyTooltip:"टेक्स्ट को क्लिपबोर्ड पर कॉपी करें",
     copyDiagramTooltip:"आरेख को PNG छवि के रूप में क्लिपबोर्ड पर कॉपी करें",
     downloadDiagramTooltip:"आरेख को SVG फ़ाइल के रूप में डाउनलोड करें (जैसे LibreOffice: सम्मिलित करें → छवि)",
@@ -859,6 +887,10 @@ const I18N = {
     ghostTooltip:"从 M 号起，元素应进一步细分。",
     riskTooltip:"高风险 – 工作量尚不明确。",
     editorTitle:"结构（文本）", diagramTitle:"图表",
+    docSwitchTooltip:"选择或管理文档", docMenuAria:"文档",
+    docNew:"新建文档", docRename:"重命名", docDelete:"删除",
+    docDefaultName:"示例", docNewName:"未命名",
+    docRenamePrompt:"重命名文档：", docDeleteConfirm:"删除文档“{name}”？",
     copy:"复制", copyDone:"已复制 ✓", copyTooltip:"将文本复制到剪贴板",
     copyDiagramTooltip:"将图表作为 PNG 图片复制到剪贴板",
     downloadDiagramTooltip:"将图表下载为 SVG 文件（例如用于 LibreOffice：插入 → 图像）",
@@ -900,6 +932,10 @@ const I18N = {
     ghostTooltip:"サイズ M 以上の要素はさらに分解すべきです。",
     riskTooltip:"高リスク – 規模はまだ不明。",
     editorTitle:"構造（テキスト）", diagramTitle:"ダイアグラム",
+    docSwitchTooltip:"ドキュメントを選択・管理", docMenuAria:"ドキュメント",
+    docNew:"新規ドキュメント", docRename:"名前を変更", docDelete:"削除",
+    docDefaultName:"例", docNewName:"無題",
+    docRenamePrompt:"ドキュメントの名前を変更:", docDeleteConfirm:"ドキュメント「{name}」を削除しますか？",
     copy:"コピー", copyDone:"コピーしました ✓", copyTooltip:"テキストをクリップボードにコピー",
     copyDiagramTooltip:"ダイアグラムを PNG 画像としてクリップボードにコピー",
     downloadDiagramTooltip:"ダイアグラムを SVG ファイルとしてダウンロード（例：LibreOffice の 挿入 → 画像）",
@@ -1026,11 +1062,56 @@ fsBtn.addEventListener('click', () => {
    Vollbild) und der Editortext bleiben per localStorage über Neuladen
    erhalten. Sprache liegt weiterhin in 'werkbaum-lang'. */
 const LS_UI = 'werkbaum-ui', LS_SRC = 'werkbaum-src';
+const LS_DOCS = 'werkbaum-docs', LS_ACTIVE = 'werkbaum-active';
 let restoring = false;   /* unterdrückt Speichern während des Wiederherstellens */
 let hadStoredUI = false;  /* gab es beim Laden schon gespeicherte GUI-Einstellungen? */
+
+/* ---------- Dokumente (mehrere umschaltbare Notationstexte) ----------
+   Noch kein Backend: mehrere Dokumente liegen als [{id,name,text}] im
+   localStorage (LS_DOCS), das aktive per id in LS_ACTIVE. Jedes Dokument ist
+   nur ein Notationstext + Name (Metadatum) — kein eigenes Strukturformat (D14).
+   Der aktive Text wird zusätzlich in LS_SRC gespiegelt (Abwärtskompatibilität
+   + Migration bestehender Einzeltexte). */
+let docs = [];          /* [{id, name, text}] */
+let activeId = null;
+function uid(){ return 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function activeDoc(){ return docs.find(d => d.id === activeId) || null; }
+function uniqueName(base){
+  const taken = new Set(docs.map(d => d.name));
+  if(!taken.has(base)) return base;
+  let i = 2;
+  while(taken.has(base + ' ' + i)) i++;
+  return base + ' ' + i;
+}
+function persistDocs(){
+  try{
+    localStorage.setItem(LS_DOCS, JSON.stringify(docs));
+    localStorage.setItem(LS_ACTIVE, activeId || '');
+    const d = activeDoc();
+    if(d) localStorage.setItem(LS_SRC, d.text);   /* Spiegel für Fallback/Migration */
+  }catch(_){}
+}
+/* Aus dem localStorage laden; bei fehlender Dokumentenliste den bestehenden
+   Einzeltext (oder INITIAL) als erstes Dokument migrieren. */
+function loadDocs(){
+  let arr = null;
+  try{ arr = JSON.parse(localStorage.getItem(LS_DOCS) || 'null'); }catch(_){}
+  if(!Array.isArray(arr) || !arr.length ||
+     !arr.every(d => d && typeof d.id === 'string' && typeof d.text === 'string')){
+    let legacy = null;
+    try{ legacy = localStorage.getItem(LS_SRC); }catch(_){}
+    arr = [{ id: uid(), name: t('docDefaultName'), text: (legacy !== null) ? legacy : INITIAL }];
+  }
+  docs = arr;
+  let a = null;
+  try{ a = localStorage.getItem(LS_ACTIVE); }catch(_){}
+  activeId = docs.some(d => d.id === a) ? a : docs[0].id;
+}
 function saveSrc(){
   if(restoring) return;
-  try{ localStorage.setItem(LS_SRC, src.value); }catch(_){}
+  const d = activeDoc();
+  if(d) d.text = src.value;
+  persistDocs();
 }
 function saveUI(){
   if(restoring) return;
@@ -1050,11 +1131,11 @@ function saveUI(){
 }
 function restoreState(){
   restoring = true;
-  let savedSrc = null, ui = null;
-  try{ savedSrc = localStorage.getItem(LS_SRC); }catch(_){}
+  let ui = null;
   try{ ui = JSON.parse(localStorage.getItem(LS_UI) || 'null'); }catch(_){}
   hadStoredUI = !!ui;
-  src.value = (savedSrc !== null) ? savedSrc : INITIAL;   /* leerer String bleibt leer */
+  /* Editortext gehört jetzt den Dokumenten (initDocs, nach applyLang), damit der
+     Standard-Dokumentname in der erkannten UI-Sprache steht. */
   const mode = (ui && ui.mode) || 'horizontal';
   const modeEl = document.querySelector('input[name="layout"][value="' + mode + '"]');
   if(modeEl) modeEl.checked = true;
@@ -1080,6 +1161,107 @@ function restoreState(){
   applyZoom();
   restoring = false;
 }
+
+/* ---------- Dokument-Wähler: UI (Dropdown in der Editor-Titelzeile) ---------- */
+const docTrigger = document.getElementById('docTrigger');
+const docMenu = document.getElementById('docMenu');
+const docNameEl = document.getElementById('docName');
+const docList = document.getElementById('docList');
+function updateDocName(){
+  const d = activeDoc();
+  if(docNameEl) docNameEl.textContent = d ? d.name : '';
+}
+function renderDocMenu(){
+  docList.innerHTML = docs.map(d =>
+    `<button type="button" class="docitem" role="menuitemradio" data-id="${d.id}" ` +
+    `aria-checked="${d.id === activeId ? 'true' : 'false'}">` +
+    `<span class="doccheck" aria-hidden="true">✓</span>` +
+    `<span class="docitem-name">${esc(d.name)}</span></button>`
+  ).join('');
+}
+function openDocMenu(){ renderDocMenu(); docMenu.hidden = false; docTrigger.setAttribute('aria-expanded', 'true'); }
+function closeDocMenu(){ docMenu.hidden = true; docTrigger.setAttribute('aria-expanded', 'false'); }
+function toggleDocMenu(){ docMenu.hidden ? openDocMenu() : closeDocMenu(); }
+/* Beim Wechseln/Anlegen/Löschen zuerst den aktuellen Editortext ins aktive
+   Dokument sichern, dann das Ziel laden und neu rendern. */
+function flushActive(){ const d = activeDoc(); if(d) d.text = src.value; }
+function loadActiveIntoEditor(){ const d = activeDoc(); src.value = d ? d.text : ''; render(); updateDocName(); }
+function switchDoc(id){
+  if(id === activeId) return;
+  flushActive();
+  activeId = id;
+  loadActiveIntoEditor();
+  persistDocs();
+}
+function newDoc(){
+  flushActive();
+  const d = { id: uid(), name: uniqueName(t('docNewName')), text: '' };
+  docs.push(d);
+  activeId = d.id;
+  loadActiveIntoEditor();
+  persistDocs();
+  src.focus();
+}
+function renameDoc(){
+  const d = activeDoc();
+  if(!d) return;
+  const name = window.prompt(t('docRenamePrompt'), d.name);
+  if(name === null) return;
+  const trimmed = name.trim();
+  if(!trimmed) return;
+  d.name = trimmed;
+  persistDocs();
+  updateDocName();
+  renderDocMenu();
+}
+function deleteDoc(){
+  const d = activeDoc();
+  if(!d) return;
+  if(!window.confirm(t('docDeleteConfirm', {name: d.name}))) return;
+  docs = docs.filter(x => x.id !== d.id);
+  if(!docs.length) docs = [{ id: uid(), name: t('docDefaultName'), text: INITIAL }];
+  activeId = docs[0].id;
+  loadActiveIntoEditor();
+  persistDocs();
+  closeDocMenu();
+}
+/* Dokumente laden + aktiven Text in den Editor holen. Nach applyLang aufgerufen,
+   damit der migrierte Standardname in der erkannten UI-Sprache steht. */
+function initDocs(){
+  restoring = true;
+  loadDocs();
+  const d = activeDoc();
+  src.value = d ? d.text : '';
+  restoring = false;
+  persistDocs();   /* migrierte/geladene Liste festschreiben (stabil über Reload) */
+  updateDocName();
+  render();
+}
+docTrigger.addEventListener('click', e => {
+  /* Desktop: ist der Editor minimiert, stellt ein Klick ihn wieder her
+     (Bubbling zur Titelzeile) statt das Menü zu öffnen. */
+  if(!isMobile() && editorPanel.classList.contains('collapsed')) return;
+  e.stopPropagation();
+  toggleDocMenu();
+});
+docTrigger.addEventListener('keydown', e => {
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleDocMenu(); }
+  else if(e.key === 'Escape') closeDocMenu();
+});
+docList.addEventListener('click', e => {
+  const btn = e.target.closest('.docitem');
+  if(!btn) return;
+  e.stopPropagation();
+  switchDoc(btn.dataset.id);
+  closeDocMenu();
+});
+document.getElementById('docNew').addEventListener('click', e => { e.stopPropagation(); newDoc(); renderDocMenu(); });
+document.getElementById('docRename').addEventListener('click', e => { e.stopPropagation(); renameDoc(); });
+document.getElementById('docDelete').addEventListener('click', e => { e.stopPropagation(); deleteDoc(); });
+/* Klick außerhalb schließt das Menü. */
+document.addEventListener('click', e => {
+  if(!docMenu.hidden && !docMenu.contains(e.target) && !docTrigger.contains(e.target)) closeDocMenu();
+});
 
 /* ---------- Kleiner Bildschirm: nur ein Panel, schlanke Sprachwahl, Vollbild ---------- */
 const mqMobile = window.matchMedia('(max-width:640px)');
@@ -1162,6 +1344,7 @@ function detectLang(){
 let startLang = 'de';
 try{ startLang = localStorage.getItem('werkbaum-lang') || detectLang(); }catch(_){ startLang = detectLang(); }
 applyLang(I18N[startLang] ? startLang : 'de');   /* setzt Texte + rendert */
+initDocs();      /* Dokumente laden + aktiven Text in den Editor (nach Sprache) */
 applyMobile();   /* Mobil-Verhalten (nach Sprache/Restore) anwenden */
 
 /* ---------- Build-Hinweis (Vorschau/Dev + „latest build") ----------

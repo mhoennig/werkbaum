@@ -329,3 +329,37 @@ Not eine deutsche Oberfläche. Die Erkennung greift auch **nach dem Reset**
 (CLAUDE: neue UI-Texte zuerst auf Deutsch) — das betrifft die Autoren-/Pflege­
 seite und ist unabhängig vom Anzeige-Default für Besucher. Eine bewusste
 Sprachwahl überschreibt die Erkennung dauerhaft (Persistenz in `werkbaum-lang`).
+
+## D22 — Mehrere Dokumente client-seitig, Wähler in der Editor-Titelzeile
+Der Editor kann mehrere Notationstexte halten, zwischen denen umgeschaltet wird
+(z. B. verschiedene Projekte/Bäume). Umgesetzt **ohne Backend** (noch keins,
+D13): die Dokumente liegen als `[{id, name, text}]` im localStorage
+(`werkbaum-docs`), das aktive per `id` in `werkbaum-active`. Der aktive Text
+wird zusätzlich in `werkbaum-src` gespiegelt (Abwärtskompatibilität + Migration).
+
+**Platzierung: Dropdown in der Editor-Titelzeile.** Der Name des aktiven
+Dokuments **ersetzt** die statische Beschriftung „Struktur (Text)" und ist
+zugleich der Auslöser eines Dropdowns zum Wechseln, Anlegen (`＋ Neu`),
+Umbenennen und Löschen. Begründung: Der Wähler bestimmt, *welchen Text* man
+bearbeitet — er gehört auf das Textpanel, nicht ins Diagramm. Verworfen:
+**Kopfzeile oben** (schon eng, besonders mobil) und **Tab-Leiste** (kostet eine
+ganze Zeile Höhe, D17, und skaliert nicht über ~5 Dokumente). Ein Dropdown
+skaliert und passt zum bereits etablierten Overlay-Idiom (Sprache/Download, D17).
+Auf kleinem Bildschirm öffnet dasselbe Menü als absolut positioniertes Overlay
+unter der Titelzeile.
+
+**Vereinbarkeit mit D14 (Text ist das führende Format):** Jedes Dokument ist nur
+ein Notationstext plus `name` (Metadatum) — **kein** erfundenes Strukturformat.
+Damit ist das Modell vorwärtskompatibel zum geplanten Persistenz-/Taiga-Backend
+(D13/D14: „Text als Ganzes + explizite Metadaten"): „mehrere Dokumente" bildet
+1:1 auf „mehrere gespeicherte Notationstexte mit Name/id" ab; der localStorage-
+Array ist der client-seitige Platzhalter, bis das Backend existiert.
+
+**Migration & Reset:** Fehlt `werkbaum-docs`, wird der bestehende Einzeltext
+(oder `INITIAL`) verlustfrei in **ein** Dokument gepackt (Name in der erkannten
+UI-Sprache, `docDefaultName`). Der Reset löscht wie bisher alle `werkbaum-*`-
+Schlüssel → beim nächsten Laden greift dieselbe Migration. Wird das letzte
+Dokument gelöscht, entsteht wieder das Beispiel-Dokument (INITIAL). Die
+GUI-Ansichts-Einstellungen (Modus, Zoom, Aufteilung; `werkbaum-ui`) bleiben
+bewusst **global** über alle Dokumente — pro-Dokument-Ansichtszustand wäre eine
+spätere Erweiterung.

@@ -239,7 +239,7 @@
     display:flex;flex-direction:column;min-height:0;min-width:0;
   }
   .panel-head{
-    flex:0 0 auto;
+    flex:0 0 auto;position:relative;
     padding:10px 16px;
     display:flex;justify-content:space-between;align-items:center;gap:14px;
     font-family:'IBM Plex Mono',monospace;
@@ -308,6 +308,49 @@
   .dlmenu{display:inline-flex;gap:3px}
   .dltrigger{display:none}
   .legendbtn{display:none}                             /* nur auf kleinem Bildschirm sichtbar */
+  /* Dokument-Wähler: der Name des aktiven Dokuments in der Editor-Titelzeile ist
+     zugleich der Auslöser eines Dropdowns zum Wechseln/Anlegen/Umbenennen/Löschen
+     (localStorage-Dokumente, noch kein Backend). */
+  .doctrigger{
+    display:inline-flex;align-items:center;gap:5px;cursor:pointer;
+    margin-right:auto;max-width:60%;color:var(--muted);
+    padding:2px 6px;margin-left:-6px;border-radius:6px;
+    text-transform:none;letter-spacing:0;font-family:'IBM Plex Mono',monospace;
+  }
+  .doctrigger:hover,.doctrigger[aria-expanded="true"]{color:var(--or)}
+  .doctrigger:focus-visible{outline:2px solid var(--or);outline-offset:2px}
+  .docname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+  .doc-caret{width:13px;height:13px;flex:0 0 auto;opacity:.7}
+  .panel.collapsed .doc-caret{display:none}
+  .docmenu{
+    position:absolute;top:calc(100% + 4px);left:12px;z-index:50;min-width:210px;
+    background:var(--card);border:1px solid rgba(36,52,71,.15);border-radius:10px;
+    padding:6px;box-shadow:0 8px 24px rgba(36,52,71,.22);
+    text-transform:none;letter-spacing:0;font-family:'IBM Plex Sans',sans-serif;
+  }
+  .docmenu[hidden]{display:none}
+  .docmenu-list{display:flex;flex-direction:column;gap:2px;max-height:260px;overflow:auto}
+  .docitem{
+    display:flex;align-items:center;gap:8px;width:100%;
+    border:0;background:transparent;cursor:pointer;text-align:left;
+    padding:7px 9px;border-radius:7px;color:var(--ink);
+    font-family:inherit;font-size:.86rem;
+  }
+  .docitem:hover{background:rgba(15,118,110,.08)}
+  .docitem[aria-checked="true"]{color:var(--or);font-weight:600}
+  .docitem .doccheck{flex:0 0 auto;width:14px;text-align:center;opacity:0}
+  .docitem[aria-checked="true"] .doccheck{opacity:1}
+  .docmenu-actions{
+    display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;padding-top:6px;
+    border-top:1px solid rgba(36,52,71,.12);
+  }
+  .docact{
+    flex:1 1 auto;border:1px solid rgba(36,52,71,.2);border-radius:7px;
+    background:var(--card);color:var(--muted);cursor:pointer;
+    padding:5px 8px;font-family:inherit;font-size:.78rem;white-space:nowrap;
+  }
+  .docact:hover{border-color:var(--or);color:var(--or)}
+  .docdel:hover{border-color:#D897A8;color:#B4415E}
   .togglebtn[aria-pressed="true"]{background:var(--or);color:#fff;border-color:var(--or)}
   .togglebtn[aria-pressed="true"]:hover{color:#fff}
   textarea{
