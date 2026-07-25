@@ -213,6 +213,18 @@ Punkt, sodass eindeutig bleibt, welche Knoten auf dem Pfad **enden**. Linie,
 abgetönte Kopie und Punkte erscheinen bei aktivem Umschalter auch im
 Grafikexport. Siehe D18.
 
+### Diagramm aus einer URL laden (`?sourceUrl=`)
+Der Editor kann den Notationstext aus einer externen Textdatei beziehen:
+`…?sourceUrl=https://example.org/plan.txt` (relative Angaben werden gegen die
+Seite aufgelöst; zugelassen sind nur `http`/`https`). Der Text wird als
+**eigenes Dokument** geführt, dessen **Name die URL** ist (vollständige URL im
+Tooltip); derselbe Link aktualisiert dieses Dokument, statt ein neues anzulegen.
+Ist der Parameter gesetzt, wird bei **jedem** Laden neu geholt — die URL ist die
+Quelle der Wahrheit, lokale Änderungen daran überleben ein Neuladen nicht.
+Scheitert das Laden (häufigster Fall: das Ziel sendet keinen
+`Access-Control-Allow-Origin`-Header, außerdem 404/Netzfehler), bleibt der
+bisherige Stand stehen und es erscheint eine **Warnung**. Siehe D23.
+
 ### Grafikexport des Diagramms
 Das Diagramm wird aus der Live-Geometrie in ein eigenständiges SVG (nur Formen
 + Text, keine externen Ressourcen) nachgezeichnet. Zwei Icon-Schaltflächen:

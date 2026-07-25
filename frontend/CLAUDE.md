@@ -110,6 +110,17 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   unterdrückt): `renameDoc()` setzt `renamingId`, `renderDocMenu()` rendert dann
   ein `<input class="docrename">` (Enter = `commitRename`, Esc = `cancelRename`,
   Blur = commit). Doc-Namen sind Nutzerdaten und werden **nicht** übersetzt.
+- `?sourceUrl=` (D23): `loadFromSourceUrl()` (Aufruf am Ende des Starts, async)
+  holt eine externe Textdatei und führt sie als Dokument mit `id: 'url:<href>'`,
+  `name`/`source` = URL. Nur `http(s)`, `credentials:'omit'`; bei jedem Laden wird
+  neu geholt (URL = Quelle der Wahrheit, lokale Edits daran gehen verloren).
+  Fehler landen als zeilenlose Warnung `{type:'sourceLoad', url, error}` in
+  `sourceWarning` — ein **persistenter** Kanal, den `render()` jedem Warnungs-Satz
+  voranstellt (überlebt Neu-Renderings, bis das Laden gelingt). Hauptstolperfalle
+  ist **CORS**: fremde Hosts brauchen `Access-Control-Allow-Origin` (raw.github…
+  ja, beliebiger Webserver oft nicht) — der Warntext nennt das ausdrücklich.
+  `updateDocName()` setzt für solche Dokumente den vollen URL-Tooltip und muss
+  deshalb **nach** dem `data-i18n-title`-Durchlauf in `applyLang()` laufen.
 - Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) stapelt
   Diagramm/Editor mit **stufenlosem** Splitter (kein Snap/Collapse wie auf
   Desktop): der Gutter-Drag ruft `setMobileDrow()` (klemmt `--drow` zwischen den

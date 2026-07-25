@@ -8,7 +8,9 @@
 
    Bekannte Typen:
    - mixedGate     { line, label }  — Geschwister mit gemischtem Gate (SPEC §3)
-   - unknownStatus { line, code }   — unbekanntes Statuszeichen (Phase 2) */
+   - unknownStatus { line, code }   — unbekanntes Statuszeichen (Phase 2)
+   - sourceLoad    { url, error }   — ?sourceUrl= nicht ladbar (D23); ohne
+                                      Zeilennummer, erscheint dadurch zuoberst */
 
 import { esc } from './render.js';
 
@@ -20,6 +22,8 @@ export function formatWarning(w, t){
       return t('mixedWarn', {line: w.line, label: esc(w.label)});
     case 'unknownStatus':
       return t('unknownStatusWarn', {line: w.line, code: esc(w.code)});
+    case 'sourceLoad':
+      return t('sourceLoadWarn', {url: esc(w.url), error: esc(w.error)});
     default:
       return `${esc(String(w.type))} (${w.line ?? '?'})`;
   }

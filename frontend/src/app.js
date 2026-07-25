@@ -33,6 +33,8 @@ const warnBox = document.getElementById('warn');
    Pfad) lebt headless in model.js, das HTML-Erzeugen in render.js. Hier bleibt
    nur der UI-State des Günstigster-Pfad-Toggles (persistiert). */
 let cheapPathOn = true;
+/* Warnung des ?sourceUrl-Ladens (D23) — zeilenlos und persistent, siehe render(). */
+let sourceWarning = null;
 
 /* ---------- Renderer (Anbindung an den DOM) ----------
    parse -> Wurzeln filtern (verworfene) -> günstigen Pfad markieren ->
@@ -46,8 +48,10 @@ function render(){
   }
 
   /* Warnungen aus Parser (unbekannte Statuszeichen) + Renderer (gemischte
-     Gates) zusammenführen, nach Zeile sortiert anzeigen. */
-  let warnings = parsed.warnings;
+     Gates) zusammenführen, nach Zeile sortiert anzeigen. `sourceWarning`
+     (?sourceUrl nicht ladbar, D23) gehört keiner Zeile und bleibt über
+     Neu-Renderings bestehen, bis das Laden gelingt. */
+  let warnings = sourceWarning ? [sourceWarning].concat(parsed.warnings) : parsed.warnings;
 
   if(!roots.length){
     out.innerHTML = `<div class="empty">${esc(t('empty'))}</div>`;
@@ -593,6 +597,7 @@ const I18N = {
     st_idee:"Idee", st_geplant:"geplant", st_arbeit:"in Arbeit", st_durchstich:"Durchstich",
     st_fertig:"fertig", st_prod:"in Produktion", st_highrisk:"High Risk", st_verworfen:"verworfen",
     unknownStatusWarn:"Zeile {line}: unbekanntes Statuszeichen „{code}“ — als neutral dargestellt.",
+    sourceLoadWarn:"„{url}“ konnte nicht geladen werden ({error}). Die Datei muss per http(s) erreichbar sein und CORS erlauben (Access-Control-Allow-Origin).",
     a11yStatus:"Status: {status}", a11ySize:"Aufwand: {size}", a11ySizeImplicit:"Aufwand: M (angenommen)", a11yTags:"Zuständig: {names}", a11yLink:"verlinkt",
     hint_indent:"Einrückung (2 Leerzeichen oder Tab) definiert die Hierarchie.",
     hint_all:"Teilpaket, alle erforderlich", hint_any:"Alternative, eine wählen",
@@ -638,6 +643,7 @@ const I18N = {
     st_idee:"idea", st_geplant:"planned", st_arbeit:"in progress", st_durchstich:"walking skeleton",
     st_fertig:"done", st_prod:"in production", st_highrisk:"high risk", st_verworfen:"discarded",
     unknownStatusWarn:"Line {line}: unknown status code “{code}” — shown as neutral.",
+    sourceLoadWarn:"Could not load “{url}” ({error}). The file must be reachable via http(s) and allow CORS (Access-Control-Allow-Origin).",
     a11yStatus:"Status: {status}", a11ySize:"Effort: {size}", a11ySizeImplicit:"Effort: M (assumed)", a11yTags:"Assigned: {names}", a11yLink:"has link",
     hint_indent:"Indentation (2 spaces or a tab) defines the hierarchy.",
     hint_all:"sub-task, all required", hint_any:"alternative, choose one",
@@ -683,6 +689,7 @@ const I18N = {
     st_idee:"idea", st_geplant:"planificado", st_arbeit:"en curso", st_durchstich:"prototipo funcional",
     st_fertig:"terminado", st_prod:"en producción", st_highrisk:"alto riesgo", st_verworfen:"descartado",
     unknownStatusWarn:"Línea {line}: código de estado desconocido «{code}» — mostrado como neutral.",
+    sourceLoadWarn:"No se pudo cargar «{url}» ({error}). El archivo debe ser accesible por http(s) y permitir CORS (Access-Control-Allow-Origin).",
     a11yStatus:"Estado: {status}", a11ySize:"Esfuerzo: {size}", a11ySizeImplicit:"Esfuerzo: M (asumido)", a11yTags:"Responsable: {names}", a11yLink:"con enlace",
     hint_indent:"La sangría (2 espacios o un tabulador) define la jerarquía.",
     hint_all:"subtarea, todas obligatorias", hint_any:"alternativa, elige una",
@@ -728,6 +735,7 @@ const I18N = {
     st_idee:"idée", st_geplant:"planifié", st_arbeit:"en cours", st_durchstich:"squelette fonctionnel",
     st_fertig:"terminé", st_prod:"en production", st_highrisk:"risque élevé", st_verworfen:"abandonné",
     unknownStatusWarn:"Ligne {line} : code de statut inconnu « {code} » — affiché comme neutre.",
+    sourceLoadWarn:"Impossible de charger « {url} » ({error}). Le fichier doit être accessible en http(s) et autoriser CORS (Access-Control-Allow-Origin).",
     a11yStatus:"Statut : {status}", a11ySize:"Effort : {size}", a11ySizeImplicit:"Effort : M (supposé)", a11yTags:"Responsable : {names}", a11yLink:"avec lien",
     hint_indent:"L'indentation (2 espaces ou une tabulation) définit la hiérarchie.",
     hint_all:"sous-tâche, toutes requises", hint_any:"alternative, en choisir une",
@@ -773,6 +781,7 @@ const I18N = {
     st_idee:"pomysł", st_geplant:"zaplanowane", st_arbeit:"w toku", st_durchstich:"działający szkielet",
     st_fertig:"gotowe", st_prod:"w produkcji", st_highrisk:"wysokie ryzyko", st_verworfen:"odrzucone",
     unknownStatusWarn:"Wiersz {line}: nieznany znak statusu „{code}” — pokazany jako neutralny.",
+    sourceLoadWarn:"Nie udało się wczytać „{url}” ({error}). Plik musi być dostępny przez http(s) i zezwalać na CORS (Access-Control-Allow-Origin).",
     a11yStatus:"Status: {status}", a11ySize:"Nakład: {size}", a11ySizeImplicit:"Nakład: M (założony)", a11yTags:"Przypisano: {names}", a11yLink:"z linkiem",
     hint_indent:"Wcięcie (2 spacje lub tabulator) definiuje hierarchię.",
     hint_all:"podzadanie, wszystkie wymagane", hint_any:"alternatywa, wybierz jedną",
@@ -818,6 +827,7 @@ const I18N = {
     st_idee:"идея", st_geplant:"запланировано", st_arbeit:"в работе", st_durchstich:"сквозной прототип",
     st_fertig:"готово", st_prod:"в эксплуатации", st_highrisk:"высокий риск", st_verworfen:"отклонено",
     unknownStatusWarn:"Строка {line}: неизвестный код статуса «{code}» — показан как нейтральный.",
+    sourceLoadWarn:"Не удалось загрузить «{url}» ({error}). Файл должен быть доступен по http(s) и разрешать CORS (Access-Control-Allow-Origin).",
     a11yStatus:"Статус: {status}", a11ySize:"Оценка: {size}", a11ySizeImplicit:"Оценка: M (предполагается)", a11yTags:"Ответственные: {names}", a11yLink:"со ссылкой",
     hint_indent:"Отступ (2 пробела или табуляция) задаёт иерархию.",
     hint_all:"подзадача, все обязательны", hint_any:"альтернатива, выберите одну",
@@ -863,6 +873,7 @@ const I18N = {
     st_idee:"विचार", st_geplant:"नियोजित", st_arbeit:"प्रगति पर", st_durchstich:"कार्यशील ढाँचा",
     st_fertig:"पूर्ण", st_prod:"उत्पादन में", st_highrisk:"उच्च जोखिम", st_verworfen:"अस्वीकृत",
     unknownStatusWarn:"पंक्ति {line}: अज्ञात स्थिति कोड „{code}“ — तटस्थ रूप में दिखाया गया।",
+    sourceLoadWarn:"„{url}“ लोड नहीं हो सका ({error})। फ़ाइल http(s) से उपलब्ध होनी चाहिए और CORS की अनुमति देनी चाहिए (Access-Control-Allow-Origin)।",
     a11yStatus:"स्थिति: {status}", a11ySize:"आकार: {size}", a11ySizeImplicit:"आकार: M (अनुमानित)", a11yTags:"जिम्मेदार: {names}", a11yLink:"लिंक सहित",
     hint_indent:"इंडेंट (2 स्पेस या टैब) पदानुक्रम तय करता है।",
     hint_all:"उप-कार्य, सभी आवश्यक", hint_any:"विकल्प, एक चुनें",
@@ -908,6 +919,7 @@ const I18N = {
     st_idee:"想法", st_geplant:"已计划", st_arbeit:"进行中", st_durchstich:"可运行骨架",
     st_fertig:"已完成", st_prod:"已上线", st_highrisk:"高风险", st_verworfen:"已放弃",
     unknownStatusWarn:"第 {line} 行：未知状态代码“{code}”——显示为中性。",
+    sourceLoadWarn:"无法加载“{url}”（{error}）。该文件必须可通过 http(s) 访问并允许 CORS（Access-Control-Allow-Origin）。",
     a11yStatus:"状态：{status}", a11ySize:"工作量：{size}", a11ySizeImplicit:"工作量：M（假定）", a11yTags:"负责人：{names}", a11yLink:"含链接",
     hint_indent:"缩进（2 个空格或制表符）定义层级。",
     hint_all:"子任务，全部必需", hint_any:"备选项，择其一",
@@ -953,6 +965,7 @@ const I18N = {
     st_idee:"アイデア", st_geplant:"計画済み", st_arbeit:"作業中", st_durchstich:"ウォーキングスケルトン",
     st_fertig:"完了", st_prod:"本番稼働", st_highrisk:"高リスク", st_verworfen:"破棄",
     unknownStatusWarn:"{line} 行目: 不明なステータス記号「{code}」— 中立として表示。",
+    sourceLoadWarn:"「{url}」を読み込めませんでした（{error}）。ファイルは http(s) でアクセス可能で、CORS（Access-Control-Allow-Origin）を許可する必要があります。",
     a11yStatus:"ステータス: {status}", a11ySize:"規模: {size}", a11ySizeImplicit:"規模: M（想定）", a11yTags:"担当: {names}", a11yLink:"リンクあり",
     hint_indent:"インデント（スペース2つまたはタブ）で階層を定義します。",
     hint_all:"サブタスク、すべて必須", hint_any:"選択肢、1つを選ぶ",
@@ -1014,6 +1027,7 @@ function applyLang(l){
     langMore.setAttribute('aria-expanded', 'true');
   }
   render();
+  updateDocName();   /* Titelzeilen-Tooltip nach dem data-i18n-title-Durchlauf setzen */
   try{ localStorage.setItem('werkbaum-lang', l); }catch(_){}
 }
 const langsel = document.querySelector('.langsel');
@@ -1184,6 +1198,14 @@ const docList = document.getElementById('docList');
 function updateDocName(){
   const d = activeDoc();
   if(docNameEl) docNameEl.textContent = d ? d.name : '';
+  /* Aus einer URL geladene Dokumente (D23): die vollständige Quelle in den
+     Tooltip, da der Name in der Titelzeile mit Ellipse abgeschnitten wird.
+     Muss nach applyLang erneut laufen — das setzt data-i18n-title zurück. */
+  if(docTrigger && d){
+    docTrigger.title = d.source
+      ? d.source + '\n' + t('docSwitchTooltip')
+      : t('docSwitchTooltip');
+  }
 }
 let renamingId = null;   /* id des gerade inline umbenannten Dokuments (oder null) */
 function renderDocMenu(){
@@ -1273,6 +1295,57 @@ function initDocs(){
   persistDocs();   /* migrierte/geladene Liste festschreiben (stabil über Reload) */
   updateDocName();
   render();
+}
+
+/* ---------- ?sourceUrl= — Notationstext von einer URL laden (D23) ----------
+   Die Datei wird geholt und als eigenes Dokument geführt, dessen Name die URL
+   ist. Die id leitet sich aus der URL ab: derselbe Link aktualisiert dieses
+   Dokument, statt bei jedem Aufruf ein neues anzulegen. Eigene Dokumente des
+   Nutzers bleiben unberührt. Scheitert das Laden (häufigster Fall: das Ziel
+   sendet keinen CORS-Header), bleibt der bisherige Stand stehen und es
+   erscheint eine Warnung. */
+const SOURCE_PARAM = 'sourceUrl';
+function sourceUrlParam(){
+  try{ return new URLSearchParams(location.search).get(SOURCE_PARAM); }catch(_){ return null; }
+}
+async function loadFromSourceUrl(){
+  const raw = sourceUrlParam();
+  if(!raw) return;
+  let url;
+  /* Relative Angaben gegen die Seite auflösen; nur http(s) zulassen (kein
+     file:/data:/javascript: — die Notation selbst erlaubt ohnehin nur http(s)). */
+  try{ url = new URL(raw, location.href); }catch(_){
+    /* Fehlerdetail bewusst technisch/englisch wie die Browser-Meldungen
+       („Failed to fetch", „HTTP 404") — der Rahmentext ist lokalisiert. */
+    sourceWarning = {type:'sourceLoad', url: raw, error: 'invalid URL'};
+    render();
+    return;
+  }
+  if(url.protocol !== 'http:' && url.protocol !== 'https:'){
+    sourceWarning = {type:'sourceLoad', url: url.href, error: url.protocol};
+    render();
+    return;
+  }
+  try{
+    const resp = await fetch(url.href, {cache:'no-store', credentials:'omit'});
+    if(!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
+    const id = 'url:' + url.href;
+    flushActive();                     /* laufende Bearbeitung nicht verlieren */
+    let d = docs.find(x => x.id === id);
+    if(d){ d.text = text; d.name = url.href; }
+    else { d = {id, name: url.href, text, source: url.href}; docs.push(d); }
+    d.source = url.href;
+    activeId = id;
+    sourceWarning = null;
+    loadActiveIntoEditor();
+    persistDocs();
+  }catch(err){
+    /* CORS-Fehler melden sich als „TypeError: Failed to fetch" ohne Details —
+       der Warntext nennt CORS daher ausdrücklich als wahrscheinliche Ursache. */
+    sourceWarning = {type:'sourceLoad', url: url.href, error: (err && err.message) || String(err)};
+    render();
+  }
 }
 docTrigger.addEventListener('click', e => {
   /* Desktop: ist der Editor minimiert, stellt ein Klick ihn wieder her
@@ -1383,6 +1456,7 @@ try{ startLang = localStorage.getItem('werkbaum-lang') || detectLang(); }catch(_
 applyLang(I18N[startLang] ? startLang : 'de');   /* setzt Texte + rendert */
 initDocs();      /* Dokumente laden + aktiven Text in den Editor (nach Sprache) */
 applyMobile();   /* Mobil-Verhalten (nach Sprache/Restore) anwenden */
+loadFromSourceUrl();   /* ?sourceUrl= nachladen (asynchron, D23) */
 
 /* ---------- Build-Hinweis (Vorschau/Dev + „latest build") ----------
    Kennzeichnet einen nicht-produktiven Build mit einem kleinen Symbol samt
@@ -1469,8 +1543,12 @@ function hashContent(str){
 
 async function checkForUpdates(){
   try {
-    /* Fetch HTML mit Cache-Busting via Timestamp */
-    const resp = await fetch(location.href + '?t=' + new Date().getTime(), { cache: 'no-store' });
+    /* Fetch HTML mit Cache-Busting via Timestamp. Über URL/searchParams gebaut,
+       damit ein bereits vorhandener Query-String (z. B. ?sourceUrl=…, D23) nicht
+       durch ein angehängtes zweites „?" zerstört wird. */
+    const bust = new URL(location.href);
+    bust.searchParams.set('t', String(new Date().getTime()));
+    const resp = await fetch(bust.href, { cache: 'no-store' });
     if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
     /* Voller Content-Hash ist die alleinige Wahrheit. ETag/Last-Modified werden

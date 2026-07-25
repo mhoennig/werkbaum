@@ -386,3 +386,45 @@ Dokumente; das war zu grob, sobald man mehrere Dokumente pflegt.
 Die GUI-Ansichts-Einstellungen (Modus, Zoom, Aufteilung; `werkbaum-ui`) bleiben
 bewusst **global** über alle Dokumente — pro-Dokument-Ansichtszustand wäre eine
 spätere Erweiterung.
+
+## D23 — Notationstext per `?sourceUrl=` von einer URL laden
+Der Editor kann den Notationstext aus einer **externen Textdatei** beziehen:
+`…/index.html?sourceUrl=https://example.org/plan.txt`. Damit lässt sich ein
+Diagramm teilen/verlinken, ohne den Text in die URL zu packen, und die Quelle
+kann anderswo (Git, Wiki, Server) gepflegt werden.
+
+**Die URL ist der Titel.** Das geladene Dokument wird als eigenes Dokument im
+Sinne von D22 geführt; sein **Name ist die URL**. Die **id leitet sich aus der
+URL ab** (`url:<href>`), damit derselbe Link dieses eine Dokument *aktualisiert*,
+statt bei jedem Aufruf ein neues anzulegen. Eigene Dokumente des Nutzers bleiben
+unberührt. Da der Name in der Titelzeile mit Ellipse abgeschnitten wird, steht
+die vollständige URL zusätzlich im Tooltip.
+
+**Die URL ist die Quelle der Wahrheit:** Ist der Parameter gesetzt, wird bei
+**jedem** Laden neu geholt und der Dokumenttext überschrieben. Lokale Änderungen
+an einem URL-Dokument überleben ein Neuladen also nicht — bewusst, weil
+`sourceUrl` eine *Ansicht auf eine entfernte Datei* ist, nicht deren Kopie. (Eine
+konfliktbewusste Variante — lokale Änderungen erkennen und behalten — wäre eine
+mögliche Erweiterung.)
+
+**CORS ist die eigentliche Einschränkung.** Der Browser lädt fremde Hosts nur,
+wenn die Zielseite `Access-Control-Allow-Origin` sendet. Das tun u. a.
+`raw.githubusercontent.com` und GitLab-Raw-Links; ein beliebiger Webserver
+oft **nicht**. Scheitert das Laden (CORS, 404, Netz), bleibt der bisherige Stand
+stehen und es erscheint eine **Warnung** im Warnbereich (Typ `sourceLoad`,
+zeilenlos ⇒ zuoberst), die CORS ausdrücklich als wahrscheinliche Ursache nennt.
+Bewusst kein Proxy-Dienst als Ausweg: das würde fremde Inhalte über einen
+Dritt-Host leiten und dem Datenschutz-Anspruch aus D20 widersprechen.
+
+**Verhältnis zu D20 („keine externen Requests"):** Der Grundsatz bleibt — die App
+lädt von sich aus **nichts** nach (Schriften inline, kein CDN). Der Request
+entsteht **nur**, wenn der Nutzer selbst eine URL angibt, und geht **nur** an
+genau diesen Host; `credentials:'omit'` verhindert das Mitsenden von Cookies.
+Erlaubt sind nur `http:`/`https:` (relative Angaben werden gegen die Seite
+aufgelöst); andere Schemata (`file:`, `data:`, `javascript:`) werden abgewiesen.
+Fremder Text ist ungefährlich: Labels werden escaped, und der Parser erkennt als
+Knoten-Link ohnehin nur `https?://…` (SPEC §1/§6) — kein `javascript:`-Vektor.
+
+Nebenbefund: `checkForUpdates()` hängte den Cache-Buster als `location.href +
+'?t=…'` an, was mit vorhandenem Query-String ein zweites `?` erzeugt hätte; es
+baut die URL nun über `URL`/`searchParams`.
