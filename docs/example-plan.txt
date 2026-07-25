@@ -1,0 +1,22 @@
+%% Werkbaum example plan — meant to be loaded via ?sourceUrl=
+%% Full notation reference: docs/SPEC.md
+
+[~] Online shop relaunch (XL) https://example.com/shop
+  - [x] Discovery (M)
+    - [x] User interviews (S) @maria
+    - [x] Competitor scan (XS)
+  - [~] Checkout (XL)
+    - [/] Shopping cart (M) @tom
+      - [x] Add and remove items (S)
+      - [/] Discount codes (S)
+    - [!] Payment provider (L) @maria @tom  %% effort still unclear
+      | [ ] Stripe (M)
+        - [ ] Sandbox account (XS)
+        - [ ] Webhook handling (S)
+      | [?] PayPal (M)
+      | [-] Build our own PSP (XXL)  %% far too expensive
+    - [ ] Order confirmation mail (S)
+  - [?] Hosting (M)
+    | Managed cloud (S) https://hostsharing.net
+    | On-premise (L)
+  - [^] Landing page (S) @lena

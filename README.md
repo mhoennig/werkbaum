@@ -37,6 +37,29 @@ Open the [hosted editor](https://werkbaum.javagil.de) — edit text on
 the left, the diagram is built live on the right. Toggles: transposed (narrow)
 layout, show discarded elements.
 
+### Loading a diagram from a URL
+
+The editor can pull its notation text from an external text file via the
+`sourceUrl` query parameter — handy for sharing a plan or keeping the source in
+Git or a wiki:
+
+**▶ [Live example](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt)**
+— loads [`docs/example-plan.txt`](docs/example-plan.txt):
+
+```
+https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt
+```
+
+The loaded text becomes its own document whose **name is the URL**, so your own
+documents stay untouched; the same link updates that one document instead of
+piling up copies. The URL is the source of truth — it is re-fetched on every
+load, so local edits to it do not survive a reload.
+
+**Caveat — CORS:** the browser only fetches a foreign host if it sends
+`Access-Control-Allow-Origin`. `raw.githubusercontent.com` and GitLab raw links
+do; an arbitrary web server often does not. If loading fails the previous
+content stays and a warning explains why. Only `http`/`https` are allowed.
+
 ### Running it locally
 
 The editor source now lives as ES modules under `frontend/src/`, bundled by

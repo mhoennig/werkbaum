@@ -38,6 +38,31 @@ Den [gehosteten Editor](https://werkbaum.javagil.de) öffnen — links
 Text bearbeiten, rechts entsteht das Diagramm live. Toggles: transponierte
 (schmale) Darstellung, verworfene Elemente einblenden.
 
+### Diagramm aus einer URL laden
+
+Der Editor kann seinen Notationstext über den Query-Parameter `sourceUrl` aus
+einer externen Textdatei beziehen — praktisch zum Teilen eines Plans oder wenn
+die Quelle in Git oder einem Wiki gepflegt wird:
+
+**▶ [Live-Beispiel](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt)**
+— lädt [`docs/example-plan.txt`](docs/example-plan.txt):
+
+```
+https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt
+```
+
+Der geladene Text wird als **eigenes Dokument** geführt, dessen **Name die URL**
+ist — eigene Dokumente bleiben unberührt, und derselbe Link aktualisiert dieses
+eine Dokument, statt Kopien anzuhäufen. Die URL ist die Quelle der Wahrheit: Sie
+wird bei jedem Laden neu geholt, lokale Änderungen daran überleben ein Neuladen
+also nicht.
+
+**Einschränkung — CORS:** Der Browser lädt fremde Hosts nur, wenn sie
+`Access-Control-Allow-Origin` senden. `raw.githubusercontent.com` und
+GitLab-Raw-Links tun das; ein beliebiger Webserver oft nicht. Scheitert das
+Laden, bleibt der bisherige Stand stehen und eine Warnung nennt die Ursache.
+Zugelassen sind nur `http`/`https`.
+
 ### Lokal ausführen
 
 Die Editor-Quelle liegt jetzt als ES-Module unter `frontend/src/`, gebündelt mit
