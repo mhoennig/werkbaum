@@ -44,12 +44,15 @@ Der Editor kann seinen Notationstext über den Query-Parameter `sourceUrl` aus
 einer externen Textdatei beziehen — praktisch zum Teilen eines Plans oder wenn
 die Quelle in Git oder einem Wiki gepflegt wird:
 
-**▶ [Live-Beispiel](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt)**
+**▶ [Live-Beispiel](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt)**
 — lädt [`docs/example-plan.txt`](docs/example-plan.txt):
 
 ```
-https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt
+https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt
 ```
+
+(Das Beispiel zeigt auf den latest build 🚧; die stabile Instanz kann
+`sourceUrl` ab ihrem nächsten Produktions-Deploy.)
 
 Der geladene Text wird als **eigenes Dokument** geführt, dessen **Name die URL**
 ist — eigene Dokumente bleiben unberührt, und derselbe Link aktualisiert dieses

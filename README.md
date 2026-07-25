@@ -43,12 +43,15 @@ The editor can pull its notation text from an external text file via the
 `sourceUrl` query parameter — handy for sharing a plan or keeping the source in
 Git or a wiki:
 
-**▶ [Live example](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt)**
+**▶ [Live example](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt)**
 — loads [`docs/example-plan.txt`](docs/example-plan.txt):
 
 ```
-https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt
+https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt
 ```
+
+(The example points at the latest build 🚧; the stable instance supports
+`sourceUrl` from its next production deploy on.)
 
 The loaded text becomes its own document whose **name is the URL**, so your own
 documents stay untouched; the same link updates that one document instead of
