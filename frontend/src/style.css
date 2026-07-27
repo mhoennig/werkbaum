@@ -570,12 +570,19 @@
     content:'';position:absolute;top:0;left:50%;height:14px;border-left:2px solid var(--line);
   }
   ul.and>li{padding:16px 12px 0}
+  /* Der Stiel liegt bei `--stem-x` — normalerweise 50 % des <li>, was die
+     Knotenmitte ist, solange der Knoten im <li> zentriert steht. Bei
+     `li.has-or` ist er das NICHT (linksbündig, damit die any-of-Leiste unter
+     ihm aufsetzt) und der Teilbaum macht das <li> breiter als den Knoten: der
+     Stiel liefe daneben vorbei. `alignStems()` in app.js misst dort die
+     Knotenmitte und setzt `--stem-x` — D10 in der Waagerechten. */
   ul.and>li::before,
   ul.and>li::after{
-    content:'';position:absolute;top:0;right:50%;
-    border-top:2px solid var(--line);width:50%;height:16px;
+    content:'';position:absolute;top:0;
+    left:0;right:calc(100% - var(--stem-x, 50%));
+    border-top:2px solid var(--line);height:16px;
   }
-  ul.and>li::after{right:auto;left:50%;border-left:2px solid var(--line)}
+  ul.and>li::after{left:var(--stem-x, 50%);right:0;border-left:2px solid var(--line)}
   ul.and>li:only-child{padding-top:14px}
   ul.and>li:only-child::before,ul.and>li:only-child::after{border-top:none}
   ul.and>li:only-child::after{border-left:2px solid var(--line);height:14px}
@@ -631,7 +638,23 @@
     font-weight:400;
   }
 
-  /* --- OPTIONAL (`+`, SPEC §3/D29): hohler Kreis am Abzweig ---
+  /* --- OPTIONAL (`+`, SPEC §3/D29): gestrichelter Abzweig + hohler Kreis ---
+     Gestrichelt wird NUR der Abzweig zum Knoten, nicht die Sammelleiste — die
+     gehört der ganzen Geschwistergruppe. Im Fächer ist der Abzweig der
+     senkrechte Stiel (border-left von ::after, beim letzten Kind border-right
+     von ::before), in den gestapelten Anordnungen der waagerechte Ast
+     (border-top von ::before); die Leiste ist jeweils die andere Kante.
+     Gestrichelt in TINTE — any-of ist gestrichelt in Grau (D15), die Farbe
+     hält beide auseinander, der Kreis unten bestätigt es. */
+  ul.and>li.opt::after{border-left-style:dashed}
+  ul.and>li.opt:last-child::before{border-right-style:dashed}
+  .tree.vertical ul.and>li.opt::before,
+  .tree.kompakt ul.and>li.opt::before,
+  .tree:not(.vertical):not(.kompakt) ul.or>li.has-and>ul.and>li.opt::before{
+    border-top-style:dashed;
+  }
+
+  /* Hohler Kreis am Abzweig ---
      Kein dritter Linienstil: gestrichelt gehört any-of, und im kompakten Modus
      codiert allein der Stil das Gate (D15). Stattdessen die FODA-Konvention —
      gefüllter Punkt = erforderlich (hier: gar keiner), hohler Punkt = optional.

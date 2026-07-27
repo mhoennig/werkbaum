@@ -76,6 +76,18 @@ describe('Renderer — Kennzeichnung und Gemischt-Warnung', () => {
     expect(html).toContain('>Zugabe<');
   });
 
+  /* Der Abzweig wird von den <li>-Pseudoelementen gezeichnet — für den
+     gestrichelten Ast braucht das <li> die Klasse ebenfalls (D29). */
+  it('gibt auch dem <li> die Klasse `opt`, neben dem Gate der eigenen Kinder', () => {
+    const {html} = render(`[ ] Wurzel\n  + [ ] Zugabe\n    | [ ] A\n    | [ ] B`);
+    expect(html).toContain('<li class="has-or opt">');
+  });
+
+  it('lässt das <li> ohne Attribut, wenn weder Kinder noch optional', () => {
+    const {html} = render(`[ ] Wurzel\n  - [ ] Pflicht`);
+    expect(html).toContain('<li>');
+  });
+
   it('warnt NICHT, wenn `-` und `+` nebeneinander stehen', () => {
     const {warnings} = render(`[ ] Wurzel\n  - [ ] Pflicht\n  + [ ] Zugabe`);
     expect(warnings).toEqual([]);

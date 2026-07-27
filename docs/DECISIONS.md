@@ -812,3 +812,41 @@ Stärke.
 **Verhaltensänderung:** Ein `+` am Zeilenanfang ist jetzt ein Zeichen und
 gehört nicht mehr zum Label (`+ 5 % Puffer` ergibt das Label „5 % Puffer").
 Test-abgedeckt, damit es niemanden unbemerkt trifft.
+
+**Nachtrag 1 — der Abzweig wird doch gestrichelt.** Der hohle Kreis allein war
+zu leise; „ein gestrichelter Ast wäre deutlicher" (Nutzer). Der oben notierte
+Einwand gegen einen dritten Linienstil bleibt richtig, greift hier aber nicht
+so weit wie gedacht: Gestrichelt wird **nur der Abzweig zum Knoten**, nicht die
+Sammelleiste, und zwar in **Tinte** — die any-of-Linien sind gestrichelt in
+**Grau**. Entscheidend ist, dass beide sich in einer Gruppe nie begegnen können:
+`|` darf nach §3 nicht mit `-`/`+` gemischt werden, ein gestrichelt-grauer und
+ein gestrichelt-blauer Ast hängen also nie am selben Verteiler. Der Kreis bleibt
+zusätzlich — er sagt, **welcher** Knoten gemeint ist, und trägt die Kennzeichnung
+auch dort, wo der Strich im Gedränge untergeht.
+
+Umgesetzt an den vorhandenen Pseudoelementen, ohne neue Zeichenebene: Im Fächer
+ist der Abzweig der senkrechte Stiel (`border-left` von `::after`, beim letzten
+Kind `border-right` von `::before`), in den gestapelten Anordnungen der
+waagerechte Ast (`border-top` von `::before`) — die jeweils andere Kante ist die
+Leiste und bleibt durchgezogen. Dafür braucht auch das **`<li>`** die Klasse
+`opt` (den Abzweig zeichnet es, nicht der Knoten).
+
+**Nachtrag 2 — Stiel trifft die Knotenmitte auch waagerecht (`--stem-x`).**
+Beim Prüfen fiel ein älterer Fehler auf: Im horizontalen Fächer lief der Stiel
+zu einem Knoten mit any-of-Kindern **neben dem Knoten vorbei** (gemessen 13,4 px).
+Ursache ist dieselbe Verwechslung, die D10 schon senkrecht behoben hat, nur in
+der anderen Achse: Der Stiel saß bei 50 % der **Zelle**, und das ist nur dann
+die Knotenmitte, wenn der Knoten in der Zelle zentriert steht. `li.has-or` ist
+aber `align-items:flex-start` — der Knoten steht links, damit die
+any-of-Sammelleiste unter ihm aufsetzt —, und die Zelle ist so breit wie der
+Teilbaum.
+
+Rein in CSS ist das nicht lösbar: Die nötige Größe ist die **Knotenbreite**, und
+kein Selektor kann sie einer Elternregel zugänglich machen (Anchor Positioning
+ist Chrome-only). Deshalb misst `alignStems()` nach jedem Rendern die Knotenmitte
+der betroffenen Zellen und setzt sie als `--stem-x`; die Pseudoelemente rechnen
+über `left:var(--stem-x, 50%)` / `right:calc(100% - var(--stem-x, 50%))`. Der
+Rückfallwert 50 % hält alle übrigen Zellen ohne Messung richtig, und die
+transponierten Modi setzen `left`/`right` ohnehin fest und bleiben unberührt.
+Gemessen wird — wie in `drawCheapPath()` — durch `zoom` zurückgerechnet, sodass
+der Wert beim Zoomen gültig bleibt.

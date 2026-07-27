@@ -23,6 +23,17 @@ function extraCls(n, opts){
   return [cheap, fresh, n.optional ? 'opt' : ''].filter(Boolean).join(' ');
 }
 
+/* Klassen des <li>: Gate der eigenen Kinder (steuert die Anordnung) plus
+   `opt`, wenn der Knoten selbst optional ist (steuert den Strich des
+   Abzweigs). Leere Liste ⇒ gar kein Attribut. */
+function liClass(visibleKids, opts, optional){
+  const cls = [
+    visibleKids.length ? (gateOf(visibleKids) === 'or' ? 'has-or' : 'has-and') : '',
+    optional ? 'opt' : ''
+  ].filter(Boolean);
+  return cls.length ? ` class="${cls.join(' ')}"` : '';
+}
+
 export function esc(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -98,7 +109,9 @@ function renderChildren(node, warnings, opts){
   const gate = gateOf(kids);
   const items = kids.map(k => {
     const vk = visibleChildren(k, opts.showDiscarded);
-    const liCls = vk.length ? (gateOf(vk) === 'or' ? ' class="has-or"' : ' class="has-and"') : '';
+    /* `opt` auch am <li>: den Abzweig zeichnen dessen Pseudoelemente, er wird
+       für optionale Knoten gestrichelt (D29). */
+    const liCls = liClass(vk, opts, k.optional);
     return `<li${liCls}>` +
            nodeHtml(k, extraCls(k, opts), opts) +
            renderChildren(k, warnings, opts) +
@@ -114,7 +127,7 @@ export function renderTreeHtml(roots, opts){
   const warnings = [];
   const html = roots.map(root => {
     const vk = visibleChildren(root, opts.showDiscarded);
-    const liCls = vk.length ? (gateOf(vk) === 'or' ? ' class="has-or"' : ' class="has-and"') : '';
+    const liCls = liClass(vk, opts, root.optional);
     return `<li${liCls}>` +
            nodeHtml(root, ('root-node ' + extraCls(root, opts)).trim(), opts) +
            renderChildren(root, warnings, opts) +

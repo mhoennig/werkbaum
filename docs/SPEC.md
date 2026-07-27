@@ -131,17 +131,23 @@ nebeneinander (schmales Diagramm rechts).
 ist grau (`#6B7A8C`) — kein Petrol mehr im Diagramm. Der Modus ändert nur die
 **Anordnung**, nicht die Linienfarbe.
 
-**Optionale Knoten (`+`, §3):** Sie hängen an der normalen all-of-Linie —
-Anordnung und Linienstil bleiben unverändert. Gekennzeichnet wird der Knoten
-selbst durch einen **kleinen hohlen Kreis** (weiß gefüllt, Rand in Tinte) genau
-dort, wo der Abzweig ihn trifft: in der horizontalen Fächer-Anordnung **oben
-mittig**, in den gestapelten Anordnungen (vertikal, kompakt, unterhalb einer
-any-of-Gruppe) **links auf halber Höhe**. Übernommen aus den Feature-Diagrammen
-(FODA: gefüllter Punkt = erforderlich, hohler Punkt = optional). Bewusst **kein
-weiterer Linienstil**: gestrichelt gehört der any-of-Zerlegung, und im kompakten
-Modus trägt allein der Linienstil die Gate-Codierung (D15) — ein dritter Stil
-wäre dort nicht mehr sicher unterscheidbar. Der Kreis erscheint auch im
-Grafikexport. Siehe D29.
+**Optionale Knoten (`+`, §3):** Sie hängen an der normalen all-of-Zerlegung,
+die Anordnung bleibt unverändert. Zwei Kennzeichen, beide auch im Grafikexport:
+
+- Der **Abzweig zum Knoten** ist **gestrichelt in Tinte** (`#41556E`). Nur der
+  Abzweig — die **Sammelleiste bleibt durchgezogen**, sie gehört der ganzen
+  Geschwistergruppe. Die any-of-Linien sind ebenfalls gestrichelt, aber in
+  **Grau** (`#6B7A8C`); die Farbe hält beide auseinander, und weil `|` nicht mit
+  `-`/`+` gemischt werden darf (§3), treffen sie in einer Gruppe nie aufeinander.
+- Am Auftreffpunkt sitzt ein **kleiner hohler Kreis** (weiß gefüllt, Rand in
+  Tinte): in der horizontalen Fächer-Anordnung **oben mittig**, in den
+  gestapelten Anordnungen (vertikal, kompakt, unterhalb einer any-of-Gruppe)
+  **links auf halber Höhe**. Übernommen aus den Feature-Diagrammen (FODA:
+  gefüllter Punkt = erforderlich, hohler Punkt = optional). Er markiert
+  eindeutig, **welcher** Knoten optional ist — auch dort, wo der Strich allein
+  mit den grauen any-of-Linien verwechselt werden könnte.
+
+Siehe D29.
 
 ### Horizontal (Normalmodus)
 - **all of:** Kinder nebeneinander, klassischer Organigramm-Fächer.
@@ -169,6 +175,12 @@ Grafikexport. Siehe D29.
   deterministisch auf Knotenmitte liegen (Offset 23 px = 5 px Listenabstand
   + halbe Knotenhöhe). Abzweige zielen auf den **Knoten**, nie auf die Mitte
   des Teilbaums.
+- Dasselbe gilt **waagerecht**: Im horizontalen Fächer trifft der Stiel die
+  **Knotenmitte**, nicht die Mitte der Zelle. Beides fällt nur zusammen, solange
+  der Knoten in seiner Zelle zentriert steht — ein Knoten mit any-of-Kindern
+  steht dort aber **linksbündig** (damit die Sammelleiste unter ihm aufsetzt),
+  während seine Zelle so breit ist wie der Teilbaum. Der Stiel wird deshalb an
+  der gemessenen Knotenmitte ausgerichtet.
 - In den transponierten Modi (vertikal, kompakt) stehen untereinander
   gestapelte Geschwister mit **zusätzlichem Abstand nach unten** (damit das
   Größen-Badge oben rechts nicht mit den Tags unten rechts des darüber

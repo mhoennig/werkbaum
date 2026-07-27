@@ -192,7 +192,17 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   **oben/50 %** im horizontalen Fächer, Rück-Ausnahme wieder links für
   `ul.or>li.has-and>ul.and>li` (D18). Im SVG-Export muss er **nach** den Knoten
   gezeichnet werden (`optMarks`, Schritt 3a) — er liegt halb außerhalb der Box
-  und würde sonst vom Knoten-Rechteck überdeckt.
+  und würde sonst vom Knoten-Rechteck überdeckt. Der **Abzweig** ist zusätzlich
+  gestrichelt (Tinte); dafür trägt auch das **`<li>`** die Klasse `opt`, denn den
+  Abzweig zeichnen dessen Pseudoelemente. Gestrichelt wird nur die Kante zum
+  Knoten, nie die Sammelleiste — im Fächer `border-left`/`-right`, gestapelt
+  `border-top`.
+- `--stem-x` (D29, Nachtrag 2): Im horizontalen Fächer sitzt der Stiel bei 50 %
+  des `<li>`. Das ist nur dann die Knotenmitte, wenn der Knoten in der Zelle
+  zentriert steht — `li.has-or` ist aber linksbündig und die Zelle so breit wie
+  der any-of-Teilbaum. `alignStems()` misst deshalb nach jedem `render()` (und
+  in `applyLayout`) die Knotenmitte und setzt `--stem-x`; Fallback im CSS ist
+  `50%`. Messwerte durch `zoom` zurückrechnen, sonst stimmt es nur bei 100 %.
 - Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) stapelt
   Diagramm/Editor mit **stufenlosem** Splitter (kein Snap/Collapse wie auf
   Desktop): der Gutter-Drag ruft `setMobileDrow()` (klemmt `--drow` zwischen den

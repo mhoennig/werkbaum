@@ -84,6 +84,7 @@ function render(){
 
   warnings = warnings.slice().sort((a, b) => (a.line || 0) - (b.line || 0));
   warnBox.innerHTML = warnings.map(w => `<div>⚠ ${formatWarning(w, t)}</div>`).join('');
+  alignStems();
   drawCheapPath();
   /* Der Baum ist neu gebaut — die Markierung der Cursor-Zeile neu setzen (D25).
      Ohne Scrollen: beim Tippen soll das Diagramm stehen bleiben. */
@@ -119,6 +120,25 @@ function overlaySvg(cls, w, h){
   return svgEl('svg', {class:'cheap-overlay ' + cls, width:w, height:h,
     viewBox:`0 0 ${w.toFixed(1)} ${h.toFixed(1)}`});
 }
+/* Stielposition der all-of-Abzweige im horizontalen Fächer (siehe style.css).
+   Nur `li.has-or` braucht die Messung: dort steht der Knoten linksbündig, das
+   <li> ist aber so breit wie sein any-of-Teilbaum — der Stiel bei 50 % liefe am
+   Knoten vorbei. Die transponierten Modi setzen left/right ohnehin fest und
+   bleiben deshalb unberührt. Messwerte sind durch `zoom` skaliert und werden
+   wie in drawCheapPath() zurückgerechnet. */
+function alignStems(){
+  out.querySelectorAll('ul.and>li').forEach(li => li.style.removeProperty('--stem-x'));
+  if(out.classList.contains('vertical') || out.classList.contains('kompakt')) return;
+  const z = zoom || 1;
+  out.querySelectorAll('ul.and>li.has-or').forEach(li => {
+    const node = li.querySelector(':scope > .node');
+    if(!node) return;
+    const lr = li.getBoundingClientRect(), nr = node.getBoundingClientRect();
+    if(!lr.width) return;                                  /* Panel eingeklappt */
+    li.style.setProperty('--stem-x', ((nr.left - lr.left + nr.width/2)/z).toFixed(1) + 'px');
+  });
+}
+
 function drawCheapPath(){
   out.querySelectorAll('svg.cheap-overlay').forEach(e => e.remove());
   if(!cheapPathOn) return;
@@ -190,7 +210,7 @@ function diagramToSvg(){
       .map(cli => cli.querySelector(':scope > .node, :scope > a.node')).filter(Boolean);
     const kids = kidEls.map(R);
     if(!kids.length) return;
-    const markOpt = (i, x, y) => { if(kidEls[i].classList.contains('opt')) optMarks.push({x, y}); };
+    const isOpt = i => kidEls[i].classList.contains('opt');
     const p = R(parentEl);
     const avgdx = kids.reduce((s,k)=>s+(k.cx-p.cx),0)/kids.length;
     const avgdy = kids.reduce((s,k)=>s+(k.cy-p.cy),0)/kids.length;
@@ -202,8 +222,9 @@ function diagramToSvg(){
       parts.push(seg(px, p.cy, busX, p.cy, stroke, dash));
       parts.push(seg(busX, Math.min(...ys), busX, Math.max(...ys), stroke, dash));
       kids.forEach((k, i) => {
-        parts.push(seg(busX, k.cy, toRight?k.x:k.r, k.cy, stroke, dash));
-        markOpt(i, toRight?k.x:k.r, k.cy);
+        const x = toRight ? k.x : k.r, o = isOpt(i);
+        parts.push(seg(busX, k.cy, x, k.cy, stroke, dash || o));
+        if(o) optMarks.push({x, y: k.cy});
       });
     } else {                                                   /* oben→unten */
       const toDown = avgdy >= 0;
@@ -213,8 +234,9 @@ function diagramToSvg(){
       parts.push(seg(p.cx, py, p.cx, busY, stroke, dash));
       parts.push(seg(Math.min(...xs), busY, Math.max(...xs), busY, stroke, dash));
       kids.forEach((k, i) => {
-        parts.push(seg(k.cx, busY, k.cx, toDown?k.y:k.b, stroke, dash));
-        markOpt(i, k.cx, toDown?k.y:k.b);
+        const y = toDown ? k.y : k.b, o = isOpt(i);
+        parts.push(seg(k.cx, busY, k.cx, y, stroke, dash || o));
+        if(o) optMarks.push({x: k.cx, y});
       });
     }
   });
@@ -530,6 +552,7 @@ function applyLayout(mode){
   out.classList.toggle('kompakt', mode === 'kompakt');
   app.classList.toggle('side', mode !== 'horizontal');
   if(!isMobile()) applySplit();   /* Desktop: Preset neu setzen. Mobil: freie --drow-Aufteilung behalten */
+  alignStems();       /* Stiel gilt nur im Fächer — beim Moduswechsel neu setzen/löschen */
   drawCheapPath();    /* Blatt-Positionen ändern sich mit dem Modus */
 }
 document.querySelectorAll('input[name="layout"]').forEach(radio => {
