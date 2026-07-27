@@ -734,3 +734,81 @@ stimmte, aber kein einziger Knoten leuchtete, weil `Set.has()` auf
 Objektidentität prüft und die gerenderten Knoten aus einem anderen Parse kamen.
 `render()` bildet die Menge daher bei jedem Durchlauf neu; vorgehalten wird nur
 der **geparste Basisbaum**.
+
+## D29 — `+` für optionale Knoten: Zugaben sind weder Pflicht noch Alternative
+Die Notation kannte bisher nur zwei Beziehungen zwischen Geschwistern:
+erforderlich (`-`) und wählbar (`|`). Für ein einzelnes zusätzliches Feature,
+das weder nötig ist noch eine Alternative zu etwas anderem, passte keine von
+beiden. Man schrieb es als normales `-`-Kind — und log damit.
+
+**Die Lücke hat einen Namen.** Feature-Modelle (FODA) unterscheiden seit den
+90ern *mandatory*, *optional* und *alternative*. Werkbaum hatte die erste und
+die dritte; `+` ergänzt die zweite. Mnemonik in der Reihe: `-` Teilpaket,
+`+` Zugabe, `|` Alternative. Deckt sich mit MoSCoW (Must / Could / Auswahl).
+
+**Der eigentliche Anlass ist der günstigste Pfad (D18), nicht die Optik.**
+`markCheapest()` lief bei all-of über *alle* Kinder — jede Zugabe steckte damit
+im errechneten Minimum. Das Ergebnis war systematisch zu groß, und zwar umso
+mehr, je ehrlicher der Plan auch Kür notierte. `pathChildren()` filtert
+optionale Knoten jetzt mit heraus; da beide Nutzer (`cheapestCost`,
+`markCheapest`) über diese eine Funktion gehen, gilt das samt Teilbaum. Sichtbar
+wird es beim Vergleich von Alternativen: eine Alternative mit teurer Zugabe
+verlor vorher gegen eine schlichtere, obwohl die Zugabe gar nicht dazugehört.
+
+**`+` gehört zum Knoten, nicht zur Gruppe** — anders als `-` und `|`. Der Parser
+setzt deshalb `optional:true` und lässt `type:'and'` stehen. Zwei Dinge fallen
+dadurch von selbst richtig aus: `gateOf()` bleibt unverändert, und die
+`mixedGate`-Warnung schlägt weiterhin genau dann an, wenn `|` mit `-`/`+`
+gemischt wird — `-` neben `+` ist erlaubt und still. Genau so soll es sein:
+„diese drei sind nötig, das hier wäre schön" ist der Normalfall, nicht der
+Fehlerfall. Die Regel dahinter: eine Gruppe ist entweder **konjunktiv**
+(`-`/`+` frei gemischt) oder **disjunktiv** (`|`).
+
+**Darstellung: hohler Kreis am Abzweig, kein dritter Linienstil.** Erwogen und
+verworfen war eine **gepunktete** Abzweiglinie. Sie wäre pro Kind trivial zu
+setzen gewesen (den Abzweig zeichnet ohnehin ein `li`-Pseudoelement), kollidiert
+aber mit D15: Im **kompakten** Modus laufen beide Gates nach unten und werden
+*allein* über den Linienstil unterschieden. Ein dritter Stil müsste sich dort
+gegen „gestrichelt grau" behaupten — zu wenig Abstand für ein Merkmal, das man
+auf einen Blick lesen können muss. Der Kreis dagegen ist **orthogonal** zum
+Linienstil und lässt D15 unangetastet; er ist zudem die etablierte
+FODA-Konvention (gefüllter Punkt = erforderlich, hohler = optional).
+
+Er sitzt **mittig auf der Knotenkante**, wo der Abzweig auftrifft, und
+unterbricht die Linie dort sichtbar. Grundfall im CSS ist die **gestapelte**
+Anordnung (links auf halber Höhe) — sie deckt vertikal, kompakt und die
+any-of-Gruppen ab; die **eine** Ausnahme ist der horizontale Fächer (oben
+mittig), die **eine** Rück-Ausnahme davon der gestapelte all-of-Teilbaum unter
+einer any-of-Gruppe (D18). Umgekehrt herum aufgezogen wären es vier Ausnahmen
+statt zwei. `.node::before`/`::after` waren beide frei; die `li`-Pseudoelemente
+sind von Abzweig und Sammelleiste belegt.
+
+**Im Export** wird der Kreis **nach** den Knoten gezeichnet. Er liegt zur Hälfte
+außerhalb der Knotenbox — in der Zeichenreihenfolge der Linien (Schritt 1)
+hätte das Knoten-Rechteck ihn später halb überdeckt. Die Auftreffpunkte werden
+beim Linienzeichnen gesammelt und in einem eigenen Schritt 3a ausgegeben.
+
+**Bekannte Schwäche:** Bei aktivem Günstigster-Pfad-Umschalter (Default an) wird
+der optionale Knoten ausgeblasst (`opacity:.32`) — und mit ihm sein Kreis, der
+die Erklärung *dafür* wäre. Undoen lässt sich das nicht: `opacity` am Elternteil
+schlägt auf jedes Kind durch, auch auf ein Pseudoelement. Bewusst in Kauf
+genommen, weil das Zurücktreten hier die *Hauptaussage* ist (dieselbe Logik wie
+bei nicht gewählten Alternativen) und Tooltip, `aria-label` und Legende die
+Begründung nachliefern. Bei ausgeschaltetem Umschalter steht der Kreis in voller
+Stärke.
+
+**Verworfene Alternativen:**
+- **Den Status `[?]` (Idee) dafür nehmen** — falsche Achse. Status ist
+  Fortschritt, `+` ist Notwendigkeit; eine Zugabe kann längst `[^]` sein (genau
+  der Fall, der die Frage ausgelöst hat). SPEC §3 hält beide Achsen getrennt.
+- **`@optional` als Personen-Tag** — missbraucht §7 für etwas Strukturelles.
+- **`#optional` als Schlagwort** (§11 reserviert) — hätte keine Syntaxänderung
+  gekostet, bringt aber weder Darstellung noch die Korrektur am Kostenmodell,
+  also gerade das nicht, wofür sich der Aufwand lohnt.
+- **`*` statt `+`** — in Regex „null oder mehr" und damit nah an der Begründung
+  von D1. Verworfen, weil `*` in Markdown zugleich Betonung auszeichnet und
+  eher wie eine Fußnote gelesen wird; `+` liest sich als „Zugabe".
+
+**Verhaltensänderung:** Ein `+` am Zeilenanfang ist jetzt ein Zeichen und
+gehört nicht mehr zum Label (`+ 5 % Puffer` ergibt das Label „5 % Puffer").
+Test-abgedeckt, damit es niemanden unbemerkt trifft.

@@ -14,12 +14,13 @@
 
 import { gateOf, needsBreakdown, visibleChildren, cheapCls } from './model.js';
 
-/* Zusatzklassen eines Knotens: günstigster Pfad (D18) + „neu in Produktion"
-   gegenüber der zuletzt gesehenen Fassung (D28, `freshSet` optional). */
+/* Zusatzklassen eines Knotens: günstigster Pfad (D18), „neu in Produktion"
+   gegenüber der zuletzt gesehenen Fassung (D28, `freshSet` optional) und
+   optionale Knoten (`+`, SPEC §3/D29 — trägt den hohlen Kreis am Abzweig). */
 function extraCls(n, opts){
   const cheap = cheapCls(n, opts.cheapSet);
   const fresh = opts.freshSet && opts.freshSet.has(n) ? 'fresh' : '';
-  return [cheap, fresh].filter(Boolean).join(' ');
+  return [cheap, fresh, n.optional ? 'opt' : ''].filter(Boolean).join(' ');
 }
 
 export function esc(s){
@@ -39,6 +40,7 @@ function nodeAria(n, opts){
   if(n.size) parts.push(t('a11ySize', {size: n.size}));
   else if(cheapPath) parts.push(t('a11ySizeImplicit'));
   if(n.tags && n.tags.length) parts.push(t('a11yTags', {names: n.tags.join(', ')}));
+  if(n.optional) parts.push(t('a11yOptional'));
   if(n.url) parts.push(t('a11yLink'));
   return parts.join(', ');
 }
@@ -52,7 +54,8 @@ function nodeHtml(n, extra, opts){
      für die Gegenrichtung (Cursor-Zeile -> Knoten hervorheben). Der Hinweis im
      Tooltip macht die sonst unsichtbare Alt-Klick-Geste auffindbar. */
   const lineAttr = n.line ? ` data-line="${n.line}"` : '';
-  const tip = [n.status ? t('st_' + n.status.key) : '', t('jumpHint')]
+  const tip = [n.status ? t('st_' + n.status.key) : '',
+               n.optional ? t('a11yOptional') : '', t('jumpHint')]
     .filter(Boolean).join(' · ');
   const title = ` title="${attr(tip)}"`;
   const tagsHtml = n.tags && n.tags.length
@@ -84,6 +87,9 @@ function nodeHtml(n, extra, opts){
 function renderChildren(node, warnings, opts){
   const kids = visibleChildren(node, opts.showDiscarded);
   if(!kids.length) return '';
+  /* Gemischte Gates (SPEC §3): Da `+` nur `optional` setzt und `type:'and'`
+     behält, schlägt das hier weiterhin genau dann an, wenn `|` mit `-`/`+`
+     gemischt wird — `-` neben `+` ist erlaubt und still. */
   const types = new Set(kids.map(k => k.type));
   if(types.size > 1){
     /* strukturierte Warnung (Typ + Zeile); Formatierung in warnings.js */

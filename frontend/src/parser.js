@@ -20,7 +20,13 @@ export const STATUS_BY_CODE = {
 };
 
 /* Parst den Notationstext zu { roots, warnings }.
-   Jeder Knoten: {label, type:'and'|'or', status, url, size, tags, children, line}.
+   Jeder Knoten: {label, type:'and'|'or', optional, status, url, size, tags,
+   children, line}.
+   `type` ist das Gate der Geschwistergruppe, `optional` (Zeichen `+`, SPEC §3)
+   eine Eigenschaft des einzelnen Knotens: er hängt an derselben Und-Zerlegung
+   (`type:'and'`), ist darin aber entbehrlich. Dadurch bleibt die
+   Gemischt-Warnung unverändert richtig — sie schlägt nur an, wenn `|` mit
+   `-`/`+` gemischt wird.
    Extraktionsreihenfolge (SPEC §1): Kommentar -> Zeichen/Status -> URL -> Größe
    -> Tags -> Label. Hierarchie über Einrückungsbreite (Tab = 2 Leerzeichen);
    Elternknoten ist die nächste vorangehende Zeile mit kleinerer Breite. */
@@ -35,9 +41,10 @@ export function parse(text){
     /* Statusbox tolerant erfassen: irgendein einzelnes Zeichen in [ ] an der
        Statusposition. Gültige Codes -> Status; unbekannte -> Warnung + neutral
        (fehlertolerant: die Zeile geht nicht verloren). */
-    const m = raw.match(/^([ \t]*)([-|])?\s*(?:\[([^\]])\]\s*)?(.*)$/);
+    const m = raw.match(/^([ \t]*)([-|+])?\s*(?:\[([^\]])\]\s*)?(.*)$/);
     const width = m[1].replace(/\t/g,'  ').length;
     const type  = m[2] === '|' ? 'or' : 'and';
+    const optional = m[2] === '+';
     const boxChar = m[3];   // undefined, wenn keine Statusbox
 
     let rest = m[4], url = null, size = null;
@@ -57,7 +64,7 @@ export function parse(text){
     while(stack.length > 1 && stack[stack.length-1].width >= width) stack.pop();
     const parent = stack[stack.length-1].node;
 
-    const node = {label, type, status, url, size, tags, children:[], line:i+1};
+    const node = {label, type, optional, status, url, size, tags, children:[], line:i+1};
     parent.children.push(node);
     stack.push({node, width});
   });

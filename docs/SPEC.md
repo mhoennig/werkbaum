@@ -14,7 +14,7 @@ Alle Bestandteile außer dem Label sind optional. Die Extraktion erfolgt in
 dieser Reihenfolge (wichtig für Kollisionsfreiheit):
 
 1. Kommentar entfernen: alles ab `%%` bis Zeilenende.
-2. Einrückung, Zeichen (`-` / `|`) und Statusbox `[…]` per Zeilen-Regex.
+2. Einrückung, Zeichen (`-` / `+` / `|`) und Statusbox `[…]` per Zeilen-Regex.
 3. URL: erstes Token, das auf `https?://\S+` passt (dadurch stören `@` in URLs nicht).
 4. Größe: erstes `(XS|S|M|L|XL|XXL)`, Groß-/Kleinschreibung egal.
 5. Tags: alle `@name`-Vorkommen.
@@ -23,7 +23,7 @@ dieser Reihenfolge (wichtig für Kollisionsfreiheit):
 Referenz-Regex der Implementierung:
 
 ```
-^([ \t]*)([-|])?\s*(?:\[([ ?~xX^/-])\]\s*)?(.*)$
+^([ \t]*)([-|+])?\s*(?:\[([ ?~xX^/-])\]\s*)?(.*)$
 ```
 
 ## 2. Hierarchie
@@ -31,7 +31,7 @@ Referenz-Regex der Implementierung:
 - Die Einrückung bestimmt die Ebene. Es gibt keine feste Schrittweite:
   Elternknoten ist die nächste vorangehende Zeile mit **kleinerer**
   Einrückungsbreite (Tab zählt als 2 Leerzeichen).
-- Zeilen ohne Zeichen (`-`/`|`) sind Wurzelknoten. Mehrere Wurzeln = mehrere
+- Zeilen ohne Zeichen (`-`/`+`/`|`) sind Wurzelknoten. Mehrere Wurzeln = mehrere
   Bäume nebeneinander.
 
 ## 3. Zerlegungsart (Gate)
@@ -39,12 +39,21 @@ Referenz-Regex der Implementierung:
 | Zeichen | Bedeutung | Semantik |
 |---|---|---|
 | `-` | all of (Und-Zerlegung) | Alle Teilpakete sind erforderlich. |
+| `+` | optional (Zugabe) | Einzelnes zusätzliches Teilpaket, nicht erforderlich. |
 | `\|` | any of (Oder-Zerlegung) | Mindestens eine Alternative wird gewählt. |
 
-- Das Gate ist eine Eigenschaft der Geschwistergruppe; alle Geschwister sollen
-  dasselbe Zeichen tragen.
-- Gemischte Geschwister: Darstellung nach dem **ersten** Kind, plus Warnung
-  mit Zeilennummer.
+- `-` und `|` sind Eigenschaften der **Geschwistergruppe**; `+` ist eine
+  Eigenschaft des **einzelnen Knotens** (er hängt an derselben Und-Zerlegung,
+  ist darin aber entbehrlich).
+- Daraus folgt die Mischregel: Eine Gruppe ist entweder **konjunktiv** — dann
+  dürfen `-` und `+` frei nebeneinander stehen — oder **disjunktiv** (`|`).
+  `|` mit `-`/`+` zu mischen ist ungültig: Darstellung nach dem **ersten** Kind,
+  plus Warnung `mixedGate` mit Zeilennummer.
+- Ein `+`-Knoten zerlegt sich weiter wie jeder andere; das Gate seiner eigenen
+  Kinder ist davon unabhängig. Optionalität vererbt sich nicht ausdrücklich —
+  wer unter einem `+`-Knoten hängt, ist mit ihm zusammen entbehrlich.
+- `+` sagt nichts über den Fortschritt: Eine Zugabe kann längst `[^]` sein. Die
+  beiden Achsen (Status §4, Notwendigkeit §3) sind unabhängig.
 
 ## 4. Status
 
@@ -122,6 +131,18 @@ nebeneinander (schmales Diagramm rechts).
 ist grau (`#6B7A8C`) — kein Petrol mehr im Diagramm. Der Modus ändert nur die
 **Anordnung**, nicht die Linienfarbe.
 
+**Optionale Knoten (`+`, §3):** Sie hängen an der normalen all-of-Linie —
+Anordnung und Linienstil bleiben unverändert. Gekennzeichnet wird der Knoten
+selbst durch einen **kleinen hohlen Kreis** (weiß gefüllt, Rand in Tinte) genau
+dort, wo der Abzweig ihn trifft: in der horizontalen Fächer-Anordnung **oben
+mittig**, in den gestapelten Anordnungen (vertikal, kompakt, unterhalb einer
+any-of-Gruppe) **links auf halber Höhe**. Übernommen aus den Feature-Diagrammen
+(FODA: gefüllter Punkt = erforderlich, hohler Punkt = optional). Bewusst **kein
+weiterer Linienstil**: gestrichelt gehört der any-of-Zerlegung, und im kompakten
+Modus trägt allein der Linienstil die Gate-Codierung (D15) — ein dritter Stil
+wäre dort nicht mehr sicher unterscheidbar. Der Kreis erscheint auch im
+Grafikexport. Siehe D29.
+
 ### Horizontal (Normalmodus)
 - **all of:** Kinder nebeneinander, klassischer Organigramm-Fächer.
 - **any of:** Alternativen untereinander; gestrichelte graue Sammelleiste links
@@ -190,13 +211,18 @@ werden die für die günstigste Realisierung **nötigen** Knoten:
 - **any of:** nur die **günstigste** Alternative ist nötig. „Günstig" =
   kleinste rekursive Kosten (eigene T-Shirt-Größe plus — je Gate — Summe bzw.
   Minimum der Kinder). Bei Gleichstand gewinnt die **erste** Alternative.
+- **Optionale Knoten (`+`, §3) sind nie nötig** — sie zählen weder zu den
+  Kosten ihres Elternknotens noch liegen sie auf dem Pfad, und der Teilbaum
+  unter ihnen ebenso wenig. Genau dafür gibt es das Zeichen: Ohne `+` rechnet
+  der günstigste Pfad jede Zugabe ins Minimum ein und überschätzt es.
 - Verworfene Knoten zählen nie mit (unabhängig vom „verworfene einblenden"-
   Filter).
 - **Fehlende Größe wird als `M` gewertet** (nur für diese Kostenschätzung; die
   SPEC-Semantik der Größen in §5 bleibt unberührt).
 
 Darstellung per **Inversion**: nicht benötigte Knoten (nicht-gewählte
-any-of-Alternativen samt Teilbaum) treten zurück (blass, entsättigt); der
+any-of-Alternativen und optionale Knoten, je samt Teilbaum) treten zurück
+(blass, entsättigt); der
 günstige Pfad hebt sich dadurch von selbst ab — kein zusätzlicher Rahmen an den
 ohnehin dichten Knoten-Ecken. Wo die Größe **implizit** als `M` angenommen wird,
 zeigt der Knoten ein **invertiertes** Größen-Badge (weiß mit petrolfarbenem
@@ -296,8 +322,8 @@ Das Diagramm wird aus der Live-Geometrie in ein eigenständiges SVG (nur Formen
 ### Barrierefreiheit
 Die visuell codierten Knoten-Eigenschaften werden für Screenreader in einem
 sprechenden **`aria-label`** je Knoten zusammengefasst — Label, Status, Aufwand
-(inkl. „(angenommen)“ beim impliziten M), Zuständige und ob der Knoten verlinkt
-ist —, alles in der aktuellen UI-Sprache. Die rein visuellen Beiwerke
+(inkl. „(angenommen)“ beim impliziten M), Zuständige, ob der Knoten optional
+(§3) und ob er verlinkt ist —, alles in der aktuellen UI-Sprache. Die rein visuellen Beiwerke
 (Größen-Badge, Tags, ↗-Pfeil) sind `aria-hidden`, damit sie nicht kryptisch
 doppelt vorgelesen werden. **Alle** Knoten sind fokussierbar (`tabindex="0"`
 bzw. der Link selbst); die **Fokusreihenfolge entspricht der Dokument-/
@@ -327,6 +353,7 @@ Druckdialog „an Seite anpassen“ bzw. Querformat wählen.
   - [~] Umsetzung (XL)
     - [/] Frontend (S) https://git.example.de/frontend @anna
     - [ ] Backend (L) @ben @carla
+    + [?] Dark Mode (S)  %% Zugabe, nicht erforderlich
     - [ ] CMS-Anbindung (M)
       | [ ] WordPress
       | [?] Headless CMS

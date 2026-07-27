@@ -182,6 +182,17 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   passiert: Zähler stimmte, nichts leuchtete). Vorgehalten wird nur
   `freshPrevRoots` (Basis, einmal geparst). Basis je Dokument in `werkbaum-seen`,
   fortgeschrieben **erst beim Bestätigen** über `#freshBtn`.
+- Optionale Knoten `+` (D29): Der Parser setzt **`optional:true` und lässt
+  `type:'and'`** — `+` gehört zum Knoten, nicht zur Gruppe. Deshalb bleiben
+  `gateOf()` und die `mixedGate`-Warnung unverändert richtig (sie meldet nur
+  `|` neben `-`/`+`). Aus dem günstigsten Pfad fallen optionale Knoten über
+  **`pathChildren()`** heraus — die eine Stelle, die `cheapestCost()` und
+  `markCheapest()` gemeinsam nutzen; deshalb wirkt sie samt Teilbaum. Der hohle
+  Kreis ist `.node.opt::before`: **Grundfall links/50 %** (gestapelt), Ausnahme
+  **oben/50 %** im horizontalen Fächer, Rück-Ausnahme wieder links für
+  `ul.or>li.has-and>ul.and>li` (D18). Im SVG-Export muss er **nach** den Knoten
+  gezeichnet werden (`optMarks`, Schritt 3a) — er liegt halb außerhalb der Box
+  und würde sonst vom Knoten-Rechteck überdeckt.
 - Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) stapelt
   Diagramm/Editor mit **stufenlosem** Splitter (kein Snap/Collapse wie auf
   Desktop): der Gutter-Drag ruft `setMobileDrow()` (klemmt `--drow` zwischen den

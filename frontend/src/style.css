@@ -631,6 +631,30 @@
     font-weight:400;
   }
 
+  /* --- OPTIONAL (`+`, SPEC §3/D29): hohler Kreis am Abzweig ---
+     Kein dritter Linienstil: gestrichelt gehört any-of, und im kompakten Modus
+     codiert allein der Stil das Gate (D15). Stattdessen die FODA-Konvention —
+     gefüllter Punkt = erforderlich (hier: gar keiner), hohler Punkt = optional.
+     Der Kreis sitzt MITTIG AUF der Knotenkante, wo der Abzweig auftrifft.
+     Grundfall ist die gestapelte Anordnung (vertikal, kompakt, unter any-of):
+     Abzweig kommt von links auf halber Knotenhöhe. */
+  .node.opt::before{
+    content:'';position:absolute;
+    left:-5px;top:50%;transform:translateY(-50%);
+    width:10px;height:10px;border-radius:50%;
+    background:var(--card);border:2px solid var(--line);
+    box-sizing:border-box;
+  }
+  /* Horizontaler Fächer: der Abzweig kommt von oben mittig. */
+  .tree:not(.vertical):not(.kompakt) ul.and>li>.node.opt::before{
+    left:50%;top:-5px;transform:translateX(-50%);
+  }
+  /* …ausgenommen der gestapelte all-of-Teilbaum unter einer any-of-Gruppe
+     (siehe oben): dort kommt der Abzweig wieder von links. */
+  .tree:not(.vertical):not(.kompakt) ul.or>li.has-and>ul.and>li>.node.opt::before{
+    left:-5px;top:50%;transform:translateY(-50%);
+  }
+
   /* ---------- Status (Pastell) ---------- */
   .node.st-idee      {background:#EBEDEF;border-color:#A2ABB5;color:var(--ink)}
   .node.st-geplant   {background:#EBE4F6;border-color:#A991D4;color:var(--ink)}

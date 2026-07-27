@@ -28,9 +28,14 @@ export function visibleChildren(n, showDiscarded){
    any-of ⇒ nur die günstigste Alternative. „Günstig" = kleinste rekursive
    Kosten (eigene Größe + Kinder; any-of das Minimum). Verworfene zählen nie
    mit (unabhängig vom Einblenden-Toggle). Gleichstand ⇒ erste. Fehlende
-   Größe = M. */
+   Größe = M.
+   Optionale Kinder (`+`, SPEC §3/D29) fallen hier ebenfalls heraus — sie sind
+   per Definition entbehrlich, also weder Kostenanteil noch Pfadknoten. Da beide
+   Nutzer (`cheapestCost`, `markCheapest`) über diese Funktion gehen, gilt das
+   samt Teilbaum. */
 export function pathChildren(n){
-  return n.children.filter(k => !k.status || k.status.key !== 'verworfen');
+  return n.children.filter(k =>
+    !k.optional && (!k.status || k.status.key !== 'verworfen'));
 }
 /* fehlende Größe wird als M interpretiert */
 export function ownCost(n){ return SIZE_RANK[n.size || 'M'] + 1; }

@@ -174,6 +174,11 @@ function diagramToSvg(){
   /* 1) Verbindungslinien (hinter den Knoten) */
   const seg = (x1,y1,x2,y2,stroke,dash) =>
     `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${stroke}" stroke-width="2"${dash?' stroke-dasharray="5 4"':''} stroke-linecap="round"/>`;
+  /* Auftreffpunkte der Abzweige an optionalen Knoten (`+`, SPEC §3/D29).
+     Gesammelt beim Linienzeichnen, gezeichnet erst NACH den Knoten — der Kreis
+     sitzt mittig auf der Kante, das Knoten-Rechteck würde ihn sonst halb
+     überdecken. */
+  const optMarks = [];
   nodes.forEach(parentEl => {
     const li = parentEl.closest('li');
     const childUl = li && [...li.children].find(c => c.tagName === 'UL');
@@ -181,9 +186,11 @@ function diagramToSvg(){
     const gate = childUl.classList.contains('or') ? 'or' : 'and';
     const stroke = gate === 'or' ? '#6B7A8C' : '#41556E';
     const dash = gate === 'or';
-    const kids = [...childUl.children]
-      .map(cli => cli.querySelector(':scope > .node, :scope > a.node')).filter(Boolean).map(R);
+    const kidEls = [...childUl.children]
+      .map(cli => cli.querySelector(':scope > .node, :scope > a.node')).filter(Boolean);
+    const kids = kidEls.map(R);
     if(!kids.length) return;
+    const markOpt = (i, x, y) => { if(kidEls[i].classList.contains('opt')) optMarks.push({x, y}); };
     const p = R(parentEl);
     const avgdx = kids.reduce((s,k)=>s+(k.cx-p.cx),0)/kids.length;
     const avgdy = kids.reduce((s,k)=>s+(k.cy-p.cy),0)/kids.length;
@@ -194,7 +201,10 @@ function diagramToSvg(){
       const ys = kids.map(k=>k.cy).concat(p.cy);
       parts.push(seg(px, p.cy, busX, p.cy, stroke, dash));
       parts.push(seg(busX, Math.min(...ys), busX, Math.max(...ys), stroke, dash));
-      kids.forEach(k => parts.push(seg(busX, k.cy, toRight?k.x:k.r, k.cy, stroke, dash)));
+      kids.forEach((k, i) => {
+        parts.push(seg(busX, k.cy, toRight?k.x:k.r, k.cy, stroke, dash));
+        markOpt(i, toRight?k.x:k.r, k.cy);
+      });
     } else {                                                   /* oben→unten */
       const toDown = avgdy >= 0;
       const py = toDown ? p.b : p.y;
@@ -202,7 +212,10 @@ function diagramToSvg(){
       const xs = kids.map(k=>k.cx).concat(p.cx);
       parts.push(seg(p.cx, py, p.cx, busY, stroke, dash));
       parts.push(seg(Math.min(...xs), busY, Math.max(...xs), busY, stroke, dash));
-      kids.forEach(k => parts.push(seg(k.cx, busY, k.cx, toDown?k.y:k.b, stroke, dash)));
+      kids.forEach((k, i) => {
+        parts.push(seg(k.cx, busY, k.cx, toDown?k.y:k.b, stroke, dash));
+        markOpt(i, k.cx, toDown?k.y:k.b);
+      });
     }
   });
 
@@ -239,6 +252,10 @@ function diagramToSvg(){
       drawBadge(tg, t.backgroundColor, t.color, t.borderTopColor);
     });
   });
+
+  /* 3a) Optionale Knoten: hohler Kreis auf der Kante (nach den Knoten) */
+  optMarks.forEach(m => parts.push(
+    `<circle cx="${m.x.toFixed(1)}" cy="${m.y.toFixed(1)}" r="4" fill="#ffffff" stroke="#41556E" stroke-width="2"/>`));
 
   /* 3b) Günstigster-Pfad: abgetönte Kopie über den Knoten + Stationspunkte */
   if(cheapPts.length >= 2){
@@ -804,10 +821,11 @@ const I18N = {
     st_fertig:"fertig", st_prod:"in Produktion", st_highrisk:"High Risk", st_verworfen:"verworfen",
     unknownStatusWarn:"Zeile {line}: unbekanntes Statuszeichen „{code}“ — als neutral dargestellt.",
     sourceLoadWarn:"„{url}“ konnte nicht geladen werden ({error}). Die Datei muss per http(s) erreichbar sein und CORS erlauben (Access-Control-Allow-Origin).",
-    a11yStatus:"Status: {status}", a11ySize:"Aufwand: {size}", a11ySizeImplicit:"Aufwand: M (angenommen)", a11yTags:"Zuständig: {names}", a11yLink:"verlinkt",
+    a11yStatus:"Status: {status}", a11ySize:"Aufwand: {size}", a11ySizeImplicit:"Aufwand: M (angenommen)", a11yTags:"Zuständig: {names}", a11yOptional:"optional", a11yLink:"verlinkt",
     hint_indent:"Einrückung (2 Leerzeichen oder Tab) definiert die Hierarchie.",
     hint_all:"Teilpaket, alle erforderlich", hint_any:"Alternative, eine wählen",
-    hint_root:"Zeile ohne Zeichen = Wurzelknoten. Geschwister sollten dasselbe Zeichen tragen.",
+    hint_opt:"Zugabe, nicht erforderlich",
+    hint_root:"Zeile ohne Zeichen = Wurzelknoten. | nicht mit - / + mischen.",
     hint_status:"Status als Kästchen nach dem Zeichen, z. B.",
     hint_size:"Aufwand als T-Shirt-Größe in Klammern, Link einfach als URL anhängen:",
     hint_break:"Ab (M) gilt: weiter untergliedern — fehlt die Untergliederung, erscheint ein Platzhalter im Diagramm.",
@@ -855,10 +873,11 @@ const I18N = {
     st_fertig:"done", st_prod:"in production", st_highrisk:"high risk", st_verworfen:"discarded",
     unknownStatusWarn:"Line {line}: unknown status code “{code}” — shown as neutral.",
     sourceLoadWarn:"Could not load “{url}” ({error}). The file must be reachable via http(s) and allow CORS (Access-Control-Allow-Origin).",
-    a11yStatus:"Status: {status}", a11ySize:"Effort: {size}", a11ySizeImplicit:"Effort: M (assumed)", a11yTags:"Assigned: {names}", a11yLink:"has link",
+    a11yStatus:"Status: {status}", a11ySize:"Effort: {size}", a11ySizeImplicit:"Effort: M (assumed)", a11yTags:"Assigned: {names}", a11yOptional:"optional", a11yLink:"has link",
     hint_indent:"Indentation (2 spaces or a tab) defines the hierarchy.",
     hint_all:"sub-task, all required", hint_any:"alternative, choose one",
-    hint_root:"Line without a marker = root node. Siblings should share the same marker.",
+    hint_opt:"extra, not required",
+    hint_root:"Line without a marker = root node. Do not mix | with - / +.",
     hint_status:"Status as a checkbox after the marker, e.g.",
     hint_size:"Effort as a T-shirt size in parentheses; add a link simply as a URL:",
     hint_break:"From (M) on: break it down further — if the breakdown is missing, a placeholder appears in the diagram.",
@@ -906,10 +925,11 @@ const I18N = {
     st_fertig:"terminado", st_prod:"en producción", st_highrisk:"alto riesgo", st_verworfen:"descartado",
     unknownStatusWarn:"Línea {line}: código de estado desconocido «{code}» — mostrado como neutral.",
     sourceLoadWarn:"No se pudo cargar «{url}» ({error}). El archivo debe ser accesible por http(s) y permitir CORS (Access-Control-Allow-Origin).",
-    a11yStatus:"Estado: {status}", a11ySize:"Esfuerzo: {size}", a11ySizeImplicit:"Esfuerzo: M (asumido)", a11yTags:"Responsable: {names}", a11yLink:"con enlace",
+    a11yStatus:"Estado: {status}", a11ySize:"Esfuerzo: {size}", a11ySizeImplicit:"Esfuerzo: M (asumido)", a11yTags:"Responsable: {names}", a11yOptional:"opcional", a11yLink:"con enlace",
     hint_indent:"La sangría (2 espacios o un tabulador) define la jerarquía.",
     hint_all:"subtarea, todas obligatorias", hint_any:"alternativa, elige una",
-    hint_root:"Línea sin marcador = nodo raíz. Los hermanos deberían llevar el mismo marcador.",
+    hint_opt:"extra, no obligatorio",
+    hint_root:"Línea sin marcador = nodo raíz. No mezcles | con - / +.",
     hint_status:"Estado como casilla tras el marcador, p. ej.",
     hint_size:"Esfuerzo como talla de camiseta entre paréntesis; añade un enlace simplemente como URL:",
     hint_break:"A partir de (M): sigue desglosando — si falta el desglose, aparece un marcador de posición en el diagrama.",
@@ -957,10 +977,11 @@ const I18N = {
     st_fertig:"terminé", st_prod:"en production", st_highrisk:"risque élevé", st_verworfen:"abandonné",
     unknownStatusWarn:"Ligne {line} : code de statut inconnu « {code} » — affiché comme neutre.",
     sourceLoadWarn:"Impossible de charger « {url} » ({error}). Le fichier doit être accessible en http(s) et autoriser CORS (Access-Control-Allow-Origin).",
-    a11yStatus:"Statut : {status}", a11ySize:"Effort : {size}", a11ySizeImplicit:"Effort : M (supposé)", a11yTags:"Responsable : {names}", a11yLink:"avec lien",
+    a11yStatus:"Statut : {status}", a11ySize:"Effort : {size}", a11ySizeImplicit:"Effort : M (supposé)", a11yTags:"Responsable : {names}", a11yOptional:"facultatif", a11yLink:"avec lien",
     hint_indent:"L'indentation (2 espaces ou une tabulation) définit la hiérarchie.",
     hint_all:"sous-tâche, toutes requises", hint_any:"alternative, en choisir une",
-    hint_root:"Ligne sans marqueur = nœud racine. Les frères devraient porter le même marqueur.",
+    hint_opt:"supplément, non requis",
+    hint_root:"Ligne sans marqueur = nœud racine. Ne mélangez pas | avec - / +.",
     hint_status:"Statut sous forme de case après le marqueur, p. ex.",
     hint_size:"Effort en taille de T-shirt entre parenthèses ; ajoutez un lien simplement comme URL :",
     hint_break:"À partir de (M) : décomposer davantage — si la décomposition manque, un espace réservé apparaît dans le diagramme.",
@@ -1008,10 +1029,11 @@ const I18N = {
     st_fertig:"gotowe", st_prod:"w produkcji", st_highrisk:"wysokie ryzyko", st_verworfen:"odrzucone",
     unknownStatusWarn:"Wiersz {line}: nieznany znak statusu „{code}” — pokazany jako neutralny.",
     sourceLoadWarn:"Nie udało się wczytać „{url}” ({error}). Plik musi być dostępny przez http(s) i zezwalać na CORS (Access-Control-Allow-Origin).",
-    a11yStatus:"Status: {status}", a11ySize:"Nakład: {size}", a11ySizeImplicit:"Nakład: M (założony)", a11yTags:"Przypisano: {names}", a11yLink:"z linkiem",
+    a11yStatus:"Status: {status}", a11ySize:"Nakład: {size}", a11ySizeImplicit:"Nakład: M (założony)", a11yTags:"Przypisano: {names}", a11yOptional:"opcjonalny", a11yLink:"z linkiem",
     hint_indent:"Wcięcie (2 spacje lub tabulator) definiuje hierarchię.",
     hint_all:"podzadanie, wszystkie wymagane", hint_any:"alternatywa, wybierz jedną",
-    hint_root:"Wiersz bez znacznika = węzeł główny. Rodzeństwo powinno mieć ten sam znacznik.",
+    hint_opt:"dodatek, niewymagany",
+    hint_root:"Wiersz bez znacznika = węzeł główny. Nie mieszaj | z - / +.",
     hint_status:"Status jako pole wyboru po znaczniku, np.",
     hint_size:"Nakład jako rozmiar koszulki w nawiasach; link dodaj po prostu jako URL:",
     hint_break:"Od (M): dziel dalej — gdy brakuje podziału, w diagramie pojawia się symbol zastępczy.",
@@ -1059,10 +1081,11 @@ const I18N = {
     st_fertig:"готово", st_prod:"в эксплуатации", st_highrisk:"высокий риск", st_verworfen:"отклонено",
     unknownStatusWarn:"Строка {line}: неизвестный код статуса «{code}» — показан как нейтральный.",
     sourceLoadWarn:"Не удалось загрузить «{url}» ({error}). Файл должен быть доступен по http(s) и разрешать CORS (Access-Control-Allow-Origin).",
-    a11yStatus:"Статус: {status}", a11ySize:"Оценка: {size}", a11ySizeImplicit:"Оценка: M (предполагается)", a11yTags:"Ответственные: {names}", a11yLink:"со ссылкой",
+    a11yStatus:"Статус: {status}", a11ySize:"Оценка: {size}", a11ySizeImplicit:"Оценка: M (предполагается)", a11yTags:"Ответственные: {names}", a11yOptional:"необязательно", a11yLink:"со ссылкой",
     hint_indent:"Отступ (2 пробела или табуляция) задаёт иерархию.",
     hint_all:"подзадача, все обязательны", hint_any:"альтернатива, выберите одну",
-    hint_root:"Строка без маркера = корневой узел. У соседних узлов должен быть одинаковый маркер.",
+    hint_opt:"дополнение, не обязательно",
+    hint_root:"Строка без маркера = корневой узел. Не смешивайте | с - / +.",
     hint_status:"Статус в виде флажка после маркера, напр.",
     hint_size:"Трудоёмкость как размер футболки в скобках; ссылку добавьте просто как URL:",
     hint_break:"С (M): дробите дальше — если декомпозиции нет, в диаграмме появляется заполнитель.",
@@ -1110,10 +1133,11 @@ const I18N = {
     st_fertig:"पूर्ण", st_prod:"उत्पादन में", st_highrisk:"उच्च जोखिम", st_verworfen:"अस्वीकृत",
     unknownStatusWarn:"पंक्ति {line}: अज्ञात स्थिति कोड „{code}“ — तटस्थ रूप में दिखाया गया।",
     sourceLoadWarn:"„{url}“ लोड नहीं हो सका ({error})। फ़ाइल http(s) से उपलब्ध होनी चाहिए और CORS की अनुमति देनी चाहिए (Access-Control-Allow-Origin)।",
-    a11yStatus:"स्थिति: {status}", a11ySize:"आकार: {size}", a11ySizeImplicit:"आकार: M (अनुमानित)", a11yTags:"जिम्मेदार: {names}", a11yLink:"लिंक सहित",
+    a11yStatus:"स्थिति: {status}", a11ySize:"आकार: {size}", a11ySizeImplicit:"आकार: M (अनुमानित)", a11yTags:"जिम्मेदार: {names}", a11yOptional:"वैकल्पिक", a11yLink:"लिंक सहित",
     hint_indent:"इंडेंट (2 स्पेस या टैब) पदानुक्रम तय करता है।",
     hint_all:"उप-कार्य, सभी आवश्यक", hint_any:"विकल्प, एक चुनें",
-    hint_root:"बिना मार्कर वाली पंक्ति = मूल नोड। सहोदर नोड्स का मार्कर समान होना चाहिए।",
+    hint_opt:"अतिरिक्त, आवश्यक नहीं",
+    hint_root:"बिना मार्कर वाली पंक्ति = मूल नोड। | को - / + के साथ न मिलाएँ।",
     hint_status:"मार्कर के बाद चेकबॉक्स के रूप में स्थिति, जैसे",
     hint_size:"प्रयास कोष्ठक में टी-शर्ट आकार के रूप में; लिंक बस URL के रूप में जोड़ें:",
     hint_break:"(M) से आगे: और विभाजित करें — विभाजन न होने पर आरेख में प्लेसहोल्डर दिखता है।",
@@ -1161,10 +1185,11 @@ const I18N = {
     st_fertig:"已完成", st_prod:"已上线", st_highrisk:"高风险", st_verworfen:"已放弃",
     unknownStatusWarn:"第 {line} 行：未知状态代码“{code}”——显示为中性。",
     sourceLoadWarn:"无法加载“{url}”（{error}）。该文件必须可通过 http(s) 访问并允许 CORS（Access-Control-Allow-Origin）。",
-    a11yStatus:"状态：{status}", a11ySize:"工作量：{size}", a11ySizeImplicit:"工作量：M（假定）", a11yTags:"负责人：{names}", a11yLink:"含链接",
+    a11yStatus:"状态：{status}", a11ySize:"工作量：{size}", a11ySizeImplicit:"工作量：M（假定）", a11yTags:"负责人：{names}", a11yOptional:"可选", a11yLink:"含链接",
     hint_indent:"缩进（2 个空格或制表符）定义层级。",
     hint_all:"子任务，全部必需", hint_any:"备选项，择其一",
-    hint_root:"无标记的行 = 根节点。同级应使用相同的标记。",
+    hint_opt:"附加项，非必需",
+    hint_root:"无标记的行 = 根节点。请勿将 | 与 - / + 混用。",
     hint_status:"在标记后用方框表示状态，例如",
     hint_size:"用括号中的 T 恤尺码表示工作量；链接直接作为 URL 附加：",
     hint_break:"从 (M) 起：继续细分——若缺少细分，图表中会出现占位符。",
@@ -1212,10 +1237,11 @@ const I18N = {
     st_fertig:"完了", st_prod:"本番稼働", st_highrisk:"高リスク", st_verworfen:"破棄",
     unknownStatusWarn:"{line} 行目: 不明なステータス記号「{code}」— 中立として表示。",
     sourceLoadWarn:"「{url}」を読み込めませんでした（{error}）。ファイルは http(s) でアクセス可能で、CORS（Access-Control-Allow-Origin）を許可する必要があります。",
-    a11yStatus:"ステータス: {status}", a11ySize:"規模: {size}", a11ySizeImplicit:"規模: M（想定）", a11yTags:"担当: {names}", a11yLink:"リンクあり",
+    a11yStatus:"ステータス: {status}", a11ySize:"規模: {size}", a11ySizeImplicit:"規模: M（想定）", a11yTags:"担当: {names}", a11yOptional:"任意", a11yLink:"リンクあり",
     hint_indent:"インデント（スペース2つまたはタブ）で階層を定義します。",
     hint_all:"サブタスク、すべて必須", hint_any:"選択肢、1つを選ぶ",
-    hint_root:"マーカーのない行 = ルートノード。兄弟は同じマーカーを使うべきです。",
+    hint_opt:"追加、必須ではない",
+    hint_root:"マーカーのない行 = ルートノード。| を - / + と混在させないでください。",
     hint_status:"マーカーの後にチェックボックスで状態、例：",
     hint_size:"工数は括弧内の T シャツサイズで；リンクは URL としてそのまま追加：",
     hint_break:"(M) 以上：さらに分解 — 分解がないと図にプレースホルダーが表示されます。",
@@ -1234,6 +1260,7 @@ function buildHint(){
   const chip = (key, code) => `<span class="chip st-${key}">${code}&nbsp;${esc(t('st_'+key))}</span>`;
   return `${esc(t('hint_indent'))}<br>
     <code>-</code>&nbsp; ${esc(t('hint_all'))} <em>(all of)</em><br>
+    <code>+</code>&nbsp; ${esc(t('hint_opt'))} <em>(optional)</em><br>
     <code class="or-code">|</code>&nbsp; ${esc(t('hint_any'))} <em>(any of)</em><br>
     ${esc(t('hint_root'))}<br>
     ${esc(t('hint_status'))} <code>- [~] Frontend</code>:

@@ -16,6 +16,7 @@ const SPEC_EXAMPLE = `%% Projektstruktur – Stand Sprint 14
   - [~] Umsetzung (XL)
     - [/] Frontend (S) https://git.example.de/frontend @anna
     - [ ] Backend (L) @ben @carla
+    + [?] Dark Mode (S)  %% Zugabe, nicht erforderlich
     - [ ] CMS-Anbindung (M)
       | [ ] WordPress
       | [?] Headless CMS
@@ -39,11 +40,12 @@ const count = (html, needle) => html.split(needle).length - 1;
 describe('renderTreeHtml — kanonisches Beispiel', () => {
   it('Grundzustand (Pfad aus, verworfene aus): Struktur-Snapshot', () => {
     const {html, warnings} = renderExample();
-    expect(count(html, 'class="node')).toBe(13);      // Eigenentwicklung ausgeblendet
+    expect(count(html, 'class="node')).toBe(14);      // Eigenentwicklung ausgeblendet
     expect(count(html, 'cheap-leaf')).toBe(0);
     expect(count(html, 'size implicit')).toBe(0);
     expect(count(html, 'ghost-node')).toBe(1);         // Backend (L) ist ein M+-Blatt
     expect(count(html, '<ul class="or">')).toBe(2);   // CMS-Anbindung, Hosting
+    expect(html).toMatch(/class="node opt st-idee"[^>]*>Dark Mode/);   // `+` (SPEC §3)
     expect(warnings).toEqual([]);
     expect(html).toMatchSnapshot();
   });
@@ -57,7 +59,7 @@ describe('renderTreeHtml — kanonisches Beispiel', () => {
 
   it('verworfene einblenden: Eigenentwicklung erscheint (durchgestrichen)', () => {
     const {html} = renderExample({showDiscarded: true});
-    expect(count(html, 'class="node')).toBe(14);
+    expect(count(html, 'class="node')).toBe(15);
     expect(html).toContain('st-verworfen');
     expect(html).toMatchSnapshot();
   });
@@ -118,15 +120,16 @@ describe('renderTreeHtml — data-line je Knoten (D25)', () => {
     expect(lineOf(html, 'Website-Relaunch')).toBe(2);      // Zeile 1 ist ein %%-Kommentar
     expect(lineOf(html, 'Zielgruppenanalyse')).toBe(4);
     expect(lineOf(html, 'Frontend')).toBe(7);              // verlinkt -> <a>
-    expect(lineOf(html, 'Headless CMS')).toBe(11);         // any-of-Alternative
-    expect(lineOf(html, 'Eigenentwicklung')).toBe(12);     // verworfen, eingeblendet
+    expect(lineOf(html, 'Dark Mode')).toBe(9);             // optionaler Knoten (+)
+    expect(lineOf(html, 'Headless CMS')).toBe(12);         // any-of-Alternative
+    expect(lineOf(html, 'Eigenentwicklung')).toBe(13);     // verworfen, eingeblendet
   });
 
   it('vergibt jede Zeilennummer genau einmal', () => {
     const {html} = renderExample({showDiscarded: true});
     const lines = [...html.matchAll(/class="node[^"]*"[^>]*?data-line="(\d+)"/g)].map(m => m[1]);
     expect(lines.length).toBe(new Set(lines).size);
-    expect(lines.length).toBe(14);   // alle Zeilen des SPEC-Beispiels außer dem Kommentar
+    expect(lines.length).toBe(15);   // alle Zeilen des SPEC-Beispiels außer dem Kommentar
   });
 
   it('der Geister-Knoten bekommt keine Zeilennummer (er steht für keine Zeile)', () => {
