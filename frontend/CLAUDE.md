@@ -153,6 +153,17 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Handler am Textfeld hebt das wieder auf (läuft vor dem Fokus). Wer sonst
   irgendwo `src.focus()` ergänzt und dabei Tippen meint, muss vorher
   `keyboardOnJump(false)` rufen — so wie `newDoc()`.
+- Legende (D26): **kein `<details>`** — Chrome legt Details-Inhalt in
+  `::details-content`, dadurch war `.hint` kein Flex-Kind mehr und ließ sich nicht
+  begrenzen (Inhalt geclippt statt scrollbar). Jetzt `div.agenda` +
+  `button.agenda-summary`, Zustand an der Klasse `open` (`setAgendaOpen()` hält
+  Klasse, `aria-expanded`, `#legendBtn` und die Sichtbarkeit des Splitters
+  zusammen). Wer hier wieder ein natives Aufklapp-Element einsetzt, bricht das
+  Scrollen. Der Splitter `#hintGutter` schreibt `--hcol` (nebeneinander) bzw.
+  `--hrow` (gestapelt: `side` oder mobil) an `#app`; beide werden getrennt in
+  `werkbaum-ui` gesichert. Die 85-%-Obergrenze steht **zusätzlich** als
+  `max-width`/`max-height` im CSS — die gespeicherte px-Größe würde den Editor
+  sonst erdrücken, wenn das Panel später schrumpft.
 - Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) stapelt
   Diagramm/Editor mit **stufenlosem** Splitter (kein Snap/Collapse wie auf
   Desktop): der Gutter-Drag ruft `setMobileDrow()` (klemmt `--drow` zwischen den

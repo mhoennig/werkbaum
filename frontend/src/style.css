@@ -208,28 +208,48 @@
      Horizontal nebeneinander, vertikal (.side) untereinander. */
   .editor-body{display:flex;align-items:stretch;flex:1 1 auto;min-height:0}
   .editor-body textarea{flex:1 1 auto;min-width:0;min-height:0}
+  /* Legende: bewusst KEIN <details> mehr. Chrome legt den Details-Inhalt in
+     `::details-content`; dadurch war `.hint` kein Flex-Kind von `.agenda` mehr,
+     `flex:1/min-height:0` liefen ins Leere und der Inhalt wurde geclippt statt
+     scrollbar (D26). Als gewöhnlicher Container ist die Kette wieder dicht. */
   .agenda{
     flex:0 0 auto;
     border-left:1px dashed rgba(36,52,71,.18);
-    display:flex;flex-direction:column;
+    display:flex;flex-direction:column;min-height:0;min-width:0;
   }
-  .agenda[open]{width:300px}
-  .agenda>summary{
-    list-style:none;cursor:pointer;white-space:nowrap;
+  /* Die Aufteilung steht als feste px-Größe. Schrumpft das Panel später (Zug am
+     großen Splitter, Drehung, Tastatur), begrenzt max-* die Legende, damit der
+     Editor nicht auf 0 gedrückt wird — gleiche Schranke wie beim Ziehen. */
+  .agenda.open{width:var(--hcol,300px);max-width:85%;overflow:hidden}
+  .agenda-summary{
+    flex:0 0 auto;
+    background:none;border:0;text-align:left;
+    cursor:pointer;white-space:nowrap;
     padding:10px 16px;
     font-family:'IBM Plex Mono',monospace;
     font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
     display:flex;align-items:center;gap:7px;
   }
-  .agenda>summary::-webkit-details-marker{display:none}
-  .agenda>summary::before{content:'▸';display:inline-block;transition:transform .15s}
-  .agenda[open]>summary::before{transform:rotate(90deg)}
-  .agenda{min-height:0}
-  .agenda[open]{overflow:hidden}
+  .agenda-summary::before{content:'▸';display:inline-block;transition:transform .15s}
+  .agenda.open>.agenda-summary::before{transform:rotate(90deg)}
+  .agenda-summary:focus-visible{outline:2px solid var(--or);outline-offset:-2px}
+  .agenda:not(.open) .hint{display:none}
   .agenda .hint{border-top:0;flex:1 1 auto;min-height:0;overflow:auto}
+  /* Splitter zwischen Editor und Legende — dieselbe Sprache wie der große
+     Splitter, nur schmaler. Ohne offene Legende gibt es nichts zu teilen. */
+  .hint-gutter{
+    flex:0 0 10px;align-self:stretch;
+    cursor:col-resize;touch-action:none;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .hint-gutter[hidden]{display:none}
+  .hint-gutter::before{content:'';width:3px;height:38px;border-radius:2px;background:rgba(36,52,71,.18)}
+  .hint-gutter:hover::before,.hint-gutter.dragging::before{background:var(--or)}
   .side .editor-body{flex-direction:column;align-items:stretch}
   .side .agenda{border-left:0;border-top:1px dashed rgba(36,52,71,.18)}
-  .side .agenda[open]{width:auto}
+  .side .agenda.open{width:auto;max-width:none;height:var(--hrow,220px);max-height:85%}
+  .side .hint-gutter{cursor:row-resize}
+  .side .hint-gutter::before{width:38px;height:3px}
 
   .panel{
     background:var(--card);
@@ -713,9 +733,11 @@
   /* Editor immer gestapelt (Textarea oben, Legende darunter) */
   body.mobile .editor-body{flex-direction:column;align-items:stretch}
   body.mobile .agenda{border-left:0;border-top:1px dashed rgba(36,52,71,.18)}
-  body.mobile .agenda[open]{width:auto}
+  body.mobile .agenda.open{width:auto;max-width:none;height:var(--hrow,220px);max-height:85%}
+  body.mobile .hint-gutter{cursor:row-resize}
+  body.mobile .hint-gutter::before{width:38px;height:3px}
   /* Legende: keine dauerhafte Summary-Zeile, dafür der #legendBtn im Kopf */
-  body.mobile .agenda>summary{display:none}
+  body.mobile .agenda-summary{display:none}
   body.mobile .legendbtn{display:inline-flex}
   /* Sprachwahl schlank: eingeklappt nur die aktive Sprache. Ein Tipp klappt die
      volle Leiste als Overlay über die Kopfzeile auf (verdeckt fsToggle usw.,

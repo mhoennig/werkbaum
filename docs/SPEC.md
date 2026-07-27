@@ -225,6 +225,16 @@ Scheitert das Laden (häufigster Fall: das Ziel sendet keinen
 `Access-Control-Allow-Origin`-Header, außerdem 404/Netzfehler), bleibt der
 bisherige Stand stehen und es erscheint eine **Warnung**. Siehe D23.
 
+### Legende im Editor-Panel
+Neben dem Textfeld steht eine aufklappbare **Legende** (Notation in Kurzform,
+abschließend eine Bedienungs-Zeile). Sie ist **scrollbar**, wenn ihr Inhalt
+höher ist als der Platz, und über einen eigenen **Splitter** vom Textfeld
+abgeteilt: horizontal nebeneinander (Legendenbreite), in den gestapelten Modi
+und auf kleinem Bildschirm untereinander (Legendenhöhe). Ziehen verteilt frei,
+Doppelklick stellt die Vorgabe wieder her; die Aufteilung bleibt für beide
+Ausrichtungen getrennt erhalten. Die Legende belegt höchstens 85 % des Panels,
+damit das Textfeld nie ganz verschwindet. Siehe D26.
+
 ### Sprung zwischen Diagramm und Text
 Jeder Knoten kennt seine Zeilennummer im Notationstext; beide Richtungen sind
 verknüpft (siehe D25):

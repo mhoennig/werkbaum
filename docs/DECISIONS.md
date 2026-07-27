@@ -586,3 +586,36 @@ Verworfen: die Tastatur zuzulassen und auf die OS-Einstellung zu verweisen (lös
 es nur auf einem Gerät), sowie ein eigener Umschalter dafür (weiteres
 Bedienelement in einer engen Kopfzeile plus i18n in 9 Sprachen, für ein
 Verhalten, das kaum jemand umstellen will).
+
+## D26 — Legende scrollbar: eigener Container statt `<details>`, plus Splitter
+Die Legende („Agenda") im Editor-Panel war zu hoch für ihren Platz und wurde
+**abgeschnitten** statt scrollbar zu sein — obwohl `.hint` seit jeher
+`flex:1 1 auto; min-height:0; overflow:auto` trug.
+
+**Ursache:** Chrome legt den Inhalt eines `<details>` seit einiger Zeit in das
+Pseudo-Element **`::details-content`**. Damit ist `.hint` **kein Flex-Kind** von
+`.agenda` mehr; die Flex-Begrenzung greift nicht, `.hint` wächst auf seine
+Inhaltshöhe (gemessen 585 px in einem 282 px hohen Container) und wird vom
+`overflow:hidden` der Agenda geclippt. Ein Gegenmittel wäre
+`.agenda::details-content{display:flex;…}` (im Test wirksam: 585 → 248 px,
+scrollbar), aber das Pseudo-Element ist Chrome-eigen — Firefox und Safari kennen
+es nicht, dort hinge dieselbe Layout-Kette an einem anderen anonymen Kasten.
+
+**Entscheidung: kein `<details>` mehr.** Die Legende ist ein gewöhnliches
+`<div class="agenda">` mit `<button class="agenda-summary">`; der Auf-/Zu-Zustand
+hängt an der Klasse `open` (`aria-expanded` am Button). Damit ist `.hint` wieder
+ein echtes Flex-Kind und die Begrenzung in **allen** Browsern dieselbe. Die
+native Aufklapp-Mechanik war ohnehin nur halb genutzt — mobil steuert seit D17
+der `#legendBtn` im Kopf, das `toggle`-Ereignis diente nur der Synchronisierung.
+
+**Splitter Editor|Legende.** Die Aufteilung ist nun frei ziehbar, im selben
+Idiom wie der große Splitter (`pointerdown`/`pointermove`/Pointer-Capture,
+Doppelklick setzt zurück). Die Ausrichtung folgt derselben Fallunterscheidung
+wie dort: horizontal nebeneinander → Legendenbreite `--hcol`, gestapelt (`side`
+oder mobil) → Legendenhöhe `--hrow`. **Beide Werte werden getrennt gehalten und
+persistiert** (`werkbaum-ui`), sodass ein Moduswechsel die jeweils andere
+Aufteilung nicht zerstört; der Auf-/Zu-Zustand der Legende wird mitgesichert.
+Grenzen: mindestens 90 px, höchstens 85 % — die Obergrenze steht **zusätzlich
+als `max-width`/`max-height` im CSS**, weil die gespeicherte Größe ein fester
+px-Wert ist: schrumpft das Panel später (Zug am großen Splitter, Drehung,
+Bildschirmtastatur), würde der Editor sonst auf 0 gedrückt.

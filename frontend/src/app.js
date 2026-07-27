@@ -770,6 +770,8 @@ const I18N = {
     downloadMenu:"Diagramm herunterladen (SVG/PNG)",
     minimize:"minimieren", normal:"normal", maximize:"maximieren",
     agenda:"Agenda", discarded:"verworfene",
+    gutterTooltip:"Ziehen zum Verschieben, Doppelklick setzt zurück", gutterAria:"Bereiche größenverändern",
+    hintGutterAria:"Editor und Legende größenverändern",
     modeHorizontal:"Horizontal – Organigramm, Diagramm über dem Editor",
     modeKompakt:"Kompakt – alles nach unten, platzsparend",
     modeVertikal:"Vertikal – Baum nach rechts, Diagramm neben dem Editor",
@@ -818,6 +820,8 @@ const I18N = {
     downloadMenu:"Download diagram (SVG/PNG)",
     minimize:"minimize", normal:"normal", maximize:"maximize",
     agenda:"Legend", discarded:"discarded",
+    gutterTooltip:"Drag to resize, double-click resets", gutterAria:"Resize the areas",
+    hintGutterAria:"Resize editor and legend",
     modeHorizontal:"Horizontal – org chart, diagram above the editor",
     modeKompakt:"Compact – everything downward, space-saving",
     modeVertikal:"Vertical – tree to the right, diagram beside the editor",
@@ -866,6 +870,8 @@ const I18N = {
     downloadMenu:"Descargar el diagrama (SVG/PNG)",
     minimize:"minimizar", normal:"normal", maximize:"maximizar",
     agenda:"Leyenda", discarded:"descartados",
+    gutterTooltip:"Arrastra para redimensionar, doble clic restablece", gutterAria:"Redimensionar las áreas",
+    hintGutterAria:"Redimensionar editor y leyenda",
     modeHorizontal:"Horizontal – organigrama, diagrama sobre el editor",
     modeKompakt:"Compacto – todo hacia abajo, ahorra espacio",
     modeVertikal:"Vertical – árbol hacia la derecha, diagrama junto al editor",
@@ -914,6 +920,8 @@ const I18N = {
     downloadMenu:"Télécharger le diagramme (SVG/PNG)",
     minimize:"réduire", normal:"normal", maximize:"agrandir",
     agenda:"Légende", discarded:"abandonnés",
+    gutterTooltip:"Glisser pour redimensionner, double-clic pour réinitialiser", gutterAria:"Redimensionner les zones",
+    hintGutterAria:"Redimensionner l'éditeur et la légende",
     modeHorizontal:"Horizontal – organigramme, diagramme au-dessus de l'éditeur",
     modeKompakt:"Compact – tout vers le bas, gain de place",
     modeVertikal:"Vertical – arbre vers la droite, diagramme à côté de l'éditeur",
@@ -962,6 +970,8 @@ const I18N = {
     downloadMenu:"Pobierz diagram (SVG/PNG)",
     minimize:"minimalizuj", normal:"normalny", maximize:"maksymalizuj",
     agenda:"Legenda", discarded:"odrzucone",
+    gutterTooltip:"Przeciągnij, aby zmienić rozmiar; dwuklik przywraca", gutterAria:"Zmień rozmiar obszarów",
+    hintGutterAria:"Zmień rozmiar edytora i legendy",
     modeHorizontal:"Poziomo – schemat organizacyjny, diagram nad edytorem",
     modeKompakt:"Kompaktowo – wszystko w dół, oszczędza miejsce",
     modeVertikal:"Pionowo – drzewo w prawo, diagram obok edytora",
@@ -1010,6 +1020,8 @@ const I18N = {
     downloadMenu:"Скачать диаграмму (SVG/PNG)",
     minimize:"свернуть", normal:"обычный", maximize:"развернуть",
     agenda:"Легенда", discarded:"отклонённые",
+    gutterTooltip:"Потяните, чтобы изменить размер; двойной щелчок сбрасывает", gutterAria:"Изменить размер областей",
+    hintGutterAria:"Изменить размер редактора и легенды",
     modeHorizontal:"Горизонтально – оргсхема, диаграмма над редактором",
     modeKompakt:"Компактно – всё вниз, экономит место",
     modeVertikal:"Вертикально – дерево вправо, диаграмма рядом с редактором",
@@ -1058,6 +1070,8 @@ const I18N = {
     downloadMenu:"आरेख डाउनलोड करें (SVG/PNG)",
     minimize:"छोटा करें", normal:"सामान्य", maximize:"बड़ा करें",
     agenda:"लेजेंड", discarded:"अस्वीकृत",
+    gutterTooltip:"आकार बदलने के लिए खींचें, डबल-क्लिक रीसेट करता है", gutterAria:"क्षेत्रों का आकार बदलें",
+    hintGutterAria:"संपादक और लेजेंड का आकार बदलें",
     modeHorizontal:"क्षैतिज – संगठन-चार्ट, संपादक के ऊपर आरेख",
     modeKompakt:"सघन – सब नीचे की ओर, जगह बचाता है",
     modeVertikal:"लंबवत – पेड़ दाईं ओर, संपादक के बगल में आरेख",
@@ -1106,6 +1120,8 @@ const I18N = {
     downloadMenu:"下载图表（SVG/PNG）",
     minimize:"最小化", normal:"正常", maximize:"最大化",
     agenda:"图例", discarded:"已放弃",
+    gutterTooltip:"拖动可调整大小，双击可重置", gutterAria:"调整区域大小",
+    hintGutterAria:"调整编辑器和图例大小",
     modeHorizontal:"横向——组织结构图，图表在编辑器上方",
     modeKompakt:"紧凑——全部向下，节省空间",
     modeVertikal:"纵向——树向右展开，图表在编辑器旁边",
@@ -1154,6 +1170,8 @@ const I18N = {
     downloadMenu:"ダイアグラムをダウンロード（SVG/PNG）",
     minimize:"最小化", normal:"標準", maximize:"最大化",
     agenda:"凡例", discarded:"破棄",
+    gutterTooltip:"ドラッグでサイズ変更、ダブルクリックでリセット", gutterAria:"領域のサイズを変更",
+    hintGutterAria:"エディターと凡例のサイズを変更",
     modeHorizontal:"横 — 組織図、ダイアグラムはエディターの上",
     modeKompakt:"コンパクト — すべて下方向、省スペース",
     modeVertikal:"縦 — ツリーを右へ、ダイアグラムはエディターの横",
@@ -1353,6 +1371,12 @@ function saveUI(){
       split: splitState,
       col: app.style.getPropertyValue('--col') || null,
       drow: app.style.getPropertyValue('--drow') || null,
+      /* Legende: auf/zu + Aufteilung Editor|Legende (D26). Bewusst per
+         DOM-Abfrage statt über die `agenda`-Konstante — die wird erst weiter
+         unten deklariert, und saveUI() läuft schon aus applySplit() heraus. */
+      agenda: !!document.querySelector('.agenda.open'),
+      hcol: app.style.getPropertyValue('--hcol') || null,
+      hrow: app.style.getPropertyValue('--hrow') || null,
       zoom: zoom,
       fullscreen: document.body.classList.contains('fullscreen')
     }));
@@ -1387,6 +1411,10 @@ function restoreState(){
     if(ui && ui.col)  app.style.setProperty('--col', ui.col);
     if(ui && ui.drow) app.style.setProperty('--drow', ui.drow);
   }
+  /* Legende (D26): Aufteilung gilt unabhängig vom Preset des großen Splitters. */
+  if(ui && ui.hcol) app.style.setProperty('--hcol', ui.hcol);
+  if(ui && ui.hrow) app.style.setProperty('--hrow', ui.hrow);
+  setAgendaOpen(!!(ui && ui.agenda));
   applyZoom();
   restoring = false;
 }
@@ -1595,13 +1623,68 @@ window.addEventListener('orientationchange', setAppHeight);
 if(window.visualViewport){
   window.visualViewport.addEventListener('resize', setAppHeight);
 }
+/* ---------- Legende: auf/zu + Splitter zum Editor (D26) ----------
+   Die Legende ist ein gewöhnlicher Container (kein <details> mehr, siehe
+   style.css/D26); der Auf-/Zu-Zustand hängt an der Klasse `open`. */
 const legendBtn = document.getElementById('legendBtn');
-const agenda = document.querySelector('.agenda');
-legendBtn.addEventListener('click', () => {
-  agenda.open = !agenda.open;
-  legendBtn.classList.toggle('active', agenda.open);
+const agenda = document.getElementById('agenda');
+const agendaToggle = document.getElementById('agendaToggle');
+const hintGutter = document.getElementById('hintGutter');
+const editorBody = document.querySelector('.editor-body');
+function agendaOpen(){ return agenda.classList.contains('open'); }
+function setAgendaOpen(on){
+  agenda.classList.toggle('open', on);
+  agendaToggle.setAttribute('aria-expanded', on ? 'true' : 'false');
+  legendBtn.classList.toggle('active', on);
+  hintGutter.hidden = !on;   /* ohne offene Legende gibt es nichts zu teilen */
+  saveUI();
+}
+legendBtn.addEventListener('click', () => setAgendaOpen(!agendaOpen()));
+agendaToggle.addEventListener('click', () => setAgendaOpen(!agendaOpen()));
+
+/* Splitter Editor|Legende. Im horizontalen Modus liegen sie nebeneinander
+   (Legendenbreite `--hcol`), in den gestapelten Modi untereinander
+   (Legendenhöhe `--hrow`) — dieselbe Fallunterscheidung wie beim großen
+   Splitter. Gezogen wird von der Editorseite aus, die Legende behält also
+   den Abstand zum jeweils gegenüberliegenden Rand. */
+const HINT_MIN = 90;          /* Titelzeile + ein paar Zeilen bleiben immer da */
+const HINT_MAX_SHARE = 0.85;
+function editorStacked(){ return isMobile() || app.classList.contains('side'); }
+let hintDragging = false;
+hintGutter.addEventListener('pointerdown', e => {
+  hintDragging = true;
+  hintGutter.classList.add('dragging');
+  hintGutter.setPointerCapture(e.pointerId);
+  document.body.style.userSelect = 'none';
+  e.preventDefault();
 });
-agenda.addEventListener('toggle', () => legendBtn.classList.toggle('active', agenda.open));
+hintGutter.addEventListener('pointermove', e => {
+  if(!hintDragging) return;
+  const b = editorBody.getBoundingClientRect();
+  if(editorStacked()){
+    const h = Math.min(Math.max(b.bottom - e.clientY, HINT_MIN), b.height * HINT_MAX_SHARE);
+    app.style.setProperty('--hrow', Math.round(h) + 'px');
+  } else {
+    const w = Math.min(Math.max(b.right - e.clientX, HINT_MIN), b.width * HINT_MAX_SHARE);
+    app.style.setProperty('--hcol', Math.round(w) + 'px');
+  }
+});
+function endHintDrag(e){
+  if(!hintDragging) return;
+  hintDragging = false;
+  hintGutter.classList.remove('dragging');
+  document.body.style.userSelect = '';
+  try{ hintGutter.releasePointerCapture(e.pointerId); }catch(_){}
+  saveUI();
+}
+hintGutter.addEventListener('pointerup', endHintDrag);
+hintGutter.addEventListener('pointercancel', endHintDrag);
+/* Doppelklick stellt die Vorgabegröße wieder her (CSS-Default greift dann). */
+hintGutter.addEventListener('dblclick', () => {
+  app.style.removeProperty('--hcol');
+  app.style.removeProperty('--hrow');
+  saveUI();
+});
 /* Modus-Wähler auf kleinem Bildschirm: es ist nur das aktive Icon sichtbar,
    Tippen schaltet zum nächsten Modus (reihum). Auf normaler Größe bleibt es
    der Dreier-Umschalter — dort kehrt der Handler sofort zurück. */
