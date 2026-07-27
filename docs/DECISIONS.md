@@ -649,9 +649,19 @@ Nutzerdaten. (Die erste Fassung hieß durch einen Tippfehler „Werkbank";
 ausgelieferte ist, damit eine eigene Umbenennung stehen bleibt.) Der Reset (D22) setzt jetzt **beide** mitgelieferten Dokumente auf
 ihren Auslieferungsstand zurück; eigene Dokumente bleiben weiterhin unangetastet.
 
-**Offen:** Der Text wird nach dem Anlegen nicht mehr aktualisiert. Erscheint
-später eine neuere Fassung des Plans, sieht sie nur, wer das Dokument löscht und
-zurücksetzt oder den `?sourceUrl=`-Link öffnet. Ein Ausbau könnte in
-`werkbaum-seeded` statt '1' eine Versionsnummer ablegen und ein **unverändertes**
-Dokument nachziehen (bearbeitete nie) — dieselbe Adoptions-Regel wie beim
-Beispiel in D22.
+**Nachziehen bei neuer Fassung (nachgereicht).** Zuerst wurde der Text nur
+einmalig angelegt — eine spätere Ergänzung des Plans erreichte niemanden mehr.
+Das fiel sofort auf, als der Plan um den Abschnitt „gemeinsam arbeiten"
+(ROADMAP) wuchs. `werkbaum-seeded` hält deshalb nicht mehr '1', sondern den
+**Fingerabdruck** (FNV-1a) der zuletzt ausgelieferten Fassung. Beim Laden gilt:
+
+- kein Merker → Dokument einmalig anlegen (auch für Bestandsnutzer);
+- Merker ≠ aktueller Fingerabdruck **und** der Text des Nutzers hat noch genau
+  den gemerkten Fingerabdruck → Text nachziehen;
+- Text **verändert** → nie anfassen (dieselbe Adoptions-Regel wie beim Beispiel
+  in D22: nur Unverändertes wird adoptiert);
+- Dokument gelöscht → bleibt gelöscht.
+
+Der Altwert `'1'` aus der ersten Fassung sagt nichts über den Textstand; dort
+wird bewusst nichts überschrieben, nur der Merker ersetzt. Wer aus dieser kurzen
+Zwischenfassung kommt, holt den aktuellen Stand über den Reset.

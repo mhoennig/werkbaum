@@ -110,9 +110,12 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `../../docs/examples/example-werkbaum.werkbaum?raw` — die Beispieldatei ist
   damit **Build-Eingabe**, Umbenennen/Verschieben bricht den Build (Zugriff
   außerhalb des Roots erlaubt `server.fs.allow:['..']`). `seedShippedDocs()` legt
-  es **einmalig** an (auch für Bestandsnutzer) und merkt sich das in
-  `werkbaum-seeded`; ohne den Merker käme ein gelöschtes Dokument bei jedem Laden
-  zurück. `resetToDefaults()` setzt beide mitgelieferten Dokumente zurück.
+  es **einmalig** an (auch für Bestandsnutzer); ohne den Merker `werkbaum-seeded`
+  käme ein gelöschtes Dokument bei jedem Laden zurück. Der Merker hält den
+  **Fingerabdruck** der ausgelieferten Fassung: Ändert sich die Datei, wird der
+  Text nur nachgezogen, wenn der Nutzer ihn **nicht** bearbeitet hat. Wer die
+  Beispieldatei ändert, ändert damit das mitgelieferte Dokument mit.
+  `resetToDefaults()` setzt beide mitgelieferten Dokumente **und** den Merker.
 - Umbenennen ist **inline** (kein `window.prompt` — in manchen Browser-Kontexten
   unterdrückt): `renameDoc()` setzt `renamingId`, `renderDocMenu()` rendert dann
   ein `<input class="docrename">` (Enter = `commitRename`, Esc = `cancelRename`,

@@ -1340,18 +1340,33 @@ function persistDocs(){
     if(d) localStorage.setItem(LS_SRC, d.text);   /* Spiegel für Fallback/Migration */
   }catch(_){}
 }
-/* „Werkbank" (D27) genau EINMAL anlegen — auch für Bestandsnutzer, die schon
-   eine Dokumentenliste haben. Der Merker `LS_SEEDED` sorgt dafür, dass ein
-   bewusst gelöschtes Dokument nicht bei jedem Laden zurückkehrt; ein späterer
-   Ausbau kann dort eine Versionsnummer statt '1' ablegen. */
+/* Kurzer, stabiler Fingerabdruck (FNV-1a) — dient nur dem Vergleich „ist das
+   noch der ausgelieferte Text?"; keine kryptografische Anforderung. */
+function fingerprint(s){
+  let h = 0x811c9dc5;
+  for(let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return (h >>> 0).toString(36);
+}
+
+/* Mitgeliefertes Dokument „Werkbaum" (D27) anlegen bzw. nachziehen. In
+   `LS_SEEDED` steht der Fingerabdruck der zuletzt ausgelieferten Fassung:
+   - kein Merker  -> Dokument einmalig anlegen (auch für Bestandsnutzer);
+   - neue Fassung -> Text nur ersetzen, wenn der Nutzer ihn NICHT geändert hat
+     (sein Fingerabdruck also noch dem gemerkten entspricht);
+   - gelöscht     -> bleibt gelöscht (der Merker verhindert die Wiederkehr).
+   Der Altwert '1' aus der ersten Fassung sagt nichts über den Textstand, dort
+   wird bewusst nichts angefasst — nur der Merker wird ersetzt. */
 function seedShippedDocs(){
-  let seeded = null;
-  try{ seeded = localStorage.getItem(LS_SEEDED); }catch(_){}
-  if(seeded) return;
-  if(!docs.some(d => d.id === WERKBAUM_ID)){
-    docs.push({ id: WERKBAUM_ID, name: WERKBAUM_NAME, text: WERKBAUM_DOC });
+  const fp = fingerprint(WERKBAUM_DOC);
+  let seen = null;
+  try{ seen = localStorage.getItem(LS_SEEDED); }catch(_){}
+  const doc = docs.find(d => d.id === WERKBAUM_ID);
+  if(!seen){
+    if(!doc) docs.push({ id: WERKBAUM_ID, name: WERKBAUM_NAME, text: WERKBAUM_DOC });
+  } else if(seen !== '1' && seen !== fp && doc && fingerprint(doc.text) === seen){
+    doc.text = WERKBAUM_DOC;
   }
-  try{ localStorage.setItem(LS_SEEDED, '1'); }catch(_){}
+  try{ localStorage.setItem(LS_SEEDED, fp); }catch(_){}
 }
 
 /* Aus dem localStorage laden; bei fehlender Dokumentenliste den bestehenden
@@ -2065,6 +2080,9 @@ function resetToDefaults(){
   };
   reseed(EXAMPLE_ID, EXAMPLE_NAME, INITIAL, true);
   reseed(WERKBAUM_ID, WERKBAUM_NAME, WERKBAUM_DOC, false);
+  /* Merker auf den jetzt ausgelieferten Stand setzen (D27) — sonst hielte ein
+     Altwert die spätere Nachzieh-Logik davon ab, den Text je zu aktualisieren. */
+  try{ localStorage.setItem(LS_SEEDED, fingerprint(WERKBAUM_DOC)); }catch(_){}
   activeId = EXAMPLE_ID;
   persistDocs();
   logUpdate('🔄 Mitgelieferte Dokumente und Einstellungen zurückgesetzt');

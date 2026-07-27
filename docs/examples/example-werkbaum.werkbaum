@@ -58,6 +58,21 @@
     - [?] Accounts and permissions (L)
       | [?] Single user, one token (S)
       | [?] Log in with OIDC (L)
+  - [?] Working together on one plan (XL)
+    - [ ] Git as the shared store (L)
+      | [ ] A file in a repository, changed by pull request (S)  %% works today, no code
+      | [?] The backend commits every change (L)
+        - [?] History and restore (M)
+          - [?] Diff between two versions (S)
+          - [?] Who changed this line (S)
+        - [?] A branch per scenario (S)
+    - [?] Live editing, several people at once (XL)
+      - [ ] Transport over a websocket (S)  %% the easy half
+      - [!] Merging simultaneous edits (L)  %% the actual work
+        | [?] Text CRDT — the plan is plain text, so it fits (L)
+        | [?] Operational transformation (XL)
+      - [?] Cursors and who else is here (S)
+      - [-] A merge algorithm of our own (XL)  %% solved problem, do not reinvent
   - [?] Mermaid plugin (XL)
     - [!] A layout engine of its own (XL)  %% measure, place, route — the real work
       - [ ] Measure node sizes (M)

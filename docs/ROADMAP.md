@@ -44,6 +44,46 @@ in laufender Entwicklung, Integrationsfähigkeit erklärtes Ziel — noch zu
 jung als Plattform-Ziel. Companion-App so schneiden, dass ein späterer
 Umzug Taiga → Tenzu nur den API-Adapter betrifft.
 
+## Gemeinsam an einem Diagramm arbeiten
+Ziel: mehrere Personen ändern denselben Plan. Drei Stufen, aufeinander
+aufbauend — die dritte lohnt nur, wenn wirklich gleichzeitig gearbeitet wird.
+
+**1. Lesen teilen — vorhanden.** `?sourceUrl=` (D23) zeigt eine entfernte
+Textdatei an; die Quelle wird anderswo gepflegt. Einbahnstraße, aber ohne
+jeden Server.
+
+**2. Asynchron ändern über Git — heute schon möglich, ohne eine Zeile Code.**
+Die `.werkbaum`-Datei (D24) liegt im Repository, wird per Pull Request geändert
+und per `?sourceUrl=` angezeigt. Weil der Plan **Text** ist (D14), sind
+`git diff` und `git blame` tatsächlich lesbar („wer hat *Payment provider* auf
+`[!]` gesetzt?"). Für einen Plan, der sich pro Woche und nicht pro Sekunde
+ändert, ist das oft die passendere Antwort — mit Review und Historie obendrauf.
+Ausbau: Das Backend (D13) legt jede Änderung als Commit ab und bekommt
+Historie, Wiederherstellung und Verzweigungen für Szenarien geschenkt.
+
+*Git direkt aus dem Browser* ist technisch möglich (`isomorphic-git` spricht das
+HTTP-Smart-Protokoll), taugt aber nicht als Live-Sync: Es synchronisiert auf
+Zuruf statt fortlaufend, braucht wegen fehlender CORS-Header einen Proxy (SSH
+scheidet im Browser ohnehin aus), und ein Konflikt landet als
+`<<<<<<<`-Markierung mitten in der Notation — der Parser sähe kaputte Zeilen.
+
+**3. Live gemeinsam tippen — offen.** Der **Transport** ist das kleinere
+Problem (WebSocket; SSE + POST oder WebRTC als Alternativen). Die eigentliche
+Frage ist, was passiert, wenn zwei Personen **dieselbe Zeile** ändern: Naives
+„jede Änderung sofort in beide Richtungen" führt zu Textsprüngen unter dem
+Cursor und verlorenen Zeichen. Erprobte Antworten sind **Operational
+Transformation** (Google Docs) und **CRDTs**. Für Werkbaum fällt die Wahl
+leicht, weil D14 das Format auf puren Text festgelegt hat: Ein Text-CRDT
+(`Y.Text` in Yjs, oder Loro) passt ohne eigene Merge-Logik darauf; Cursor und
+Anwesenheit fallen als Beigabe ab. **Eigene Merge-Algorithmen sind hier kein
+Betätigungsfeld** — das Problem ist gelöst.
+
+Offene Punkte vor einer Entscheidung: Yjs wäre die **erste
+Laufzeit-Abhängigkeit** überhaupt (CLAUDE: nicht ohne Rückfrage); wie CRDT-
+Zustand und Git-Historie zusammenspielen (Commit-Granularität — nicht jeder
+Tastendruck ein Commit); und wer bei einem Backend eigentlich was darf
+(Rechte, siehe „Accounts" im Werkbaum-Beispielplan).
+
 ## Kleinere Ideen
 - Deterministische Pastellfarbe pro `@name` (Personen wiedererkennen).
 - Sichtbare Anmerkungen am Knoten (eigene Syntax, getrennt von `%%`).
