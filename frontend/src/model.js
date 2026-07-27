@@ -68,3 +68,44 @@ export function cheapCls(n, cheapSet){
   const leaf = !pathChildren(n).some(k => cheapSet.has(k));
   return leaf ? 'cheap cheap-leaf' : 'cheap';
 }
+
+/* ---------- Was ist neu? (D28) ----------
+   „Neu" heißt hier bewusst nicht „Zeile hinzugefügt", sondern **neu in
+   Produktion**: ein Knoten, der jetzt `[^]` trägt und es in der zuletzt
+   gesehenen Fassung noch nicht tat (weil er anders stand oder fehlte). Das ist
+   die Änderungsmeldung, die einen Plan-Leser wirklich interessiert.
+
+   Knoten-Identität ist der **Pfad der Labels** von der Wurzel, nicht die
+   Zeilennummer: Umeinrücken oder Umsortieren erzeugt so keine Falschmeldungen.
+   Gleichnamige Geschwister werden über einen Index unterschieden. Ein
+   umbenanntes Label gilt als neuer Knoten — gewollt, der Text ist der Vertrag
+   (D14). */
+function walkKeys(nodes, parentKey, fn){
+  const seen = new Map();
+  for(const n of nodes){
+    const base = parentKey + ' > ' + n.label;
+    const i = seen.get(base) || 0;
+    seen.set(base, i + 1);
+    const key = i ? base + '#' + i : base;
+    fn(key, n);
+    walkKeys(n.children, key, fn);
+  }
+}
+/* key -> Status-Schlüssel ('' für neutrale Knoten) über den ganzen Baum. */
+export function statusByKey(roots){
+  const map = new Map();
+  walkKeys(roots, '', (key, n) => map.set(key, n.status ? n.status.key : ''));
+  return map;
+}
+/* Menge der Knoten, die gegenüber `prevRoots` NEU in Produktion sind.
+   `prevRoots == null` (noch keine Vergleichsfassung) ⇒ leere Menge — sonst
+   leuchtete beim ersten Ansehen der ganze fertige Teil des Plans auf. */
+export function freshProdSet(prevRoots, currRoots){
+  const set = new Set();
+  if(!prevRoots) return set;
+  const before = statusByKey(prevRoots);
+  walkKeys(currRoots, '', (key, n) => {
+    if(n.status && n.status.key === 'prod' && before.get(key) !== 'prod') set.add(n);
+  });
+  return set;
+}

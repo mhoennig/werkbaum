@@ -174,6 +174,14 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `werkbaum-ui` gesichert. Die 85-%-Obergrenze steht **zusätzlich** als
   `max-width`/`max-height` im CSS — die gespeicherte px-Größe würde den Editor
   sonst erdrücken, wenn das Panel später schrumpft.
+- „Was ist neu?" (D28): `freshProdSet(prevRoots, currRoots)` in `model.js` liefert
+  die Knoten, die **neu `[^]`** sind (Identität = Label-Pfad, nicht Zeile).
+  `render()` bildet die Menge **bei jedem Durchlauf neu** aus den gerade
+  geparsten `roots` — eine vorab berechnete Menge stammte aus einem anderen
+  Parse-Durchlauf und träfe per Objektidentität nie zu (genau dieser Fehler ist
+  passiert: Zähler stimmte, nichts leuchtete). Vorgehalten wird nur
+  `freshPrevRoots` (Basis, einmal geparst). Basis je Dokument in `werkbaum-seen`,
+  fortgeschrieben **erst beim Bestätigen** über `#freshBtn`.
 - Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) stapelt
   Diagramm/Editor mit **stufenlosem** Splitter (kein Snap/Collapse wie auf
   Desktop): der Gutter-Drag ruft `setMobileDrow()` (klemmt `--drow` zwischen den

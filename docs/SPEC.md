@@ -235,6 +235,17 @@ Doppelklick stellt die Vorgabe wieder her; die Aufteilung bleibt für beide
 Ausrichtungen getrennt erhalten. Die Legende belegt höchstens 85 % des Panels,
 damit das Textfeld nie ganz verschwindet. Siehe D26.
 
+### Was ist neu? (Dokumente von außen)
+Bei Dokumenten, die von außen kommen (mitgeliefert oder per `?sourceUrl=`), wird
+gezeigt, was sich seit dem letzten Besuch getan hat. **„Neu" heißt: neu in
+Produktion** — ein Knoten trägt jetzt `[^]` und tat es in der zuletzt gesehenen
+Fassung nicht. Solche Knoten bekommen einen **gelben Strahlenkranz** nach außen
+(die Füllung bleibt die Statusfarbe aus §4). Ein Knopf im Diagramm-Kopf nennt
+die Anzahl und bestätigt per Klick; danach ist die aktuelle Fassung die neue
+Vergleichsbasis. Beim ersten Ansehen eines Dokuments leuchtet nichts. Der Kranz
+erscheint weder im Druck noch im Grafikexport — er hängt am persönlichen
+Besuchsstand. Siehe D28.
+
 ### Sprung zwischen Diagramm und Text
 Jeder Knoten kennt seine Zeilennummer im Notationstext; beide Richtungen sind
 verknüpft (siehe D25):

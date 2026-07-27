@@ -237,6 +237,15 @@
   .agenda .hint{border-top:0;flex:1 1 auto;min-height:0;overflow:auto}
   /* Splitter zwischen Editor und Legende — dieselbe Sprache wie der große
      Splitter, nur schmaler. Ohne offene Legende gibt es nichts zu teilen. */
+  /* Neuheiten-Knopf im Diagramm-Kopf (D28): Sternchen + Anzahl, nur sichtbar,
+     wenn es etwas gibt. Gelb wie der Strahlenkranz am Knoten. */
+  .freshbtn{position:relative;color:#A16207;border-color:#FACC15;background:#FEFCE8}
+  .freshbtn:hover{color:#854D0E;border-color:#EAB308}
+  .freshbtn[hidden]{display:none}
+  .freshcount{
+    font-family:'IBM Plex Mono',monospace;font-size:.62rem;font-weight:600;
+    margin-left:3px;vertical-align:2px;
+  }
   .hint-gutter{
     flex:0 0 10px;align-self:stretch;
     cursor:col-resize;touch-action:none;
@@ -463,6 +472,13 @@
      (weiter unten) ist spezifischer als `.node.current` und schluckte den Ring
      sonst überall unterhalb einer any-of-Gruppe. */
   #out .node.current{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink)}
+  /* Neu in Produktion seit dem letzten Besuch (D28): gelber Strahlenkranz um den
+     Knoten. Bewusst ein Schein nach AUSSEN statt Farbe im Knoten — die Füllung
+     gehört dem Status (SPEC §4) und bleibt lesbar. Kein Blinken: WCAG 2.2.2/2.3.1
+     und es zöge dauerhaft den Blick. `#out`-Präfix wegen `ul.or .node`. */
+  #out .node.fresh{box-shadow:0 0 0 2px #FACC15,0 0 16px 5px rgba(234,179,8,.65)}
+  /* Beides zugleich: Cursor-Zeile innen (Tinte), Neuheit außen (gelb). */
+  #out .node.fresh.current{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink),0 0 18px 6px rgba(234,179,8,.65)}
   /* Alt gedrückt = Sprung-Geste scharf: Cursor an allen Knoten, Petrol-Ring am
      Knoten unter dem Zeiger. Auf verlinkten Knoten ist das die einzige
      Rückmeldung, weil dort der einfache Klick dem Link gehört (D25). */
@@ -792,5 +808,6 @@
     /* Knoten nicht über den Seitenrand zerschneiden */
     #out li{break-inside:avoid}
     .node.current{box-shadow:none!important}   /* Editierhilfe, nicht drucken (D25) */
+    .node.fresh{box-shadow:none!important}     /* „neu seit dem letzten Besuch" ist persönlich (D28) */
     @page{margin:12mm}
   }

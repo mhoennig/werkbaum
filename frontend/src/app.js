@@ -1,6 +1,6 @@
 import './style.css';
 import { parse } from './parser.js';
-import { computeCheapSet } from './model.js';
+import { computeCheapSet, freshProdSet } from './model.js';
 import { esc, renderTreeHtml } from './render.js';
 import { formatWarning } from './warnings.js';
 /* Werkbaum, mit Werkbaum geplant — als mitgeliefertes Dokument „Werkbank" (D27).
@@ -40,6 +40,12 @@ const warnBox = document.getElementById('warn');
 let cheapPathOn = true;
 /* Warnung des ?sourceUrl-Ladens (D23) — zeilenlos und persistent, siehe render(). */
 let sourceWarning = null;
+/* „Was ist neu?" (D28): Knoten, die gegenüber der zuletzt GESEHENEN Fassung neu
+   in Produktion sind. Gilt immer für genau ein Dokument (`freshDocId`) — nur
+   Dokumente von außen (mitgeliefert oder ?sourceUrl=) haben eine
+   Vergleichsfassung. `freshBaseline` ist der Text, gegen den verglichen wurde;
+   er wird erst beim Bestätigen fortgeschrieben. */
+let freshSet = new Set(), freshDocId = null, freshBaseline = null, freshPrevRoots = null;
 
 /* ---------- Renderer (Anbindung an den DOM) ----------
    parse -> Wurzeln filtern (verworfene) -> günstigen Pfad markieren ->
@@ -60,10 +66,18 @@ function render(){
 
   if(!roots.length){
     out.innerHTML = `<div class="empty">${esc(t('empty'))}</div>`;
+    freshSet = new Set();
   } else {
     const cheapSet = cheapPathOn ? computeCheapSet(roots) : new Set();
     out.classList.toggle('cheap-on', cheapPathOn);
-    const r = renderTreeHtml(roots, {t, showDiscarded, cheapPath: cheapPathOn, cheapSet});
+    /* Die Menge MUSS aus denselben Knotenobjekten gebildet werden, die gerade
+       gerendert werden — `freshProdSet` liefert Knoten aus `roots`. Eine früher
+       berechnete Menge stammte aus einem anderen Parse-Durchlauf und träfe per
+       Objektidentität nie zu (D28). */
+    freshSet = (freshDocId === activeId && freshPrevRoots)
+      ? freshProdSet(freshPrevRoots, roots) : new Set();
+    const r = renderTreeHtml(roots, {t, showDiscarded, cheapPath: cheapPathOn, cheapSet,
+                                     freshSet});
     out.innerHTML = r.html;
     warnings = warnings.concat(r.warnings);
   }
@@ -74,6 +88,7 @@ function render(){
   /* Der Baum ist neu gebaut — die Markierung der Cursor-Zeile neu setzen (D25).
      Ohne Scrollen: beim Tippen soll das Diagramm stehen bleiben. */
   highlightCurrentNode(false);
+  updateFreshBtn();   /* Zähler folgt der gerade gerenderten Menge (D28) */
 }
 
 /* ---------- Günstigster-Pfad-Linie ----------
@@ -777,6 +792,7 @@ const I18N = {
     agenda:"Agenda", discarded:"verworfene",
     gutterTooltip:"Ziehen zum Verschieben, Doppelklick setzt zurück", gutterAria:"Bereiche größenverändern",
     hintGutterAria:"Editor und Legende größenverändern",
+    freshTooltip:"Neu in Produktion seit dem letzten Ansehen: {n}. Klicken markiert sie als gesehen.",
     modeHorizontal:"Horizontal – Organigramm, Diagramm über dem Editor",
     modeKompakt:"Kompakt – alles nach unten, platzsparend",
     modeVertikal:"Vertikal – Baum nach rechts, Diagramm neben dem Editor",
@@ -827,6 +843,7 @@ const I18N = {
     agenda:"Legend", discarded:"discarded",
     gutterTooltip:"Drag to resize, double-click resets", gutterAria:"Resize the areas",
     hintGutterAria:"Resize editor and legend",
+    freshTooltip:"New in production since you last looked: {n}. Click to mark them as seen.",
     modeHorizontal:"Horizontal – org chart, diagram above the editor",
     modeKompakt:"Compact – everything downward, space-saving",
     modeVertikal:"Vertical – tree to the right, diagram beside the editor",
@@ -877,6 +894,7 @@ const I18N = {
     agenda:"Leyenda", discarded:"descartados",
     gutterTooltip:"Arrastra para redimensionar, doble clic restablece", gutterAria:"Redimensionar las áreas",
     hintGutterAria:"Redimensionar editor y leyenda",
+    freshTooltip:"Nuevo en producción desde la última vez: {n}. Haz clic para marcarlo como visto.",
     modeHorizontal:"Horizontal – organigrama, diagrama sobre el editor",
     modeKompakt:"Compacto – todo hacia abajo, ahorra espacio",
     modeVertikal:"Vertical – árbol hacia la derecha, diagrama junto al editor",
@@ -927,6 +945,7 @@ const I18N = {
     agenda:"Légende", discarded:"abandonnés",
     gutterTooltip:"Glisser pour redimensionner, double-clic pour réinitialiser", gutterAria:"Redimensionner les zones",
     hintGutterAria:"Redimensionner l'éditeur et la légende",
+    freshTooltip:"Nouveau en production depuis votre dernière visite : {n}. Cliquez pour marquer comme vu.",
     modeHorizontal:"Horizontal – organigramme, diagramme au-dessus de l'éditeur",
     modeKompakt:"Compact – tout vers le bas, gain de place",
     modeVertikal:"Vertical – arbre vers la droite, diagramme à côté de l'éditeur",
@@ -977,6 +996,7 @@ const I18N = {
     agenda:"Legenda", discarded:"odrzucone",
     gutterTooltip:"Przeciągnij, aby zmienić rozmiar; dwuklik przywraca", gutterAria:"Zmień rozmiar obszarów",
     hintGutterAria:"Zmień rozmiar edytora i legendy",
+    freshTooltip:"Nowe na produkcji od ostatniego razu: {n}. Kliknij, aby oznaczyć jako zobaczone.",
     modeHorizontal:"Poziomo – schemat organizacyjny, diagram nad edytorem",
     modeKompakt:"Kompaktowo – wszystko w dół, oszczędza miejsce",
     modeVertikal:"Pionowo – drzewo w prawo, diagram obok edytora",
@@ -1027,6 +1047,7 @@ const I18N = {
     agenda:"Легенда", discarded:"отклонённые",
     gutterTooltip:"Потяните, чтобы изменить размер; двойной щелчок сбрасывает", gutterAria:"Изменить размер областей",
     hintGutterAria:"Изменить размер редактора и легенды",
+    freshTooltip:"Новое в продакшене с прошлого раза: {n}. Нажмите, чтобы отметить как просмотренное.",
     modeHorizontal:"Горизонтально – оргсхема, диаграмма над редактором",
     modeKompakt:"Компактно – всё вниз, экономит место",
     modeVertikal:"Вертикально – дерево вправо, диаграмма рядом с редактором",
@@ -1077,6 +1098,7 @@ const I18N = {
     agenda:"लेजेंड", discarded:"अस्वीकृत",
     gutterTooltip:"आकार बदलने के लिए खींचें, डबल-क्लिक रीसेट करता है", gutterAria:"क्षेत्रों का आकार बदलें",
     hintGutterAria:"संपादक और लेजेंड का आकार बदलें",
+    freshTooltip:"पिछली बार से उत्पादन में नया: {n}. देखा गया चिह्नित करने के लिए क्लिक करें।",
     modeHorizontal:"क्षैतिज – संगठन-चार्ट, संपादक के ऊपर आरेख",
     modeKompakt:"सघन – सब नीचे की ओर, जगह बचाता है",
     modeVertikal:"लंबवत – पेड़ दाईं ओर, संपादक के बगल में आरेख",
@@ -1127,6 +1149,7 @@ const I18N = {
     agenda:"图例", discarded:"已放弃",
     gutterTooltip:"拖动可调整大小，双击可重置", gutterAria:"调整区域大小",
     hintGutterAria:"调整编辑器和图例大小",
+    freshTooltip:"自上次查看以来新上线：{n}。点击标记为已查看。",
     modeHorizontal:"横向——组织结构图，图表在编辑器上方",
     modeKompakt:"紧凑——全部向下，节省空间",
     modeVertikal:"纵向——树向右展开，图表在编辑器旁边",
@@ -1177,6 +1200,7 @@ const I18N = {
     agenda:"凡例", discarded:"破棄",
     gutterTooltip:"ドラッグでサイズ変更、ダブルクリックでリセット", gutterAria:"領域のサイズを変更",
     hintGutterAria:"エディターと凡例のサイズを変更",
+    freshTooltip:"前回以降に本番化されたもの：{n} 件。クリックで既読にします。",
     modeHorizontal:"横 — 組織図、ダイアグラムはエディターの上",
     modeKompakt:"コンパクト — すべて下方向、省スペース",
     modeVertikal:"縦 — ツリーを右へ、ダイアグラムはエディターの横",
@@ -1367,6 +1391,10 @@ function seedShippedDocs(){
     doc.text = WERKBAUM_DOC;
   }
   try{ localStorage.setItem(LS_SEEDED, fp); }catch(_){}
+  /* Nur vergleichen, solange der Text der ausgelieferte ist — hat der Nutzer ihn
+     bearbeitet, gibt es keine saubere Vergleichsbasis (D28). */
+  const shipped = docs.find(d => d.id === WERKBAUM_ID);
+  if(shipped && shipped.text === WERKBAUM_DOC) computeFresh(WERKBAUM_ID, WERKBAUM_DOC);
 }
 
 /* Aus dem localStorage laden; bei fehlender Dokumentenliste den bestehenden
@@ -1517,7 +1545,57 @@ function toggleDocMenu(){ docMenu.hidden ? openDocMenu() : closeDocMenu(); }
 /* Beim Wechseln/Anlegen/Löschen zuerst den aktuellen Editortext ins aktive
    Dokument sichern, dann das Ziel laden und neu rendern. */
 function flushActive(){ const d = activeDoc(); if(d) d.text = src.value; }
-function loadActiveIntoEditor(){ const d = activeDoc(); src.value = d ? d.text : ''; render(); updateDocName(); }
+
+/* ---------- „Was ist neu?" (D28) ----------
+   Verglichen wird gegen die zuletzt **gesehene** Fassung eines Dokuments von
+   außen (mitgeliefert oder ?sourceUrl=), nicht gegen die letzte Auslieferung:
+   Wer mehrere Fassungen übersprungen hat, sieht alles seither. Die Basis wird
+   deshalb erst beim Bestätigen fortgeschrieben — sonst wäre die Meldung nach
+   einem Neuladen verschwunden, bevor sie jemand bemerkt hat. */
+const LS_SEEN = 'werkbaum-seen';
+function readSeen(){
+  try{ const o = JSON.parse(localStorage.getItem(LS_SEEN) || '{}'); return o && typeof o === 'object' ? o : {}; }
+  catch(_){ return {}; }
+}
+function markSeen(id, text){
+  const o = readSeen();
+  o[id] = text;
+  try{ localStorage.setItem(LS_SEEN, JSON.stringify(o)); }catch(_){}
+}
+/* Nach dem Laden eines Dokuments von außen aufrufen. Beim Erstkontakt wird nur
+   die Basis gesetzt und nichts hervorgehoben — sonst leuchtete beim ersten
+   Ansehen der gesamte fertige Teil des Plans auf. */
+function computeFresh(id, text){
+  const prev = readSeen()[id];
+  freshDocId = id;
+  freshBaseline = text;
+  if(typeof prev !== 'string'){
+    freshPrevRoots = null;      /* Erstkontakt: nur Basis setzen, nichts leuchtet */
+    markSeen(id, text);
+  } else {
+    freshPrevRoots = parse(prev).roots;   /* einmal parsen, render() vergleicht dagegen */
+  }
+}
+function acknowledgeFresh(){
+  if(freshDocId && freshBaseline !== null) markSeen(freshDocId, freshBaseline);
+  freshPrevRoots = null;
+  render();                     /* render() bildet die Menge neu und meldet dem Knopf */
+}
+const freshBtn = document.getElementById('freshBtn');
+const freshCount = document.getElementById('freshCount');
+function updateFreshBtn(){
+  const n = freshDocId === activeId ? freshSet.size : 0;
+  if(!freshBtn) return;
+  freshBtn.hidden = !n;
+  if(!n) return;
+  freshCount.textContent = String(n);
+  const tip = t('freshTooltip', {n: n});
+  freshBtn.title = tip;
+  freshBtn.setAttribute('aria-label', tip);
+}
+freshBtn.addEventListener('click', acknowledgeFresh);
+
+function loadActiveIntoEditor(){ const d = activeDoc(); src.value = d ? d.text : ''; render(); updateDocName(); updateFreshBtn(); }
 function switchDoc(id){
   if(id === activeId) return;
   flushActive();
@@ -1614,6 +1692,7 @@ async function loadFromSourceUrl(){
     d.source = url.href;
     activeId = id;
     sourceWarning = null;
+    computeFresh(id, text);   /* was ist seit dem letzten Ansehen in Produktion? (D28) */
     loadActiveIntoEditor();
     persistDocs();
   }catch(err){

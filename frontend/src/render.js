@@ -9,9 +9,18 @@
      showDiscarded, // verworfene einblenden?
      cheapPath,     // günstigster Pfad aktiv? (steuert das implizite M-Badge)
      cheapSet,      // Set der nötigen Knoten (leer, wenn Pfad aus)
+     freshSet,      // optional: Knoten, die neu in Produktion sind (D28)
    } */
 
 import { gateOf, needsBreakdown, visibleChildren, cheapCls } from './model.js';
+
+/* Zusatzklassen eines Knotens: günstigster Pfad (D18) + „neu in Produktion"
+   gegenüber der zuletzt gesehenen Fassung (D28, `freshSet` optional). */
+function extraCls(n, opts){
+  const cheap = cheapCls(n, opts.cheapSet);
+  const fresh = opts.freshSet && opts.freshSet.has(n) ? 'fresh' : '';
+  return [cheap, fresh].filter(Boolean).join(' ');
+}
 
 export function esc(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -85,7 +94,7 @@ function renderChildren(node, warnings, opts){
     const vk = visibleChildren(k, opts.showDiscarded);
     const liCls = vk.length ? (gateOf(vk) === 'or' ? ' class="has-or"' : ' class="has-and"') : '';
     return `<li${liCls}>` +
-           nodeHtml(k, cheapCls(k, opts.cheapSet), opts) +
+           nodeHtml(k, extraCls(k, opts), opts) +
            renderChildren(k, warnings, opts) +
            `</li>`;
   }).join('');
@@ -101,7 +110,7 @@ export function renderTreeHtml(roots, opts){
     const vk = visibleChildren(root, opts.showDiscarded);
     const liCls = vk.length ? (gateOf(vk) === 'or' ? ' class="has-or"' : ' class="has-and"') : '';
     return `<li${liCls}>` +
-           nodeHtml(root, ('root-node ' + cheapCls(root, opts.cheapSet)).trim(), opts) +
+           nodeHtml(root, ('root-node ' + extraCls(root, opts)).trim(), opts) +
            renderChildren(root, warnings, opts) +
            `</li>`;
   }).join('');

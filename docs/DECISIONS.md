@@ -665,3 +665,55 @@ Das fiel sofort auf, als der Plan um den Abschnitt „gemeinsam arbeiten"
 Der Altwert `'1'` aus der ersten Fassung sagt nichts über den Textstand; dort
 wird bewusst nichts überschrieben, nur der Merker ersetzt. Wer aus dieser kurzen
 Zwischenfassung kommt, holt den aktuellen Stand über den Reset.
+
+## D28 — „Was ist neu?": neu in Produktion, gelber Strahlenkranz
+Dokumente von außen (mitgeliefert, D27; per `?sourceUrl=`, D23) ändern sich,
+ohne dass der Betrachter es merkt. Sie zeigen deshalb, was sich seit seinem
+letzten Besuch getan hat.
+
+**„Neu" heißt: neu in Produktion.** Nicht „Zeile hinzugefügt". Ein Zeilendiff
+meldet vor allem Rauschen — jede neu notierte Idee, jede Umformulierung. Die
+Nachricht, die einen Plan-Leser wirklich angeht, ist: *was ist tatsächlich
+live gegangen*. Also gilt ein Knoten als neu, wenn er **jetzt `[^]`** trägt und
+es in der zuletzt gesehenen Fassung **nicht** tat (weil er anders stand oder
+noch fehlte). Das macht die Hervorhebung zugleich sparsam: In einem großen Plan
+leuchten typischerweise eine Handvoll Knoten, nicht dreißig.
+
+**Basis ist die zuletzt GESEHENE Fassung, nicht die letzte Auslieferung.**
+`werkbaum-seen` hält je Dokument-id den Text, den der Betrachter zuletzt
+bestätigt hat. Wer drei Fassungen übersprungen hat, sieht alles seither. Die
+Basis wird **erst beim Bestätigen** fortgeschrieben — schriebe man sie beim
+Laden fort, wäre die Meldung nach einem Neuladen verschwunden, bevor sie jemand
+bemerkt hat. Beim **Erstkontakt** leuchtet nichts (sonst strahlte beim ersten
+Ansehen der gesamte fertige Teil des Plans auf); es wird nur die Basis gesetzt.
+
+**Knoten-Identität ist der Label-Pfad**, nicht die Zeilennummer: Umeinrücken und
+Umsortieren erzeugen so keine Falschmeldungen. Gleichnamige Geschwister werden
+über einen Index unterschieden; ein umbenanntes Label gilt als neuer Knoten —
+gewollt, der Text ist der Vertrag (D14).
+
+**Darstellung: gelber Strahlenkranz nach außen.** Bewusst **kein Blinken** (vom
+Nutzer erwogen): WCAG 2.2.2 verlangt, dass blinkende Inhalte abschaltbar sind,
+2.3.1 begrenzt Flackern wegen des Anfallsrisikos — und vor allem zöge Blinken
+*dauerhaft* den Blick, statt einmal zu melden. Der Schein liegt **außen**, weil
+die Knotenfüllung dem Status gehört (SPEC §4) und lesbar bleiben muss. Ein
+Knoten, der zugleich die Cursor-Zeile ist (D25), bekommt beides: Tinte innen,
+Gelb außen. Im **Druck und im Grafikexport erscheint der Kranz nicht** — er
+hängt an *deinem* letzten Besuch, ein Export damit hieße für jeden Betrachter
+etwas anderes.
+
+Ein **Knopf im Diagramm-Kopf** erscheint nur, wenn es etwas gibt, nennt die
+Anzahl und bestätigt per Klick („gesehen"). Kein Dauer-Umschalter: Die Meldung
+soll verschwinden, wenn sie ihren Zweck erfüllt hat.
+
+**Zurückhaltung bei bearbeitetem Text.** Hat der Nutzer das mitgelieferte
+Dokument geändert, wird es nicht mehr nachgezogen (D27) — dann gibt es keine
+saubere Vergleichsbasis, und es wird nichts hervorgehoben.
+
+**Stolperfalle (beim Bauen hineingelaufen):** Die Menge der neuen Knoten muss aus
+**denselben Knotenobjekten** gebildet werden, die gerade gerendert werden. Zuerst
+wurde sie beim Laden aus einem eigenen Parse-Durchlauf berechnet — der Zähler
+stimmte, aber kein einziger Knoten leuchtete, weil `Set.has()` auf
+Objektidentität prüft und die gerenderten Knoten aus einem anderen Parse kamen.
+`render()` bildet die Menge daher bei jedem Durchlauf neu; vorgehalten wird nur
+der **geparste Basisbaum**.
