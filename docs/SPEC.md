@@ -293,3 +293,14 @@ Druckdialog „an Seite anpassen“ bzw. Querformat wählen.
 
 - `#123` — Referenz auf externe Tickets (geplant für Taiga-Integration).
 - `#tag` — freie Schlagworte (deshalb `#` nicht anderweitig verwenden).
+
+## 12. Dateiendung
+
+- Notationstexte tragen die Endung **`.werkbaum`**, Kodierung UTF-8,
+  Zeilenende LF. Beispiele: `docs/examples/*.werkbaum`.
+- Die Endung ist **Konvention, kein Vertrag**: Der Parser sieht nur Text, und
+  das Laden per `?sourceUrl=` (§9) wertet weder Endung noch `Content-Type` aus.
+  `.txt` und endungslose Dateien bleiben damit gültig.
+- Es gibt keinen registrierten MIME-Typ; wer selbst ausliefert, nimmt
+  `text/plain; charset=utf-8` (dann zeigt der Browser die Datei an, statt sie
+  herunterzuladen). Siehe D24.

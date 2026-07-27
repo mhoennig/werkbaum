@@ -1,0 +1,46 @@
+%% Werkbaum example 2 — an event: wide plan, many people, few alternatives.
+%% Good for the horizontal mode; try the compact one for comparison.
+
+[~] Community conference 2027 (XXL) https://example.org/conf
+  - [^] Save the date announced (XS) @lena
+  - [x] Venue (L)
+    - [x] Shortlist three halls (S) @lena
+    - [x] Site visit (S) @lena @tom
+    - [x] Contract signed (M)
+      - [x] Cancellation clause (S)
+      - [x] Deposit paid (XS)
+  - [~] Programme (XL) @maria
+    - [x] Call for papers (S) https://example.org/conf/cfp
+    - [~] Review (M) @maria @tom
+      - [x] Reviewer team (S)
+      - [~] Second round (S)
+    - [ ] Schedule (M)
+      - [ ] Tracks and rooms (S)
+      - [ ] Breaks that actually work (XS)
+    - [ ] Keynote (M)
+      | [ ] Ask the local research group (S)
+      | [?] Invite an international speaker (L)  %% travel budget?
+  - [~] Sponsors (L) @ben
+    - [x] Package prices (S)
+    - [~] Approach last year's sponsors (M)
+      - [x] Mailing (XS)
+      - [~] Follow-up calls (S) @ben
+    - [ ] Logos on the website (XS)
+  - [ ] Catering (M)
+    | [ ] Buffet from the hall's caterer  %% nobody has priced these two yet
+    | [?] Food trucks in the yard
+    | [-] Everyone brings something (S)  %% not with 300 guests
+  - [ ] Website (M) @sam
+    - [x] Landing page (S)
+    - [ ] Ticket shop (M)
+      - [ ] Payment provider (S)
+      - [ ] Refunds and name changes (S)
+    - [ ] Schedule page (S)
+  - [!] Recording and streaming (L) @tom  %% hall has no fixed technology
+  - [ ] On the day (L)
+    - [ ] Helper shifts (M)
+      - [ ] Registration desk (S)
+      - [ ] Room angels (S)
+    - [ ] Signage (S)
+    - [ ] Badges printed (XS) @lena
+  - [?] Social event in the evening (S)

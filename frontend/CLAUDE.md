@@ -121,6 +121,10 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   ja, beliebiger Webserver oft nicht) — der Warntext nennt das ausdrücklich.
   `updateDocName()` setzt für solche Dokumente den vollen URL-Tooltip und muss
   deshalb **nach** dem `data-i18n-title`-Durchlauf in `applyLang()` laufen.
+  Weder Endung noch `Content-Type` werden geprüft (`response.text()`); die
+  Endung `.werkbaum` ist reine Konvention (D24, SPEC §12). Beispieldateien zum
+  Ausprobieren: `docs/examples/*.werkbaum` (nacheinander geöffnet ergeben sie
+  mehrere Dokumente im Wähler).
 - Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) stapelt
   Diagramm/Editor mit **stufenlosem** Splitter (kein Snap/Collapse wie auf
   Desktop): der Gutter-Drag ruft `setMobileDrow()` (klemmt `--drow` zwischen den

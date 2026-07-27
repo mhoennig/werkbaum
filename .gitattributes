@@ -1,0 +1,2 @@
+# Notationstexte sind Text (LF im Repo), damit Diffs lesbar bleiben — D24.
+*.werkbaum text eol=lf diff

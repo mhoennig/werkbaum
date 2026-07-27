@@ -1,0 +1,29 @@
+%% Werkbaum example 1 — a plan that is not software at all.
+%% Lots of alternatives: switch the cheapest-path button on and off.
+
+[~] New kitchen (XL)
+  - [x] Budget and measurements (S) @sam
+  - [~] Layout (M)
+    - [x] Floor plan sketch (XS)
+    - [~] Where the appliances go (S) @kim
+  - [ ] Worktop (M)
+    | [ ] Laminate (S)
+    | [?] Solid oak (L)
+    | [?] Quartz composite (L)
+    | [-] Marble (XL)  %% too soft for a kitchen, and way over budget
+  - [ ] Floor (M)
+    | [ ] Vinyl planks (S)
+    | [?] Tiles (M)
+      - [ ] Take out the old screed (S)
+      - [ ] Check the underfloor heating (XS)
+  - [!] Move the water connection (M) @kim  %% no idea what that wall hides
+  - [ ] Electrics (L)
+    - [ ] Own circuit for the oven (M)
+      - [ ] Cable route (S)
+      - [ ] Free slot in the fuse box (XS)
+    - [ ] Sockets on the island (S)
+  - [?] Splashback (S)
+  - [ ] Assembly weekend (M) @sam @kim @dad
+    - [ ] Carcasses (S)
+    - [ ] Doors and drawers (S)
+    - [ ] Silicone joints (XS)

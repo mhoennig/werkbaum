@@ -1,0 +1,34 @@
+%% Werkbaum example 3 — three trees side by side.
+%% A line without a leading "-" or "|" starts a new root (SPEC §2), so one
+%% document can hold several independent plans.
+
+[~] Now: ship the mobile app (L)
+  - [x] Beta with 50 testers (S) @kim
+  - [~] Fix what the beta found (M)
+    - [x] Crash on rotate (S)
+    - [~] Slow start-up (S)
+  - [ ] Store listing (M)
+    - [ ] Screenshots (S)
+    - [ ] Privacy declaration (S)
+  - [!] App review, first submission (S)  %% nobody knows how long this takes
+
+[ ] Next: a second office (L)
+  - [ ] Pick the city (M)
+    | [ ] Leipzig (M)
+    | [?] Porto (L)
+    | [-] Zurich (XL)  %% rents eat the whole budget
+  - [ ] Find rooms (M)
+    - [ ] Broker briefing (XS)
+    - [ ] Three viewings (S)
+  - [ ] Hire the first two people (L)
+    - [ ] Job ads (S)
+    - [ ] Interviews on site (M)
+      - [ ] Travel budget (XS)
+      - [ ] Interview guide (S)
+
+[?] Someday: our own hardware (XXL)
+  | [?] Buy a white-label device and brand it (L)
+  | [?] Build it ourselves (XXL)
+    - [?] Board design  %% no size yet — the cheapest path assumes M
+    - [?] Certification (L)
+  | [-] Licence the design to someone else (M)  %% then it is not our product

@@ -428,3 +428,40 @@ Knoten-Link ohnehin nur `https?://…` (SPEC §1/§6) — kein `javascript:`-Vek
 Nebenbefund: `checkForUpdates()` hängte den Cache-Buster als `location.href +
 '?t=…'` an, was mit vorhandenem Query-String ein zweites `?` erzeugt hätte; es
 baut die URL nun über `URL`/`searchParams`.
+
+## D24 — Eigene Dateiendung `.werkbaum`
+Notationstexte tragen die Endung **`.werkbaum`** (UTF-8, LF). Bislang lag das
+einzige Beispiel als `.txt` — eine Endung, die nichts über den Inhalt sagt und
+in einem Verzeichnis mit Notizen, Logs und Exporten untergeht.
+
+**Begründung:** Die Endung macht Dateien maschinell und für Menschen
+zuordenbar — Voraussetzung für spätere Editor-Zuordnung (Öffnen mit Werkbaum),
+Syntax-Highlighting (VS Code/Vim-Modus, `*.werkbaum`) und ein künftiges
+Öffnen/Speichern im Editor (dann als `accept`-Filter und Download-Endung).
+Ausgeschrieben statt kurz, weil kurze Endungen belegt/mehrdeutig sind: `.wbs`
+wird von diversen Projektplanungswerkzeugen und generisch für „Work Breakdown
+Structure" benutzt, `.wb` ist ebenfalls mehrfach vergeben, `.tree` sagt nichts
+über die Notation. Die Länge stört nicht: die Dateien werden selten getippt und
+meist als URL geteilt.
+
+**Kein registrierter MIME-Typ nötig.** Server liefern unbekannte Endungen als
+`application/octet-stream` oder `text/plain` aus; für das Laden per
+`?sourceUrl=` (D23) ist das gleichgültig, weil der Loader den `Content-Type`
+**nicht** auswertet, sondern `response.text()` liest. Empfehlung für eigene
+Server dennoch `text/plain; charset=utf-8`, damit die Datei im Browser lesbar
+statt als Download erscheint. `raw.githubusercontent.com` liefert `.werkbaum`
+als `text/plain; charset=utf-8` mit `Access-Control-Allow-Origin: *`.
+
+**`.txt` bleibt zulässig** — die Endung ist Konvention, kein Vertrag. Der
+Parser sieht ohnehin nur Text (SPEC §1), und `?sourceUrl=` lädt jede per
+http(s) erreichbare Textdatei unabhängig von Endung und Content-Type. Es gibt
+also keinen Bruch für bestehende Links.
+
+**Beispieldateien liegen unter `docs/examples/`** (`example-plan-0…3.werkbaum`,
+`example-werkbaum.werkbaum`) statt einzeln in `docs/`. Mehrere Beispiele, weil
+sich das Umschalten zwischen Dokumenten (D22) erst mit mehreren *geladenen*
+Dokumenten zeigen lässt: jeder `?sourceUrl=`-Link legt ein eigenes Dokument an
+(id aus der URL, D23), nacheinander geöffnet stehen sie danach alle im Wähler.
+`example-werkbaum.werkbaum` beschreibt Werkbaum selbst (Bestand + mögliche
+Weiterentwicklung, destilliert aus ROADMAP/TASKS/DECISIONS) — zugleich
+Beispiel und lebende Projektübersicht; bei größeren Änderungen mitpflegen.

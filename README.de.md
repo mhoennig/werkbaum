@@ -44,21 +44,34 @@ Der Editor kann seinen Notationstext über den Query-Parameter `sourceUrl` aus
 einer externen Textdatei beziehen — praktisch zum Teilen eines Plans oder wenn
 die Quelle in Git oder einem Wiki gepflegt wird:
 
-**▶ [Live-Beispiel](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt)**
-— lädt [`docs/example-plan.txt`](docs/example-plan.txt):
-
 ```
-https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt
+https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum
 ```
 
-(Das Beispiel zeigt auf den latest build 🚧; die stabile Instanz kann
-`sourceUrl` ab ihrem nächsten Produktions-Deploy.)
+Fertige Beispiele in [`docs/examples/`](docs/examples/) — **nacheinander
+öffnen**: Jedes wird ein eigenes Dokument, danach lässt sich in der
+Editor-Titelzeile zwischen allen umschalten:
+
+| Beispiel | Zeigt |
+|---|---|
+| **▶ [0 · Online-Shop-Relaunch](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum)** | ein Softwareprojekt mit allen acht Status |
+| **▶ [1 · Neue Küche](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-1.werkbaum)** | ein Plan ohne Software, viele Alternativen — gut für den Günstigster-Pfad-Schalter |
+| **▶ [2 · Community-Konferenz](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-2.werkbaum)** | ein breiter Plan mit vielen Beteiligten; horizontal vs. kompakt vergleichen |
+| **▶ [3 · Drei Arbeitsstränge](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-3.werkbaum)** | mehrere Wurzeln = mehrere Bäume nebeneinander |
+| **▶ [Werkbaum selbst](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-werkbaum.werkbaum)** | Bestand und mögliche Weiterentwicklung |
+
+(Die Links zeigen auf den latest build 🚧; die stabile Instanz kann `sourceUrl`
+ab ihrem nächsten Produktions-Deploy.)
 
 Der geladene Text wird als **eigenes Dokument** geführt, dessen **Name die URL**
 ist — eigene Dokumente bleiben unberührt, und derselbe Link aktualisiert dieses
 eine Dokument, statt Kopien anzuhäufen. Die URL ist die Quelle der Wahrheit: Sie
 wird bei jedem Laden neu geholt, lokale Änderungen daran überleben ein Neuladen
 also nicht.
+
+Notationsdateien tragen die Endung **`.werkbaum`** (UTF-8; siehe `docs/SPEC.md`
+§12 und D24) — Konvention, kein Vertrag: `sourceUrl` liest jede per http(s)
+erreichbare Textdatei, unabhängig von Endung und Content-Type.
 
 **Einschränkung — CORS:** Der Browser lädt fremde Hosts nur, wenn sie
 `Access-Control-Allow-Origin` senden. `raw.githubusercontent.com` und

@@ -43,20 +43,33 @@ The editor can pull its notation text from an external text file via the
 `sourceUrl` query parameter — handy for sharing a plan or keeping the source in
 Git or a wiki:
 
-**▶ [Live example](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt)**
-— loads [`docs/example-plan.txt`](docs/example-plan.txt):
-
 ```
-https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/example-plan.txt
+https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum
 ```
 
-(The example points at the latest build 🚧; the stable instance supports
+Ready-made examples in [`docs/examples/`](docs/examples/) — **open them one
+after another**, each becomes its own document, so afterwards you can switch
+between all of them in the editor title bar:
+
+| Example | Shows |
+|---|---|
+| **▶ [0 · Online shop relaunch](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum)** | a software project with all eight states |
+| **▶ [1 · New kitchen](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-1.werkbaum)** | a non-software plan, lots of alternatives — good for the cheapest-path toggle |
+| **▶ [2 · Community conference](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-2.werkbaum)** | a wide plan with many people; compare horizontal vs. compact |
+| **▶ [3 · Three workstreams](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-3.werkbaum)** | several roots = several trees side by side |
+| **▶ [Werkbaum itself](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-werkbaum.werkbaum)** | what exists today and where it could go |
+
+(The links point at the latest build 🚧; the stable instance supports
 `sourceUrl` from its next production deploy on.)
 
 The loaded text becomes its own document whose **name is the URL**, so your own
 documents stay untouched; the same link updates that one document instead of
 piling up copies. The URL is the source of truth — it is re-fetched on every
 load, so local edits to it do not survive a reload.
+
+Notation files use the extension **`.werkbaum`** (UTF-8; see `docs/SPEC.md` §12
+and D24) — a convention, not a contract: `sourceUrl` reads any text file over
+http(s) regardless of extension or content type.
 
 **Caveat — CORS:** the browser only fetches a foreign host if it sends
 `Access-Control-Allow-Origin`. `raw.githubusercontent.com` and GitLab raw links
