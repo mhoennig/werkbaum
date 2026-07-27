@@ -234,7 +234,9 @@ verknüpft (siehe D25):
   Textfeld). Tastatur: **Alt+Enter** am fokussierten Knoten. Auf Touch-Geräten:
   **langer Druck** — nach ≥ 500 ms zeigt der Knoten einen Petrol-Ring („scharf"),
   der Sprung erfolgt beim **Loslassen**; ein Wischen bricht ab. Ist das
-  Editor-Panel zugeklappt, öffnet der Sprung es zuerst.
+  Editor-Panel zugeklappt, öffnet der Sprung es zuerst. Der Sprung ist
+  „hinschauen": Er holt **keine Bildschirmtastatur** herauf — die erscheint erst,
+  wenn das Textfeld selbst angetippt wird.
 - **Text → Diagramm:** Der Knoten der **Cursor-Zeile** wird im Diagramm
   hervorgehoben (weißer Halo + Ring in Tinte) und beim Zeilenwechsel ins Bild
   gescrollt. Zeilen ohne Knoten (Kommentar, Leerzeile, ausgeblendetes

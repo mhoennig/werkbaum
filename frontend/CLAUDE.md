@@ -148,6 +148,11 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `user-select:none` per `@media (hover:none) and (pointer:coarse)` und
   `-webkit-touch-callout:none` (nur iOS). Synthetische `TouchEvent`s prüfen
   davon **nichts** — nur die eigene Ereignis-Logik.
+- Bildschirmtastatur (D25): `jumpToLine()` setzt vor dem Fokus `inputmode="none"`
+  (`keyboardOnJump(true)`) — der Sprung ist „hinschauen". Der `pointerdown`-
+  Handler am Textfeld hebt das wieder auf (läuft vor dem Fokus). Wer sonst
+  irgendwo `src.focus()` ergänzt und dabei Tippen meint, muss vorher
+  `keyboardOnJump(false)` rufen — so wie `newDoc()`.
 - Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) stapelt
   Diagramm/Editor mit **stufenlosem** Splitter (kein Snap/Collapse wie auf
   Desktop): der Gutter-Drag ruft `setMobileDrow()` (klemmt `--drow` zwischen den

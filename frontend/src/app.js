@@ -371,12 +371,24 @@ function revealEditor(){
   }
 }
 
+/* Der Sprung ist „hinschauen", nicht „bearbeiten": `inputmode="none"` hält die
+   **virtuelle** Tastatur unten, die sonst beim Fokussieren den halben
+   Bildschirm nimmt. Hardware-Tastaturen (BT) tippen unverändert weiter. Sobald
+   der Nutzer das Textfeld selbst antippt, ist Bearbeiten gemeint — `pointerdown`
+   läuft vor dem Fokus, die Sperre fällt also rechtzeitig. */
+function keyboardOnJump(off){
+  if(off) src.setAttribute('inputmode', 'none');
+  else src.removeAttribute('inputmode');
+}
+src.addEventListener('pointerdown', () => keyboardOnJump(false));
+
 /* Diagramm -> Text: ganze Zeile markieren (die native Auswahl ist die einzige
    Hervorhebung, die ein <textarea> kennt — und sie verschwindet beim Tippen). */
 function jumpToLine(line){
   const r = lineRange(line);
   if(!r) return;
   revealEditor();
+  keyboardOnJump(true);
   src.focus({preventScroll: true});
   src.setSelectionRange(r.start, r.end);
   scrollEditorToOffset(r.start);
@@ -1446,6 +1458,7 @@ function newDoc(){
   activeId = d.id;
   loadActiveIntoEditor();
   persistDocs();
+  keyboardOnJump(false);   /* neues, leeres Dokument = tippen ist gemeint */
   src.focus();
 }
 function renameDoc(){

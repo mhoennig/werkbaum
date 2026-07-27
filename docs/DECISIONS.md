@@ -565,3 +565,24 @@ mehr markieren — bewusst in Kauf genommen, die Geste ist dort vergeben.
 Lehre für die Prüfung: Synthetische `TouchEvent`s beweisen nur die eigene
 Ereignis-Logik. Weder die Nutzergesten-Regel noch die nativen Langdruck-Gesten
 lassen sich so auslösen — beides fiel erst auf echter Hardware auf.
+
+**Der Sprung holt keine Bildschirmtastatur (Nachtrag).** Auf Touch-Geräten
+erschien nach dem Sprung sofort die virtuelle Tastatur und nahm den halben
+Bildschirm — auch bei angeschlossener Bluetooth-Tastatur. Das ist kein Fehler
+der App: Eine Webseite erfährt nichts über verbundene Tastaturen; sie fordert
+nur **Fokus** an, alles Weitere entscheidet das Betriebssystem (Android hat
+dafür den Schalter „Bildschirmtastatur anzeigen" unter *Physische Tastatur*,
+auf vielen Geräten voreingestellt an; iPadOS unterdrückt sie von selbst).
+
+Entscheidung: Der Sprung **fordert sie erst gar nicht an**. `jumpToLine()` setzt
+vor dem Fokussieren `inputmode="none"` am Textfeld — das unterdrückt nur die
+**virtuelle** Tastatur, Hardware-Tastaturen tippen unverändert. Die Sperre fällt,
+sobald der Nutzer das Textfeld **selbst antippt** (`pointerdown`, läuft vor dem
+Fokus). Damit ist der Sprung „hinschauen" und der erste Tipp ins Textfeld
+„bearbeiten". `newDoc()` hebt die Sperre ausdrücklich auf — bei einem neuen,
+leeren Dokument ist Tippen gemeint.
+
+Verworfen: die Tastatur zuzulassen und auf die OS-Einstellung zu verweisen (löst
+es nur auf einem Gerät), sowie ein eigener Umschalter dafür (weiteres
+Bedienelement in einer engen Kopfzeile plus i18n in 9 Sprachen, für ein
+Verhalten, das kaum jemand umstellen will).
