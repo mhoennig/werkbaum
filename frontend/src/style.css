@@ -476,7 +476,11 @@
      Knoten. Bewusst ein Schein nach AUSSEN statt Farbe im Knoten — die Füllung
      gehört dem Status (SPEC §4) und bleibt lesbar. Kein Blinken: WCAG 2.2.2/2.3.1
      und es zöge dauerhaft den Blick. `#out`-Präfix wegen `ul.or .node`. */
-  #out .node.fresh{box-shadow:0 0 0 2px #FACC15,0 0 16px 5px rgba(234,179,8,.65)}
+  /* `z-index`, weil der Schein AUSSERHALB des Knotens liegt: ohne ihn malt jedes
+     später kommende Geschwister seinen undurchsichtigen Hintergrund darüber und
+     schneidet den Kranz einseitig ab (in engen Layouts bleibt nur eine gelbe
+     Kante stehen — sieht aus wie ein halber Hintergrund statt eines Rahmens). */
+  #out .node.fresh{box-shadow:0 0 0 2px #FACC15,0 0 16px 5px rgba(234,179,8,.65);z-index:2}
   /* Beides zugleich: Cursor-Zeile innen (Tinte), Neuheit außen (gelb). */
   #out .node.fresh.current{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink),0 0 18px 6px rgba(234,179,8,.65)}
   /* Alt gedrückt = Sprung-Geste scharf: Cursor an allen Knoten, Petrol-Ring am
@@ -539,6 +543,11 @@
      any-of-Alternativen samt Teilbaum) treten zurück (blass, entsättigt);
      der günstige Pfad hebt sich dadurch von allein ab. */
   .cheap-on .node:not(.cheap){opacity:.32;filter:saturate(.4)}
+  /* „Neu in Produktion" darf die Pfad-Inversion nicht wegdimmen: opacity und
+     saturate treffen sonst auch den gelben Kranz (0,32 Deckkraft ⇒ praktisch
+     unsichtbar), und gerade bei einer nicht gewählten Alternative ist „das ist
+     jetzt live" die interessantere Nachricht (D28). */
+  .cheap-on .node:not(.cheap).fresh{opacity:1;filter:none}
   /* implizit als M angenommene Größe: invertiertes Badge (weiß statt petrol) */
   .size.implicit{background:var(--card);color:var(--or);border-color:var(--or)}
   /* Günstigster-Pfad-Linie: gestrichelt, geschwungen, petrol — fädelt durch

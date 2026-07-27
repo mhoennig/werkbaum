@@ -710,6 +710,23 @@ soll verschwinden, wenn sie ihren Zweck erfüllt hat.
 Dokument geändert, wird es nicht mehr nachgezogen (D27) — dann gibt es keine
 saubere Vergleichsbasis, und es wird nichts hervorgehoben.
 
+**Zwei Nachbesserungen nach dem ersten Blick auf die deployte Seite.** Gemeldet
+war „nur die linke Hälfte gelb, kein Rahmen drum herum":
+
+- **`z-index:2` am neuen Knoten.** Der Schein liegt *außerhalb* der Knotenbox.
+  Ohne eigene Stapelordnung malt jedes **später kommende Geschwister** seinen
+  undurchsichtigen Hintergrund darüber und schneidet den Kranz einseitig ab —
+  übrig bleibt eine gelbe Kante, die wie ein halber Hintergrund aussieht statt
+  wie ein Rahmen. Die Abstände (24–25 px) liegen nur knapp über der Reichweite
+  des Scheins (Blur 16 + Spread 5 = 21 px); in engeren Layouts, bei Zoom oder
+  längeren Labels reicht das nicht.
+- **Die Pfad-Inversion darf „neu" nicht wegdimmen.**
+  `.cheap-on .node:not(.cheap)` setzt `opacity:.32; filter:saturate(.4)` — das
+  trifft auch den gelben Kranz und macht ihn praktisch unsichtbar. Gerade bei
+  einer *nicht gewählten* Alternative ist „das ist jetzt live" aber die
+  interessantere Nachricht. Deshalb `.cheap-on .node:not(.cheap).fresh
+  {opacity:1;filter:none}`.
+
 **Stolperfalle (beim Bauen hineingelaufen):** Die Menge der neuen Knoten muss aus
 **denselben Knotenobjekten** gebildet werden, die gerade gerendert werden. Zuerst
 wurde sie beim Laden aus einem eigenen Parse-Durchlauf berechnet — der Zähler
