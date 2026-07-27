@@ -84,6 +84,7 @@ function render(){
 
   warnings = warnings.slice().sort((a, b) => (a.line || 0) - (b.line || 0));
   warnBox.innerHTML = warnings.map(w => `<div>⚠ ${formatWarning(w, t)}</div>`).join('');
+  applyOptStairs();   /* muss vor dem Messen laufen — es verschiebt Knoten */
   alignStems();
   drawCheapPath();
   /* Der Baum ist neu gebaut — die Markierung der Cursor-Zeile neu setzen (D25).
@@ -120,6 +121,56 @@ function overlaySvg(cls, w, h){
   return svgEl('svg', {class:'cheap-overlay ' + cls, width:w, height:h,
     viewBox:`0 0 ${w.toFixed(1)} ${h.toFixed(1)}`});
 }
+/* ---------- Treppe für optionale Endknoten (D29, Nachtrag 3) ----------
+   Im horizontalen Fächer kostet jedes optionale Geschwister eine eigene Spalte
+   — Breite für gerade das, was am wenigsten wichtig ist. Aufeinanderfolgende
+   optionale Endknoten werden deshalb zu einer Kaskade gestapelt, die an einem
+   Punkt hängt.
+
+   Warum hier und nicht im Renderer: Die Gruppierung ist reine Darstellung. So
+   bleiben der Renderer-String (SPEC §9: der Modus ändert nur die Anordnung) und
+   die hand-getunte Geometrie der drei übrigen Anordnungen unberührt — dort gibt
+   es das Platzproblem gar nicht, die Kinder stehen ohnehin untereinander.
+
+   Nur ENDknoten: Der Platzgewinn entsteht gerade daraus, dass kein Teilbaum
+   mitgestapelt werden muss; außerdem setzt die Stufengeometrie voraus, dass die
+   Zelle so hoch ist wie ihr Knoten (kein Teilbaum, kein Geister-Knoten). */
+const STAIR_MIN = 2;
+function applyOptStairs(){
+  /* Erst auflösen: applyLayout() arbeitet auf einem bereits gruppierten Baum. */
+  out.querySelectorAll('li.opt-group').forEach(group => {
+    const stair = group.firstElementChild;
+    while(stair.firstElementChild){
+      const li = stair.firstElementChild;
+      li.style.removeProperty('--i');
+      group.parentNode.insertBefore(li, group);
+    }
+    group.remove();
+  });
+  if(out.classList.contains('vertical') || out.classList.contains('kompakt')) return;
+  out.querySelectorAll('ul.and').forEach(ul => {
+    let run = [];
+    const flush = () => {
+      if(run.length >= STAIR_MIN){
+        const group = document.createElement('li');
+        group.className = 'opt-group';
+        const stair = document.createElement('ul');
+        stair.className = 'opt-stair';
+        ul.insertBefore(group, run[0]);
+        group.appendChild(stair);
+        run.forEach((li, i) => { li.style.setProperty('--i', i); stair.appendChild(li); });
+      }
+      run = [];
+    };
+    for(const li of [...ul.children]){
+      const leaf = li.classList.contains('opt') && li.children.length === 1
+                   && li.firstElementChild.classList.contains('node');
+      if(leaf) run.push(li); else flush();
+    }
+    flush();
+  });
+}
+
 /* Stielposition der all-of-Abzweige im horizontalen Fächer (siehe style.css).
    Nur `li.has-or` braucht die Messung: dort steht der Knoten linksbündig, das
    <li> ist aber so breit wie sein any-of-Teilbaum — der Stiel bei 50 % liefe am
@@ -130,8 +181,10 @@ function alignStems(){
   out.querySelectorAll('ul.and>li').forEach(li => li.style.removeProperty('--stem-x'));
   if(out.classList.contains('vertical') || out.classList.contains('kompakt')) return;
   const z = zoom || 1;
-  out.querySelectorAll('ul.and>li.has-or').forEach(li => {
-    const node = li.querySelector(':scope > .node');
+  /* `li.opt-group` (Treppe) hat keinen eigenen Knoten — der Stiel zielt auf den
+     ERSTEN Knoten der Kaskade. */
+  out.querySelectorAll('ul.and>li.has-or, ul.and>li.opt-group').forEach(li => {
+    const node = li.querySelector(':scope > .node') || li.querySelector('.node');
     if(!node) return;
     const lr = li.getBoundingClientRect(), nr = node.getBoundingClientRect();
     if(!lr.width) return;                                  /* Panel eingeklappt */
@@ -206,8 +259,23 @@ function diagramToSvg(){
     const gate = childUl.classList.contains('or') ? 'or' : 'and';
     const stroke = gate === 'or' ? '#6B7A8C' : '#41556E';
     const dash = gate === 'or';
-    const kidEls = [...childUl.children]
-      .map(cli => cli.querySelector(':scope > .node, :scope > a.node')).filter(Boolean);
+    /* Die Treppe (D29) ist eine Anordnung, keine Ebene: alle Stufen sind Kinder
+       DIESES Elternknotens. An die Sammelleiste kommt nur die erste Stufe; die
+       übrigen hängen an der Kaskade und werden unten nachgezogen. Zöge man jede
+       Stufe einzeln an die Leiste, liefe die Linie zur dritten Stufe hinter der
+       zweiten hindurch — und läse sich wie eine Eltern-Kind-Beziehung. */
+    const kidEls = [], stairs = [];
+    for(const cli of childUl.children){
+      if(cli.classList.contains('opt-group')){
+        const st = [...cli.querySelectorAll(':scope > ul.opt-stair > li > .node')];
+        if(!st.length) continue;
+        kidEls.push(st[0]);
+        if(st.length > 1) stairs.push(st);
+      } else {
+        const n = cli.querySelector(':scope > .node');
+        if(n) kidEls.push(n);
+      }
+    }
     const kids = kidEls.map(R);
     if(!kids.length) return;
     const isOpt = i => kidEls[i].classList.contains('opt');
@@ -239,6 +307,16 @@ function diagramToSvg(){
         if(o) optMarks.push({x: k.cx, y});
       });
     }
+    /* Kaskade ab der zweiten Stufe: an der linken Kante der vorigen Stufe
+       herab, dann waagerecht in die eigene — dieselbe Führung wie am Bildschirm. */
+    stairs.forEach(st => {
+      for(let j = 1; j < st.length; j++){
+        const a = R(st[j-1]), b = R(st[j]);
+        parts.push(seg(a.x, a.b, a.x, b.cy, stroke, true));
+        parts.push(seg(a.x, b.cy, b.x, b.cy, stroke, true));
+        optMarks.push({x: b.x, y: b.cy});
+      }
+    });
   });
 
   /* 1b) Günstigster-Pfad: kräftige Linie hinter den Knoten */
@@ -552,6 +630,7 @@ function applyLayout(mode){
   out.classList.toggle('kompakt', mode === 'kompakt');
   app.classList.toggle('side', mode !== 'horizontal');
   if(!isMobile()) applySplit();   /* Desktop: Preset neu setzen. Mobil: freie --drow-Aufteilung behalten */
+  applyOptStairs();   /* Treppe gilt nur im Fächer — beim Moduswechsel bauen/auflösen */
   alignStems();       /* Stiel gilt nur im Fächer — beim Moduswechsel neu setzen/löschen */
   drawCheapPath();    /* Blatt-Positionen ändern sich mit dem Modus */
 }

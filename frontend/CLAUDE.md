@@ -197,6 +197,18 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Abzweig zeichnen dessen Pseudoelemente. Gestrichelt wird nur die Kante zum
   Knoten, nie die Sammelleiste — im Fächer `border-left`/`-right`, gestapelt
   `border-top`.
+- Treppe optionaler Endknoten (D29, Nachtrag 3): `applyOptStairs()` gruppiert
+  **in app.js**, nicht im Renderer — die DOM-Ebene `li.opt-group > ul.opt-stair`
+  gibt es semantisch nicht und müsste in den drei übrigen Anordnungen wieder
+  neutralisiert werden. Deshalb: nur im Fächer bauen, beim Moduswechsel
+  auflösen (die Funktion räumt immer zuerst auf, `applyLayout` arbeitet auf dem
+  bereits gruppierten Baum). Reihenfolge: `applyOptStairs()` **vor**
+  `alignStems()`/`drawCheapPath()`, es verschiebt Knoten. Bedingung ist „`<li>`
+  hat genau ein Element-Kind, und das ist der Knoten" — also kein Teilbaum und
+  kein Geister-Knoten, weil die Stufengeometrie Zellenhöhe == Knotenhöhe
+  voraussetzt. Der SVG-Export hängt nur die **erste** Stufe an die Leiste und
+  zieht die übrigen als Winkelkette nach; flach eingereiht lief die Linie zur
+  dritten Stufe hinter der zweiten hindurch.
 - `--stem-x` (D29, Nachtrag 2): Im horizontalen Fächer sitzt der Stiel bei 50 %
   des `<li>`. Das ist nur dann die Knotenmitte, wenn der Knoten in der Zelle
   zentriert steht — `li.has-or` ist aber linksbündig und die Zelle so breit wie

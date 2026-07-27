@@ -678,6 +678,46 @@
     left:-5px;top:50%;transform:translateY(-50%);
   }
 
+  /* --- TREPPE: aufeinanderfolgende optionale Endknoten (D29, Nachtrag 3) ---
+     Nur im horizontalen Fächer, wo jedes Geschwister sonst eine eigene Spalte
+     kostet. `applyOptStairs()` in app.js gruppiert sie in
+     `li.opt-group > ul.opt-stair` und nummeriert die Stufen als `--i` (0-basiert).
+     Geometrie: Stufe 0 hängt am Stiel von oben wie ein gewöhnliches Kind
+     (`--stem-x` zielt auf sie). Jede weitere Stufe steht `--stair-step` weiter
+     rechts und hängt an einem gestrichelten Winkel, der bündig an der linken
+     Kante der VORIGEN Stufe herabfällt und waagerecht in den eigenen Kreis
+     einbiegt. Das setzt voraus, dass die Zelle so hoch ist wie ihr Knoten —
+     deshalb nur Endknoten. */
+  .tree:not(.vertical):not(.kompakt) ul.opt-stair{
+    --stair-step:26px; --stair-gap:12px;
+    display:flex;flex-direction:column;align-items:flex-start;position:relative;
+  }
+  .tree:not(.vertical):not(.kompakt) ul.opt-stair>li{
+    align-items:flex-start;
+    padding:var(--stair-gap) 0 0 calc(var(--i) * var(--stair-step));
+  }
+  .tree:not(.vertical):not(.kompakt) ul.opt-stair>li:first-child{padding-top:0}
+  /* Winkel zur vorigen Stufe: senkrecht herab, dann waagerecht in den Knoten.
+     Der Knick liegt auf der linken Kante der vorigen Stufe. */
+  .tree:not(.vertical):not(.kompakt) ul.opt-stair>li+li::before,
+  .tree:not(.vertical):not(.kompakt) ul.opt-stair>li+li::after{
+    content:'';position:absolute;
+    left:calc((var(--i) - 1) * var(--stair-step));
+  }
+  .tree:not(.vertical):not(.kompakt) ul.opt-stair>li+li::after{
+    top:0;height:calc(var(--stair-gap) + 16px);
+    border-left:2px dashed var(--line);
+  }
+  .tree:not(.vertical):not(.kompakt) ul.opt-stair>li+li::before{
+    top:calc(var(--stair-gap) + 16px);width:var(--stair-step);
+    border-top:2px dashed var(--line);
+  }
+  /* Stufe 0 wird von oben getroffen (Kreis oben mittig), alle weiteren von
+     links — das ist bereits der Grundfall von `.node.opt::before`. */
+  .tree:not(.vertical):not(.kompakt) ul.opt-stair>li:first-child>.node.opt::before{
+    left:50%;top:-5px;transform:translateX(-50%);
+  }
+
   /* ---------- Status (Pastell) ---------- */
   .node.st-idee      {background:#EBEDEF;border-color:#A2ABB5;color:var(--ink)}
   .node.st-geplant   {background:#EBE4F6;border-color:#A991D4;color:var(--ink)}

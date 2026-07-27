@@ -850,3 +850,57 @@ Rückfallwert 50 % hält alle übrigen Zellen ohne Messung richtig, und die
 transponierten Modi setzen `left`/`right` ohnehin fest und bleiben unberührt.
 Gemessen wird — wie in `drawCheapPath()` — durch `zoom` zurückgerechnet, sodass
 der Wert beim Zoomen gültig bleibt.
+
+**Nachtrag 3 — Treppe für mehrere optionale Endknoten.** Im horizontalen Fächer
+kostet jedes optionale Geschwister eine eigene Spalte — Breite für gerade das,
+was am entbehrlichsten ist. Aufeinanderfolgende optionale Endknoten werden
+deshalb als **Kaskade** gestapelt (Nutzerwunsch: „mehrere optionale Knoten in
+einer diagonalen Linie an eine Anschlussstelle").
+
+Verworfen wurde die naheliegendere **senkrechte Spalte** unter einem
+Anschlusspunkt: Sie wäre schmaler und in einem Bruchteil der Zeit gebaut, sähe
+aber fast genau aus wie eine **any-of-Gruppe** (gestapelte Spalte an
+gestrichelter Leiste), unterschieden nur durch Tinte statt Grau. Genau diese
+Verwechslung zu vermeiden ist der Zweck von Kreis und Farbgebung. Die Treppe
+kauft Eindeutigkeit für etwas Breite — schon die Form ist eine andere.
+
+Ebenfalls verworfen: eine **echte** Diagonale. Rahmenkanten sind achsenparallel;
+sie bräuchte die SVG-Ebene (die es für den Pfad-Spline gibt) und wäre damit eine
+**zweite Zeichenebene** neben allen anderen Linien, nachzuführen bei jedem
+Rendern, Moduswechsel und Zoom. Der gestufte Anschluss aus rechten Winkeln gibt
+denselben Kaskaden-Eindruck im vorhandenen Mechanismus.
+
+**Nur Endknoten.** Der Platzgewinn entsteht gerade daraus, dass kein Teilbaum
+mitgestapelt werden muss — ein optionaler Knoten *mit* Kindern spart in der
+Treppe nichts und behält seine Spalte. Technisch kommt dasselbe heraus: Die
+Stufengeometrie rechnet mit einem festen Abstand von Knotenunterkante zur
+nächsten Stufe und setzt deshalb voraus, dass die Zelle so hoch ist wie ihr
+Knoten (kein Teilbaum, kein Geister-Knoten). Geprüft wird genau das: das `<li>`
+hat exakt ein Element-Kind, und das ist der Knoten.
+
+**Gruppiert wird in app.js, nicht im Renderer.** Die Gruppierung
+(`li.opt-group > ul.opt-stair`, Stufennummer als `--i`) ist reine Darstellung.
+Im Renderer hätte sie eine DOM-Ebene erzeugt, die es semantisch nicht gibt —
+und die in den **drei übrigen Anordnungen** (vertikal, kompakt, all-of unter
+any-of) wieder hätte neutralisiert werden müssen, jede mit hand-getunter
+Geometrie. `display:contents` löst das nicht: Es richtet die Boxen, aber die
+`>`-Selektoren jener Regeln greifen weiter auf dem DOM und passen dann nicht
+mehr. `applyOptStairs()` baut die Gruppe deshalb nur im Fächer und löst sie beim
+Moduswechsel wieder auf — dieselbe Kategorie wie `alignStems()` und
+`drawCheapPath()`, und SPEC §9 („der Modus ändert nur die Anordnung") bleibt für
+den **Renderer** wörtlich wahr. Lese- und Fokusreihenfolge bleiben unberührt,
+weil nur umgehängt und nichts umsortiert wird.
+
+**Der Export folgt der Kaskade.** Erste Fassung reihte alle Stufen flach als
+Kinder ein und ließ den Export selbst routen (er zieht Linien ohnehin unabhängig
+vom Darstellungsmodus neu). Ergebnis: Die Linie zur dritten Stufe lief **hinter
+der zweiten hindurch** und las sich wie eine Eltern-Kind-Beziehung — keine
+Schönheitsfrage, sondern eine falsche Aussage über die Struktur. Jetzt hängt nur
+die **erste** Stufe an der Sammelleiste, die übrigen bekommen denselben Winkel
+wie am Bildschirm.
+
+**Nicht durch Tests gedeckt:** `applyOptStairs()` arbeitet auf dem DOM, und für
+`app.js` gibt es keine Testumgebung (die Vitest-Suite prüft die headless-Module).
+Geprüft wurde im Browser — auch der Moduswechsel hin und zurück, mehrfach: Die
+Gruppe entsteht und löst sich rückstandsfrei auf, Knotenzahl und Dokumentordnung
+bleiben in allen drei Modi gleich.

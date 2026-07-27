@@ -153,6 +153,19 @@ Siehe D29.
 - **all of:** Kinder nebeneinander, klassischer Organigramm-Fächer.
 - **any of:** Alternativen untereinander; gestrichelte graue Sammelleiste links
   unterhalb des Parents, gestrichelte graue Abzweige zu den Alternativen.
+- **Treppe für optionale Endknoten:** Stehen **zwei oder mehr** optionale
+  **Endknoten** (`+`, §3) unmittelbar nebeneinander, bekommen sie nicht je eine
+  eigene Spalte, sondern werden als **Kaskade** gestapelt: Die erste Stufe hängt
+  am Stiel von oben wie ein gewöhnliches Kind, jede weitere steht eine Stufe
+  tiefer und weiter rechts und hängt an einem gestrichelten Winkel, der an der
+  linken Kante der vorigen Stufe herabfällt und waagerecht in ihren Kreis
+  einbiegt. Das spart Breite genau dort, wo das Entbehrlichste steht.
+  Es bleiben **Geschwister** — die Treppe ist eine Anordnung, keine Ebene, und
+  ändert weder Lese-/Fokusreihenfolge noch `aria-label`. Nur Endknoten, weil der
+  Platzgewinn gerade daher rührt, dass kein Teilbaum mitgestapelt wird; ein
+  optionaler Knoten **mit** Kindern behält seine Spalte. Die transponierten Modi
+  kennen die Treppe nicht — dort stehen die Kinder ohnehin untereinander. Der
+  Grafikexport folgt der Kaskade.
 
 ### Vertikal (transponiert)
 - **all of:** exakter transponierter Organigramm-Fächer (horizontal um 90°
