@@ -620,9 +620,9 @@ als `max-width`/`max-height` im CSS**, weil die gespeicherte Größe ein fester
 px-Wert ist: schrumpft das Panel später (Zug am großen Splitter, Drehung,
 Bildschirmtastatur), würde der Editor sonst auf 0 gedrückt.
 
-## D27 — „Werkbank": Werkbaums eigener Plan als mitgeliefertes Dokument
+## D27 — „Werkbaum": der eigene Plan als mitgeliefertes Dokument
 Neben dem Beispiel (D22) liegt ein zweites mitgeliefertes Dokument im Wähler:
-**„Werkbank"** — Werkbaum selbst, mit Werkbaum geplant (Bestand + mögliche
+**„Werkbaum"** — Werkbaum selbst, mit Werkbaum geplant (Bestand + mögliche
 Weiterentwicklung). Damit ist der interessanteste Beispielbaum ohne Umweg über
 einen `?sourceUrl=`-Link erreichbar; zugleich dient er als lebende
 Projektübersicht.
@@ -644,7 +644,9 @@ kehrte bei **jedem** Laden zurück. Das aktive Dokument bleibt beim Anlegen
 unverändert — niemand wird aus seinem Text gerissen.
 
 **Fester Name, nicht lokalisiert** — wie „Example" (D22): Dokumentnamen sind
-Nutzerdaten. Der Reset (D22) setzt jetzt **beide** mitgelieferten Dokumente auf
+Nutzerdaten. (Die erste Fassung hieß durch einen Tippfehler „Werkbank";
+`loadDocs()` zieht den Namen nach — aber **nur**, solange er unverändert der
+ausgelieferte ist, damit eine eigene Umbenennung stehen bleibt.) Der Reset (D22) setzt jetzt **beide** mitgelieferten Dokumente auf
 ihren Auslieferungsstand zurück; eigene Dokumente bleiben weiterhin unangetastet.
 
 **Offen:** Der Text wird nach dem Anlegen nicht mehr aktualisiert. Erscheint

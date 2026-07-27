@@ -1318,7 +1318,9 @@ let hadStoredUI = false;  /* gab es beim Laden schon gespeicherte GUI-Einstellun
 const EXAMPLE_ID = 'example', EXAMPLE_NAME = 'Example';
 /* Zweites mitgeliefertes Dokument: Werkbaum selbst (D27). Fester Name wie beim
    Beispiel — Dokumentnamen sind Nutzerdaten und werden nicht übersetzt (D22). */
-const WERKBAUM_ID = 'werkbaum', WERKBAUM_NAME = 'Werkbank';
+const WERKBAUM_ID = 'werkbaum', WERKBAUM_NAME = 'Werkbaum';
+/* Die erste Fassung hieß versehentlich „Werkbank" (Tippfehler). */
+const WERKBAUM_NAME_ALT = 'Werkbank';
 let docs = [];          /* [{id, name, text}] */
 let activeId = null;
 function uid(){ return 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
@@ -1376,6 +1378,11 @@ function loadDocs(){
     docs[0].name = EXAMPLE_NAME;
   }
   seedShippedDocs();
+  /* Namensfix für die kurzlebige Fassung mit dem Tippfehler — nur, solange der
+     ausgelieferte Name unverändert ist; eine eigene Umbenennung bleibt stehen
+     (Dokumentnamen sind Nutzerdaten, D22). */
+  const wb = docs.find(d => d.id === WERKBAUM_ID);
+  if(wb && wb.name === WERKBAUM_NAME_ALT) wb.name = WERKBAUM_NAME;
   activeId = docs.some(d => d.id === a) ? a : docs[0].id;
 }
 function saveSrc(){
