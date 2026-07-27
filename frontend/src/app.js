@@ -3,6 +3,11 @@ import { parse } from './parser.js';
 import { computeCheapSet } from './model.js';
 import { esc, renderTreeHtml } from './render.js';
 import { formatWarning } from './warnings.js';
+/* Werkbaum, mit Werkbaum geplant — als mitgeliefertes Dokument „Werkbank" (D27).
+   Dieselbe Datei, die auch per ?sourceUrl= geladen werden kann; `?raw` bettet
+   sie beim Build in die eine Ausgabedatei ein (D19), es wird nichts nachgeladen
+   (D20). Quelle bleibt docs/examples/ — keine Kopie, die auseinanderläuft. */
+import WERKBAUM_DOC from '../../docs/examples/example-werkbaum.werkbaum?raw';
 
 const INITIAL = `%% Project structure – Sprint 14
 [~] Website relaunch (XL) https://wiki.example.com/relaunch
@@ -1296,6 +1301,7 @@ fsBtn.addEventListener('click', () => {
    erhalten. Sprache liegt weiterhin in 'werkbaum-lang'. */
 const LS_UI = 'werkbaum-ui', LS_SRC = 'werkbaum-src';
 const LS_DOCS = 'werkbaum-docs', LS_ACTIVE = 'werkbaum-active';
+const LS_SEEDED = 'werkbaum-seeded';   /* mitgelieferte Dokumente schon angelegt? */
 let restoring = false;   /* unterdrückt Speichern während des Wiederherstellens */
 let hadStoredUI = false;  /* gab es beim Laden schon gespeicherte GUI-Einstellungen? */
 
@@ -1310,6 +1316,9 @@ let hadStoredUI = false;  /* gab es beim Laden schon gespeicherte GUI-Einstellun
    unabhängig von der UI-Sprache englisch — wie der Beispieltext selbst (breiteres
    Publikum). */
 const EXAMPLE_ID = 'example', EXAMPLE_NAME = 'Example';
+/* Zweites mitgeliefertes Dokument: Werkbaum selbst (D27). Fester Name wie beim
+   Beispiel — Dokumentnamen sind Nutzerdaten und werden nicht übersetzt (D22). */
+const WERKBAUM_ID = 'werkbaum', WERKBAUM_NAME = 'Werkbank';
 let docs = [];          /* [{id, name, text}] */
 let activeId = null;
 function uid(){ return 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
@@ -1329,6 +1338,20 @@ function persistDocs(){
     if(d) localStorage.setItem(LS_SRC, d.text);   /* Spiegel für Fallback/Migration */
   }catch(_){}
 }
+/* „Werkbank" (D27) genau EINMAL anlegen — auch für Bestandsnutzer, die schon
+   eine Dokumentenliste haben. Der Merker `LS_SEEDED` sorgt dafür, dass ein
+   bewusst gelöschtes Dokument nicht bei jedem Laden zurückkehrt; ein späterer
+   Ausbau kann dort eine Versionsnummer statt '1' ablegen. */
+function seedShippedDocs(){
+  let seeded = null;
+  try{ seeded = localStorage.getItem(LS_SEEDED); }catch(_){}
+  if(seeded) return;
+  if(!docs.some(d => d.id === WERKBAUM_ID)){
+    docs.push({ id: WERKBAUM_ID, name: WERKBAUM_NAME, text: WERKBAUM_DOC });
+  }
+  try{ localStorage.setItem(LS_SEEDED, '1'); }catch(_){}
+}
+
 /* Aus dem localStorage laden; bei fehlender Dokumentenliste den bestehenden
    Einzeltext (oder INITIAL) als erstes Dokument migrieren. */
 function loadDocs(){
@@ -1352,6 +1375,7 @@ function loadDocs(){
     docs[0].id = EXAMPLE_ID;
     docs[0].name = EXAMPLE_NAME;
   }
+  seedShippedDocs();
   activeId = docs.some(d => d.id === a) ? a : docs[0].id;
 }
 function saveSrc(){
@@ -2023,14 +2047,20 @@ function resetToDefaults(){
   ['werkbaum-ui','werkbaum-lang','werkbaum-html-hash','werkbaum-update-available','werkbaum-update-log']
     .forEach(k => { try{ localStorage.removeItem(k); }catch(_){} });
 
-  /* Nur das Beispiel-Dokument auf den Ausgangstext zurücksetzen; existiert es
-     nicht (mehr), wird es neu angelegt. Andere Dokumente bleiben unberührt. */
-  const ex = docs.find(d => d.id === EXAMPLE_ID);
-  if(ex){ ex.text = INITIAL; ex.name = EXAMPLE_NAME; }
-  else { docs.unshift({ id: EXAMPLE_ID, name: EXAMPLE_NAME, text: INITIAL }); }
+  /* Nur die MITGELIEFERTEN Dokumente auf ihren Ausgangstext zurücksetzen;
+     existiert eines nicht (mehr), wird es neu angelegt. Eigene Dokumente des
+     Nutzers bleiben unberührt (D22/D27). */
+  const reseed = (id, name, text, vorn) => {
+    const d = docs.find(x => x.id === id);
+    if(d){ d.text = text; d.name = name; }
+    else if(vorn) docs.unshift({ id, name, text });
+    else docs.push({ id, name, text });
+  };
+  reseed(EXAMPLE_ID, EXAMPLE_NAME, INITIAL, true);
+  reseed(WERKBAUM_ID, WERKBAUM_NAME, WERKBAUM_DOC, false);
   activeId = EXAMPLE_ID;
   persistDocs();
-  logUpdate('🔄 Beispiel-Dokument und Einstellungen zurückgesetzt');
+  logUpdate('🔄 Mitgelieferte Dokumente und Einstellungen zurückgesetzt');
 
   /* Kurze Verzögerung, damit Logging sichtbar wird, dann reload */
   setTimeout(() => {

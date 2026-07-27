@@ -619,3 +619,37 @@ Grenzen: mindestens 90 px, höchstens 85 % — die Obergrenze steht **zusätzlic
 als `max-width`/`max-height` im CSS**, weil die gespeicherte Größe ein fester
 px-Wert ist: schrumpft das Panel später (Zug am großen Splitter, Drehung,
 Bildschirmtastatur), würde der Editor sonst auf 0 gedrückt.
+
+## D27 — „Werkbank": Werkbaums eigener Plan als mitgeliefertes Dokument
+Neben dem Beispiel (D22) liegt ein zweites mitgeliefertes Dokument im Wähler:
+**„Werkbank"** — Werkbaum selbst, mit Werkbaum geplant (Bestand + mögliche
+Weiterentwicklung). Damit ist der interessanteste Beispielbaum ohne Umweg über
+einen `?sourceUrl=`-Link erreichbar; zugleich dient er als lebende
+Projektübersicht.
+
+**Eine Quelle, keine Kopie.** Der Text wird per `?raw`-Import aus
+`docs/examples/example-werkbaum.werkbaum` gezogen — derselben Datei, die auch
+der `?sourceUrl=`-Link lädt. Vite bettet sie beim Build in die eine Ausgabedatei
+ein (D19), es wird nichts nachgeladen (D20). Eine zweite, abgetippte Fassung im
+Quelltext würde unweigerlich auseinanderlaufen. (Nebenwirkung: die Beispieldatei
+ist damit **Build-Eingabe** — Umbenennen bricht den Build. `vite.config.js`
+erlaubt den Zugriff außerhalb des Roots bereits über `server.fs.allow: ['..']`,
+eingeführt für das Favicon.)
+
+**Genau einmal angelegt.** `seedShippedDocs()` fügt das Dokument auch
+Bestandsnutzern hinzu, die schon eine Dokumentenliste haben, und merkt sich das
+in `werkbaum-seeded`. Ohne diesen Merker gäbe es nur schlechte Alternativen:
+entweder bekämen bestehende Nutzer es nie, oder ein bewusst gelöschtes Dokument
+kehrte bei **jedem** Laden zurück. Das aktive Dokument bleibt beim Anlegen
+unverändert — niemand wird aus seinem Text gerissen.
+
+**Fester Name, nicht lokalisiert** — wie „Example" (D22): Dokumentnamen sind
+Nutzerdaten. Der Reset (D22) setzt jetzt **beide** mitgelieferten Dokumente auf
+ihren Auslieferungsstand zurück; eigene Dokumente bleiben weiterhin unangetastet.
+
+**Offen:** Der Text wird nach dem Anlegen nicht mehr aktualisiert. Erscheint
+später eine neuere Fassung des Plans, sieht sie nur, wer das Dokument löscht und
+zurücksetzt oder den `?sourceUrl=`-Link öffnet. Ein Ausbau könnte in
+`werkbaum-seeded` statt '1' eine Versionsnummer ablegen und ein **unverändertes**
+Dokument nachziehen (bearbeitete nie) — dieselbe Adoptions-Regel wie beim
+Beispiel in D22.
