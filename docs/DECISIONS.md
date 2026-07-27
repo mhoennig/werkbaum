@@ -520,3 +520,25 @@ Knoten-Ecken nicht an (die sind laut D18 schon dicht). Die Regel braucht den
 any-of-Gruppe (im Test zuerst passiert). Rein visuelle Editierhilfe — im Druck
 abgeschaltet; im Grafikexport erscheint sie ohnehin nicht, weil `diagramToSvg()`
 nur Hintergrund, Rahmen, Farbe und Textdekoration ausliest, nie `box-shadow`.
+
+**Auffindbarkeit (Nachtrag).** Eine Modifier-Geste, die niemand kennt, ist
+keine Funktion. Gegenmaßnahmen, absteigend nach Wirkung:
+
+- **Alt-Modus sichtbar machen:** Solange Alt gedrückt ist, trägt `#out` die
+  Klasse `alt`; alle Knoten bekommen `cursor:alias` und der Knoten unter dem
+  Zeiger einen Petrol-Ring. Das wirkt auch auf **verlinkten** Knoten, wo der
+  einfache Klick dem Link gehört und es sonst gar keine Rückmeldung gäbe. Der
+  Modus muss zusätzlich am `blur` des Fensters zurückgesetzt werden — bei
+  Alt+Tab kommt kein `keyup` mehr an und er bliebe hängen.
+- **Tooltip an jedem Knoten** (siehe oben, `jumpHint`).
+- **Legende:** Die aufklappbare Legende endet mit einer abgesetzten
+  Bedienungs-Zeile (`hint_jump`, `.hint-op` mit gestricheltem Trenner), damit
+  sie ihre Rolle als *Notations*-Legende behält.
+
+Erwogen und **verworfen: der einfache Klick springt** (auf Knoten ohne URL, wo
+nichts kollidiert — das wären ~97 % der Knoten der Beispieldateien). Hätte die
+Geste beiläufig auffindbar gemacht und auf Mobil den langen Druck erspart,
+bedeutet aber, dass derselbe Klick je nach Knoten Verschiedenes tut. Ebenfalls
+verworfen: ein **einmaliger Hinweis** nach dem ersten Sprung (localStorage-Flag)
+— zusätzlicher i18n-Text in 9 Sprachen für einen Effekt, den Cursor und Legende
+bereits abdecken.

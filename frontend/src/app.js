@@ -454,6 +454,16 @@ function syncCaret(){
 }
 for(const ev of ['click','keyup','input','focus']) src.addEventListener(ev, syncCaret);
 
+/* Alt-Modus sichtbar machen: solange Alt gedrückt ist, zeigt jeder Knoten den
+   Sprung-Cursor und der Knoten unter dem Zeiger einen Petrol-Ring. Das ist die
+   einzige Rückmeldung, die auch auf verlinkten Knoten funktioniert (dort gehört
+   der einfache Klick weiterhin dem Link). `blur` ist nötig: bei Alt+Tab kommt
+   kein keyup mehr an, der Modus bliebe sonst hängen. */
+function setAltMode(on){ out.classList.toggle('alt', on); }
+window.addEventListener('keydown', e => { if(e.key === 'Alt') setAltMode(true); });
+window.addEventListener('keyup',   e => { if(e.key === 'Alt' || !e.altKey) setAltMode(false); });
+window.addEventListener('blur',    () => setAltMode(false));
+
 const app = document.getElementById('app');
 function applyLayout(mode){
   out.classList.toggle('vertical', mode === 'vertikal');
@@ -756,7 +766,8 @@ const I18N = {
     hint_size:"Aufwand als T-Shirt-Größe in Klammern, Link einfach als URL anhängen:",
     hint_break:"Ab (M) gilt: weiter untergliedern — fehlt die Untergliederung, erscheint ein Platzhalter im Diagramm.",
     hint_comment:"Kommentare mit %% — als ganze Zeile oder am Zeilenende.",
-    hint_people:"Personen mit @name — erscheinen unten rechts am Knoten."
+    hint_people:"Personen mit @name — erscheinen unten rechts am Knoten.",
+    hint_jump:"Alt+Klick auf einen Knoten (mobil: langer Druck) springt zur zugehörigen Textzeile."
   },
   en: {
     subtitle:"Werkbaum – Work Breakdown Structure / Lean Pathfinding · Project structure editor (also feature-tree & requirements)",
@@ -803,7 +814,8 @@ const I18N = {
     hint_size:"Effort as a T-shirt size in parentheses; add a link simply as a URL:",
     hint_break:"From (M) on: break it down further — if the breakdown is missing, a placeholder appears in the diagram.",
     hint_comment:"Comments with %% — whole line or at the end of a line.",
-    hint_people:"People with @name — shown at the bottom-right of the node."
+    hint_people:"People with @name — shown at the bottom-right of the node.",
+    hint_jump:"Alt+click a node (long press on touch) jumps to its line in the text."
   },
   es: {
     subtitle:"Werkbaum – EDT / Lean Pathfinding · Editor de estructura de proyectos (también árboles de características y requisitos)",
@@ -850,7 +862,8 @@ const I18N = {
     hint_size:"Esfuerzo como talla de camiseta entre paréntesis; añade un enlace simplemente como URL:",
     hint_break:"A partir de (M): sigue desglosando — si falta el desglose, aparece un marcador de posición en el diagrama.",
     hint_comment:"Comentarios con %% — línea completa o al final de la línea.",
-    hint_people:"Personas con @nombre — aparecen abajo a la derecha del nodo."
+    hint_people:"Personas con @nombre — aparecen abajo a la derecha del nodo.",
+    hint_jump:"Alt+clic en un nodo (pulsación larga en táctil) salta a su línea en el texto."
   },
   fr: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · Éditeur de structure de projet (aussi pour arbres de fonctionnalités et d'exigences)",
@@ -897,7 +910,8 @@ const I18N = {
     hint_size:"Effort en taille de T-shirt entre parenthèses ; ajoutez un lien simplement comme URL :",
     hint_break:"À partir de (M) : décomposer davantage — si la décomposition manque, un espace réservé apparaît dans le diagramme.",
     hint_comment:"Commentaires avec %% — ligne entière ou en fin de ligne.",
-    hint_people:"Personnes avec @nom — affichées en bas à droite du nœud."
+    hint_people:"Personnes avec @nom — affichées en bas à droite du nœud.",
+    hint_jump:"Alt+clic sur un nœud (appui long sur tactile) saute à sa ligne dans le texte."
   },
   pl: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · Edytor struktury projektów (również dla drzew funkcji i wymagań)",
@@ -944,7 +958,8 @@ const I18N = {
     hint_size:"Nakład jako rozmiar koszulki w nawiasach; link dodaj po prostu jako URL:",
     hint_break:"Od (M): dziel dalej — gdy brakuje podziału, w diagramie pojawia się symbol zastępczy.",
     hint_comment:"Komentarze z %% — cały wiersz lub na końcu wiersza.",
-    hint_people:"Osoby z @nazwa — pokazywane w prawym dolnym rogu węzła."
+    hint_people:"Osoby z @nazwa — pokazywane w prawym dolnym rogu węzła.",
+    hint_jump:"Alt+kliknięcie węzła (długie naciśnięcie na dotyku) przechodzi do jego wiersza w tekście."
   },
   ru: {
     subtitle:"Werkbaum – СДР / Lean Pathfinding · Редактор структуры проектов (также для деревьев функций и требований)",
@@ -991,7 +1006,8 @@ const I18N = {
     hint_size:"Трудоёмкость как размер футболки в скобках; ссылку добавьте просто как URL:",
     hint_break:"С (M): дробите дальше — если декомпозиции нет, в диаграмме появляется заполнитель.",
     hint_comment:"Комментарии через %% — вся строка или в конце строки.",
-    hint_people:"Люди через @имя — показываются справа внизу узла."
+    hint_people:"Люди через @имя — показываются справа внизу узла.",
+    hint_jump:"Alt+клик по узлу (долгое нажатие на сенсоре) переходит к его строке в тексте."
   },
   hi: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · परियोजना संरचना संपादक (फ़ीचर और रिक्वायरमेंट ट्री के लिए भी)",
@@ -1038,7 +1054,8 @@ const I18N = {
     hint_size:"प्रयास कोष्ठक में टी-शर्ट आकार के रूप में; लिंक बस URL के रूप में जोड़ें:",
     hint_break:"(M) से आगे: और विभाजित करें — विभाजन न होने पर आरेख में प्लेसहोल्डर दिखता है।",
     hint_comment:"%% से टिप्पणियाँ — पूरी पंक्ति या पंक्ति के अंत में।",
-    hint_people:"@नाम से व्यक्ति — नोड के नीचे-दाएँ दिखते हैं।"
+    hint_people:"@नाम से व्यक्ति — नोड के नीचे-दाएँ दिखते हैं।",
+    hint_jump:"किसी नोड पर Alt+क्लिक (टच पर लंबा दबाव) टेक्स्ट में उसकी पंक्ति पर ले जाता है।"
   },
   zh: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · 项目结构编辑器（也支持功能树和需求树）",
@@ -1085,7 +1102,8 @@ const I18N = {
     hint_size:"用括号中的 T 恤尺码表示工作量；链接直接作为 URL 附加：",
     hint_break:"从 (M) 起：继续细分——若缺少细分，图表中会出现占位符。",
     hint_comment:"用 %% 注释——整行或行尾。",
-    hint_people:"用 @姓名 表示人员——显示在节点右下角。"
+    hint_people:"用 @姓名 表示人员——显示在节点右下角。",
+    hint_jump:"Alt+点击节点（触摸屏为长按）可跳转到文本中对应的行。"
   },
   ja: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · プロジェクト構造エディター（フィーチャーツリーと要件ツリーにも対応）",
@@ -1132,7 +1150,8 @@ const I18N = {
     hint_size:"工数は括弧内の T シャツサイズで；リンクは URL としてそのまま追加：",
     hint_break:"(M) 以上：さらに分解 — 分解がないと図にプレースホルダーが表示されます。",
     hint_comment:"%% でコメント — 行全体または行末。",
-    hint_people:"@名前 で担当者 — ノードの右下に表示されます。"
+    hint_people:"@名前 で担当者 — ノードの右下に表示されます。",
+    hint_jump:"ノードを Alt+クリック（タッチでは長押し）すると、テキストの該当行へ移動します。"
   }
 };
 let lang = 'de';
@@ -1161,7 +1180,8 @@ function buildHint(){
     <code>- [ ] Backend (L) https://…</code><br>
     ${esc(t('hint_break'))}<br>
     ${esc(t('hint_comment'))}
-    ${esc(t('hint_people'))}`;
+    ${esc(t('hint_people'))}
+    <div class="hint-op">${esc(t('hint_jump'))}</div>`;
 }
 function applyLang(l){
   lang = l;

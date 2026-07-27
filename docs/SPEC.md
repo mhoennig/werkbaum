@@ -240,6 +240,11 @@ verknüpft (siehe D25):
   verworfenes Element) heben nichts hervor.
 - Der **einfache** Klick bleibt unverändert der Link (§6): Ein Knoten mit URL
   öffnet sie weiterhin im neuen Tab. Deshalb Alt und nicht der einfache Klick.
+- **Auffindbarkeit:** Solange **Alt gedrückt** ist, zeigen alle Knoten den
+  Sprung-Cursor und der Knoten unter dem Zeiger einen Petrol-Ring — die Geste
+  ist im Moment des Ausprobierens sichtbar, auch auf verlinkten Knoten. Dazu
+  nennt der Knoten-Tooltip die Geste, und die aufklappbare Legende schließt mit
+  einer Bedienungs-Zeile ab.
 - Die Hervorhebung ist eine reine Editierhilfe: nicht im Grafikexport, nicht im
   Druck.
 

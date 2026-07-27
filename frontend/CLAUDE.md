@@ -135,7 +135,10 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `syncCaret()` setzt die Klasse `current` auf den Knoten der Cursor-Zeile;
   `render()` stellt sie nach jedem Neubau wieder her (ohne zu scrollen). Die
   CSS-Regel braucht den `#out`-Präfix (`ul.or .node{box-shadow:none}` ist
-  spezifischer).
+  spezifischer). Auffindbarkeit: `setAltMode()` setzt bei gedrückter Alt-Taste
+  die Klasse `alt` an `#out` (Cursor + Ring am Knoten unter dem Zeiger) — der
+  `blur`-Handler ist Pflicht, sonst bleibt der Modus nach Alt+Tab hängen; dazu
+  `jumpHint` im Knoten-Tooltip und `hint_jump` als letzte Zeile der Legende.
 - Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) stapelt
   Diagramm/Editor mit **stufenlosem** Splitter (kein Snap/Collapse wie auf
   Desktop): der Gutter-Drag ruft `setMobileDrow()` (klemmt `--drow` zwischen den
