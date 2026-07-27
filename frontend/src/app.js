@@ -66,6 +66,9 @@ function render(){
   warnings = warnings.slice().sort((a, b) => (a.line || 0) - (b.line || 0));
   warnBox.innerHTML = warnings.map(w => `<div>⚠ ${formatWarning(w, t)}</div>`).join('');
   drawCheapPath();
+  /* Der Baum ist neu gebaut — die Markierung der Cursor-Zeile neu setzen (D25).
+     Ohne Scrollen: beim Tippen soll das Diagramm stehen bleiben. */
+  highlightCurrentNode(false);
 }
 
 /* ---------- Günstigster-Pfad-Linie ----------
@@ -304,6 +307,152 @@ src.addEventListener('keydown', e => {
 
 src.addEventListener('input', render);
 src.addEventListener('input', saveSrc);
+
+/* ---------- Sprung zwischen Diagramm und Text (D25) ----------
+   Jeder Knoten trägt seine Zeilennummer als `data-line` (render.js).
+   Diagramm -> Text: Alt+Klick (bzw. Alt+Enter am fokussierten Knoten, mobil
+   langer Druck) markiert die Zeile im Textfeld. Text -> Diagramm: die Zeile
+   des Cursors hebt den zugehörigen Knoten hervor. Alt statt einfachem Klick,
+   weil ein Knoten mit URL als <a> den ganzen Kasten belegt (SPEC §6). */
+
+/* Zeichenbereich einer 1-basierten Zeile; null, wenn es sie nicht (mehr) gibt. */
+function lineRange(line){
+  const lines = src.value.split('\n');
+  if(!(line >= 1 && line <= lines.length)) return null;
+  let start = 0;
+  for(let i = 0; i < line - 1; i++) start += lines[i].length + 1;
+  return {start, end: start + lines[line - 1].length};
+}
+
+/* Vertikale Position eines Zeichenoffsets im Textfeld. Zeilenhöhe × n scheitert
+   an weichen Umbrüchen (lange Zeilen belegen mehrere Bildzeilen), deshalb ein
+   unsichtbarer Spiegel mit gleicher Typografie und Breite plus Marker-Span. */
+let mirrorEl = null;
+function offsetTopInEditor(offset){
+  if(!mirrorEl){
+    mirrorEl = document.createElement('div');
+    mirrorEl.setAttribute('aria-hidden', 'true');
+    mirrorEl.style.cssText = 'position:absolute;visibility:hidden;top:0;left:-9999px;' +
+                             'white-space:pre-wrap;overflow-wrap:break-word;';
+    document.body.appendChild(mirrorEl);
+  }
+  const cs = getComputedStyle(src);
+  for(const p of ['fontFamily','fontSize','fontWeight','lineHeight','letterSpacing',
+                  'paddingTop','paddingLeft','paddingRight','borderTopWidth','tabSize']){
+    mirrorEl.style[p] = cs[p];
+  }
+  mirrorEl.style.width = src.clientWidth + 'px';
+  mirrorEl.textContent = src.value.slice(0, offset);
+  const marker = document.createElement('span');
+  marker.textContent = '​';
+  mirrorEl.appendChild(marker);
+  const top = marker.offsetTop;
+  mirrorEl.textContent = '';
+  return top;
+}
+
+/* Nur scrollen, wenn die Zeile nicht ohnehin bequem sichtbar ist. */
+function scrollEditorToOffset(offset){
+  const top = offsetTopInEditor(offset), h = src.clientHeight;
+  if(top < src.scrollTop + 8 || top > src.scrollTop + h - 28){
+    src.scrollTop = Math.max(0, top - h / 2);
+  }
+}
+
+/* Ist das Editor-Panel zugeklappt, muss der Sprung es erst öffnen. */
+function revealEditor(){
+  if(isMobile()){
+    const raw = app.style.getPropertyValue('--drow');
+    const collapsed = raw ? parseFloat(raw) > mobileMaxDrow() - 40 : splitState === 'b';
+    if(collapsed) setMobileDrow(app.getBoundingClientRect().height * 0.45, true);
+  } else if(splitState === 'b'){
+    splitState = 'normal';
+    applySplit();
+  }
+}
+
+/* Diagramm -> Text: ganze Zeile markieren (die native Auswahl ist die einzige
+   Hervorhebung, die ein <textarea> kennt — und sie verschwindet beim Tippen). */
+function jumpToLine(line){
+  const r = lineRange(line);
+  if(!r) return;
+  revealEditor();
+  src.focus({preventScroll: true});
+  src.setSelectionRange(r.start, r.end);
+  scrollEditorToOffset(r.start);
+  caretLine = line;
+  highlightCurrentNode(true);
+}
+
+function nodeFromEvent(e){
+  const el = e.target && e.target.closest ? e.target.closest('.node[data-line]') : null;
+  return el && out.contains(el) ? el : null;
+}
+
+out.addEventListener('click', e => {
+  if(!e.altKey) return;
+  const el = nodeFromEvent(e);
+  if(!el) return;
+  /* Ohne preventDefault lädt der Browser bei Alt+Klick auf einen Link das Ziel
+     herunter (Chrome/Firefox) — das ist hier ausdrücklich nicht gemeint. */
+  e.preventDefault();
+  e.stopPropagation();
+  jumpToLine(+el.dataset.line);
+});
+
+/* Tastatur: Alt+Enter am fokussierten Knoten. Enter allein bleibt dem Link. */
+out.addEventListener('keydown', e => {
+  if(e.key !== 'Enter' || !e.altKey) return;
+  const el = nodeFromEvent(e);
+  if(!el) return;
+  e.preventDefault();
+  jumpToLine(+el.dataset.line);
+});
+
+/* Mobil gibt es kein Alt: langer Druck (500 ms) auf einen Knoten springt.
+   Der folgende Klick wird unterdrückt, sonst öffnete ein Link-Knoten zusätzlich
+   seine URL; das Kontextmenü/Callout ebenso (die Geste ist hier vergeben). */
+let pressTimer = null, pressFired = false;
+out.addEventListener('touchstart', e => {
+  const el = nodeFromEvent(e);
+  pressFired = false;
+  if(!el) return;
+  pressTimer = setTimeout(() => {
+    pressTimer = null;
+    pressFired = true;
+    jumpToLine(+el.dataset.line);
+  }, 500);
+}, {passive: true});
+function cancelPress(){ if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; } }
+out.addEventListener('touchmove', cancelPress, {passive: true});
+out.addEventListener('touchend', e => {
+  if(pressFired) e.preventDefault();
+  cancelPress();
+}, {passive: false});
+out.addEventListener('touchcancel', () => { cancelPress(); pressFired = false; });
+out.addEventListener('contextmenu', e => { if(pressTimer || pressFired) e.preventDefault(); });
+
+/* Text -> Diagramm: Knoten der Cursor-Zeile hervorheben. `caretLine` bleibt
+   null, bis der Cursor das erste Mal bewegt wurde — sonst wäre nach dem Laden
+   ohne Zutun die Wurzel markiert. */
+let caretLine = null, currentNodeEl = null;
+function highlightCurrentNode(scroll){
+  if(currentNodeEl) currentNodeEl.classList.remove('current');
+  currentNodeEl = caretLine == null
+    ? null
+    : out.querySelector('.node[data-line="' + caretLine + '"]');
+  if(!currentNodeEl) return;
+  currentNodeEl.classList.add('current');
+  /* Nur beim Zeilenwechsel scrollen, sonst ruckelte das Diagramm beim Tippen. */
+  if(scroll) currentNodeEl.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
+}
+function syncCaret(){
+  const line = src.value.slice(0, src.selectionStart).split('\n').length;
+  const moved = line !== caretLine;
+  caretLine = line;
+  highlightCurrentNode(moved);
+}
+for(const ev of ['click','keyup','input','focus']) src.addEventListener(ev, syncCaret);
 
 const app = document.getElementById('app');
 function applyLayout(mode){
@@ -569,6 +718,7 @@ const I18N = {
     privacy:"Datenschutz",
     legendTooltip:"Legende ein-/ausblenden",
     ghostTooltip:"Ab Größe M sollte ein Element weiter untergliedert werden.",
+    jumpHint:"Alt+Klick: zur Zeile im Text",
     riskTooltip:"High Risk – Aufwand noch unklar.",
     discardedTooltip:"Verworfene Knoten samt Teilbaum ein-/ausblenden",
     cheapTooltip:"Günstigsten Pfad hervorheben – nicht benötigte Alternativen treten zurück",
@@ -615,6 +765,7 @@ const I18N = {
     privacy:"Privacy",
     legendTooltip:"Show/hide legend",
     ghostTooltip:"From size M upward, an item should be broken down further.",
+    jumpHint:"Alt+click: jump to the line in the text",
     riskTooltip:"High risk – effort still unclear.",
     discardedTooltip:"Show/hide discarded nodes and their subtree",
     cheapTooltip:"Highlight the cheapest path – unneeded alternatives recede",
@@ -661,6 +812,7 @@ const I18N = {
     privacy:"Privacidad",
     legendTooltip:"Mostrar u ocultar la leyenda",
     ghostTooltip:"A partir de la talla M, un elemento debería desglosarse más.",
+    jumpHint:"Alt+clic: ir a la línea en el texto",
     riskTooltip:"Alto riesgo – esfuerzo aún incierto.",
     discardedTooltip:"Mostrar u ocultar los nodos descartados y su subárbol",
     cheapTooltip:"Resaltar la ruta más económica: las alternativas no necesarias se atenúan",
@@ -707,6 +859,7 @@ const I18N = {
     privacy:"Confidentialité",
     legendTooltip:"Afficher/masquer la légende",
     ghostTooltip:"À partir de la taille M, un élément devrait être décomposé davantage.",
+    jumpHint:"Alt+clic : aller à la ligne dans le texte",
     riskTooltip:"Risque élevé – effort encore incertain.",
     discardedTooltip:"Afficher/masquer les nœuds abandonnés et leur sous-arbre",
     cheapTooltip:"Mettre en évidence le chemin le moins coûteux – les alternatives inutiles s'estompent",
@@ -753,6 +906,7 @@ const I18N = {
     privacy:"Prywatność",
     legendTooltip:"Pokaż/ukryj legendę",
     ghostTooltip:"Od rozmiaru M element powinien być dalej podzielony.",
+    jumpHint:"Alt+kliknięcie: przejdź do wiersza w tekście",
     riskTooltip:"Wysokie ryzyko – nakład jeszcze niejasny.",
     discardedTooltip:"Pokaż/ukryj odrzucone węzły wraz z poddrzewem",
     cheapTooltip:"Wyróżnij najtańszą ścieżkę – niepotrzebne alternatywy są przygaszone",
@@ -799,6 +953,7 @@ const I18N = {
     privacy:"Конфиденциальность",
     legendTooltip:"Показать/скрыть легенду",
     ghostTooltip:"Начиная с размера M элемент следует далее декомпозировать.",
+    jumpHint:"Alt+клик: перейти к строке в тексте",
     riskTooltip:"Высокий риск – оценка ещё не ясна.",
     discardedTooltip:"Показать/скрыть отклонённые узлы вместе с поддеревом",
     cheapTooltip:"Выделить самый дешёвый путь — ненужные альтернативы приглушаются",
@@ -845,6 +1000,7 @@ const I18N = {
     privacy:"गोपनीयता",
     legendTooltip:"लेजेंड दिखाएँ/छिपाएँ",
     ghostTooltip:"आकार M से ऊपर किसी तत्व को और अधिक उप-विभाजित करना चाहिए।",
+    jumpHint:"Alt+क्लिक: टेक्स्ट में उस पंक्ति पर जाएँ",
     riskTooltip:"उच्च जोखिम – प्रयास अभी अस्पष्ट।",
     discardedTooltip:"अस्वीकृत नोड्स और उनके उप-वृक्ष दिखाएँ/छिपाएँ",
     cheapTooltip:"सबसे किफ़ायती पथ को उजागर करें – अनावश्यक विकल्प मंद हो जाते हैं",
@@ -896,6 +1052,7 @@ const I18N = {
     cheapTooltip:"突出显示成本最低的路径——不需要的备选项将淡化",
     implicitSizeTooltip:"未指定尺寸——成本估算时按 M 计",
     ghostTooltip:"从 M 号起，元素应进一步细分。",
+    jumpHint:"Alt+点击：跳转到文本中的该行",
     riskTooltip:"高风险 – 工作量尚不明确。",
     editorTitle:"结构（文本）", diagramTitle:"图表",
     docSwitchTooltip:"选择或管理文档", docMenuAria:"文档",
@@ -942,6 +1099,7 @@ const I18N = {
     cheapTooltip:"最も低コストの経路を強調 – 不要な選択肢は控えめに表示",
     implicitSizeTooltip:"サイズ未指定 – コスト見積もりのため M として扱う",
     ghostTooltip:"サイズ M 以上の要素はさらに分解すべきです。",
+    jumpHint:"Alt+クリック：テキストの該当行へ移動",
     riskTooltip:"高リスク – 規模はまだ不明。",
     editorTitle:"構造（テキスト）", diagramTitle:"ダイアグラム",
     docSwitchTooltip:"ドキュメントを選択・管理", docMenuAria:"ドキュメント",

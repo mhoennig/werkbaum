@@ -38,6 +38,18 @@ Den [gehosteten Editor](https://werkbaum.javagil.de) öffnen — links
 Text bearbeiten, rechts entsteht das Diagramm live. Toggles: transponierte
 (schmale) Darstellung, verworfene Elemente einblenden.
 
+### Zwischen Diagramm und Text springen
+
+Diagramm und Editor sind in beide Richtungen verknüpft:
+
+- **Alt+Klick auf einen Knoten** (Tastatur: **Alt+Enter**, Touch: **langer
+  Druck**) markiert seine Zeile im Texteditor — ein zugeklapptes Editor-Panel
+  öffnet sich dabei zuerst.
+- **Cursor im Text bewegen** hebt den zugehörigen Knoten im Diagramm hervor.
+
+Der einfache Klick behält seine bisherige Bedeutung: Ein Knoten mit URL öffnet
+sie weiterhin.
+
 ### Diagramm aus einer URL laden
 
 Der Editor kann seinen Notationstext über den Query-Parameter `sourceUrl` aus

@@ -225,6 +225,24 @@ Scheitert das Laden (häufigster Fall: das Ziel sendet keinen
 `Access-Control-Allow-Origin`-Header, außerdem 404/Netzfehler), bleibt der
 bisherige Stand stehen und es erscheint eine **Warnung**. Siehe D23.
 
+### Sprung zwischen Diagramm und Text
+Jeder Knoten kennt seine Zeilennummer im Notationstext; beide Richtungen sind
+verknüpft (siehe D25):
+
+- **Diagramm → Text:** **Alt+Klick** auf einen Knoten markiert die zugehörige
+  Zeile im Texteditor (ganze Zeile ausgewählt, in Sicht gescrollt, Fokus im
+  Textfeld). Tastatur: **Alt+Enter** am fokussierten Knoten. Auf Touch-Geräten:
+  **langer Druck** (≥ 500 ms); ein Wischen bricht ab. Ist das Editor-Panel
+  zugeklappt, öffnet der Sprung es zuerst.
+- **Text → Diagramm:** Der Knoten der **Cursor-Zeile** wird im Diagramm
+  hervorgehoben (weißer Halo + Ring in Tinte) und beim Zeilenwechsel ins Bild
+  gescrollt. Zeilen ohne Knoten (Kommentar, Leerzeile, ausgeblendetes
+  verworfenes Element) heben nichts hervor.
+- Der **einfache** Klick bleibt unverändert der Link (§6): Ein Knoten mit URL
+  öffnet sie weiterhin im neuen Tab. Deshalb Alt und nicht der einfache Klick.
+- Die Hervorhebung ist eine reine Editierhilfe: nicht im Grafikexport, nicht im
+  Druck.
+
 ### Grafikexport des Diagramms
 Das Diagramm wird aus der Live-Geometrie in ein eigenständiges SVG (nur Formen
 + Text, keine externen Ressourcen) nachgezeichnet. Zwei Icon-Schaltflächen:

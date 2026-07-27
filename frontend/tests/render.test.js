@@ -69,7 +69,7 @@ describe('renderTreeHtml — „Untergliederung fehlt" (Geister-Knoten, SPEC §5
     const {html} = renderTreeHtml(roots, {t, showDiscarded: false, cheapPath: false, cheapSet: new Set()});
     expect(count(html, 'ghost-node')).toBe(1);
     expect(html).toContain('title="ghostTooltip"');
-    expect(html).toMatchInlineSnapshot(`"<li><div class="node root-node st-geplant" tabindex="0" aria-label="Großes Paket, a11yStatus, a11ySize" title="st_geplant">Großes Paket<span class="size" aria-hidden="true">L</span></div><div class="ghost-node" aria-label="ghostTooltip" title="ghostTooltip">ghost</div></li>"`);
+    expect(html).toMatchInlineSnapshot(`"<li><div class="node root-node st-geplant" tabindex="0" data-line="1" aria-label="Großes Paket, a11yStatus, a11ySize" title="st_geplant · jumpHint">Großes Paket<span class="size" aria-hidden="true">L</span></div><div class="ghost-node" aria-label="ghostTooltip" title="ghostTooltip">ghost</div></li>"`);
   });
 
   it('verworfenes M+ löst die Regel nicht aus', () => {
@@ -100,5 +100,39 @@ describe('renderTreeHtml — Moduswechsel ist CSS, nicht Renderer', () => {
     expect(html).not.toMatch(/\bkompakt\b/);
     // Also gilt derselbe Renderer-Snapshot für alle drei Modi (horizontal,
     // vertikal, kompakt) — sie unterscheiden sich nur in der Container-Klasse.
+  });
+});
+
+/* Grundlage für den Sprung Diagramm <-> Text (D25, SPEC §9): Jeder Knoten muss
+   die Zeilennummer aus dem Parser als data-line tragen — auch verlinkte Knoten
+   (die als <a> gerendert werden) und Knoten in any-of-Gruppen. */
+describe('renderTreeHtml — data-line je Knoten (D25)', () => {
+  const lineOf = (html, label) => {
+    const re = new RegExp('<(?:a|div) class="node[^"]*"[^>]*?data-line="(\\d+)"[^>]*>' + label);
+    const m = html.match(re);
+    return m ? Number(m[1]) : null;
+  };
+
+  it('trägt die Parser-Zeilennummer an jeden Knoten', () => {
+    const {html} = renderExample({showDiscarded: true});
+    expect(lineOf(html, 'Website-Relaunch')).toBe(2);      // Zeile 1 ist ein %%-Kommentar
+    expect(lineOf(html, 'Zielgruppenanalyse')).toBe(4);
+    expect(lineOf(html, 'Frontend')).toBe(7);              // verlinkt -> <a>
+    expect(lineOf(html, 'Headless CMS')).toBe(11);         // any-of-Alternative
+    expect(lineOf(html, 'Eigenentwicklung')).toBe(12);     // verworfen, eingeblendet
+  });
+
+  it('vergibt jede Zeilennummer genau einmal', () => {
+    const {html} = renderExample({showDiscarded: true});
+    const lines = [...html.matchAll(/class="node[^"]*"[^>]*?data-line="(\d+)"/g)].map(m => m[1]);
+    expect(lines.length).toBe(new Set(lines).size);
+    expect(lines.length).toBe(14);   // alle Zeilen des SPEC-Beispiels außer dem Kommentar
+  });
+
+  it('der Geister-Knoten bekommt keine Zeilennummer (er steht für keine Zeile)', () => {
+    const {html} = renderTreeHtml(parse('[ ] Großes Paket (L)').roots,
+                                  {t, showDiscarded: false, cheapPath: false, cheapSet: new Set()});
+    expect(html).toMatch(/class="ghost-node"/);
+    expect(html).not.toMatch(/ghost-node[^>]*data-line/);
   });
 });

@@ -39,7 +39,13 @@ function nodeHtml(n, extra, opts){
   const need = needsBreakdown(n);
   const cls = ['node', extra || '', n.status ? 'st-' + n.status.key : '']
     .filter(Boolean).join(' ');
-  const title = n.status ? ` title="${attr(t('st_' + n.status.key))}"` : '';
+  /* Zeilennummer am Knoten (D25): Grundlage für den Sprung ins Textfeld und
+     für die Gegenrichtung (Cursor-Zeile -> Knoten hervorheben). Der Hinweis im
+     Tooltip macht die sonst unsichtbare Alt-Klick-Geste auffindbar. */
+  const lineAttr = n.line ? ` data-line="${n.line}"` : '';
+  const tip = [n.status ? t('st_' + n.status.key) : '', t('jumpHint')]
+    .filter(Boolean).join(' · ');
+  const title = ` title="${attr(tip)}"`;
   const tagsHtml = n.tags && n.tags.length
     ? `<span class="tags" aria-hidden="true">${n.tags.map(tag => `<span class="tag">${esc(tag)}</span>`).join('')}</span>`
     : '';
@@ -59,8 +65,8 @@ function nodeHtml(n, extra, opts){
                 tagsHtml;
   const aria = ` aria-label="${attr(nodeAria(n, opts))}"`;
   const html = n.url
-    ? `<a class="${cls}" href="${attr(n.url)}" target="_blank" rel="noopener"${aria}${title}>${inner}</a>`
-    : `<div class="${cls}" tabindex="0"${aria}${title}>${inner}</div>`;
+    ? `<a class="${cls}" href="${attr(n.url)}" target="_blank" rel="noopener"${lineAttr}${aria}${title}>${inner}</a>`
+    : `<div class="${cls}" tabindex="0"${lineAttr}${aria}${title}>${inner}</div>`;
   const ghostTip = attr(t('ghostTooltip'));
   const ghost = `<div class="ghost-node" aria-label="${ghostTip}" title="${ghostTip}">${esc(t('ghost'))}</div>`;
   return html + (need ? ghost : '');

@@ -125,6 +125,17 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Endung `.werkbaum` ist reine Konvention (D24, SPEC §12). Beispieldateien zum
   Ausprobieren: `docs/examples/*.werkbaum` (nacheinander geöffnet ergeben sie
   mehrere Dokumente im Wähler).
+- Sprung Diagramm ↔ Text (D25): `render.js` schreibt die Parser-Zeilennummer als
+  `data-line` an jeden Knoten (Geister-Knoten bekommen keine). `jumpToLine()` in
+  `app.js` klappt bei Bedarf das Editor-Panel auf (`revealEditor()`), markiert die
+  **ganze Zeile** und scrollt über einen Spiegel-`div` (`offsetTopInEditor()`) —
+  Zeilenhöhe × n scheitert an weichen Umbrüchen. Ausgelöst per Alt+Klick,
+  Alt+Enter und langem Druck; der Klick-Handler **muss `preventDefault()`** rufen,
+  sonst lädt Alt+Klick auf einen Link-Knoten das Ziel herunter. Gegenrichtung:
+  `syncCaret()` setzt die Klasse `current` auf den Knoten der Cursor-Zeile;
+  `render()` stellt sie nach jedem Neubau wieder her (ohne zu scrollen). Die
+  CSS-Regel braucht den `#out`-Präfix (`ul.or .node{box-shadow:none}` ist
+  spezifischer).
 - Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) stapelt
   Diagramm/Editor mit **stufenlosem** Splitter (kein Snap/Collapse wie auf
   Desktop): der Gutter-Drag ruft `setMobileDrow()` (klemmt `--drow` zwischen den

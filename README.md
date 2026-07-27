@@ -37,6 +37,16 @@ Open the [hosted editor](https://werkbaum.javagil.de) — edit text on
 the left, the diagram is built live on the right. Toggles: transposed (narrow)
 layout, show discarded elements.
 
+### Jumping between diagram and text
+
+Diagram and editor are linked in both directions:
+
+- **Alt+click a node** (keyboard: **Alt+Enter**, touch: **long press**) selects
+  its line in the text editor — collapsed editor panel opens first.
+- **Moving the cursor in the text** highlights the matching node in the diagram.
+
+A plain click keeps its old meaning: a node carrying a URL still opens it.
+
 ### Loading a diagram from a URL
 
 The editor can pull its notation text from an external text file via the

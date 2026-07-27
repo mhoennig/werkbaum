@@ -465,3 +465,58 @@ Dokumenten zeigen lässt: jeder `?sourceUrl=`-Link legt ein eigenes Dokument an
 `example-werkbaum.werkbaum` beschreibt Werkbaum selbst (Bestand + mögliche
 Weiterentwicklung, destilliert aus ROADMAP/TASKS/DECISIONS) — zugleich
 Beispiel und lebende Projektübersicht; bei größeren Änderungen mitpflegen.
+
+## D25 — Sprung Diagramm ↔ Text per Alt+Klick, Gegenrichtung per Cursor-Zeile
+Ein Knoten im Diagramm und „seine" Zeile im Texteditor sind nun verknüpft. Der
+Parser hängte die Zeilennummer ohnehin schon an jeden Knoten (`{…, line}`,
+bislang nur für Warnungen genutzt); der Renderer gibt sie als `data-line` aus.
+
+**Alt+Klick statt einfachem Klick.** Ein Knoten mit URL ist als `<a>` gerendert
+und belegt mit dem einfachen Klick bereits den ganzen Kasten (SPEC §6, D6).
+Erwogen und verworfen:
+
+- **↗ wird der Link, Knotenfläche springt** — klarste Regel, alles per
+  einfachem Klick; ändert aber SPEC §6 und schrumpft die Link-Trefferfläche auf
+  ein Symbol.
+- **Klick springt, Strg-Klick öffnet** — behält die große Trefferfläche, macht
+  das Öffnen aber zur unsichtbaren Geste und ändert §6 ebenfalls.
+- **Gewählt: Alt+Klick springt** — das Verlinkungs-Verhalten bleibt exakt wie
+  bisher, SPEC §6 unverändert. Preis ist die geringe Auffindbarkeit; dagegen
+  steht der **Tooltip an jedem Knoten** („Alt+Klick: zur Zeile im Text",
+  i18n-Key `jumpHint`, in allen 9 Sprachen), der bisher nur den Statusnamen
+  zeigte.
+
+Wichtig: Der Klick-Handler **muss `preventDefault()`** rufen — Alt+Klick auf
+einen Link lädt sonst in Chrome/Firefox das Ziel herunter. Tastatur-Pendant ist
+**Alt+Enter** am fokussierten Knoten (Enter allein bleibt dem Link). Auf Touch
+gibt es kein Alt: dort **langer Druck** (500 ms), Wischen bricht ab; der
+folgende Klick und das Kontextmenü werden unterdrückt (`-webkit-touch-callout`
+aus), sonst öffnete ein Link-Knoten zusätzlich seine URL.
+
+**Ganze Zeile markieren statt nur Cursor setzen.** Ein `<textarea>` kennt keine
+Zeilen-Hervorhebung (kein Rich-Text-Markup); die native Auswahl ist die einzige
+Betonung, die es gibt — und sie verschwindet beim ersten Tippen von selbst.
+
+**Scrollen über einen Spiegel-`div`, nicht über Zeilenhöhe × n.** Lange Zeilen
+brechen weich um und belegen mehrere Bildzeilen; die naive Rechnung lag im Test
+bei 60 Zeilen um bis zu 525 px daneben. Gemessen wird deshalb an einem
+unsichtbaren `div` mit gleicher Typografie und Breite plus Marker-Span
+(`offsetTop`). Gescrollt wird nur, wenn die Zeile nicht ohnehin sichtbar ist.
+
+**Gegenrichtung (Cursor-Zeile → Knoten)** ist bei großen Bäumen die nützlichere
+Hälfte: `example-werkbaum.werkbaum` hat 75 sichtbare Knoten, ohne Markierung
+verliert man beim Tippen die Orientierung. Der Knoten der Cursor-Zeile bekommt
+die Klasse `current`; ins Bild gescrollt wird **nur beim Zeilenwechsel**, sonst
+ruckelte das Diagramm bei jedem Tastendruck. Vor der ersten Cursor-Bewegung ist
+`caretLine === null` — sonst wäre direkt nach dem Laden ungefragt die Wurzel
+markiert.
+
+**Darstellung: weißer Halo + Ring in Tinte** (`box-shadow`, kein Rahmen). Hebt
+sich von allen Pastell-Status *und* vom dunklen Wurzelknoten ab, ist vom
+petrolfarbenen Fokusring (`:focus-visible`) unterscheidbar und rührt die
+Knoten-Ecken nicht an (die sind laut D18 schon dicht). Die Regel braucht den
+`#out`-Präfix: `ul.or .node{box-shadow:none}` ist spezifischer als
+`.node.current` und schluckte den Ring sonst überall unterhalb einer
+any-of-Gruppe (im Test zuerst passiert). Rein visuelle Editierhilfe — im Druck
+abgeschaltet; im Grafikexport erscheint sie ohnehin nicht, weil `diagramToSvg()`
+nur Hintergrund, Rahmen, Farbe und Textdekoration ausliest, nie `box-shadow`.
