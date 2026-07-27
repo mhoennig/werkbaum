@@ -139,6 +139,15 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   die Klasse `alt` an `#out` (Cursor + Ring am Knoten unter dem Zeiger) — der
   `blur`-Handler ist Pflicht, sonst bleibt der Modus nach Alt+Tab hängen; dazu
   `jumpHint` im Knoten-Tooltip und `hint_jump` als letzte Zeile der Legende.
+- Touch-Langdruck (D25): Der Timer (500 ms) setzt **nur** die Klasse `armed`
+  (Petrol-Ring); `jumpToLine()` läuft im `touchend`-Handler. Nicht zurück in den
+  Timer verlegen — **`focus()` aus einem Timer gilt in mobilen Browsern nicht als
+  Nutzergeste**, das Textfeld verliert den Fokus sofort wieder (Symptom: die
+  Markierung flackert nur auf). Gegen die native Langdruck-Auswahl braucht es
+  alle drei Schichten: `contextmenu`-`preventDefault` während des Drucks,
+  `user-select:none` per `@media (hover:none) and (pointer:coarse)` und
+  `-webkit-touch-callout:none` (nur iOS). Synthetische `TouchEvent`s prüfen
+  davon **nichts** — nur die eigene Ereignis-Logik.
 - Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) stapelt
   Diagramm/Editor mit **stufenlosem** Splitter (kein Snap/Collapse wie auf
   Desktop): der Gutter-Drag ruft `setMobileDrow()` (klemmt `--drow` zwischen den

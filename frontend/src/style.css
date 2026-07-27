@@ -448,8 +448,14 @@
      Rückmeldung, weil dort der einfache Klick dem Link gehört (D25). */
   #out.alt .node{cursor:alias}
   #out.alt .node:hover{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--or)}
-  /* Auf Touch ist der lange Druck die Sprung-Geste — kein iOS-Link-Callout. */
-  a.node{-webkit-touch-callout:none}
+  /* Langer Druck „scharf": derselbe Petrol-Ring wie unter dem Alt-Zeiger. */
+  #out .node.armed{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--or)}
+  /* Auf Touch ist der lange Druck die Sprung-Geste — die native Textauswahl und
+     das Link-Callout des Browsers starten zur selben Zeit und rissen sonst die
+     Auswahl im Textfeld wieder an sich (D25). */
+  @media (hover:none) and (pointer:coarse){
+    .node{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  }
   .ext{font-size:.72em;margin-left:5px;opacity:.55}
   .size{
     position:absolute;top:-9px;right:-9px;

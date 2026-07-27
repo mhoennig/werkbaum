@@ -410,27 +410,38 @@ out.addEventListener('keydown', e => {
 });
 
 /* Mobil gibt es kein Alt: langer Druck (500 ms) auf einen Knoten springt.
-   Der folgende Klick wird unterdrückt, sonst öffnete ein Link-Knoten zusätzlich
-   seine URL; das Kontextmenü/Callout ebenso (die Geste ist hier vergeben). */
-let pressTimer = null, pressFired = false;
+   Der Sprung passiert erst beim LOSLASSEN: `focus()` aus einem Timer heraus
+   gilt in mobilen Browsern nicht als Nutzergeste — der Fokus fiel sofort wieder
+   aus dem Textfeld (die Markierung flackerte nur kurz auf). `touchend` ist eine
+   echte Geste, dort bleibt er. Nach 500 ms passiert deshalb nur die Rückmeldung:
+   der Zielknoten bekommt den Petrol-Ring („scharf"). Der folgende Klick wird
+   unterdrückt, sonst öffnete ein Link-Knoten zusätzlich seine URL; das
+   Kontextmenü/Callout ebenso (die Geste ist hier vergeben). */
+let pressTimer = null, armedEl = null;
+function disarmPress(){
+  if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
+  if(armedEl){ armedEl.classList.remove('armed'); armedEl = null; }
+}
 out.addEventListener('touchstart', e => {
+  disarmPress();
   const el = nodeFromEvent(e);
-  pressFired = false;
   if(!el) return;
   pressTimer = setTimeout(() => {
     pressTimer = null;
-    pressFired = true;
-    jumpToLine(+el.dataset.line);
+    armedEl = el;
+    el.classList.add('armed');
   }, 500);
 }, {passive: true});
-function cancelPress(){ if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; } }
-out.addEventListener('touchmove', cancelPress, {passive: true});
+out.addEventListener('touchmove', disarmPress, {passive: true});
 out.addEventListener('touchend', e => {
-  if(pressFired) e.preventDefault();
-  cancelPress();
+  const el = armedEl;
+  disarmPress();
+  if(!el) return;
+  e.preventDefault();             /* unterdrückt den nachfolgenden Klick/Link */
+  jumpToLine(+el.dataset.line);   /* echte Nutzergeste -> der Fokus bleibt */
 }, {passive: false});
-out.addEventListener('touchcancel', () => { cancelPress(); pressFired = false; });
-out.addEventListener('contextmenu', e => { if(pressTimer || pressFired) e.preventDefault(); });
+out.addEventListener('touchcancel', disarmPress);
+out.addEventListener('contextmenu', e => { if(pressTimer || armedEl) e.preventDefault(); });
 
 /* Text -> Diagramm: Knoten der Cursor-Zeile hervorheben. `caretLine` bleibt
    null, bis der Cursor das erste Mal bewegt wurde — sonst wäre nach dem Laden

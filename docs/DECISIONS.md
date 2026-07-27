@@ -542,3 +542,26 @@ bedeutet aber, dass derselbe Klick je nach Knoten Verschiedenes tut. Ebenfalls
 verworfen: ein **einmaliger Hinweis** nach dem ersten Sprung (localStorage-Flag)
 — zusätzlicher i18n-Text in 9 Sprachen für einen Effekt, den Cursor und Legende
 bereits abdecken.
+
+**Touch: der Sprung passiert beim Loslassen, nicht nach 500 ms (Nachtrag).**
+Erste Fassung führte den Sprung im 500-ms-Timer aus. Auf echten Touch-Geräten
+flackerte die Markierung im Editor dann nur kurz auf und der Fokus fiel sofort
+wieder heraus: **`focus()` aus einem Timer-Callback gilt in mobilen Browsern
+nicht als Nutzergeste**, das Textfeld darf sich so nicht selbst fokussieren
+(sonst könnte jede Seite ungefragt die Bildschirmtastatur aufziehen).
+`touchend` **ist** eine Nutzergeste — dort bleibt der Fokus. Der Timer macht
+seither nur noch die Rückmeldung („scharf": Petrol-Ring am Zielknoten, dieselbe
+Sprache wie unter dem Alt-Zeiger), der eigentliche Sprung hängt am Loslassen.
+
+Zweiter Beitrag zum selben Symptom: Die **native Textauswahl bzw. das
+Link-Callout** des Browsers startet bei etwa derselben Druckdauer und riss die
+Auswahl an sich. Dagegen drei Schichten, weil keine allein überall wirkt:
+`preventDefault()` auf `contextmenu` während des Drucks (überall),
+`user-select:none` an `.node` für grobe Zeiger (`@media (hover:none) and
+(pointer:coarse)`) und `-webkit-touch-callout:none` (nur iOS/Safari; Chrome
+kennt die Eigenschaft nicht mehr). Auf Touch lässt sich Knotentext damit nicht
+mehr markieren — bewusst in Kauf genommen, die Geste ist dort vergeben.
+
+Lehre für die Prüfung: Synthetische `TouchEvent`s beweisen nur die eigene
+Ereignis-Logik. Weder die Nutzergesten-Regel noch die nativen Langdruck-Gesten
+lassen sich so auslösen — beides fiel erst auf echter Hardware auf.

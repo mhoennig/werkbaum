@@ -232,8 +232,9 @@ verknüpft (siehe D25):
 - **Diagramm → Text:** **Alt+Klick** auf einen Knoten markiert die zugehörige
   Zeile im Texteditor (ganze Zeile ausgewählt, in Sicht gescrollt, Fokus im
   Textfeld). Tastatur: **Alt+Enter** am fokussierten Knoten. Auf Touch-Geräten:
-  **langer Druck** (≥ 500 ms); ein Wischen bricht ab. Ist das Editor-Panel
-  zugeklappt, öffnet der Sprung es zuerst.
+  **langer Druck** — nach ≥ 500 ms zeigt der Knoten einen Petrol-Ring („scharf"),
+  der Sprung erfolgt beim **Loslassen**; ein Wischen bricht ab. Ist das
+  Editor-Panel zugeklappt, öffnet der Sprung es zuerst.
 - **Text → Diagramm:** Der Knoten der **Cursor-Zeile** wird im Diagramm
   hervorgehoben (weißer Halo + Ring in Tinte) und beim Zeilenwechsel ins Bild
   gescrollt. Zeilen ohne Knoten (Kommentar, Leerzeile, ausgeblendetes
