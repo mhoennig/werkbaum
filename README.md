@@ -197,6 +197,23 @@ repository, while the **version number** links to that exact commit
 "GitHub Actions". The repo must be **public** for this (GitHub Pages via Actions
 is only available for private repos on a paid plan).
 
+### Stable instance
+
+`scripts/deploy-prod.sh` mirrors a badge-free production build to a server over
+SSH (target in `.env`, template `.env.example`). Unlike Pages this is a
+**deliberate** step, so it is also the moment a feature actually goes live.
+
+The script therefore starts by running `scripts/promote-shipped.sh`, which turns
+`[x]` (done) into `[^]` (in production) in `docs/examples/example-werkbaum.werkbaum`
+— the shipped plan describing Werkbaum itself — and records that as its own
+commit. The convention is: mark a finished feature `[x]` when it is merged and
+let the deploy promote it. That keeps the plan honest on both instances and
+keeps the "what's new" highlighting meaningful. Skip it with `--no-promote`; see
+[docs/DECISIONS.md](docs/DECISIONS.md) D30.
+
+The commit is **not** pushed automatically — run `git push` afterwards, or the
+footer version link points at a commit GitHub does not know yet.
+
 ## License
 
 MIT — see [LICENSE](LICENSE). © 2026 Michael Hönnig. The bundled IBM Plex fonts

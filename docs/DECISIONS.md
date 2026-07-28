@@ -904,3 +904,62 @@ wie am Bildschirm.
 Geprüft wurde im Browser — auch der Moduswechsel hin und zurück, mehrfach: Die
 Gruppe entsteht und löst sich rückstandsfrei auf, Knotenzahl und Dokumentordnung
 bleiben in allen drei Modi gleich.
+
+## D30 — `[x]` → `[^]` per Beförderungs-Commit vor dem Deploy
+Der mitgelieferte Werkbaum-Plan (D27) behauptete `[^]` („in Produktion") für
+Funktionen, die nur auf der automatisch deployten Pages-Instanz lagen, nicht auf
+der stabilen Installation `werkbaum.javagil.de` (manueller Deploy, D16). Damit
+war ausgerechnet das Dokument ungenau, das den Stand beschreiben soll — und die
+„Was ist neu?"-Anzeige (D28) meldete Dinge als live, die es dort nicht waren.
+
+**Die Unterscheidung gibt es längst.** SPEC §4 trennt `[x]` fertig
+(abgeschlossen) von `[^]` in Produktion (deployed/live). Der Plan hat diese
+Trennung ausgerechnet für sich selbst nie benutzt und sprang direkt auf `[^]`.
+Die Konvention lautet daher ab jetzt: **beim Mergen `[x]`**, und der Deploy
+befördert. Nur der Deploy weiß, wann die Aussage wahr wird.
+
+**Umgesetzt als Commit, nicht als Rewrite beim Bauen.** `scripts/promote-shipped.sh`
+schreibt die Statusboxen am Zeilenanfang von `[x]` auf `[^]` und hält das in
+einem eigenen Commit fest; `scripts/deploy-prod.sh` ruft es als Schritt 0 auf
+(abschaltbar mit `--no-promote`). Gründe:
+
+- Ein Rewrite beim Bauen macht **genau eine** Installation ehrlich. Pages
+  untertriebe dauerhaft, und die Neu-Anzeige wäre dort **für immer stumm** —
+  das Feature ließe sich nur noch künstlich prüfen. Der Commit dagegen wird von
+  **beiden** Pipelines gesehen: Pages baut ihn beim Push, prod beim nächsten
+  rsync.
+- Das Deployment-Artefakt bleibt **inhaltsgleich mit dem Repo**. Die
+  vorhandenen `sed`-Regeln (D16) fassen nur Pfade und die Versionsnummer an —
+  Infrastruktur. Ein Status-Rewrite wäre der erste Schritt, der ändert, was das
+  Dokument *aussagt*; die per `?sourceUrl=` geladene Rohdatei wäre dann eine
+  dritte, wieder abweichende Fassung.
+- Es folgt dem Präzedenzfall aus D16: Die Version wird per **bewusstem
+  Bump-Commit** gepflegt, „vollständig aus dem Repo reproduzierbar". Ein Deploy
+  ist ein bewusster Akt; ihn in der Historie festzuhalten passt dazu — und der
+  Plan bekommt nebenbei eine Chronik, wann was live ging.
+
+**Verworfen:** Rewrite nur im Prod-Deploy (siehe oben) und Rewrite in **beiden**
+Pipelines. Letzteres wäre testbar, aber `[^]` hieße auf Pages faktisch nur
+„gemerged", und das kollidiert damit, dass D16 die Pages-Instanz bewusst als
+nicht-produktiven Build markiert (🚧-Badge).
+
+**Bekannter Preis:** Zwischen Beförderungs-Commit und rsync sagt Pages `[^]` für
+etwas, das auf prod noch nicht liegt. Das Fenster ist kurz und liegt in der Hand
+dessen, der deployt — gegenüber einer *dauerhaften* Ungenauigkeit bei der
+Build-Rewrite-Variante der bessere Tausch.
+
+**Einmalige Nachholung.** Welche Knoten zu früh `[^]` trugen, ließ sich exakt
+bestimmen statt zu schätzen: Der Footer der stabilen Instanz verlinkt den
+deployten Commit (`4061362`), und alles danach ist dort nicht enthalten. Es
+waren **genau zwei** Knoten — „Optional nodes" (D29) und „Show what is new since
+your last visit" (D28) —, nicht das Dutzend, das vorher grob geschätzt worden
+war. Beide stehen jetzt auf `[x]` und leuchten beim nächsten Prod-Deploy als neu
+auf, was genau der Wahrheit entspricht.
+
+**Umfang:** Nur `docs/examples/example-werkbaum.werkbaum`. Die übrigen
+Beispieldateien sind erfunden und sagen nichts über ein Deployment aus.
+
+**Nicht gepusht.** Das Skript committet, pusht aber nicht — Veröffentlichen
+bleibt eine bewusste Handlung. `deploy-prod.sh` warnt stattdessen, wenn HEAD
+noch nicht auf `origin` liegt: der Footer-Versionslink zeigt sonst auf einen
+Commit, den GitHub nicht kennt.

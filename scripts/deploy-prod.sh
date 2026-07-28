@@ -2,16 +2,21 @@
 #
 # Werkbaum — Produktions-Deploy via rsync/SSH.
 #
-# Baut das badge-freie Prod-Bundle (`npm run build:prod`, ohne den
-# Entwicklungs-Hinweis hinter dem Titel), stellt es lokal genauso zusammen wie
-# der GitHub-Pages-Workflow (LICENSE-Link geradeziehen + Footer-Version/Commit)
-# und spiegelt es per rsync in ein Zielverzeichnis. `--delete`: am Ziel bleibt
-# nichts Altes stehen.
+# Befördert zuerst die fertigen Knoten des mitgelieferten Werkbaum-Plans auf
+# „in Produktion" (scripts/promote-shipped.sh, D30 — genau dieser Deploy macht
+# die Aussage `[^]` wahr), baut dann das badge-freie Prod-Bundle
+# (`npm run build:prod`, ohne den Entwicklungs-Hinweis hinter dem Titel), stellt
+# es lokal genauso zusammen wie der GitHub-Pages-Workflow (LICENSE-Link
+# geradeziehen + Footer-Version/Commit) und spiegelt es per rsync in ein
+# Zielverzeichnis. `--delete`: am Ziel bleibt nichts Altes stehen.
 #
 # Verwendung:
-#   scripts/deploy-prod.sh [-y] [rsync-ziel]
+#   scripts/deploy-prod.sh [-y] [--no-promote] [rsync-ziel]
 #
-#   -y   ohne Rückfrage spiegeln (sonst erst Vorschau via --dry-run + Nachfrage)
+#   -y             ohne Rückfrage befördern und spiegeln (sonst erst Vorschau
+#                  via --dry-run + Nachfrage)
+#   --no-promote   Beförderungsschritt überspringen (z. B. Wiederholung eines
+#                  Deploys, der schon befördert hat)
 #
 # Das Ziel ist entweder das Argument ODER — wenn keins angegeben ist — die
 # Variable DEPLOY_TARGET aus der git-ignorierten Datei .env im Repo-Wurzelordner
@@ -26,16 +31,18 @@
 # ACHTUNG: Das Zielverzeichnis wird als exklusiv für Werkbaum angenommen —
 # `--delete` entfernt dort ALLES, was nicht zum Bundle gehört.
 #
-# Siehe README (Abschnitt Deployment) und docs/DECISIONS.md D16/D19.
+# Siehe README (Abschnitt Deployment) und docs/DECISIONS.md D16/D19/D30.
 
 set -euo pipefail
 
 # ---- Argumente ----
 YES=0
+PROMOTE=1
 TARGET=""
 for arg in "$@"; do
   case "$arg" in
     -y|--yes) YES=1 ;;
+    --no-promote) PROMOTE=0 ;;
     -h|--help)
       awk 'NR>2 { if ($0 ~ /^#/) { sub(/^# ?/, ""); print } else exit }' "$0"
       exit 0 ;;
@@ -72,6 +79,17 @@ if [ -z "$TARGET" ]; then
   exit 2
 fi
 
+# ---- 0) Fertiges auf „in Produktion" befördern (D30) ----
+# MUSS vor dem Build laufen: der Plan ist Build-Eingabe (?raw-Import, D27), und
+# der Commit soll derjenige sein, auf den der Footer-Versionslink zeigt.
+if [ "$PROMOTE" -eq 1 ]; then
+  PROMOTE_ARGS=()
+  [ "$YES" -eq 1 ] && PROMOTE_ARGS+=(-y)
+  "$ROOT/scripts/promote-shipped.sh" "${PROMOTE_ARGS[@]+"${PROMOTE_ARGS[@]}"}"
+else
+  echo "==> Beförderung übersprungen (--no-promote)"
+fi
+
 # ---- 1) Prod-Build (ohne Build-Hinweis) ----
 if [ ! -d frontend/node_modules ]; then
   echo "==> node_modules fehlt — npm ci"
@@ -100,6 +118,12 @@ if git -C "$ROOT" rev-parse HEAD >/dev/null 2>&1; then
   BUILD_VERSION="${MAJORMINOR}.${MICRO}"
   COMMIT_URL="https://github.com/mhoennig/werkbaum/commit/$(git -C "$ROOT" rev-parse HEAD)"
   echo "==> Footer-Version ${BUILD_VERSION} -> ${COMMIT_URL}"
+  # Der Link zeigt ins Leere, solange der Commit nicht auf GitHub liegt — nach
+  # einer Beförderung (Schritt 0) ist das der Normalfall.
+  if [ -z "$(git -C "$ROOT" branch -r --contains HEAD 2>/dev/null)" ]; then
+    echo "   ! HEAD liegt noch nicht auf origin — der Footer-Versionslink läuft" >&2
+    echo "     ins Leere, bis 'git push' nachgeholt ist." >&2
+  fi
   SED_ARGS+=(-e "s#\(<a class=\"ver\" href=\"\)[^\"]*#\1${COMMIT_URL}#")
   SED_ARGS+=(-e "s#\(<a class=\"ver\"[^>]*>\)[0-9.]\+</a>#\1${BUILD_VERSION}</a>#")
 else

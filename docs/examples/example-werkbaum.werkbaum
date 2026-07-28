@@ -8,7 +8,7 @@
       - [^] T-shirt size and the "decompose from M" rule (S)
       - [^] People tags, bare URLs, %% comments (XS)
     - [^] And/or decomposition (S)
-    - [^] Optional nodes — neither required nor an alternative (S)
+    - [x] Optional nodes — neither required nor an alternative (S)
     - [-] A separate storage format for the structure (L)  %% the text is the format
     - [ ] Ticket references #123 (S)
     - [?] Benefit per node, not only cost (M)
@@ -38,7 +38,7 @@
       - [^] Load a document from ?sourceUrl= (S)
     - [^] Jump between diagram and text (S)
     - [ ] Open and save .werkbaum files (S)
-    + [^] Show what is new since your last visit (S)
+    + [x] Show what is new since your last visit (S)
     + [?] A pastel colour per person (S)
     - [?] Dates and milestones (M)
       | [?] An attribute in the line (S)
