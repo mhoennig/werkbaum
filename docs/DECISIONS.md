@@ -956,8 +956,24 @@ your last visit" (D28) —, nicht das Dutzend, das vorher grob geschätzt worden
 war. Beide stehen jetzt auf `[x]` und leuchten beim nächsten Prod-Deploy als neu
 auf, was genau der Wahrheit entspricht.
 
-**Umfang:** Nur `docs/examples/example-werkbaum.werkbaum`. Die übrigen
-Beispieldateien sind erfunden und sagen nichts über ein Deployment aus.
+**Umfang: genau eine Datei, bewusst kein Muster.** Befördert wird nur
+`docs/examples/example-werkbaum.werkbaum` — allein der Werkbaum-eigene Plan sagt
+etwas über das Deployment aus. `[x]` steht im Repo an mehreren Stellen, wo eine
+Beförderung falsch bis unsinnig wäre:
+
+- Die **Legende („Agenda")** zeigt `[x] fertig` als *Anschauungsmaterial* für die
+  Notation (`frontend/index.html`, `chip('fertig','[x]')` in `app.js`). Daraus
+  würde `[^] fertig` — Unsinn, den beim Durchsehen eines Diffs niemand bemerkt.
+- Das mitgelieferte **„Example"-Dokument** (`INITIAL` in `app.js`) und die
+  übrigen `docs/examples/*.werkbaum` sind erfunden.
+- **SPEC §10** (kanonisches Beispiel, zugleich Test-Fixture) und die Checkboxen
+  in `docs/TASKS.md`.
+
+Weil eine spätere „Verallgemeinerung" auf ein Glob naheliegt und der Schaden
+still wäre, bleibt es nicht bei der Zusage: Der Lauf vergleicht `git status` vor
+und nach dem Schreiben und **bricht ab**, sobald mehr als die Plandatei neu
+geändert ist — die Datei wird zurückgesetzt, nichts wird committet. Geprüft mit
+einem absichtlich ausgeweiteten `sed` in einem Wegwerf-Worktree.
 
 **Nicht gepusht.** Das Skript committet, pusht aber nicht — Veröffentlichen
 bleibt eine bewusste Handlung. `deploy-prod.sh` warnt stattdessen, wenn HEAD

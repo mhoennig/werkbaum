@@ -22,6 +22,19 @@
 #
 # Ohne zu befördernde Knoten endet der Lauf mit 0 und ändert nichts.
 # Gepusht wird NICHT — das bleibt eine bewusste Handlung.
+#
+# UMFANG — bewusst genau EINE Datei, niemals ein Glob:
+# Nur der Werkbaum-eigene Plan sagt etwas über das Deployment aus. `[x]` steht
+# im Repo an mehreren Stellen, wo eine Beförderung falsch bis unsinnig wäre:
+#   * die Legende („Agenda") zeigt `[x] fertig` als ANSCHAUUNGSMATERIAL für die
+#     Notation (frontend/index.html, `chip('fertig','[x]')` in app.js) — daraus
+#     würde `[^] fertig`, also Quatsch, den beim Diff niemand bemerkt;
+#   * das mitgelieferte „Example"-Dokument (INITIAL in app.js) und die übrigen
+#     docs/examples/*.werkbaum sind erfunden und beschreiben kein Deployment;
+#   * SPEC §10 (kanonisches Beispiel, zugleich Test-Fixture) und die Checkboxen
+#     in docs/TASKS.md.
+# Wer diesen Lauf erweitern will, erweitert ihn deshalb NICHT auf ein Muster.
+# Die Prüfung weiter unten bricht ab, sobald mehr als die Plandatei anders ist.
 
 set -euo pipefail
 
@@ -78,11 +91,32 @@ mapfile -t LABELS < <(printf '%s\n' "${HITS[@]}" \
   | sed -E 's/^[0-9]+:[[:space:]]*([-+|][[:space:]]*)?\[[xX]\][[:space:]]*//' \
   | sed -E 's/[[:space:]]*\((XS|S|M|L|XL|XXL)\)[[:space:]]*$//')
 
+IS_GIT=0
+git rev-parse HEAD >/dev/null 2>&1 && IS_GIT=1
+
+BEFORE="$(mktemp)"; AFTER="$(mktemp)"
+trap 'rm -f "$BEFORE" "$AFTER"' EXIT
+[ "$IS_GIT" -eq 1 ] && git status --porcelain > "$BEFORE"
+
 sed -i -E "s/$MATCH/\1[^]/" "$PLAN"
 
-if ! git rev-parse HEAD >/dev/null 2>&1; then
+if [ "$IS_GIT" -eq 0 ]; then
   echo "==> Kein Git-Repo — Datei geändert, nicht committet."
   exit 0
+fi
+
+# Sicherung gegen künftige Ausweitung (siehe UMFANG oben): Nach dem Schreiben
+# darf GENAU eine Datei neu geändert sein — die Plandatei. Träfe es zusätzlich
+# die Legende oder ein fremdes Beispiel, fiele das im Diff kaum auf; hier fällt
+# es sofort auf.
+git status --porcelain > "$AFTER"
+NEU="$(grep -vxF -f "$BEFORE" "$AFTER" | sed -E 's/^.{3}//' || true)"
+if [ "$NEU" != "$PLAN" ]; then
+  echo "   ! Unerwarteter Umfang — geändert wurde:" >&2
+  printf '     %s\n' ${NEU:-"(nichts)"} >&2
+  echo "     Erwartet war ausschließlich $PLAN. Nichts committet." >&2
+  git checkout -- "$PLAN"
+  exit 1
 fi
 
 {
