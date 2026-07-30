@@ -169,7 +169,13 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `revealEditor()` schaltet 'pad' → 'both', sonst zeigte der Sprung (D25) ins
   Nichts. Das Markup: `#srcArea` umschließt Rahmen + Splitter + `#src`, damit die
   Legenden-Aufteilung unberührt bleibt — `.editor-body textarea` ist ein
-  Nachfahren-Selektor und greift weiter.
+  Nachfahren-Selektor und greift weiter. Nebenwirkung, die als Behelf taugt:
+  Einmal durch die Ansichten schalten **lädt den Rahmen neu** (über
+  `about:blank`) — das ist der Ausweg, wenn ein eingebettetes Pad nicht mehr
+  beschreibbar ist. Nicht in den Neu-laden-Knopf legen: der zieht nach dem Tippen
+  Spiegel und Diagramm nach, und ein Rahmen-Reload dabei kostete jedes Mal die
+  Schreibmarke im Pad. **Umhängen im DOM lädt jeden `<iframe>` neu** — wer
+  Container um `#srcArea` herum neu aufbaut, wirft die Pad-Sitzung weg.
 - Fokusmarke `!!!` (D32, SPEC §1): Parser setzt `focus`, Renderer die Klasse
   `focusmark`, CSS teilt die Regel mit `.node.current` (ein Begriff „hier
   schauen"). Erkannt **nur alleinstehend** — `(^|\s)!!!(?=\s|$)`, bewusst ohne

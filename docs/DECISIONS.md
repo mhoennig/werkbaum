@@ -1238,3 +1238,49 @@ Notwendigkeit (§3) — test-abgedeckt, damit niemand später Status oder `optio
 daran koppelt. **Nicht** in das kanonische Beispiel (SPEC §10) aufgenommen: Das
 ist zugleich Test-Fixture, und ein dauerhafter Zeigefinger darin wäre eine
 Aussage, die niemand gemacht hat.
+
+**Nachtrag zu D31 — „der eingebettete Rahmen lässt sich nach einer Weile nicht
+mehr bearbeiten".** Gemeldet vom Nutzer, mit dem Verdacht, es hänge am
+Update-Poller. **Der ist es nicht**, und das ist belegbar statt vermutet:
+
+- `checkForUpdates()` holt `location.href`, also den **Werkbaum**-Origin. Es kann
+  die Drosselung des Pads (10 Abrufe je 90 s, siehe oben) gar nicht auslösen.
+- Es lädt die Seite nicht neu, sondern zeigt nur ein Banner;
+  `checkAndShowUpdateNotification()` und `showUpdateDebug()` hängen ausschließlich
+  `position:fixed`-Elemente an `<body>` — kein Neuaufbau eines Containers, in dem
+  der Rahmen steckt (das *würde* ihn neu laden, denn ein Umhängen im DOM lädt
+  jeden `<iframe>` neu).
+- Gemessen über ~6 Minuten mit sichtbarem Tab: Marker auf `window` überlebt
+  (kein Seiten-Reload), ein `load`-Zähler am Rahmen bleibt bei **0** (kein
+  Rahmen-Reload), Sichtbarkeit durchgehend `visible`.
+
+**Reproduziert wurde der Fehler nicht.** Nach sechs Minuten war die Verbindung
+noch lebendig — geprüft ohne Tippen, indem das Pad von außen geändert wurde: Der
+Rahmen übernahm die Änderung sofort, seine Socket-Verbindung lief also. Etherpads
+eigene Meldungen sind von außen nicht lesbar (fremdstämmiger Rahmen, eigener
+Konsolen-Kontext), eine Instrumentierung von unserer Seite gibt es dafür nicht.
+
+**Verdacht, ausdrücklich unbewiesen:** das `SameSite=Lax`-Cookie (siehe oben).
+Die erste Verbindung gelingt, aber Etherpads Autoren-Token wird im
+fremdstämmigen Rahmen nicht mitgesendet. Bricht die Socket-Verbindung später
+einmal ab (Netzwechsel, Standby, Timer-Drosselung eines Hintergrund-Tabs), fehlt
+beim Wiederaufbau die Identität — und ein Etherpad ohne gültige Sitzung ist genau
+das: sichtbar, aber nicht mehr beschreibbar. Das passt zu „nach einer Weile" und
+dazu, dass es im eigenen Tab (erstanbieter-Kontext, Cookie wird gesendet) nicht
+auftritt.
+
+**Der Test, der es entscheidet**, gehört in die Hand dessen, der es sieht: Wenn
+es wieder klemmt, das Pad über den „im Pad bearbeiten"-Knopf im **eigenen Tab**
+öffnen. Geht es dort, ist es der Dritt-Kontext (dann hilft nur serverseitig
+`cookie.sameSite: "None"`). Klemmt es dort auch, liegt es am Pad selbst.
+
+**Behelf, der schon eingebaut ist:** Den Ansichts-Wähler einmal durchschalten
+lädt den Rahmen neu — „nur Text" setzt `src` auf `about:blank`, zurück auf „beide"
+setzt die Pad-Adresse wieder ein, und das ist ein vollständiger Neuaufbau samt
+Verbindung. Bewusst **nicht** in den Neu-laden-Knopf gelegt: Dessen Zweck ist,
+nach dem Tippen im Pad Spiegel und Diagramm nachzuziehen — würde er dabei den
+Rahmen neu laden, verlöre man bei jedem Diagramm-Update die Schreibmarke im Pad.
+
+**Haltung daraus:** Der Rahmen ist zum **Mitlesen** gut; für längeres Schreiben
+ist der eigene Tab die verlässliche Fläche, solange das Cookie nicht
+serverseitig auf `SameSite=None` steht.

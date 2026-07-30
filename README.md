@@ -131,8 +131,12 @@ ordinary label. It stays in the text until someone deletes it.
 **Be aware:** your plan text then lives on third-party infrastructure, and a pad
 is readable by anyone who knows its address. In an embedded frame Etherpad's
 author cookie (`SameSite=Lax`) is not sent, so you count as a new author on every
-load — fixable only on the server (`cookie.sameSite: "None"`). See
-`docs/DECISIONS.md` D31 and D32.
+load — fixable only on the server (`cookie.sameSite: "None"`).
+
+For the same reason the **embedded frame is best for reading along**: if editing
+in it ever stops working, cycle the view selector once (that reloads the frame),
+or use the "edit in the pad" button and work in the pad's own tab, where the
+cookie does apply. See `docs/DECISIONS.md` D31 and D32.
 
 ### Running it locally
 

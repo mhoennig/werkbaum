@@ -139,7 +139,12 @@ löscht.
 für jeden lesbar, der die Adresse kennt. Im eingebetteten Rahmen wird Etherpads
 Autoren-Cookie (`SameSite=Lax`) nicht mitgesendet — man gilt bei jedem Laden als
 neuer Autor, was nur serverseitig zu beheben ist (`cookie.sameSite: "None"`).
-Siehe `docs/DECISIONS.md` D31 und D32.
+
+Aus demselben Grund ist der eingebettete Rahmen vor allem zum **Mitlesen** gut:
+Sollte das Bearbeiten darin einmal aufhören zu funktionieren, den Ansichts-Wähler
+einmal durchschalten (das lädt den Rahmen neu) oder über „im Pad bearbeiten" im
+eigenen Tab weiterarbeiten, wo das Cookie gilt. Siehe `docs/DECISIONS.md` D31
+und D32.
 
 ### Lokal ausführen
 
