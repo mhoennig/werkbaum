@@ -61,7 +61,7 @@
     - [?] Accounts and permissions (L)
       | [?] Single user, one token (S)
       | [?] Log in with OIDC (L)
-  - [~] Working together on one plan (XL)
+  - [~] Collaborating on a Diagram (XL)
     - [^] Watch a shared Etherpad — it merges, we render (S)
       - [^] Load the pad's plain-text export (XS)
       - [^] Reload on demand (XS)  %% a timer only trips Etherpad's rate limit
