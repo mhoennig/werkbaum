@@ -290,6 +290,18 @@ Export- oder `/timeslider`-Pfad wird abgeschnitten.
 - Deshalb ist das Textfeld für ein solches Dokument **schreibgeschützt** — ein
   Knopf in der Editor-Titelzeile öffnet das Pad im neuen Tab. Ohne den Schutz
   verschwände getippter Text beim nächsten Abruf.
+- Das Pad kann **im Editor-Panel eingebettet** werden. Ein Wähler in der
+  Titelzeile schaltet reihum zwischen drei Ansichten: **Pad und Text** (beide,
+  durch einen eigenen **Splitter** frei geteilt — Doppelklick setzt zurück),
+  **nur Pad** und **nur Text**. Die Aufteilung wird für nebeneinander und
+  gestapelt getrennt gehalten und bleibt erhalten.
+  - Der schmal gezogene Textspiegel behält seinen Zweck: Der Sprung zwischen
+    Diagramm und Text (§9) arbeitet auf ihm. In „nur Pad" ist er ausgeblendet —
+    ein Sprung holt ihn dann selbst zurück, so wie er ein zugeklapptes
+    Editor-Panel aufklappt.
+  - Der Rahmen wird **nur geladen, wenn er sichtbar ist**. Ein geladenes Pad
+    verbindet sich und zeigt dich in dessen Anwesenden-Liste; „nur Text" ist
+    damit die Ansicht, die nichts von dir verrät.
 - Geholt wird **auf Knopfdruck**, nicht selbsttätig: Ein Neu-laden-Knopf neben
   dem Pad-Knopf holt den aktuellen Stand. Etherpad **drosselt** den Export
   (serienmäßig 10 Abrufe je 90 s und IP); ein Hintergrund-Takt läuft dagegen an

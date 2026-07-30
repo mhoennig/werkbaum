@@ -158,6 +158,18 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Beim Prüfen im Vorschau-Browser: HMR lädt bei jeder Quelländerung neu, und ein
   Reload holt den Text beim Erstabruf — sieht wie eine geglückte Übernahme aus.
   Marker auf `window` setzen und hinterher prüfen, sonst beweist der Test nichts.
+- Pad einbetten, drei Ansichten (D31): `padView` ('both'|'pad'|'text') +
+  `applyPadView()`. Der Rahmen bekommt **nur sichtbar** ein `src`, sonst
+  `about:blank` — ein geladenes Pad verbindet sich per Socket und zeigt dich in
+  dessen Anwesenden-Liste. `PAD_VIEWS`/`padView` stehen **oben** bei
+  `cheapPathOn`, nicht beim übrigen Pad-Code: `saveUI()` liest sie und kann schon
+  aus `applySplit()` heraus laufen, weiter unten stünden sie noch in der
+  temporalen Todeszone. Der Splitter Pad|Spiegel (`#padGutter`, `--pcol`/`--prow`)
+  ist eine Kopie des Legenden-Splitters (D26) samt getrennter Persistenz.
+  `revealEditor()` schaltet 'pad' → 'both', sonst zeigte der Sprung (D25) ins
+  Nichts. Das Markup: `#srcArea` umschließt Rahmen + Splitter + `#src`, damit die
+  Legenden-Aufteilung unberührt bleibt — `.editor-body textarea` ist ein
+  Nachfahren-Selektor und greift weiter.
 - Sprung Diagramm ↔ Text (D25): `render.js` schreibt die Parser-Zeilennummer als
   `data-line` an jeden Knoten (Geister-Knoten bekommen keine). `jumpToLine()` in
   `app.js` klappt bei Bedarf das Editor-Panel auf (`revealEditor()`), markiert die

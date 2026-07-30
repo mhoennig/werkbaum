@@ -1105,32 +1105,7 @@ Link baut — Werkbaum legt von sich aus kein Pad an.
 **Verworfene und aufgeschobene Alternativen:**
 - **`?sourceUrl=` um wiederholtes Abrufen erweitern** — hätte bestehenden Links
   ungefragt Requests verpasst und D23 seine klare Semantik gekostet.
-- **Das Pad als `<iframe>` einbetten** (aufgeschoben, nicht verworfen). Ob der
-  Server das überhaupt zulässt, ist **nachgemessen**: `pad.hostsharing.net`
-  sendet **kein** `X-Frame-Options` und keine CSP mit `frame-ancestors`, und im
-  Versuch hat das Pad in einem fremdstämmigen Rahmen seine inneren Editorframes
-  aufgebaut (`contentWindow.length === 2`, das sind `ace_outer`/`ace_inner`),
-  samt Werkzeugleiste, heiler Einrückung und lebender Socket-Verbindung
-  (Anwesenden-Zähler). Technisch geht es also.
-
-  Zwei Preise. Erstens **`Set-Cookie: token=…; SameSite=Lax`**: Dieses Cookie ist
-  Etherpads Autoren-Identität und wird in einem fremdstämmigen Rahmen **nicht
-  mitgesendet** (Safari blockt Dritt-Cookies grundsätzlich, Chrome je nach
-  Einstellung). Bearbeiten geht, aber man ist bei jedem Laden ein neuer Autor —
-  Name und Farbe halten nicht. Reparieren lässt sich das nur serverseitig
-  (`cookie.sameSite: "None"` in Etherpads `settings.json`), nicht in Werkbaum.
-  Zweitens: Einbetten heißt das **Textpanel ersetzen**, und damit fallen **beide**
-  Richtungen von D25 weg — kein Alt+Klick → Zeile, keine Cursor-Zeile → Knoten,
-  weil ein cross-origin-iframe keinen DOM-Zugriff erlaubt. Bei 75 Knoten ist das
-  die Orientierung.
-
-  Der Ausweg, der sich beim Messen zeigte: das schreibgeschützte Textfeld
-  **behalten** und das Pad daneben stellen. Dann bleibt der Spiegel die Fläche
-  zum Hinschauen (Alt+Klick und Cursor-Synchronisierung arbeiten auf unserem
-  eigenen `<textarea>`), das Pad ist die Fläche zum Schreiben. Preis ist
-  Bildschirmfläche; auf kleinem Bildschirm (D17) sind es dann drei Bereiche.
-  Der Knopf „im Pad bearbeiten" ist bis dahin die kleine Lösung desselben
-  Bedürfnisses; das Einbetten bleibt möglich, weil die Pad-URL vorliegt.
+- **Das Pad einbetten** — nicht verworfen, sondern gebaut; siehe Nachtrag unten.
 - **Echter Etherpad-Client** (socket.io + Easysync-Changesets): Rettet D25 und
   erlaubt Schreiben aus Werkbaum heraus, kostet aber zwei **Laufzeit**-
   Abhängigkeiten und damit „eine self-contained Datei ohne
@@ -1141,3 +1116,51 @@ Link baut — Werkbaum legt von sich aus kein Pad an.
 - **Etherpads HTTP-API** (`/api/1/getText?apikey=…`) — der API-Schlüssel ist ein
   Administrationsschlüssel für **alle** Pads der Instanz und hat in einer
   Client-Anwendung nichts zu suchen. Der Export-Endpunkt braucht ihn nicht.
+
+**Nachtrag — das Pad wird eingebettet, der Textspiegel bleibt daneben.**
+Ob der Server das Einbetten zulässt, war die erste Frage. Nachgemessen:
+`pad.hostsharing.net` sendet **kein** `X-Frame-Options` und keine CSP mit
+`frame-ancestors`, und im Versuch hat das Pad in einem fremdstämmigen Rahmen
+seine inneren Editorframes aufgebaut (`contentWindow.length === 2`, das sind
+`ace_outer`/`ace_inner`) — samt Werkzeugleiste, heiler Einrückung und lebender
+Socket-Verbindung (der Anwesenden-Zähler sprang auf 2). Technisch geht es also.
+
+**Aber Einbetten heißt nicht Ersetzen.** Der naheliegende Schritt wäre, das
+Textfeld durch den Rahmen zu ersetzen. Das kostete **beide** Richtungen von D25
+— kein Alt+Klick → Zeile, keine Cursor-Zeile → Knoten —, weil in einen
+cross-origin-iframe kein DOM-Zugriff führt. Bei 75 Knoten ist das die
+Orientierung. Deshalb **drei Ansichten** statt einer Entscheidung, reihum über
+einen Wähler in der Editor-Titelzeile:
+
+- **Pad und Text**, geteilt durch einen eigenen Splitter (Idiom und Mechanik wie
+  beim Legenden-Splitter aus D26: von der Spiegelseite gezogen, Doppelklick
+  setzt zurück, `--pcol`/`--prow` getrennt gehalten und persistiert). Der Spiegel
+  darf schmal werden — er trägt weiter die Sprünge, denn die arbeiten auf
+  **unserem** `<textarea>`.
+- **nur Pad** — der Spiegel ist ausgeblendet. Ein Sprung aus dem Diagramm holt
+  ihn selbst zurück, so wie `revealEditor()` ein zugeklapptes Panel aufklappt
+  (D25). Ohne das zeigte der Sprung ins Nichts.
+- **nur Text** — wie bisher, kein Rahmen.
+
+**Ein Wähler statt dreier Knöpfe:** Die Editor-Titelzeile trägt schon Dokument,
+Pad, Neu laden, Kopieren, Legende und die Fensterknöpfe; auf kleinem Bildschirm
+(D17) ist sie dreifach eng. Derselbe Reihum-Griff wie beim Modus-Wähler dort. Der
+Zustand steckt im Symbol (geteilter Rahmen / links gefüllt / rechts gefüllt), der
+Tooltip nennt ihn im Klartext.
+
+**Der Rahmen wird nur geladen, wenn er sichtbar ist** (`about:blank` sonst). Das
+ist kein Geiz um Bytes: Ein geladenes Pad verbindet sich per Socket und macht
+dich in dessen Anwesenden-Liste sichtbar. „Nur Text" ist damit die Ansicht, die
+nichts von dir verrät — und die Voreinstellung „beide" ist eine bewusste
+Entscheidung, weil wer `?etherpad=` aufruft, das Pad auch will.
+
+**Der Preis, der bleibt: `Set-Cookie: token=…; SameSite=Lax`.** Dieses Cookie ist
+Etherpads Autoren-Identität und wird in einem fremdstämmigen Rahmen **nicht
+mitgesendet** (Safari blockt Dritt-Cookies grundsätzlich, Chrome je nach
+Einstellung). Bearbeiten geht, aber man ist bei jedem Laden ein neuer Autor —
+Name und Farbe halten nicht. Reparieren lässt sich das nur **serverseitig**
+(`cookie.sameSite: "None"` in Etherpads `settings.json`), nicht in Werkbaum.
+
+Auf kleinem Bildschirm wurde „beide" nachgemessen statt geschätzt: bei 375 × 812
+bleiben Pad 317 px und Spiegel 180 px, per Splitter verschiebbar — knapp, aber
+brauchbar. Eine Sonderregel für Mobil braucht es deshalb nicht.

@@ -39,6 +39,11 @@ const warnBox = document.getElementById('warn');
    Pfad) lebt headless in model.js, das HTML-Erzeugen in render.js. Hier bleibt
    nur der UI-State des Günstigster-Pfad-Toggles (persistiert). */
 let cheapPathOn = true;
+/* Ansicht bei einem Pad-Dokument (D31): beide | nur Pad | nur Spiegel. Hier oben
+   deklariert, weil saveUI() sie liest und schon aus applySplit() heraus laufen
+   kann — weiter unten stünde sie dann noch in der temporalen Todeszone. */
+const PAD_VIEWS = ['both', 'pad', 'text'];
+let padView = 'both';
 /* Warnung des ?sourceUrl-Ladens (D23) — zeilenlos und persistent, siehe render(). */
 let sourceWarning = null;
 /* „Was ist neu?" (D28): Knoten, die gegenüber der zuletzt GESEHENEN Fassung neu
@@ -499,6 +504,14 @@ function scrollEditorToOffset(offset){
 
 /* Ist das Editor-Panel zugeklappt, muss der Sprung es erst öffnen. */
 function revealEditor(){
+  /* In der Ansicht „nur Pad" (D31) ist der Spiegel ausgeblendet — dann gibt es
+     keine Zeile zum Markieren. Der Sprung holt ihn deshalb zurück, genau wie er
+     ein zugeklapptes Editor-Panel aufklappt (D25). */
+  if(padView === 'pad' && padSource && activeId === padSource.id){
+    padView = 'both';
+    applyPadView();
+    saveUI();
+  }
   if(isMobile()){
     const raw = app.style.getPropertyValue('--drow');
     const collapsed = raw ? parseFloat(raw) > mobileMaxDrow() - 40 : splitState === 'b';
@@ -897,6 +910,11 @@ const I18N = {
     padRefresh:"Vom Pad neu laden",
     padWait:"Noch {seconds} s — Etherpad begrenzt die Abrufe",
     padRateLimitWarn:"Noch nicht neu geladen: Etherpad erlaubt nur wenige Abrufe je Zeitfenster (serienmäßig 10 pro 90 s), so häufiges Nachladen ist leider nicht möglich. In {seconds} s geht es wieder.",
+    padViewTooltip:"Ansicht: {state} — klicken zum Wechseln",
+    padView_both:"Pad und Text",
+    padView_pad:"nur Pad",
+    padView_text:"nur Text",
+    padGutterAria:"Pad und Texteditor größenverändern",
     riskTooltip:"High Risk – Aufwand noch unklar.",
     discardedTooltip:"Verworfene Knoten samt Teilbaum ein-/ausblenden",
     cheapTooltip:"Günstigsten Pfad hervorheben – nicht benötigte Alternativen treten zurück",
@@ -955,6 +973,11 @@ const I18N = {
     padRefresh:"Reload from the pad",
     padWait:"{seconds} s to go — Etherpad limits how often we may fetch",
     padRateLimitWarn:"Not reloaded yet: Etherpad only allows a few fetches per time window (10 per 90 s by default), so syncing this often is unfortunately not possible. Try again in {seconds} s.",
+    padViewTooltip:"View: {state} — click to switch",
+    padView_both:"pad and text",
+    padView_pad:"pad only",
+    padView_text:"text only",
+    padGutterAria:"Resize pad and text editor",
     riskTooltip:"High risk – effort still unclear.",
     discardedTooltip:"Show/hide discarded nodes and their subtree",
     cheapTooltip:"Highlight the cheapest path – unneeded alternatives recede",
@@ -1013,6 +1036,11 @@ const I18N = {
     padRefresh:"Recargar desde el pad",
     padWait:"Faltan {seconds} s — Etherpad limita la frecuencia",
     padRateLimitWarn:"Aún no se ha recargado: Etherpad solo permite unas pocas descargas por ventana de tiempo (10 por 90 s de forma predeterminada), así que sincronizar tan a menudo no es posible. Vuelve a intentarlo en {seconds} s.",
+    padViewTooltip:"Vista: {state} — clic para cambiar",
+    padView_both:"pad y texto",
+    padView_pad:"solo pad",
+    padView_text:"solo texto",
+    padGutterAria:"Redimensionar pad y editor de texto",
     riskTooltip:"Alto riesgo – esfuerzo aún incierto.",
     discardedTooltip:"Mostrar u ocultar los nodos descartados y su subárbol",
     cheapTooltip:"Resaltar la ruta más económica: las alternativas no necesarias se atenúan",
@@ -1071,6 +1099,11 @@ const I18N = {
     padRefresh:"Recharger depuis le pad",
     padWait:"Encore {seconds} s — Etherpad limite la fréquence",
     padRateLimitWarn:"Pas encore rechargé : Etherpad n’autorise que quelques récupérations par fenêtre de temps (10 par 90 s par défaut), une synchronisation aussi fréquente n’est donc pas possible. Réessaie dans {seconds} s.",
+    padViewTooltip:"Vue : {state} — cliquer pour changer",
+    padView_both:"pad et texte",
+    padView_pad:"pad seul",
+    padView_text:"texte seul",
+    padGutterAria:"Redimensionner le pad et l’éditeur de texte",
     riskTooltip:"Risque élevé – effort encore incertain.",
     discardedTooltip:"Afficher/masquer les nœuds abandonnés et leur sous-arbre",
     cheapTooltip:"Mettre en évidence le chemin le moins coûteux – les alternatives inutiles s'estompent",
@@ -1129,6 +1162,11 @@ const I18N = {
     padRefresh:"Wczytaj ponownie z padu",
     padWait:"Jeszcze {seconds} s — Etherpad ogranicza częstość",
     padRateLimitWarn:"Jeszcze nie wczytano ponownie: Etherpad dopuszcza tylko kilka pobrań w okresie (domyślnie 10 na 90 s), więc tak częsta synchronizacja nie jest możliwa. Spróbuj za {seconds} s.",
+    padViewTooltip:"Widok: {state} — kliknij, aby zmienić",
+    padView_both:"pad i tekst",
+    padView_pad:"tylko pad",
+    padView_text:"tylko tekst",
+    padGutterAria:"Zmień rozmiar padu i edytora tekstu",
     riskTooltip:"Wysokie ryzyko – nakład jeszcze niejasny.",
     discardedTooltip:"Pokaż/ukryj odrzucone węzły wraz z poddrzewem",
     cheapTooltip:"Wyróżnij najtańszą ścieżkę – niepotrzebne alternatywy są przygaszone",
@@ -1187,6 +1225,11 @@ const I18N = {
     padRefresh:"Обновить из пада",
     padWait:"Ещё {seconds} с — Etherpad ограничивает частоту",
     padRateLimitWarn:"Пока не обновлено: Etherpad разрешает лишь несколько загрузок за окно времени (по умолчанию 10 за 90 с), поэтому столь частая синхронизация невозможна. Повторите через {seconds} с.",
+    padViewTooltip:"Вид: {state} — нажмите для переключения",
+    padView_both:"пад и текст",
+    padView_pad:"только пад",
+    padView_text:"только текст",
+    padGutterAria:"Изменить размер пада и текстового редактора",
     riskTooltip:"Высокий риск – оценка ещё не ясна.",
     discardedTooltip:"Показать/скрыть отклонённые узлы вместе с поддеревом",
     cheapTooltip:"Выделить самый дешёвый путь — ненужные альтернативы приглушаются",
@@ -1245,6 +1288,11 @@ const I18N = {
     padRefresh:"पैड से फिर लोड करें",
     padWait:"{seconds} स॰ बाकी — Etherpad बार-बार लेने की सीमा रखता है",
     padRateLimitWarn:"अभी दोबारा लोड नहीं किया: Etherpad प्रति समय-खिड़की केवल कुछ ही बार लेने देता है (डिफ़ॉल्ट रूप से 90 स॰ में 10 बार), इसलिए इतनी बार सिंक करना संभव नहीं है। {seconds} स॰ में फिर कोशिश करें।",
+    padViewTooltip:"दृश्य: {state} — बदलने के लिए क्लिक करें",
+    padView_both:"पैड और टेक्स्ट",
+    padView_pad:"केवल पैड",
+    padView_text:"केवल टेक्स्ट",
+    padGutterAria:"पैड और टेक्स्ट संपादक का आकार बदलें",
     riskTooltip:"उच्च जोखिम – प्रयास अभी अस्पष्ट।",
     discardedTooltip:"अस्वीकृत नोड्स और उनके उप-वृक्ष दिखाएँ/छिपाएँ",
     cheapTooltip:"सबसे किफ़ायती पथ को उजागर करें – अनावश्यक विकल्प मंद हो जाते हैं",
@@ -1308,6 +1356,11 @@ const I18N = {
     padRefresh:"从 Pad 重新加载",
     padWait:"还需 {seconds} 秒 — Etherpad 限制获取频率",
     padRateLimitWarn:"尚未重新加载：Etherpad 每个时间窗口只允许少量获取（默认每 90 秒 10 次），因此无法如此频繁地同步。请在 {seconds} 秒后再试。",
+    padViewTooltip:"视图：{state} — 点击切换",
+    padView_both:"Pad 和文本",
+    padView_pad:"仅 Pad",
+    padView_text:"仅文本",
+    padGutterAria:"调整 Pad 与文本编辑器大小",
     riskTooltip:"高风险 – 工作量尚不明确。",
     editorTitle:"结构（文本）", diagramTitle:"图表",
     docSwitchTooltip:"选择或管理文档", docMenuAria:"文档",
@@ -1366,6 +1419,11 @@ const I18N = {
     padRefresh:"パッドから再読み込み",
     padWait:"あと {seconds} 秒 — Etherpad は取得頻度を制限します",
     padRateLimitWarn:"まだ再読み込みしていません: Etherpad は一定時間内の取得回数を制限します（既定で 90 秒あたり 10 回）。これほど頻繁な同期はできません。{seconds} 秒後にもう一度お試しください。",
+    padViewTooltip:"表示: {state} — クリックで切り替え",
+    padView_both:"パッドとテキスト",
+    padView_pad:"パッドのみ",
+    padView_text:"テキストのみ",
+    padGutterAria:"パッドとテキストエディターのサイズを変更",
     riskTooltip:"高リスク – 規模はまだ不明。",
     editorTitle:"構造（テキスト）", diagramTitle:"ダイアグラム",
     docSwitchTooltip:"ドキュメントを選択・管理", docMenuAria:"ドキュメント",
@@ -1635,6 +1693,11 @@ function saveUI(){
       agenda: !!document.querySelector('.agenda.open'),
       hcol: app.style.getPropertyValue('--hcol') || null,
       hrow: app.style.getPropertyValue('--hrow') || null,
+      /* Pad-Ansicht + Aufteilung Pad|Spiegel (D31). Global über alle Dokumente,
+         wie der übrige Ansichts-Zustand (D22). */
+      padView: padView,
+      pcol: app.style.getPropertyValue('--pcol') || null,
+      prow: app.style.getPropertyValue('--prow') || null,
       zoom: zoom,
       fullscreen: document.body.classList.contains('fullscreen')
     }));
@@ -1672,6 +1735,9 @@ function restoreState(){
   /* Legende (D26): Aufteilung gilt unabhängig vom Preset des großen Splitters. */
   if(ui && ui.hcol) app.style.setProperty('--hcol', ui.hcol);
   if(ui && ui.hrow) app.style.setProperty('--hrow', ui.hrow);
+  if(ui && PAD_VIEWS.indexOf(ui.padView) >= 0) padView = ui.padView;
+  if(ui && ui.pcol) app.style.setProperty('--pcol', ui.pcol);
+  if(ui && ui.prow) app.style.setProperty('--prow', ui.prow);
   setAgendaOpen(!!(ui && ui.agenda));
   applyZoom();
   restoring = false;
@@ -2048,6 +2114,58 @@ async function refreshPad(){
   updateFreshBtn();
 }
 
+/* ---------- Ansicht bei einem Pad-Dokument: beide | nur Pad | nur Spiegel ----
+   Das Pad lässt sich einbetten (nachgemessen: kein `X-Frame-Options`, keine CSP
+   mit `frame-ancestors`), doch es ersetzt nicht einfach das Textfeld: Alt+Klick
+   und die Cursor-Zeile (D25) arbeiten auf **unserem** `<textarea>`, und in einen
+   fremdstämmigen Rahmen kommt kein DOM-Zugriff. Deshalb drei Ansichten statt
+   einer Entscheidung — in „beide" bleibt der Spiegel schmal ziehbar und trägt
+   weiter die Sprünge.
+
+   Ein **Wähler** statt dreier Knöpfe: Die Editor-Titelzeile ist schon voll
+   (Dokument, Pad, Neu laden, Kopieren, Legende, Fenster), und auf kleinem
+   Bildschirm (D17) ist sie es dreifach. Derselbe Reihum-Griff wie beim
+   Modus-Wähler dort.
+
+   Der Rahmen wird **nur geladen, wenn er sichtbar ist** (`about:blank` sonst).
+   Das ist kein Geiz: Ein geladenes Pad verbindet sich per Socket und macht dich
+   in der Anwesenden-Liste sichtbar. „Nur Spiegel" ist damit die Ansicht, die
+   nichts von dir verrät. */
+const padFrame = document.getElementById('padFrame');
+const srcArea = document.getElementById('srcArea');
+const padGutter = document.getElementById('padGutter');
+const padViewBtn = document.getElementById('padViewBtn');
+function applyPadView(){
+  const d = activeDoc();
+  const isPad = !!(d && padSource && d.id === padSource.id);
+  const show = isPad ? padView : 'text';
+  if(srcArea) srcArea.className = 'src-area pv-' + show;
+  if(padViewBtn){
+    padViewBtn.hidden = !isPad;
+    padViewBtn.dataset.view = show;
+    const tip = t('padViewTooltip', {state: t('padView_' + show)});
+    padViewBtn.title = tip;
+    padViewBtn.setAttribute('aria-label', tip);
+  }
+  if(padGutter) padGutter.hidden = (show !== 'both');
+  if(!padFrame) return;
+  const wantFrame = isPad && show !== 'text';
+  padFrame.hidden = !wantFrame;
+  const wantSrc = wantFrame ? padViewUrl(padSource.source) : 'about:blank';
+  if(padFrame.getAttribute('src') !== wantSrc) padFrame.setAttribute('src', wantSrc);
+}
+/* Zeilennummern und Monospace sind für diese Notation die richtige Darstellung;
+   der Chat kostet in einem schmalen Rahmen nur Platz. */
+function padViewUrl(padUrl){
+  return padUrl + '?showChat=false&showLineNumbers=true&useMonospaceFont=true';
+}
+function cyclePadView(){
+  padView = PAD_VIEWS[(PAD_VIEWS.indexOf(padView) + 1) % PAD_VIEWS.length];
+  applyPadView();
+  saveUI();
+}
+if(padViewBtn) padViewBtn.addEventListener('click', cyclePadView);
+
 /* Ein Pad-Dokument wird im Pad bearbeitet, nicht hier (D31): Textfeld
    schreibgeschützt, Knopf in der Titelzeile öffnet das Pad im neuen Tab. Ohne
    den Schutz verschwände getippter Text beim nächsten Abruf. */
@@ -2075,6 +2193,7 @@ function updatePadLink(){
     padRefreshBtn.hidden = !(isPad || pending);
     updatePadRefreshLabel();   /* trägt auch den laufenden Sperr-Zähler */
   }
+  applyPadView();
 }
 if(padRefreshBtn) padRefreshBtn.addEventListener('click', refreshPad);
 docTrigger.addEventListener('click', e => {
@@ -2185,6 +2304,47 @@ hintGutter.addEventListener('dblclick', () => {
   app.style.removeProperty('--hrow');
   saveUI();
 });
+/* Splitter Pad|Spiegel (D31) — dieselbe Mechanik wie beim Legenden-Splitter
+   (D26): gezogen wird von der Spiegelseite aus, Doppelklick setzt zurück,
+   Ausrichtung folgt der Panel-Anordnung. Beide Werte werden getrennt gehalten,
+   damit ein Moduswechsel die jeweils andere Aufteilung nicht zerstört. */
+const PAD_MIN = 120;          /* schmal darf er werden — aber lesbar bleiben */
+const PAD_MAX_SHARE = 0.85;
+let padDragging = false;
+padGutter.addEventListener('pointerdown', e => {
+  padDragging = true;
+  padGutter.classList.add('dragging');
+  padGutter.setPointerCapture(e.pointerId);
+  document.body.style.userSelect = 'none';
+  e.preventDefault();
+});
+padGutter.addEventListener('pointermove', e => {
+  if(!padDragging) return;
+  const b = srcArea.getBoundingClientRect();
+  if(editorStacked()){
+    const h = Math.min(Math.max(b.bottom - e.clientY, PAD_MIN), b.height * PAD_MAX_SHARE);
+    app.style.setProperty('--prow', Math.round(h) + 'px');
+  } else {
+    const w = Math.min(Math.max(b.right - e.clientX, PAD_MIN), b.width * PAD_MAX_SHARE);
+    app.style.setProperty('--pcol', Math.round(w) + 'px');
+  }
+});
+function endPadDrag(e){
+  if(!padDragging) return;
+  padDragging = false;
+  padGutter.classList.remove('dragging');
+  document.body.style.userSelect = '';
+  try{ padGutter.releasePointerCapture(e.pointerId); }catch(_){}
+  saveUI();
+}
+padGutter.addEventListener('pointerup', endPadDrag);
+padGutter.addEventListener('pointercancel', endPadDrag);
+padGutter.addEventListener('dblclick', () => {
+  app.style.removeProperty('--pcol');
+  app.style.removeProperty('--prow');
+  saveUI();
+});
+
 /* Modus-Wähler auf kleinem Bildschirm: es ist nur das aktive Icon sichtbar,
    Tippen schaltet zum nächsten Modus (reihum). Auf normaler Größe bleibt es
    der Dreier-Umschalter — dort kehrt der Handler sofort zurück. */

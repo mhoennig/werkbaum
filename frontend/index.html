@@ -58,6 +58,9 @@
           <button type="button" class="docact docdel" id="docDelete" data-i18n="docDelete">Löschen</button>
         </div>
       </div>
+      <button type="button" class="copybtn padview" id="padViewBtn" data-view="text" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="frame" x="2.5" y="5" width="19" height="14" rx="2"/><line class="ic-both" x1="12" y1="5" x2="12" y2="19"/><rect class="ic-pad" x="3.5" y="6" width="8" height="12" rx="1" fill="currentColor" stroke="none"/><rect class="ic-text" x="12.5" y="6" width="8" height="12" rx="1" fill="currentColor" stroke="none"/></svg>
+      </button>
       <a class="copybtn padlink" id="padLink" href="#" target="_blank" rel="noopener" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </a>
@@ -78,7 +81,14 @@
       </div>
     </div>
     <div class="editor-body">
+    <!-- Pad-Rahmen + interner Spiegel teilen sich einen eigenen Bereich, damit die
+         Legenden-Aufteilung (D26) unberührt bleibt. Reihenfolge: Pad, Splitter,
+         Spiegel — gezogen wird von der Spiegelseite aus, wie bei der Legende. -->
+    <div class="src-area pv-text" id="srcArea">
+    <iframe class="padframe" id="padFrame" title="Etherpad" hidden></iframe>
+    <div class="pad-gutter" id="padGutter" role="separator" data-i18n-title="gutterTooltip" data-i18n-aria="padGutterAria" title="Ziehen zum Verschieben, Doppelklick setzt zurück" aria-label="Pad und Texteditor größenverändern" hidden></div>
     <textarea id="src" spellcheck="false" data-i18n-aria="editorTitle" aria-label="Struktur (Text)"></textarea>
+    </div>
     <div class="hint-gutter" id="hintGutter" role="separator" data-i18n-title="gutterTooltip" data-i18n-aria="hintGutterAria" title="Ziehen zum Verschieben, Doppelklick setzt zurück" aria-label="Editor und Legende größenverändern" hidden></div>
     <div class="agenda" id="agenda">
       <button type="button" class="agenda-summary" id="agendaToggle" aria-expanded="false" aria-controls="hint" data-i18n="agenda">Agenda</button>

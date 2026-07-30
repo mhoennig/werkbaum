@@ -65,7 +65,9 @@
     - [x] Watch a shared Etherpad — it merges, we render (S)
       - [x] Load the pad's plain-text export (XS)
       - [x] Reload on demand (XS)  %% a timer only trips Etherpad's rate limit
-      + [?] Embed the pad beside the diagram (M)  %% costs the jump to the line
+      - [x] Embed the pad, keep the text mirror beside it (M)
+        - [x] Three views: pad and text, pad only, text only (S)
+        - [x] Splitter between pad and mirror (XS)
     - [ ] Git as the shared store (L)
       | [ ] A file in a repository, changed by pull request (S)  %% works today, no code
       | [?] The backend commits every change (L)
