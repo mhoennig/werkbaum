@@ -112,6 +112,25 @@
     - [?] Registration with Mermaid (M)
       | [?] External diagram, self-hosted pages only (M)
       | [?] Pull request into Mermaid itself (L)
+  - [?] IntelliJ IDEA plugin (XL)
+    - [?] Show the diagram in the IDE (L)
+      | [?] Through Mermaid, once Werkbaum is part of Mermaid itself (M)
+        - [?] Fenced werkbaum blocks render in Markdown (S)
+        - [-] A self-hosted Mermaid diagram type (S)  %% the IDE brings its own Mermaid
+      | [?] Our own preview: the bundled single file in a JCEF window (M)
+        - [?] Hand the editor text in (S)
+        - [?] Get the clicked line back to the caret (S)
+    + [?] A real editor, not just a preview (XL)
+      - [?] Language support for .werkbaum (L)
+        - [?] Lexer and parser to a PSI tree (M)
+          - [?] Syntax highlighting (S)
+          - [?] Warnings as inspections (S)  %% mixed gate, unknown status
+        - [?] Completion for status, size and tags (S)
+        - [?] Structure view and folding (S)
+      - [?] Kotlin with the Gradle IntelliJ plugin (S)
+      - [!] A second parser that must not drift from the SPEC (M)  %% exactly what D14 warns about
+        | [?] Both parsers test against the same fixtures (S)
+        | [?] Run the one JS parser inside the IDE (M)
   - [?] Tracker integration (XL)
     | [?] Taiga (L) https://taiga.io
       - [ ] Resolve #123 over the REST API (M)
