@@ -57,7 +57,7 @@ einer externen Textdatei beziehen — praktisch zum Teilen eines Plans oder wenn
 die Quelle in Git oder einem Wiki gepflegt wird:
 
 ```
-https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum
+https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum
 ```
 
 Fertige Beispiele in [`docs/examples/`](docs/examples/) — **nacheinander
@@ -66,14 +66,11 @@ Editor-Titelzeile zwischen allen umschalten:
 
 | Beispiel | Zeigt |
 |---|---|
-| **▶ [0 · Online-Shop-Relaunch](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum)** | ein Softwareprojekt mit allen acht Status |
-| **▶ [1 · Neue Küche](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-1.werkbaum)** | ein Plan ohne Software, viele Alternativen — gut für den Günstigster-Pfad-Schalter |
-| **▶ [2 · Community-Konferenz](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-2.werkbaum)** | ein breiter Plan mit vielen Beteiligten; horizontal vs. kompakt vergleichen |
-| **▶ [3 · Drei Arbeitsstränge](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-3.werkbaum)** | mehrere Wurzeln = mehrere Bäume nebeneinander |
-| **▶ [Werkbaum selbst](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-werkbaum.werkbaum)** | Bestand und mögliche Weiterentwicklung |
-
-(Die Links zeigen auf den latest build 🚧; die stabile Instanz kann `sourceUrl`
-ab ihrem nächsten Produktions-Deploy.)
+| **▶ [0 · Online-Shop-Relaunch](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum)** | ein Softwareprojekt mit allen acht Status |
+| **▶ [1 · Neue Küche](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-1.werkbaum)** | ein Plan ohne Software, viele Alternativen — gut für den Günstigster-Pfad-Schalter |
+| **▶ [2 · Community-Konferenz](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-2.werkbaum)** | ein breiter Plan mit vielen Beteiligten; horizontal vs. kompakt vergleichen |
+| **▶ [3 · Drei Arbeitsstränge](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-3.werkbaum)** | mehrere Wurzeln = mehrere Bäume nebeneinander |
+| **▶ [Werkbaum selbst](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-werkbaum.werkbaum)** | Bestand und mögliche Weiterentwicklung |
 
 Der geladene Text wird als **eigenes Dokument** geführt, dessen **Name die URL**
 ist — eigene Dokumente bleiben unberührt, und derselbe Link aktualisiert dieses

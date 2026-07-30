@@ -54,7 +54,7 @@ The editor can pull its notation text from an external text file via the
 Git or a wiki:
 
 ```
-https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum
+https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum
 ```
 
 Ready-made examples in [`docs/examples/`](docs/examples/) — **open them one
@@ -63,14 +63,11 @@ between all of them in the editor title bar:
 
 | Example | Shows |
 |---|---|
-| **▶ [0 · Online shop relaunch](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum)** | a software project with all eight states |
-| **▶ [1 · New kitchen](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-1.werkbaum)** | a non-software plan, lots of alternatives — good for the cheapest-path toggle |
-| **▶ [2 · Community conference](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-2.werkbaum)** | a wide plan with many people; compare horizontal vs. compact |
-| **▶ [3 · Three workstreams](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-3.werkbaum)** | several roots = several trees side by side |
-| **▶ [Werkbaum itself](https://mhoennig.github.io/werkbaum/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-werkbaum.werkbaum)** | what exists today and where it could go |
-
-(The links point at the latest build 🚧; the stable instance supports
-`sourceUrl` from its next production deploy on.)
+| **▶ [0 · Online shop relaunch](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum)** | a software project with all eight states |
+| **▶ [1 · New kitchen](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-1.werkbaum)** | a non-software plan, lots of alternatives — good for the cheapest-path toggle |
+| **▶ [2 · Community conference](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-2.werkbaum)** | a wide plan with many people; compare horizontal vs. compact |
+| **▶ [3 · Three workstreams](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-3.werkbaum)** | several roots = several trees side by side |
+| **▶ [Werkbaum itself](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-werkbaum.werkbaum)** | what exists today and where it could go |
 
 The loaded text becomes its own document whose **name is the URL**, so your own
 documents stay untouched; the same link updates that one document instead of
