@@ -1329,3 +1329,63 @@ zwei Scheine nach außen gehen nicht, einer muss der Ring sein). Die Regel für
 `fresh.focusmark` steht **nach** der für `focusmark.current`: gleiche Spezifität,
 und wenn alles drei zutrifft, sollen Zuruf und Neuheit gewinnen, nicht die eigene
 Cursor-Zeile.
+
+**Nachtrag zu D31 — Recherche: Wie kann sich die Ansicht von selbst aktualisieren?**
+Wunsch: automatisch, mit höchstens ~2 s Verzögerung, „dafür könnte man die
+Websockets von Etherpad verwenden". Recherchiert und **gemessen** statt geschätzt;
+die Zahlen stammen aus Etherpads `settings.json.template` und aus Versuchen gegen
+`pad.hostsharing.net`:
+
+| Befund | Messung |
+|---|---|
+| `importExportRateLimiting` | `{windowMs: 90000, max: 10}` — 10 Abrufe je 90 s **und IP** |
+| `commitRateLimiting` | `{duration: 1, points: 10}` (betrifft Schreiben, nicht uns) |
+| `cookie.sameSite` | Voreinstellung `"Lax"` — Ursache der Rahmen-Probleme |
+| socket.io | Server v4; `/socket.io/?EIO=4` antwortet `0{"sid":…}`, `EIO=3` wird abgelehnt |
+| Pad-**Seite** `/p/<pad>` | **kein** `Access-Control-Allow-Origin` |
+| Pad-**Export** `/export/txt` | `Access-Control-Allow-Origin: *` |
+
+Daraus folgt die Kernbeobachtung, die alles andere erklärt: **Der einzige
+Endpunkt, den wir fremdstämmig lesen dürfen, ist genau der gedrosselte.**
+
+**Zwei naheliegende Wege sind gemessen versperrt:**
+
+- **Pad-HTML statt Export lesen.** Die Seite enthält den vollen Text in
+  `clientVars` und unterliegt dem Export-Limit nicht — aber sie sendet keinen
+  CORS-Header, der Browser blockt es. Sackgasse.
+- **Eigener Socket zum Pad.** `wss://…/socket.io/?EIO=4&transport=websocket`
+  scheitert mit Code 1006 **ohne** `open`. Gegenprobe gegen einen fremden
+  Echo-Server aus derselben Seite: `OPEN`, saubere Schließung — die Umgebung kann
+  also WebSockets, dieser Server nimmt uns nur nicht. Zugleich verbindet sich das
+  **eingebettete** Pad problemlos (nachgewiesen: es übernahm eine von außen
+  eingespielte Änderung sofort) — der Unterschied ist der Origin. Warum genau,
+  sagt 1006 nicht (Origin-Prüfung, fehlendes Session-Cookie oder ein Proxy, der
+  nur gleichstämmig upgradet); alle drei liegen serverseitig, die Folgerung hält
+  also unabhängig davon. **Der vorgeschlagene Websocket-Weg scheitert damit nicht
+  an unserer Bereitschaft, eine Abhängigkeit aufzunehmen, sondern an der
+  Gegenseite** — und die Easysync-Frage (Changesets anwenden) stellt sich gar
+  nicht mehr.
+
+**Der Fund, den die Suche gebracht hat:** Es gibt Etherpad-Plugins, die per
+`postMessage` mit der einbettenden Seite reden — `ep_iframeinsert` schickt
+periodisch `{func:"none", context:"ep_iframeinsert", data:<ganzer Pad-Text>}` ans
+Elternfenster (und nimmt umgekehrt `insert`-Befehle an, könnte also sogar
+Schreiben aus Werkbaum heraus erlauben); `ep_resize` belegt dasselbe Muster für
+Größenänderungen. Das ist der einzige Weg, der **live** ist, **kein** Polling
+braucht, das Rate Limit nicht berührt und auf unserer Seite nur einen
+`message`-Zuhörer mit Origin-Prüfung kostet — also **keine** neue
+Laufzeit-Abhängigkeit. Preis: Das Plugin muss auf der Instanz installiert sein.
+
+**Damit hängt alles an einer einzigen Frage: Kommt man an die Konfiguration der
+Pad-Instanz?** Jede der wirksamen Möglichkeiten ist eine Server-Änderung —
+Rate Limit höher, Plugin installieren, `cookie.sameSite: "None"`, oder eine
+socket.io-CORS-Freigabe. Ohne Zugriff bleibt nur, innerhalb des Budgets zu
+pollen: höchstens **einmal je 9 s** (10 je 90 s), und das teilen sich alle
+Betrachter hinter derselben IP. Das ist ehrlich machbar, aber es sind nicht die
+gewünschten 2 s — und es ist schlechter als der Knopf, sobald mehrere zuschauen.
+
+Die Alternativen stehen als any-of-Gruppe im mitgelieferten Plan
+(`docs/examples/example-werkbaum.werkbaum`, unter „Update by itself"); die beiden
+gemessenen Sackgassen als `[-]` mit dem Messergebnis im Kommentar, damit niemand
+sie erneut aufmacht. Der günstigste Pfad wählt dort von selbst die
+Rate-Limit-Anhebung — die billigste wirksame Änderung.
