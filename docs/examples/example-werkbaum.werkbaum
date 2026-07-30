@@ -73,6 +73,10 @@
           | [ ] Live with it: edit in the pad's own tab (XS)
       - [^] A shared pointer: !!! focuses a node for everyone (XS)
       - [?] Update by itself, within about 2 s (M)
+        | [?] Our own Etherpad beside Werkbaum (M)  %% then every setting below is ours
+          - [ ] Node, a real database, TLS (S)  %% the flatfile store is not for production
+          - [ ] A proxy that passes the websocket upgrade (XS)
+          - [!] Keeping a public service patched (S)  %% indefinitely, that is the real cost
         | [?] Admin raises the export rate limit (XS)  %% default is 10 per 90 s
         | [?] Admin installs a plugin that pushes the text (S)  %% postMessage to the page
         | [?] Our own backend holds one socket and fans out (XXL)
