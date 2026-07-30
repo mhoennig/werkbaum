@@ -177,8 +177,13 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Schreibmarke im Pad. **Umhängen im DOM lädt jeden `<iframe>` neu** — wer
   Container um `#srcArea` herum neu aufbaut, wirft die Pad-Sitzung weg.
 - Fokusmarke `!!!` (D32, SPEC §1): Parser setzt `focus`, Renderer die Klasse
-  `focusmark`, CSS teilt die Regel mit `.node.current` (ein Begriff „hier
-  schauen"). Erkannt **nur alleinstehend** — `(^|\s)!!!(?=\s|$)`, bewusst ohne
+  `focusmark`, CSS gibt ihr einen **eigenen Strahlenkranz in Petrol** (Nachtrag zu
+  D32; der geteilte Ring mit `.current` war zu leise). Schein in **hellem** Teal
+  `#14B8A6`, Ring in dunklem `--or`: ein dunkler Schein auf Weiß liest sich als
+  Schatten, ein heller als Licht. Wie bei `.fresh` braucht die Regel `z-index:2`,
+  sonst schneidet ein später gemaltes Geschwister den Kranz ab (D28). Die
+  Kombinationen `focusmark.current` und `fresh.focusmark` sind ausbuchstabiert;
+  letztere steht bewusst **danach** (gleiche Spezifität). Erkannt **nur alleinstehend** — `(^|\s)!!!(?=\s|$)`, bewusst ohne
   Lookbehind (Safari erst ab 16.4), sonst verlöre `Achtung!!!` seine
   Ausrufezeichen. Extraktion **nach** den Tags; der Kommentar fällt vorher weg,
   eine Marke hinter `%%` wirkt also nicht. `revealFocusMark()` scrollt **nur bei

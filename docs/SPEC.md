@@ -397,17 +397,21 @@ verknüpft (siehe D25):
   Druck.
 
 ### Fokusmarke im Diagramm (`!!!`, §1)
-Ein mit `!!!` markierter Knoten trägt **dieselbe Hervorhebung wie die
-Cursor-Zeile** (weißer Halo + Ring in Tinte) und wird ins Bild geholt — bewusst
-kein eigenes Aussehen: Es gibt nur einen Begriff „hier schauen", und ein
-dritter Ring neben Fokusrahmen, Strahlenkranz (§9) und Cursor-Ring wäre ein
-Zeichen zu viel.
+Ein mit `!!!` markierter Knoten trägt einen **Strahlenkranz in Petrol** —
+kräftiger Ring in `--or` (`#0F766E`) plus leuchtender Schein in hellem Teal
+(`#14B8A6`) — und wird ins Bild geholt. Gebaut wie der gelbe Kranz für „neu in
+Produktion" (§9): Schein nach **außen**, damit die Knotenfüllung dem Status (§4)
+gehört und lesbar bleibt. Kein Blinken.
 
+- **Die Farbe trägt die Bedeutung:** Gelb heißt „seit deinem letzten Besuch live
+  gegangen" (eine stehende Tatsache), Petrol heißt „jemand zeigt gerade hierauf"
+  (ein Zuruf). Beides kann zugleich zutreffen und muss darum unterscheidbar
+  bleiben; trifft es zusammen, wird der Ring petrol und der Schein gelb.
+- Trifft die Marke mit der **Cursor-Zeile** zusammen, liegt der Tinte-Ring innen
+  und der Schein außen — die eigene Cursor-Position und der fremde Zuruf bleiben
+  so auseinanderzuhalten.
 - Ins Bild geholt wird nur, wenn sich die Marke **ändert** — sonst zöge das
   Diagramm bei jedem Neubau den Blick zurück und man könnte nicht wegscrollen.
-- Weil `!!!` im Text steht, sehen **alle** dieselbe Stelle. Der Unterschied zur
-  eigenen Cursor-Zeile ist im Bild nicht zu erkennen; für Screenreader benennt
-  das `aria-label` die Marke ausdrücklich.
 - Wie die Cursor-Zeile erscheint sie **nicht** im Druck und **nicht** im
   Grafikexport: Sie sagt „schau jetzt hierhin", nicht „so ist der Plan".
 

@@ -1284,3 +1284,48 @@ Rahmen neu laden, verlöre man bei jedem Diagramm-Update die Schreibmarke im Pad
 **Haltung daraus:** Der Rahmen ist zum **Mitlesen** gut; für längeres Schreiben
 ist der eigene Tab die verlässliche Fläche, solange das Cookie nicht
 serverseitig auf `SameSite=None` steht.
+
+**Nachtrag zu D32 — eigener Strahlenkranz in Petrol statt geteilter Ring.**
+Der geteilte Ring mit der Cursor-Zeile war zu leise: „Das erkennt man zu wenig"
+(Nutzer). Damit fällt die oben als Preis notierte Zweideutigkeit weg — sie war
+das Zugeständnis für die Sparsamkeit, und wenn die Sparsamkeit nicht funktioniert,
+ist das Zugeständnis auch nicht mehr zu rechtfertigen.
+
+Gebaut wie der gelbe Kranz aus D28 (Schein nach außen, Füllung bleibt dem Status,
+kein Blinken, `z-index:2` gegen das Abschneiden durch später gemalte
+Geschwister) — aber **in Petrol, nicht in Gelb**. Die Frage stand ausdrücklich im
+Raum („oder würdest du dafür auch das gelbe Leuchten nehmen?"), und die Antwort
+ist nein:
+
+- Die beiden bedeuten Verschiedenes und treten **gleichzeitig** auf. Gelb ist eine
+  stehende Tatsache über den Plan („seit deinem letzten Besuch live gegangen"),
+  Petrol ein Zuruf („schau jetzt hierhin"). Im Pad-Betrieb ist die Kombination der
+  Normalfall — man zeigt auf das, was sich geändert hat. Wären beide gelb, könnte
+  ein Knoten nicht beides sagen, und bei einem gelben Knoten wüsste niemand mehr,
+  welche der beiden Aussagen gemeint ist. Das wäre genau die Verwechslung, die
+  dieser Nachtrag behebt, nur mit der anderen Farbe.
+- Die Farblogik ist schon vergeben: Petrol ist im Diagramm die Farbe für
+  Interaktion und Aufmerksamkeit (Fokusring, Alt-Ring, „scharf"-Ring, günstigster
+  Pfad — D18), Gelb die für Status-Neuigkeit. D15 gab Petrol nur für die
+  **Gate-Codierung** auf, nicht als Signalfarbe.
+
+**Der Schein ist helles Teal (`#14B8A6`), der Ring dunkles Petrol (`--or`).**
+Die erste Fassung nahm für beides `--or` und wirkte trotz identischer Geometrie
+leiser als der gelbe Kranz. Der Grund ist nicht Geschmack: Ein **dunkler** Schein
+auf weißem Grund liest sich als Schatten, ein **heller** als Licht. Reichweite
+kommt daher vom hellen Teal, die Zuordnung zur Akzentfarbe vom dunklen Ring
+(3 px, damit er gegen den helleren Schein besteht).
+
+**Gegen die Stationspunkte geprüft, nicht angenommen.** Der günstigste Pfad legt
+blasse Petrol-Punkte hinter die Endknoten (D18) — ein petrolfarbener Kranz hätte
+damit verschwimmen können. Deshalb wurden zwei Marken gezielt auf Pfad-Endknoten
+gesetzt (mit Punkt) und eine daneben (ohne): Der Kranz sitzt eng am Knoten und
+hat einen harten Ring, der Stationspunkt ist ein großer blasser Fleck ohne Rand.
+Sie sind auseinanderzuhalten.
+
+Kombinationen sind ausbuchstabiert, weil sie real vorkommen: `focusmark.current`
+(Tinte innen, Teal außen) und `fresh.focusmark` (Petrol-Ring innen, Gelb außen —
+zwei Scheine nach außen gehen nicht, einer muss der Ring sein). Die Regel für
+`fresh.focusmark` steht **nach** der für `focusmark.current`: gleiche Spezifität,
+und wenn alles drei zutrifft, sollen Zuruf und Neuheit gewinnen, nicht die eigene
+Cursor-Zeile.

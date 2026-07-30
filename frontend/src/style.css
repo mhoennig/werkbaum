@@ -536,8 +536,24 @@
      nur einen Begriff „hier schauen", und ein dritter Ring neben Fokusring,
      Strahlenkranz und Cursor-Ring wäre ein Zeichen zu viel. Der Unterschied
      steht im `aria-label`. */
-  #out .node.current,
-  #out .node.focusmark{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink)}
+  #out .node.current{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink)}
+  /* Fokusmarke `!!!` (SPEC §1, D32): **Strahlenkranz in Petrol**, nach dem Muster
+     der Neuheiten-Markierung (D28), nur in der Akzentfarbe der App statt in Gelb.
+     Der geteilte Ring mit der Cursor-Zeile war zu leise — „das erkennt man zu
+     wenig" (Nutzer) —, und ein Ring allein wächst beim Zoomen nicht mit dem
+     Blickbedürfnis. Der Kranz löst zugleich die in D32 hingenommene Schwäche:
+     Cursor-Zeile (Tinte, innen) und fremde Marke (Petrol, außen) sind jetzt
+     unterscheidbar. Kein Blinken (WCAG 2.2.2/2.3.1, vgl. D28), und `z-index`,
+     weil der Schein AUSSERHALB der Knotenbox liegt — ohne ihn malt jedes später
+     kommende Geschwister seinen Hintergrund darüber und schneidet ihn ab. */
+  /* Der Schein ist **helles** Teal (#14B8A6), nicht das dunkle Petrol des Rings:
+     Ein dunkler Schein auf weißem Grund liest sich als Schatten, ein heller als
+     Licht — deshalb wirkte die erste Fassung leiser als der gelbe Kranz aus D28,
+     obwohl die Geometrie dieselbe war. Der Ring bleibt dunkles Petrol und ordnet
+     die Marke der Akzentfarbe zu; das Leuchten macht die Reichweite. */
+  #out .node.focusmark{box-shadow:0 0 0 3px var(--or),0 0 20px 7px rgba(20,184,166,.85);z-index:2}
+  /* Beides zugleich: Cursor-Zeile innen (Tinte), fremde Marke außen (Petrol). */
+  #out .node.focusmark.current{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink),0 0 20px 7px rgba(20,184,166,.85)}
   /* Neu in Produktion seit dem letzten Besuch (D28): gelber Strahlenkranz um den
      Knoten. Bewusst ein Schein nach AUSSEN statt Farbe im Knoten — die Füllung
      gehört dem Status (SPEC §4) und bleibt lesbar. Kein Blinken: WCAG 2.2.2/2.3.1
@@ -549,6 +565,12 @@
   #out .node.fresh{box-shadow:0 0 0 2px #FACC15,0 0 16px 5px rgba(234,179,8,.65);z-index:2}
   /* Beides zugleich: Cursor-Zeile innen (Tinte), Neuheit außen (gelb). */
   #out .node.fresh.current{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink),0 0 18px 6px rgba(234,179,8,.65)}
+  /* Neu in Produktion UND jemand zeigt darauf: Ring in Petrol (der bewusste
+     Zuruf, innen), Kranz in Gelb (die stehende Nachricht, außen). Zwei Scheine
+     nach außen gingen nicht — einer muss der Ring sein. Steht bewusst **nach**
+     `.node.focusmark.current`: gleiche Spezifität (drei Klassen), und wenn alles
+     drei zutrifft, soll Zuruf + Neuheit gewinnen, nicht die eigene Cursor-Zeile. */
+  #out .node.fresh.focusmark{box-shadow:0 0 0 3px var(--or),0 0 20px 7px rgba(234,179,8,.65);z-index:2}
   /* Alt gedrückt = Sprung-Geste scharf: Cursor an allen Knoten, Petrol-Ring am
      Knoten unter dem Zeiger. Auf verlinkten Knoten ist das die einzige
      Rückmeldung, weil dort der einfache Klick dem Link gehört (D25). */
