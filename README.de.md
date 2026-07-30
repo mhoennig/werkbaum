@@ -101,9 +101,16 @@ sich ein **Etherpad**. Angegeben wird die Pad-Adresse, wie sie im Browser steht
 https://werkbaum.javagil.de/?etherpad=https://pad.hostsharing.net/p/mein-plan
 ```
 
-Alle bearbeiten den Notationstext **im Pad**, jeder Betrachter sieht das Diagramm
-mitwachsen (Abruf alle 2,5 s; nicht, während der Tab im Hintergrund liegt). Das
-Zusammenführen gleichzeitiger Änderungen macht Etherpad — genau darum geht es.
+Alle bearbeiten den Notationstext **im Pad**; ein Neu-laden-Knopf neben dem
+Pad-Knopf holt den aktuellen Stand. Das Zusammenführen gleichzeitiger Änderungen
+macht Etherpad — genau darum geht es.
+
+Bewusst **kein** Abrufen im Hintergrund: Etherpad drosselt den Export
+(serienmäßig 10 Abrufe je 90 s und IP), ein Takt gewinnt dagegen nicht — er
+*erzeugt* die Drosselung. Nachgemessen: Nach Überschreiten des Budgets hält der
+Server die Verbindung rund zwei Minuten ohne Antwort offen und liefert dann in
+0,4 s. Der Knopf greift gut mit „Was ist neu?" zusammen: drücken, und was seither
+in Produktion ging, leuchtet auf.
 
 Weil das Pad die Schreibfläche ist, ist das Textfeld hier **schreibgeschützt**;
 ein Knopf in der Editor-Titelzeile öffnet das Pad im neuen Tab. Ohne den Schutz

@@ -96,9 +96,16 @@ Werkbaum appends that itself):
 https://werkbaum.javagil.de/?etherpad=https://pad.hostsharing.net/p/my-plan
 ```
 
-Everyone edits the notation text **in the pad**, and every viewer watches the
-diagram grow (fetched every 2.5 s; not while the tab is in the background).
-Merging simultaneous edits is Etherpad's job — that is the whole point.
+Everyone edits the notation text **in the pad**; a reload button next to the pad
+button fetches the current state. Merging simultaneous edits is Etherpad's job —
+that is the whole point.
+
+Deliberately **no background polling**: Etherpad rate-limits the export (10
+fetches per 90 s per IP by default), so a timer does not win against it — it
+*causes* the throttling. Measured: after exceeding the budget the server holds
+the connection open with no reply for about two minutes, then answers in 0.4 s.
+The button pairs well with "what's new": press it, and whatever went into
+production since your last look lights up.
 
 Because the pad is the writing surface, the text area here is **read-only**; a
 button in the editor title bar opens the pad in a new tab. Without that

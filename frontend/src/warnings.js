@@ -10,7 +10,14 @@
    - mixedGate     { line, label }  — Geschwister mit gemischtem Gate (SPEC §3)
    - unknownStatus { line, code }   — unbekanntes Statuszeichen (Phase 2)
    - sourceLoad    { url, error }   — ?sourceUrl= nicht ladbar (D23); ohne
-                                      Zeilennummer, erscheint dadurch zuoberst */
+                                      Zeilennummer, erscheint dadurch zuoberst
+   - padRateLimit  { seconds }      — zu früh nachgeladen; Werkbaum hat gar nicht
+                                      erst geholt, um Etherpads Grenze nicht
+                                      auszulösen (D31)
+   - sourceTimeout { url, seconds } — Abruf abgebrochen, Gegenseite zu langsam
+                                      (D31). Eigener Typ, weil `sourceLoad` auf
+                                      CORS zeigt — bei einem Zeitablauf schickt
+                                      das den Leser auf die falsche Fährte */
 
 import { esc } from './render.js';
 
@@ -24,6 +31,10 @@ export function formatWarning(w, t){
       return t('unknownStatusWarn', {line: w.line, code: esc(w.code)});
     case 'sourceLoad':
       return t('sourceLoadWarn', {url: esc(w.url), error: esc(w.error)});
+    case 'padRateLimit':
+      return t('padRateLimitWarn', {seconds: w.seconds});
+    case 'sourceTimeout':
+      return t('sourceTimeoutWarn', {url: esc(w.url), seconds: w.seconds});
     default:
       return `${esc(String(w.type))} (${w.line ?? '?'})`;
   }

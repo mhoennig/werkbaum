@@ -64,7 +64,7 @@
   - [~] Working together on one plan (XL)
     - [x] Watch a shared Etherpad — it merges, we render (S)
       - [x] Load the pad's plain-text export (XS)
-      - [x] Keep up while the others type (XS)
+      - [x] Reload on demand (XS)  %% a timer only trips Etherpad's rate limit
       + [?] Embed the pad beside the diagram (M)  %% costs the jump to the line
     - [ ] Git as the shared store (L)
       | [ ] A file in a repository, changed by pull request (S)  %% works today, no code

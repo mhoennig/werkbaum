@@ -894,6 +894,9 @@ const I18N = {
     jumpHint:"Alt+Klick: zur Zeile im Text",
     padReadonly:"Wird im Pad bearbeitet — hier nur lesen.",
     padEdit:"Pad zum Bearbeiten öffnen",
+    padRefresh:"Vom Pad neu laden",
+    padWait:"Noch {seconds} s — Etherpad begrenzt die Abrufe",
+    padRateLimitWarn:"Noch nicht neu geladen: Etherpad erlaubt nur wenige Abrufe je Zeitfenster (serienmäßig 10 pro 90 s), so häufiges Nachladen ist leider nicht möglich. In {seconds} s geht es wieder.",
     riskTooltip:"High Risk – Aufwand noch unklar.",
     discardedTooltip:"Verworfene Knoten samt Teilbaum ein-/ausblenden",
     cheapTooltip:"Günstigsten Pfad hervorheben – nicht benötigte Alternativen treten zurück",
@@ -926,6 +929,7 @@ const I18N = {
     st_fertig:"fertig", st_prod:"in Produktion", st_highrisk:"High Risk", st_verworfen:"verworfen",
     unknownStatusWarn:"Zeile {line}: unbekanntes Statuszeichen „{code}“ — als neutral dargestellt.",
     sourceLoadWarn:"„{url}“ konnte nicht geladen werden ({error}). Die Datei muss per http(s) erreichbar sein und CORS erlauben (Access-Control-Allow-Origin).",
+    sourceTimeoutWarn:"„{url}“ hat innerhalb von {seconds} s nicht geantwortet — der Abruf wurde abgebrochen. Etherpad begrenzt, wie oft der Export geholt werden darf (serienmäßig 10-mal pro 90 s); warte einen Moment und lade dann erneut.",
     a11yStatus:"Status: {status}", a11ySize:"Aufwand: {size}", a11ySizeImplicit:"Aufwand: M (angenommen)", a11yTags:"Zuständig: {names}", a11yOptional:"optional", a11yLink:"verlinkt",
     hint_indent:"Einrückung (2 Leerzeichen oder Tab) definiert die Hierarchie.",
     hint_all:"Teilpaket, alle erforderlich", hint_any:"Alternative, eine wählen",
@@ -948,6 +952,9 @@ const I18N = {
     jumpHint:"Alt+click: jump to the line in the text",
     padReadonly:"Edited in the pad — read-only here.",
     padEdit:"Open the pad to edit",
+    padRefresh:"Reload from the pad",
+    padWait:"{seconds} s to go — Etherpad limits how often we may fetch",
+    padRateLimitWarn:"Not reloaded yet: Etherpad only allows a few fetches per time window (10 per 90 s by default), so syncing this often is unfortunately not possible. Try again in {seconds} s.",
     riskTooltip:"High risk – effort still unclear.",
     discardedTooltip:"Show/hide discarded nodes and their subtree",
     cheapTooltip:"Highlight the cheapest path – unneeded alternatives recede",
@@ -980,6 +987,7 @@ const I18N = {
     st_fertig:"done", st_prod:"in production", st_highrisk:"high risk", st_verworfen:"discarded",
     unknownStatusWarn:"Line {line}: unknown status code “{code}” — shown as neutral.",
     sourceLoadWarn:"Could not load “{url}” ({error}). The file must be reachable via http(s) and allow CORS (Access-Control-Allow-Origin).",
+    sourceTimeoutWarn:"“{url}” did not answer within {seconds} s — the request was aborted. Etherpad limits how often the export may be fetched (10 times per 90 s by default); wait a moment, then reload.",
     a11yStatus:"Status: {status}", a11ySize:"Effort: {size}", a11ySizeImplicit:"Effort: M (assumed)", a11yTags:"Assigned: {names}", a11yOptional:"optional", a11yLink:"has link",
     hint_indent:"Indentation (2 spaces or a tab) defines the hierarchy.",
     hint_all:"sub-task, all required", hint_any:"alternative, choose one",
@@ -1002,6 +1010,9 @@ const I18N = {
     jumpHint:"Alt+clic: ir a la línea en el texto",
     padReadonly:"Se edita en el pad — aquí solo lectura.",
     padEdit:"Abrir el pad para editar",
+    padRefresh:"Recargar desde el pad",
+    padWait:"Faltan {seconds} s — Etherpad limita la frecuencia",
+    padRateLimitWarn:"Aún no se ha recargado: Etherpad solo permite unas pocas descargas por ventana de tiempo (10 por 90 s de forma predeterminada), así que sincronizar tan a menudo no es posible. Vuelve a intentarlo en {seconds} s.",
     riskTooltip:"Alto riesgo – esfuerzo aún incierto.",
     discardedTooltip:"Mostrar u ocultar los nodos descartados y su subárbol",
     cheapTooltip:"Resaltar la ruta más económica: las alternativas no necesarias se atenúan",
@@ -1034,6 +1045,7 @@ const I18N = {
     st_fertig:"terminado", st_prod:"en producción", st_highrisk:"alto riesgo", st_verworfen:"descartado",
     unknownStatusWarn:"Línea {line}: código de estado desconocido «{code}» — mostrado como neutral.",
     sourceLoadWarn:"No se pudo cargar «{url}» ({error}). El archivo debe ser accesible por http(s) y permitir CORS (Access-Control-Allow-Origin).",
+    sourceTimeoutWarn:"«{url}» no respondió en {seconds} s — se canceló la petición. Etherpad limita la frecuencia de descarga del export (10 veces por 90 s de forma predeterminada); espera un momento y vuelve a cargar.",
     a11yStatus:"Estado: {status}", a11ySize:"Esfuerzo: {size}", a11ySizeImplicit:"Esfuerzo: M (asumido)", a11yTags:"Responsable: {names}", a11yOptional:"opcional", a11yLink:"con enlace",
     hint_indent:"La sangría (2 espacios o un tabulador) define la jerarquía.",
     hint_all:"subtarea, todas obligatorias", hint_any:"alternativa, elige una",
@@ -1056,6 +1068,9 @@ const I18N = {
     jumpHint:"Alt+clic : aller à la ligne dans le texte",
     padReadonly:"Modifié dans le pad — lecture seule ici.",
     padEdit:"Ouvrir le pad pour modifier",
+    padRefresh:"Recharger depuis le pad",
+    padWait:"Encore {seconds} s — Etherpad limite la fréquence",
+    padRateLimitWarn:"Pas encore rechargé : Etherpad n’autorise que quelques récupérations par fenêtre de temps (10 par 90 s par défaut), une synchronisation aussi fréquente n’est donc pas possible. Réessaie dans {seconds} s.",
     riskTooltip:"Risque élevé – effort encore incertain.",
     discardedTooltip:"Afficher/masquer les nœuds abandonnés et leur sous-arbre",
     cheapTooltip:"Mettre en évidence le chemin le moins coûteux – les alternatives inutiles s'estompent",
@@ -1088,6 +1103,7 @@ const I18N = {
     st_fertig:"terminé", st_prod:"en production", st_highrisk:"risque élevé", st_verworfen:"abandonné",
     unknownStatusWarn:"Ligne {line} : code de statut inconnu « {code} » — affiché comme neutre.",
     sourceLoadWarn:"Impossible de charger « {url} » ({error}). Le fichier doit être accessible en http(s) et autoriser CORS (Access-Control-Allow-Origin).",
+    sourceTimeoutWarn:"« {url} » n’a pas répondu en {seconds} s — la requête a été interrompue. Etherpad limite la fréquence de récupération de l’export (10 fois par 90 s par défaut) ; attends un instant, puis recharge.",
     a11yStatus:"Statut : {status}", a11ySize:"Effort : {size}", a11ySizeImplicit:"Effort : M (supposé)", a11yTags:"Responsable : {names}", a11yOptional:"facultatif", a11yLink:"avec lien",
     hint_indent:"L'indentation (2 espaces ou une tabulation) définit la hiérarchie.",
     hint_all:"sous-tâche, toutes requises", hint_any:"alternative, en choisir une",
@@ -1110,6 +1126,9 @@ const I18N = {
     jumpHint:"Alt+kliknięcie: przejdź do wiersza w tekście",
     padReadonly:"Edytowane w padzie — tu tylko do czytania.",
     padEdit:"Otwórz pad do edycji",
+    padRefresh:"Wczytaj ponownie z padu",
+    padWait:"Jeszcze {seconds} s — Etherpad ogranicza częstość",
+    padRateLimitWarn:"Jeszcze nie wczytano ponownie: Etherpad dopuszcza tylko kilka pobrań w okresie (domyślnie 10 na 90 s), więc tak częsta synchronizacja nie jest możliwa. Spróbuj za {seconds} s.",
     riskTooltip:"Wysokie ryzyko – nakład jeszcze niejasny.",
     discardedTooltip:"Pokaż/ukryj odrzucone węzły wraz z poddrzewem",
     cheapTooltip:"Wyróżnij najtańszą ścieżkę – niepotrzebne alternatywy są przygaszone",
@@ -1142,6 +1161,7 @@ const I18N = {
     st_fertig:"gotowe", st_prod:"w produkcji", st_highrisk:"wysokie ryzyko", st_verworfen:"odrzucone",
     unknownStatusWarn:"Wiersz {line}: nieznany znak statusu „{code}” — pokazany jako neutralny.",
     sourceLoadWarn:"Nie udało się wczytać „{url}” ({error}). Plik musi być dostępny przez http(s) i zezwalać na CORS (Access-Control-Allow-Origin).",
+    sourceTimeoutWarn:"„{url}” nie odpowiedział w ciągu {seconds} s — żądanie przerwano. Etherpad ogranicza częstość pobierania eksportu (domyślnie 10 razy na 90 s); odczekaj chwilę i wczytaj ponownie.",
     a11yStatus:"Status: {status}", a11ySize:"Nakład: {size}", a11ySizeImplicit:"Nakład: M (założony)", a11yTags:"Przypisano: {names}", a11yOptional:"opcjonalny", a11yLink:"z linkiem",
     hint_indent:"Wcięcie (2 spacje lub tabulator) definiuje hierarchię.",
     hint_all:"podzadanie, wszystkie wymagane", hint_any:"alternatywa, wybierz jedną",
@@ -1164,6 +1184,9 @@ const I18N = {
     jumpHint:"Alt+клик: перейти к строке в тексте",
     padReadonly:"Редактируется в паде — здесь только чтение.",
     padEdit:"Открыть пад для редактирования",
+    padRefresh:"Обновить из пада",
+    padWait:"Ещё {seconds} с — Etherpad ограничивает частоту",
+    padRateLimitWarn:"Пока не обновлено: Etherpad разрешает лишь несколько загрузок за окно времени (по умолчанию 10 за 90 с), поэтому столь частая синхронизация невозможна. Повторите через {seconds} с.",
     riskTooltip:"Высокий риск – оценка ещё не ясна.",
     discardedTooltip:"Показать/скрыть отклонённые узлы вместе с поддеревом",
     cheapTooltip:"Выделить самый дешёвый путь — ненужные альтернативы приглушаются",
@@ -1196,6 +1219,7 @@ const I18N = {
     st_fertig:"готово", st_prod:"в эксплуатации", st_highrisk:"высокий риск", st_verworfen:"отклонено",
     unknownStatusWarn:"Строка {line}: неизвестный код статуса «{code}» — показан как нейтральный.",
     sourceLoadWarn:"Не удалось загрузить «{url}» ({error}). Файл должен быть доступен по http(s) и разрешать CORS (Access-Control-Allow-Origin).",
+    sourceTimeoutWarn:"«{url}» не ответил за {seconds} с — запрос прерван. Etherpad ограничивает частоту загрузки экспорта (по умолчанию 10 раз за 90 с); подождите немного и обновите снова.",
     a11yStatus:"Статус: {status}", a11ySize:"Оценка: {size}", a11ySizeImplicit:"Оценка: M (предполагается)", a11yTags:"Ответственные: {names}", a11yOptional:"необязательно", a11yLink:"со ссылкой",
     hint_indent:"Отступ (2 пробела или табуляция) задаёт иерархию.",
     hint_all:"подзадача, все обязательны", hint_any:"альтернатива, выберите одну",
@@ -1218,6 +1242,9 @@ const I18N = {
     jumpHint:"Alt+क्लिक: टेक्स्ट में उस पंक्ति पर जाएँ",
     padReadonly:"पैड में संपादित होता है — यहाँ केवल पढ़ें।",
     padEdit:"संपादित करने के लिए पैड खोलें",
+    padRefresh:"पैड से फिर लोड करें",
+    padWait:"{seconds} स॰ बाकी — Etherpad बार-बार लेने की सीमा रखता है",
+    padRateLimitWarn:"अभी दोबारा लोड नहीं किया: Etherpad प्रति समय-खिड़की केवल कुछ ही बार लेने देता है (डिफ़ॉल्ट रूप से 90 स॰ में 10 बार), इसलिए इतनी बार सिंक करना संभव नहीं है। {seconds} स॰ में फिर कोशिश करें।",
     riskTooltip:"उच्च जोखिम – प्रयास अभी अस्पष्ट।",
     discardedTooltip:"अस्वीकृत नोड्स और उनके उप-वृक्ष दिखाएँ/छिपाएँ",
     cheapTooltip:"सबसे किफ़ायती पथ को उजागर करें – अनावश्यक विकल्प मंद हो जाते हैं",
@@ -1250,6 +1277,7 @@ const I18N = {
     st_fertig:"पूर्ण", st_prod:"उत्पादन में", st_highrisk:"उच्च जोखिम", st_verworfen:"अस्वीकृत",
     unknownStatusWarn:"पंक्ति {line}: अज्ञात स्थिति कोड „{code}“ — तटस्थ रूप में दिखाया गया।",
     sourceLoadWarn:"„{url}“ लोड नहीं हो सका ({error})। फ़ाइल http(s) से उपलब्ध होनी चाहिए और CORS की अनुमति देनी चाहिए (Access-Control-Allow-Origin)।",
+    sourceTimeoutWarn:"„{url}“ ने {seconds} स॰ में उत्तर नहीं दिया — अनुरोध रद्द कर दिया गया। Etherpad सीमित करता है कि एक्सपोर्ट कितनी बार लिया जा सके (डिफ़ॉल्ट रूप से 90 स॰ में 10 बार); कुछ क्षण रुकें, फिर दोबारा लोड करें।",
     a11yStatus:"स्थिति: {status}", a11ySize:"आकार: {size}", a11ySizeImplicit:"आकार: M (अनुमानित)", a11yTags:"जिम्मेदार: {names}", a11yOptional:"वैकल्पिक", a11yLink:"लिंक सहित",
     hint_indent:"इंडेंट (2 स्पेस या टैब) पदानुक्रम तय करता है।",
     hint_all:"उप-कार्य, सभी आवश्यक", hint_any:"विकल्प, एक चुनें",
@@ -1277,6 +1305,9 @@ const I18N = {
     jumpHint:"Alt+点击：跳转到文本中的该行",
     padReadonly:"在 Pad 中编辑 — 此处只读。",
     padEdit:"打开 Pad 进行编辑",
+    padRefresh:"从 Pad 重新加载",
+    padWait:"还需 {seconds} 秒 — Etherpad 限制获取频率",
+    padRateLimitWarn:"尚未重新加载：Etherpad 每个时间窗口只允许少量获取（默认每 90 秒 10 次），因此无法如此频繁地同步。请在 {seconds} 秒后再试。",
     riskTooltip:"高风险 – 工作量尚不明确。",
     editorTitle:"结构（文本）", diagramTitle:"图表",
     docSwitchTooltip:"选择或管理文档", docMenuAria:"文档",
@@ -1304,6 +1335,7 @@ const I18N = {
     st_fertig:"已完成", st_prod:"已上线", st_highrisk:"高风险", st_verworfen:"已放弃",
     unknownStatusWarn:"第 {line} 行：未知状态代码“{code}”——显示为中性。",
     sourceLoadWarn:"无法加载“{url}”（{error}）。该文件必须可通过 http(s) 访问并允许 CORS（Access-Control-Allow-Origin）。",
+    sourceTimeoutWarn:"“{url}” 在 {seconds} 秒内没有响应 — 请求已中止。Etherpad 会限制导出的获取频率（默认每 90 秒 10 次）；请稍候再重新加载。",
     a11yStatus:"状态：{status}", a11ySize:"工作量：{size}", a11ySizeImplicit:"工作量：M（假定）", a11yTags:"负责人：{names}", a11yOptional:"可选", a11yLink:"含链接",
     hint_indent:"缩进（2 个空格或制表符）定义层级。",
     hint_all:"子任务，全部必需", hint_any:"备选项，择其一",
@@ -1331,6 +1363,9 @@ const I18N = {
     jumpHint:"Alt+クリック：テキストの該当行へ移動",
     padReadonly:"パッドで編集します — ここでは読み取り専用です。",
     padEdit:"編集するにはパッドを開く",
+    padRefresh:"パッドから再読み込み",
+    padWait:"あと {seconds} 秒 — Etherpad は取得頻度を制限します",
+    padRateLimitWarn:"まだ再読み込みしていません: Etherpad は一定時間内の取得回数を制限します（既定で 90 秒あたり 10 回）。これほど頻繁な同期はできません。{seconds} 秒後にもう一度お試しください。",
     riskTooltip:"高リスク – 規模はまだ不明。",
     editorTitle:"構造（テキスト）", diagramTitle:"ダイアグラム",
     docSwitchTooltip:"ドキュメントを選択・管理", docMenuAria:"ドキュメント",
@@ -1358,6 +1393,7 @@ const I18N = {
     st_fertig:"完了", st_prod:"本番稼働", st_highrisk:"高リスク", st_verworfen:"破棄",
     unknownStatusWarn:"{line} 行目: 不明なステータス記号「{code}」— 中立として表示。",
     sourceLoadWarn:"「{url}」を読み込めませんでした（{error}）。ファイルは http(s) でアクセス可能で、CORS（Access-Control-Allow-Origin）を許可する必要があります。",
+    sourceTimeoutWarn:"「{url}」が {seconds} 秒以内に応答しませんでした — 要求を中止しました。Etherpad はエクスポートの取得回数を制限します（既定で 90 秒あたり 10 回）。少し待ってから再読み込みしてください。",
     a11yStatus:"ステータス: {status}", a11ySize:"規模: {size}", a11ySizeImplicit:"規模: M（想定）", a11yTags:"担当: {names}", a11yOptional:"任意", a11yLink:"リンクあり",
     hint_indent:"インデント（スペース2つまたはタブ）で階層を定義します。",
     hint_all:"サブタスク、すべて必須", hint_any:"選択肢、1つを選ぶ",
@@ -1781,6 +1817,7 @@ function deleteDoc(){
   const d = activeDoc();
   if(!d) return;
   if(!window.confirm(t('docDeleteConfirm', {name: d.name}))) return;
+  if(padSource && padSource.id === d.id) stopPad();   /* danach gibt es nichts mehr zu holen (D31) */
   docs = docs.filter(x => x.id !== d.id);
   if(!docs.length) docs = [{ id: EXAMPLE_ID, name: EXAMPLE_NAME, text: INITIAL }];
   activeId = docs[0].id;
@@ -1814,7 +1851,6 @@ function initDocs(){
    Etherpads Aufgabe ist. Ein Fetch-Pfad, zwei Eingänge. */
 const SOURCE_PARAM = 'sourceUrl';
 const ETHERPAD_PARAM = 'etherpad';
-const PAD_POLL_MS = 2500;
 function urlParam(name){
   try{ return new URLSearchParams(location.search).get(name); }catch(_){ return null; }
 }
@@ -1855,6 +1891,21 @@ async function fetchRemote(url, timeoutMs){
     return await resp.text();
   } finally { if(timer) clearTimeout(timer); }
 }
+/* Geholten Text als Dokument übernehmen und aktivieren. Gemeinsam genutzt vom
+   ersten Ladeversuch und vom Pad-Takt, wenn dieser einen gescheiterten ersten
+   Versuch nachholt — sonst gäbe es zwei Fassungen derselben sechs Zeilen. */
+function adoptRemote(s, text){
+  flushActive();                       /* laufende Bearbeitung nicht verlieren */
+  let d = docs.find(x => x.id === s.id);
+  if(d){ d.text = text; d.name = s.name; }
+  else { d = {id: s.id, name: s.name, text}; docs.push(d); }
+  d.source = s.source;
+  activeId = s.id;
+  sourceWarning = null;
+  computeFresh(s.id, text);   /* was ist seit dem letzten Ansehen in Produktion? (D28) */
+  loadActiveIntoEditor();
+  persistDocs();
+}
 async function loadRemoteSource(){
   const s = remoteSource();
   if(!s) return;
@@ -1863,67 +1914,126 @@ async function loadRemoteSource(){
     render();
     return;
   }
+  /* `padSource` **vor** dem ersten Abruf setzen: Es trägt den Schreibschutz
+     (muss also vor loadActiveIntoEditor() stehen) und macht den Neu-laden-Knopf
+     erreichbar. Scheitert der erste Abruf — die Gegenseite fällt beobachtbar mal
+     aus —, bleibt der Knopf also da und man kommt ohne Neuladen weiter. */
+  if(s.live){ padSource = s; padBusy = true; setPadCooldown(PAD_MIN_GAP_MS); }
   try{
-    const text = await fetchRemote(s.fetchUrl);
-    flushActive();                     /* laufende Bearbeitung nicht verlieren */
-    let d = docs.find(x => x.id === s.id);
-    if(d){ d.text = text; d.name = s.name; }
-    else { d = {id: s.id, name: s.name, text}; docs.push(d); }
-    d.source = s.source;
-    activeId = s.id;
-    sourceWarning = null;
-    if(s.live) padSource = s;   /* vor loadActiveIntoEditor: setzt den Schreibschutz */
-    computeFresh(s.id, text);   /* was ist seit dem letzten Ansehen in Produktion? (D28) */
-    loadActiveIntoEditor();
-    persistDocs();
-    if(s.live) startPadPolling();
+    adoptRemote(s, await fetchRemote(s.fetchUrl));
   }catch(err){
     /* CORS-Fehler melden sich als „TypeError: Failed to fetch" ohne Details —
-       der Warntext nennt CORS daher ausdrücklich als wahrscheinliche Ursache. */
+       der Warntext nennt CORS daher ausdrücklich als wahrscheinliche Ursache.
+       Bei einem Pad ist das nicht das Ende: der Knopf holt es nach und räumt die
+       Warnung weg, sobald ein Abruf gelingt. */
     sourceWarning = {type:'sourceLoad', url: s.fetchUrl, error: (err && err.message) || String(err)};
+    updatePadLink();   /* Knopf zeigen, obwohl kein Dokument entstanden ist */
     render();
+  }finally{
+    if(s.live) padBusy = false;
   }
 }
 
-/* ---------- Pad: regelmäßig neu holen (D31) ----------
-   Stumm bei Fehlschlägen — der erste Ladeversuch hat bereits gewarnt, ein
-   Netzaussetzer soll den Warnbereich nicht fluten. Nicht abrufen, solange der
-   Tab im Hintergrund liegt: der Export rendert jedes Mal das ganze Pad, und die
-   Gegenseite ist fremde Infrastruktur. */
-const PAD_FETCH_TIMEOUT_MS = 10000;
+/* ---------- Pad: auf Knopfdruck neu holen (D31) ----------
+   Kein Hintergrund-Takt. Der erste Entwurf holte alle 2,5 s selbsttätig — und
+   lief damit in Etherpads **Drosselung**: `importExportRateLimiting` ist
+   serienmäßig an und lässt 10 Abrufe je 90 s und IP zu, der Takt wollte 36.
+   Danach hält die Gegenseite die Verbindung einfach offen (kein `429`, keine
+   Kopfzeilen), der Abbruch reißt sie ab — im Netzwerk-Mitschnitt „cancelled",
+   und es kommt kaum je etwas an. Ein Knopf ist ohnehin ehrlicher gegenüber
+   fremder Infrastruktur: geholt wird, wenn jemand es will. Zusammen mit
+   „Was ist neu?" (D28) ergibt das die bessere Geschichte — Knopf drücken, und
+   was seither in Produktion ging, leuchtet auf. */
+const PAD_FETCH_TIMEOUT_MS = 20000;
+/* Mindestabstand zwischen zwei Abrufen. 10 s ergibt höchstens **9** Abrufe je
+   90 s und bleibt damit beweisbar unter Etherpads Voreinstellung (10 je 90 s) —
+   die Drosselung wird also gar nicht erst ausgelöst. Nach einem Abbruch sind wir
+   schon drüber: dann das ganze Fenster abwarten, statt weiter dagegen zu rennen. */
+const PAD_MIN_GAP_MS = 10000;
+const PAD_BACKOFF_MS = 90000;
 let padSource = null;    /* Beschreiber der aktiven Pad-Quelle, oder null */
-let padTimer = null;
-let padPending = null;   /* geholter, noch nicht übernommener Text (Stabilitätstakt) */
-let padBusy = false;     /* höchstens ein Abruf unterwegs (siehe pollPad) */
-function startPadPolling(){
-  if(padTimer) clearInterval(padTimer);
-  padTimer = setInterval(pollPad, PAD_POLL_MS);
+let padBusy = false;     /* ein Abruf unterwegs — schützt vor Doppelklick */
+let padNextAllowed = 0;  /* Zeitpunkt (ms), ab dem wieder geholt werden darf */
+let padCoolTimer = null;
+/* Wer das Pad-Dokument löscht, meint es: danach gibt es nichts mehr zu holen. */
+function stopPad(){ padSource = null; }
+function padCoolLeft(){ return Math.max(0, padNextAllowed - Date.now()); }
+function setPadCooldown(ms){ padNextAllowed = Date.now() + ms; tickPadCooldown(); }
+/* Der Sekundenzähler läuft **nur** während der Sperre und hält sich selbst an. */
+function tickPadCooldown(){
+  if(padCoolTimer){ clearInterval(padCoolTimer); padCoolTimer = null; }
+  updatePadRefreshLabel();
+  if(padCoolLeft() <= 0) return;
+  padCoolTimer = setInterval(() => {
+    updatePadRefreshLabel();
+    if(padCoolLeft() <= 0){ clearInterval(padCoolTimer); padCoolTimer = null; }
+  }, 1000);
 }
-/* Bei Rückkehr in den sichtbaren Zustand sofort holen: nach einer langen Pause
-   stünde sonst bis zum nächsten Takt ein veralteter Stand da. */
-document.addEventListener('visibilitychange', () => {
-  if(document.visibilityState === 'visible' && padSource) pollPad();
-});
-async function pollPad(){
+/* Sperre sichtbar machen, aber den Knopf **klickbar** lassen: Ein `disabled`
+   erklärt nichts. So kann der Klick den Grund melden (Live-Region `#warn`). */
+function updatePadRefreshLabel(){
+  if(!padRefreshBtn || padRefreshBtn.hidden) return;
+  const left = Math.ceil(padCoolLeft()/1000);
+  padRefreshBtn.classList.toggle('cooling', left > 0);
+  padRefreshBtn.setAttribute('aria-disabled', left > 0 ? 'true' : 'false');
+  const tip = left > 0 ? t('padWait', {seconds: left}) : t('padRefresh');
+  padRefreshBtn.title = tip;
+  padRefreshBtn.setAttribute('aria-label', tip);
+}
+/* Rückmeldung während des Abrufs: Bei einer gedrosselten Gegenseite können das
+   die vollen 20 s sein — ohne Zeichen wirkt der Knopf kaputt. */
+function setPadBusy(on){
+  if(!padRefreshBtn) return;
+  padRefreshBtn.classList.toggle('busy', on);
+  padRefreshBtn.setAttribute('aria-busy', on ? 'true' : 'false');
+}
+async function refreshPad(){
   const s = padSource;
-  /* `padBusy`: höchstens ein Abruf unterwegs. Ist die Gegenseite langsamer als
-     der Takt, stapelten sich sonst die Anfragen — und eine spät eintreffende
-     alte Antwort überschriebe neueren Text (im Netzwerk-Mitschnitt beobachtet). */
-  if(!s || padBusy || document.visibilityState === 'hidden') return;
-  const d = docs.find(x => x.id === s.id);
-  if(!d) return;                       /* Dokument gelöscht — nichts nachtragen */
-  let text;
+  if(!s || padBusy) return;
+  if(padCoolLeft() > 0){
+    /* Nicht heimlich nichts tun: Der Grund ist eine fremde Grenze, und die
+       gehört gesagt — sonst wirkt der Knopf kaputt. Die Meldung landet im
+       Warnbereich, der eine Live-Region ist und deshalb angesagt wird. */
+    sourceWarning = {type:'padRateLimit', seconds: Math.ceil(padCoolLeft()/1000)};
+    render();
+    return;
+  }
   padBusy = true;
+  setPadBusy(true);
+  setPadCooldown(PAD_MIN_GAP_MS);
+  let text;
   try{ text = await fetchRemote(s.fetchUrl, PAD_FETCH_TIMEOUT_MS); }
-  catch(_){ return; }                  /* stumm; `finally` gibt den Riegel frei */
-  finally{ padBusy = false; }
-  if(text === d.text){ padPending = null; return; }
-  /* Stabilitätstakt: erst übernehmen, wenn zwei Abrufe hintereinander denselben
-     neuen Text liefern. Sonst sieht man die anderen mitten im Tippen, und eine
-     halb geschriebene Zeile ist eine kaputte Zeile — Diagramm und Warnungen
-     flackerten. Kostet im Mittel einen Takt. */
-  if(padPending !== text){ padPending = text; return; }
-  padPending = null;
+  catch(err){
+    /* Anders als ein Hintergrund-Takt ist das eine bewusste Handlung — sie
+       braucht eine Antwort, auch wenn sie schiefgeht. Ein Abbruch bekommt einen
+       **eigenen** Warnungstyp: `sourceLoad` zeigt auf CORS, und bei einer
+       Drosselung schickte das den Leser auf die falsche Fährte. */
+    if(err && err.name === 'AbortError'){
+      /* Abbruch heißt: Wir sind schon in der Drosselung. Weiterklicken hilft
+         nicht, also das ganze Fenster abwarten — und das dem Nutzer sagen. */
+      setPadCooldown(PAD_BACKOFF_MS);
+      sourceWarning = {type:'sourceTimeout', url: s.fetchUrl,
+                       seconds: Math.round(PAD_FETCH_TIMEOUT_MS/1000)};
+    } else {
+      sourceWarning = {type:'sourceLoad', url: s.fetchUrl, error: (err && err.message) || String(err)};
+    }
+    render();
+    return;
+  }
+  finally{ padBusy = false; setPadBusy(false); }
+  if(padRefreshBtn) flashBtn(padRefreshBtn);
+  const d = docs.find(x => x.id === s.id);
+  if(!d){
+    /* Kein Dokument: der erste Ladeversuch ist gescheitert. Jetzt nachholen —
+       anlegen und aktivieren wie beim Laden. */
+    adoptRemote(s, text);
+    return;
+  }
+  /* Ein geglückter Abruf räumt die Warnung des ersten Versuchs weg — sonst
+     stünde „konnte nicht geladen werden", während der Text längst da ist. */
+  const hadWarning = !!sourceWarning;
+  sourceWarning = null;
+  if(text === d.text){ if(hadWarning) render(); return; }
   d.text = text;
   persistDocs();
   if(activeId !== d.id) return;        /* im Hintergrund still aktualisiert */
@@ -1942,20 +2052,31 @@ async function pollPad(){
    schreibgeschützt, Knopf in der Titelzeile öffnet das Pad im neuen Tab. Ohne
    den Schutz verschwände getippter Text beim nächsten Abruf. */
 const padLink = document.getElementById('padLink');
+const padRefreshBtn = document.getElementById('padRefresh');
 function updatePadLink(){
   const d = activeDoc();
   const isPad = !!(d && padSource && d.id === padSource.id);
   src.readOnly = isPad;
   src.classList.toggle('readonly', isPad);
   if(isPad) src.title = t('padReadonly'); else src.removeAttribute('title');
-  if(!padLink) return;
-  padLink.hidden = !isPad;
-  if(!isPad) return;
-  padLink.href = padSource.source;
-  const tip = t('padEdit');
-  padLink.title = tip;
-  padLink.setAttribute('aria-label', tip);
+  if(padLink){
+    padLink.hidden = !isPad;
+    if(isPad){
+      padLink.href = padSource.source;
+      padLink.title = t('padEdit');
+      padLink.setAttribute('aria-label', t('padEdit'));
+    }
+  }
+  /* Der Neu-laden-Knopf erscheint auch, wenn es das Pad-Dokument noch **nicht**
+     gibt: Dann ist der erste Abruf gescheitert, und genau dieser Knopf ist der
+     Weg zurück — ohne ihn bliebe nur Neuladen der Seite. */
+  if(padRefreshBtn){
+    const pending = !!(padSource && !docs.some(x => x.id === padSource.id));
+    padRefreshBtn.hidden = !(isPad || pending);
+    updatePadRefreshLabel();   /* trägt auch den laufenden Sperr-Zähler */
+  }
 }
+if(padRefreshBtn) padRefreshBtn.addEventListener('click', refreshPad);
 docTrigger.addEventListener('click', e => {
   /* Desktop: ist der Editor minimiert, stellt ein Klick ihn wieder her
      (Bubbling zur Titelzeile) statt das Menü zu öffnen. */

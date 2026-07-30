@@ -332,7 +332,20 @@
   /* „im Pad bearbeiten" (D31) — nur bei einem ?etherpad=-Dokument sichtbar.
      Das [hidden] braucht die eigene Regel, weil .copybtn ein display setzt. */
   .padlink{text-decoration:none}
-  .padlink[hidden]{display:none}
+  .padlink[hidden],.padrefresh[hidden]{display:none}
+  /* Läuft ein Abruf, dreht das Symbol: bei gedrosselter Gegenseite (D31) können
+     das die vollen 20 s sein, und ein Knopf ohne Rückmeldung wirkt kaputt. */
+  /* Sperre nach einem Abruf (D31): sichtbar gedämpft, aber **klickbar** — der
+     Klick meldet den Grund, ein `disabled` erklärte nichts. */
+  .padrefresh.cooling{opacity:.45;cursor:not-allowed}
+  .padrefresh.busy{color:var(--or);border-color:var(--or);pointer-events:none}
+  .padrefresh.busy.cooling{opacity:1;cursor:default}
+  .padrefresh.busy svg{animation:padspin 1.1s linear infinite}
+  @keyframes padspin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){
+    .padrefresh.busy svg{animation:none}
+    .padrefresh.busy{opacity:.55}
+  }
   .dlbtn{gap:3px}
   .dl-label{font-family:'IBM Plex Mono',monospace;font-size:.62rem;font-weight:600;letter-spacing:.02em}
   /* Download-Gruppe: Desktop zeigt SVG/PNG inline, der Trigger ist versteckt.

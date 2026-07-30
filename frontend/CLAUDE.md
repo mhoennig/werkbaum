@@ -142,19 +142,22 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `tests/remote.test.js`): Export-/Timeslider-Pfad, Query, Fragment und
   Schrägstriche fallen weg, verlangt wird `/p/<name>` am Ende. Name und id sind
   die **vollständige** Pad-URL (Pad-Namen sind nur pro Instanz eindeutig).
-  `padSource` muss **vor** `loadActiveIntoEditor()` gesetzt werden — daran hängt
-  der Schreibschutz. `pollPad()` hat drei Riegel, jeder aus einem echten Fehler:
-  `padBusy` (höchstens ein Abruf unterwegs — sonst stapeln sich Anfragen und eine
-  spät eintreffende alte Antwort überschreibt neueren Text, im
-  Netzwerk-Mitschnitt beobachtet), `PAD_FETCH_TIMEOUT_MS` (ohne Abbruch bliebe
-  `padBusy` bei hängender Gegenseite für immer zu) und `visibilityState`
-  (+ `visibilitychange`-Handler, der bei Rückkehr sofort holt). Fehlschläge im
-  Takt bleiben **stumm**; nur der erste Ladeversuch warnt. Der Stabilitätstakt
-  (`padPending`) übernimmt erst beim zweiten gleichen Abruf — sonst sieht man die
-  anderen mitten im Tippen. Beim Prüfen im Vorschau-Browser: `visibilityState`
-  ist dort `hidden` (Polling also aus) und HMR lädt bei jeder Quelländerung neu —
-  ein Reload sieht wie eine geglückte Übernahme aus. Marker auf `window` setzen
-  und hinterher prüfen, sonst beweist der Test nichts.
+  `padSource` muss **vor** dem ersten Abruf und vor `loadActiveIntoEditor()`
+  gesetzt werden: Es trägt den Schreibschutz, und scheitert der erste Abruf
+  (Normalfall bei dieser Gegenseite), bleibt so der Neu-laden-Knopf erreichbar
+  statt das Dokument tot liegen zu lassen. Geholt wird **nur auf Knopfdruck**
+  (`refreshPad`) — **kein Hintergrund-Takt wieder einbauen**: Etherpads
+  `importExportRateLimiting` lässt serienmäßig 10 Abrufe je 90 s und IP zu, und
+  jenseits davon hält die Gegenseite die Verbindung ohne Antwort offen (kein
+  `429`), bis der eigene Abbruch sie abreißt — gemessen: zwei Minuten tot, danach
+  0,4 s. Ein Takt gewinnt dagegen nicht, er erzeugt die Drosselung. Deshalb auch
+  `setPadBusy()` (Symbol dreht, bis zu 20 s) und ein **eigener** Warnungstyp
+  `sourceTimeout` für den Abbruch — `sourceLoad` zeigt auf CORS und schickte hier
+  auf die falsche Fährte. `deleteDoc()` ruft `stopPad()`, sonst legte ein späterer
+  Abruf das gelöschte Dokument wieder an und aktivierte es auch gleich.
+  Beim Prüfen im Vorschau-Browser: HMR lädt bei jeder Quelländerung neu, und ein
+  Reload holt den Text beim Erstabruf — sieht wie eine geglückte Übernahme aus.
+  Marker auf `window` setzen und hinterher prüfen, sonst beweist der Test nichts.
 - Sprung Diagramm ↔ Text (D25): `render.js` schreibt die Parser-Zeilennummer als
   `data-line` an jeden Knoten (Geister-Knoten bekommen keine). `jumpToLine()` in
   `app.js` klappt bei Bedarf das Editor-Panel auf (`revealEditor()`), markiert die

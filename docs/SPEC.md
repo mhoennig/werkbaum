@@ -290,11 +290,13 @@ Export- oder `/timeslider`-Pfad wird abgeschnitten.
 - Deshalb ist das Textfeld für ein solches Dokument **schreibgeschützt** — ein
   Knopf in der Editor-Titelzeile öffnet das Pad im neuen Tab. Ohne den Schutz
   verschwände getippter Text beim nächsten Abruf.
-- Geholt wird **regelmäßig** (Voreinstellung 2,5 s; nicht, solange der Tab im
-  Hintergrund liegt). Übernommen wird eine Änderung erst, wenn zwei Abrufe
-  hintereinander **denselben** neuen Text liefern — sonst sähe man die anderen
-  mitten im Tippen, und halb geschriebene Zeilen ließen Diagramm und Warnungen
-  flackern.
+- Geholt wird **auf Knopfdruck**, nicht selbsttätig: Ein Neu-laden-Knopf neben
+  dem Pad-Knopf holt den aktuellen Stand. Etherpad **drosselt** den Export
+  (serienmäßig 10 Abrufe je 90 s und IP); ein Hintergrund-Takt läuft dagegen an
+  und bekommt am Ende gar nichts mehr. Läuft ein Abruf, dreht das Symbol — bei
+  gedrosselter Gegenseite kann das bis zum Abbruch (20 s) dauern.
+- Der Knopf greift gut mit „Was ist neu?" (§9) zusammen: drücken, und was seither
+  in Produktion ging, leuchtet auf.
 - **Name ist die vollständige Pad-URL** (nicht der bloße Pad-Name — zwei Pads
   gleichen Namens auf verschiedenen Hosts wären sonst nicht zu unterscheiden),
   wie bei `?sourceUrl=`. Identität und Name leiten sich von der **Pad**-Adresse
@@ -302,8 +304,11 @@ Export- oder `/timeslider`-Pfad wird abgeschnitten.
   Dokument, gleich in welcher Schreibweise der Link kam.
 - `?sourceUrl=` bleibt unverändert: statische Datei, einmal pro Laden geholt.
   Der eigene Parameter trägt gerade den Unterschied.
-- Fehler (CORS, 404, Netz) melden sich wie bei `?sourceUrl=`; ein einzelner
-  Aussetzer beim Abrufen bleibt stumm und lässt den letzten Stand stehen.
+- Fehler (CORS, 404, Netz) melden sich wie bei `?sourceUrl=`. Ein **Abbruch**
+  wegen Zeitablauf bekommt eine eigene Meldung, die die Drosselung benennt —
+  die `?sourceUrl=`-Meldung zeigt auf CORS und schickte hier auf die falsche
+  Fährte. Scheitert schon der erste Abruf, bleibt der Neu-laden-Knopf sichtbar
+  und holt es nach; ein Neuladen der Seite ist nicht nötig.
 
 Siehe D31.
 

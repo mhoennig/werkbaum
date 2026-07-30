@@ -1000,10 +1000,14 @@ http(s), ohne Endung oder `Content-Type` zu prüfen (D24). Nachgemessen an
   Einrückung als echte Leerzeichen und deutet das `-` nicht zur Aufzählung um.
   Das war das Risiko, das die Idee hätte erledigen können.
 
-(Gemessen wurde Import → Speicher → Export. Das *Tippen* im Etherpad-Editor —
-Tab-Einrückung, mögliches Auto-Bullet — ist damit **nicht** geprüft; dafür
-braucht es einen echten Browser. Vgl. die Lehre aus D25: synthetische Ereignisse
-beweisen nur die eigene Logik.)
+Das war zunächst nur Import → Speicher → Export, also **nicht** das Tippen — und
+genau das war der offene Punkt (Tab-Einrückung, mögliches Auto-Bullet), im Geist
+der Lehre aus D25: synthetische Ereignisse beweisen nur die eigene Logik.
+**Nachgeholt an echter Eingabe:** Der Nutzer hat im Pad `    - [ ] Layout`
+eingerückt eingetippt und eine Kommentarzeile geändert; der Export gibt beides
+zeichengenau zurück (`>     - [ ] Layout$` — vier echte Leerzeichen, kein Tab,
+kein Listen-Markup). Der Etherpad-Editor fasst die Notation beim Tippen also
+nicht an.
 
 **Eigener Parameter statt `?sourceUrl=`.** Drei Gründe, der erste ist der
 schwächste:
@@ -1013,9 +1017,10 @@ schwächste:
    nicht in die Schnittstelle; Werkbaum hängt sie selbst an.
 2. Der Parameter **lizenziert anderes Verhalten**. `sourceUrl` heißt „statische
    Datei, einmal pro Laden geholt" — das ist D23 wörtlich und bleibt
-   unangetastet. `etherpad` heißt „lebendes Pad", und daran hängt das
-   regelmäßige Abrufen. Ohne die Trennung müsste D23 seine Semantik ändern und
-   bestehende Links bekämen ungefragt Polling.
+   unangetastet. `etherpad` heißt „lebendes Pad", und daran hängen der
+   Schreibschutz, der „im Pad bearbeiten"-Knopf und der Neu-laden-Knopf. Ohne
+   die Trennung müsste D23 seine Semantik ändern und bestehende Links bekämen
+   Verhalten, um das niemand gebeten hat.
 3. Die **Pad**-URL ist mehr wert als die Export-URL: nur mit ihr sind der
    „im Pad bearbeiten"-Knopf und ein späteres Einbetten (siehe unten) ohne
    weiteren Parameter erreichbar, und Identität/Name des Dokuments werden aus
@@ -1042,19 +1047,51 @@ gleichzeitige Änderungen nicht zusammenführen, das Pad kann es. Deshalb
 erscheint in der Editor-Titelzeile ein Knopf, der das Pad im neuen Tab öffnet
 (nur bei solchen Dokumenten sichtbar).
 
-**Stabilitäts-Verzögerung statt rohem Polling.** Beim Abrufen sieht man die
-anderen mitten im Tippen; eine halb geschriebene Zeile ist eine kaputte Zeile,
-das Diagramm zuckt und die Warnungen flackern. Übernommen wird ein neuer Text
-deshalb erst, wenn **zwei** Abrufe hintereinander denselben liefern. Das kostet
-im Mittel einen Takt Verzögerung und macht die Ansicht ruhig. Bei `?sourceUrl=`
-gibt es das Problem nicht (man lädt bewusst neu) — es ist also spezifisch für
-diesen Parameter, wie das Polling selbst.
+**Geholt wird auf Knopfdruck, nicht selbsttätig — Etherpad drosselt.** Die erste
+Fassung holte alle 2,5 s im Hintergrund, mit einem Stabilitätstakt (erst
+übernehmen, wenn zwei Abrufe denselben Text liefern) gegen das Mitlesen halb
+getippter Zeilen. In der Praxis kam damit fast nichts an: im Netzwerk-Mitschnitt
+stapelten sich Anfragen und wurden abgebrochen („cancelled").
 
-Getaktet wird mit 2,5 s und **nicht**, solange der Tab im Hintergrund liegt: Der
-Export rendert bei jedem Abruf das ganze Pad, und die Gegenseite ist fremde
-Infrastruktur. Ein Fehlschlag beim Abrufen bleibt **stumm** und lässt den
-letzten Stand stehen (nur der erste Ladeversuch warnt) — sonst flutete ein
-Netzaussetzer den Warnbereich.
+Die Ursache ist nicht Langsamkeit, sondern ein **Rate Limit**:
+`importExportRateLimiting` ist in Etherpad serienmäßig an und lässt **10 Abrufe
+je 90 s und IP** zu — der Takt wollte 36. Danach antwortet die Gegenseite nicht
+mit `429`, sondern **hält die Verbindung offen** (keine Kopfzeilen, keine
+Antwort), bis der eigene Abbruch sie abreißt. Nachgemessen:
+
+```
+12:48:12  Abbruch nach 25 s (0 Bytes)
+          Abbruch nach 25 s (0 Bytes)
+12:50:23  HTTP 200 nach 0,436 s   <- nach ~40 s Pause
+```
+
+Zwei Minuten totgestellt, dann sofort in 0,4 s da. Gegen eine Drosselung kann ein
+Takt nicht gewinnen — er *erzeugt* sie. Also: **ein Knopf**. Damit entfallen
+Stabilitätstakt, Sichtbarkeits-Wächter, Anti-Stapel-Riegel und Wiederanlauf; was
+bleibt, ist ein Abruf, wenn jemand ihn will. Das ist auch die ehrlichere Haltung
+gegenüber fremder Infrastruktur, und es greift gut mit „Was ist neu?" (D28)
+zusammen: drücken, und was seither in Produktion ging, leuchtet auf.
+
+Zwei Dinge, die der Knopf braucht und ein stiller Takt nicht:
+
+- **Rückmeldung während des Abrufs** (das Symbol dreht). Bei gedrosselter
+  Gegenseite sind das bis zu 20 s; ohne Zeichen wirkt der Knopf kaputt.
+- **Eine Antwort im Fehlerfall.** Ein Hintergrund-Takt durfte stumm scheitern,
+  eine bewusste Handlung nicht. Der Abbruch bekommt dafür einen **eigenen**
+  Warnungstyp `sourceTimeout`: Die `sourceLoad`-Meldung zeigt auf CORS und
+  schickte hier auf die falsche Fährte — richtig ist „warte einen Moment".
+
+**Der erste Abruf darf scheitern, ohne alles zu verlieren.** In der ersten Fassung
+standen `padSource` und der Takt *hinter* dem `await` des ersten Abrufs: Ein
+einziger Fehlschlag — bei dieser Gegenseite der Normalfall — ließ das Dokument
+tot liegen, ohne Knopf und ohne Wiederversuch, bis zum Neuladen der Seite.
+Jetzt wird `padSource` **vor** dem Abruf gesetzt; der Knopf erscheint auch, wenn
+es das Dokument noch nicht gibt, und legt es beim ersten Erfolg an.
+
+**Wer das Pad-Dokument löscht, meint es.** `deleteDoc()` beendet die Pad-Quelle.
+Ohne das hätte der (damalige) Takt es wieder angelegt — und beim Anlegen auch
+gleich aktiviert, den Nutzer also aus dem Dokument gerissen, in das er gewechselt
+war.
 
 **Verhältnis zu D20 („keine externen Requests").** Unverändert wie bei D23: Die
 App lädt von sich aus nichts; der Request entsteht nur, weil der Nutzer eine
@@ -1066,13 +1103,33 @@ anderes als bei einer Schriftart. Es bleibt die Entscheidung dessen, der den
 Link baut — Werkbaum legt von sich aus kein Pad an.
 
 **Verworfene und aufgeschobene Alternativen:**
-- **`?sourceUrl=` um Polling erweitern** — hätte bestehenden Links ungefragt
-  wiederholte Requests verpasst und D23 seine klare Semantik gekostet.
-- **Das Pad als `<iframe>` einbetten** (aufgeschoben, nicht verworfen): Bringt
-  Cursor, Namen, Farben und Chat mit. Kostet aber **beide** Richtungen von D25
-  — in einem cross-origin-iframe gibt es keinen DOM-Zugriff, also kein
-  Alt+Klick → Zeile und keine Cursor-Zeile → Knoten. Bei 75 Knoten ist das die
-  Orientierung. Der Knopf „im Pad bearbeiten" ist die kleine Lösung desselben
+- **`?sourceUrl=` um wiederholtes Abrufen erweitern** — hätte bestehenden Links
+  ungefragt Requests verpasst und D23 seine klare Semantik gekostet.
+- **Das Pad als `<iframe>` einbetten** (aufgeschoben, nicht verworfen). Ob der
+  Server das überhaupt zulässt, ist **nachgemessen**: `pad.hostsharing.net`
+  sendet **kein** `X-Frame-Options` und keine CSP mit `frame-ancestors`, und im
+  Versuch hat das Pad in einem fremdstämmigen Rahmen seine inneren Editorframes
+  aufgebaut (`contentWindow.length === 2`, das sind `ace_outer`/`ace_inner`),
+  samt Werkzeugleiste, heiler Einrückung und lebender Socket-Verbindung
+  (Anwesenden-Zähler). Technisch geht es also.
+
+  Zwei Preise. Erstens **`Set-Cookie: token=…; SameSite=Lax`**: Dieses Cookie ist
+  Etherpads Autoren-Identität und wird in einem fremdstämmigen Rahmen **nicht
+  mitgesendet** (Safari blockt Dritt-Cookies grundsätzlich, Chrome je nach
+  Einstellung). Bearbeiten geht, aber man ist bei jedem Laden ein neuer Autor —
+  Name und Farbe halten nicht. Reparieren lässt sich das nur serverseitig
+  (`cookie.sameSite: "None"` in Etherpads `settings.json`), nicht in Werkbaum.
+  Zweitens: Einbetten heißt das **Textpanel ersetzen**, und damit fallen **beide**
+  Richtungen von D25 weg — kein Alt+Klick → Zeile, keine Cursor-Zeile → Knoten,
+  weil ein cross-origin-iframe keinen DOM-Zugriff erlaubt. Bei 75 Knoten ist das
+  die Orientierung.
+
+  Der Ausweg, der sich beim Messen zeigte: das schreibgeschützte Textfeld
+  **behalten** und das Pad daneben stellen. Dann bleibt der Spiegel die Fläche
+  zum Hinschauen (Alt+Klick und Cursor-Synchronisierung arbeiten auf unserem
+  eigenen `<textarea>`), das Pad ist die Fläche zum Schreiben. Preis ist
+  Bildschirmfläche; auf kleinem Bildschirm (D17) sind es dann drei Bereiche.
+  Der Knopf „im Pad bearbeiten" ist bis dahin die kleine Lösung desselben
   Bedürfnisses; das Einbetten bleibt möglich, weil die Pad-URL vorliegt.
 - **Echter Etherpad-Client** (socket.io + Easysync-Changesets): Rettet D25 und
   erlaubt Schreiben aus Werkbaum heraus, kostet aber zwei **Laufzeit**-
