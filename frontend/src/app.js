@@ -3,6 +3,7 @@ import { parse } from './parser.js';
 import { computeCheapSet, freshProdSet } from './model.js';
 import { esc, renderTreeHtml } from './render.js';
 import { formatWarning } from './warnings.js';
+import { padUrls } from './remote.js';
 /* Werkbaum, mit Werkbaum geplant — als mitgeliefertes Dokument „Werkbank" (D27).
    Dieselbe Datei, die auch per ?sourceUrl= geladen werden kann; `?raw` bettet
    sie beim Build in die eine Ausgabedatei ein (D19), es wird nichts nachgeladen
@@ -891,6 +892,8 @@ const I18N = {
     legendTooltip:"Legende ein-/ausblenden",
     ghostTooltip:"Ab Größe M sollte ein Element weiter untergliedert werden.",
     jumpHint:"Alt+Klick: zur Zeile im Text",
+    padReadonly:"Wird im Pad bearbeitet — hier nur lesen.",
+    padEdit:"Pad zum Bearbeiten öffnen",
     riskTooltip:"High Risk – Aufwand noch unklar.",
     discardedTooltip:"Verworfene Knoten samt Teilbaum ein-/ausblenden",
     cheapTooltip:"Günstigsten Pfad hervorheben – nicht benötigte Alternativen treten zurück",
@@ -943,6 +946,8 @@ const I18N = {
     legendTooltip:"Show/hide legend",
     ghostTooltip:"From size M upward, an item should be broken down further.",
     jumpHint:"Alt+click: jump to the line in the text",
+    padReadonly:"Edited in the pad — read-only here.",
+    padEdit:"Open the pad to edit",
     riskTooltip:"High risk – effort still unclear.",
     discardedTooltip:"Show/hide discarded nodes and their subtree",
     cheapTooltip:"Highlight the cheapest path – unneeded alternatives recede",
@@ -995,6 +1000,8 @@ const I18N = {
     legendTooltip:"Mostrar u ocultar la leyenda",
     ghostTooltip:"A partir de la talla M, un elemento debería desglosarse más.",
     jumpHint:"Alt+clic: ir a la línea en el texto",
+    padReadonly:"Se edita en el pad — aquí solo lectura.",
+    padEdit:"Abrir el pad para editar",
     riskTooltip:"Alto riesgo – esfuerzo aún incierto.",
     discardedTooltip:"Mostrar u ocultar los nodos descartados y su subárbol",
     cheapTooltip:"Resaltar la ruta más económica: las alternativas no necesarias se atenúan",
@@ -1047,6 +1054,8 @@ const I18N = {
     legendTooltip:"Afficher/masquer la légende",
     ghostTooltip:"À partir de la taille M, un élément devrait être décomposé davantage.",
     jumpHint:"Alt+clic : aller à la ligne dans le texte",
+    padReadonly:"Modifié dans le pad — lecture seule ici.",
+    padEdit:"Ouvrir le pad pour modifier",
     riskTooltip:"Risque élevé – effort encore incertain.",
     discardedTooltip:"Afficher/masquer les nœuds abandonnés et leur sous-arbre",
     cheapTooltip:"Mettre en évidence le chemin le moins coûteux – les alternatives inutiles s'estompent",
@@ -1099,6 +1108,8 @@ const I18N = {
     legendTooltip:"Pokaż/ukryj legendę",
     ghostTooltip:"Od rozmiaru M element powinien być dalej podzielony.",
     jumpHint:"Alt+kliknięcie: przejdź do wiersza w tekście",
+    padReadonly:"Edytowane w padzie — tu tylko do czytania.",
+    padEdit:"Otwórz pad do edycji",
     riskTooltip:"Wysokie ryzyko – nakład jeszcze niejasny.",
     discardedTooltip:"Pokaż/ukryj odrzucone węzły wraz z poddrzewem",
     cheapTooltip:"Wyróżnij najtańszą ścieżkę – niepotrzebne alternatywy są przygaszone",
@@ -1151,6 +1162,8 @@ const I18N = {
     legendTooltip:"Показать/скрыть легенду",
     ghostTooltip:"Начиная с размера M элемент следует далее декомпозировать.",
     jumpHint:"Alt+клик: перейти к строке в тексте",
+    padReadonly:"Редактируется в паде — здесь только чтение.",
+    padEdit:"Открыть пад для редактирования",
     riskTooltip:"Высокий риск – оценка ещё не ясна.",
     discardedTooltip:"Показать/скрыть отклонённые узлы вместе с поддеревом",
     cheapTooltip:"Выделить самый дешёвый путь — ненужные альтернативы приглушаются",
@@ -1203,6 +1216,8 @@ const I18N = {
     legendTooltip:"लेजेंड दिखाएँ/छिपाएँ",
     ghostTooltip:"आकार M से ऊपर किसी तत्व को और अधिक उप-विभाजित करना चाहिए।",
     jumpHint:"Alt+क्लिक: टेक्स्ट में उस पंक्ति पर जाएँ",
+    padReadonly:"पैड में संपादित होता है — यहाँ केवल पढ़ें।",
+    padEdit:"संपादित करने के लिए पैड खोलें",
     riskTooltip:"उच्च जोखिम – प्रयास अभी अस्पष्ट।",
     discardedTooltip:"अस्वीकृत नोड्स और उनके उप-वृक्ष दिखाएँ/छिपाएँ",
     cheapTooltip:"सबसे किफ़ायती पथ को उजागर करें – अनावश्यक विकल्प मंद हो जाते हैं",
@@ -1260,6 +1275,8 @@ const I18N = {
     implicitSizeTooltip:"未指定尺寸——成本估算时按 M 计",
     ghostTooltip:"从 M 号起，元素应进一步细分。",
     jumpHint:"Alt+点击：跳转到文本中的该行",
+    padReadonly:"在 Pad 中编辑 — 此处只读。",
+    padEdit:"打开 Pad 进行编辑",
     riskTooltip:"高风险 – 工作量尚不明确。",
     editorTitle:"结构（文本）", diagramTitle:"图表",
     docSwitchTooltip:"选择或管理文档", docMenuAria:"文档",
@@ -1312,6 +1329,8 @@ const I18N = {
     implicitSizeTooltip:"サイズ未指定 – コスト見積もりのため M として扱う",
     ghostTooltip:"サイズ M 以上の要素はさらに分解すべきです。",
     jumpHint:"Alt+クリック：テキストの該当行へ移動",
+    padReadonly:"パッドで編集します — ここでは読み取り専用です。",
+    padEdit:"編集するにはパッドを開く",
     riskTooltip:"高リスク – 規模はまだ不明。",
     editorTitle:"構造（テキスト）", diagramTitle:"ダイアグラム",
     docSwitchTooltip:"ドキュメントを選択・管理", docMenuAria:"ドキュメント",
@@ -1638,6 +1657,7 @@ function updateDocName(){
       ? d.source + '\n' + t('docSwitchTooltip')
       : t('docSwitchTooltip');
   }
+  updatePadLink();   /* Schreibschutz + Pad-Knopf hängen am aktiven Dokument (D31) */
 }
 let renamingId = null;   /* id des gerade inline umbenannten Dokuments (oder null) */
 function renderDocMenu(){
@@ -1780,56 +1800,161 @@ function initDocs(){
   render();
 }
 
-/* ---------- ?sourceUrl= — Notationstext von einer URL laden (D23) ----------
-   Die Datei wird geholt und als eigenes Dokument geführt, dessen Name die URL
-   ist. Die id leitet sich aus der URL ab: derselbe Link aktualisiert dieses
+/* ---------- Text von außen: ?sourceUrl= (D23) und ?etherpad= (D31) ----------
+   Beide holen einen Notationstext über http(s) und führen ihn als eigenes
+   Dokument. Die id leitet sich aus der URL ab: derselbe Link aktualisiert dieses
    Dokument, statt bei jedem Aufruf ein neues anzulegen. Eigene Dokumente des
    Nutzers bleiben unberührt. Scheitert das Laden (häufigster Fall: das Ziel
    sendet keinen CORS-Header), bleibt der bisherige Stand stehen und es
-   erscheint eine Warnung. */
+   erscheint eine Warnung.
+
+   Unterschied: `sourceUrl` ist eine statische Datei, einmal pro Laden geholt
+   (D23, unverändert). `etherpad` ist ein lebendes Pad — wiederholt geholt und
+   hier schreibgeschützt, weil das Zusammenführen gleichzeitiger Änderungen
+   Etherpads Aufgabe ist. Ein Fetch-Pfad, zwei Eingänge. */
 const SOURCE_PARAM = 'sourceUrl';
-function sourceUrlParam(){
-  try{ return new URLSearchParams(location.search).get(SOURCE_PARAM); }catch(_){ return null; }
+const ETHERPAD_PARAM = 'etherpad';
+const PAD_POLL_MS = 2500;
+function urlParam(name){
+  try{ return new URLSearchParams(location.search).get(name); }catch(_){ return null; }
 }
-async function loadFromSourceUrl(){
+function sourceUrlParam(){ return urlParam(SOURCE_PARAM); }
+
+/* Woher kommt der Text? null = kein Parameter, {bad,error} = unbrauchbare
+   Angabe, sonst der Beschreiber für loadRemoteSource(). Die Normalisierung der
+   Pad-Adresse steht headless in remote.js — dort auch ihre Begründung. */
+function remoteSource(){
+  const padRaw = urlParam(ETHERPAD_PARAM);
+  if(padRaw){
+    const p = padUrls(padRaw, location.href);
+    if(!p) return {bad: padRaw, error: 'not an Etherpad URL'};
+    return {fetchUrl: p.text, id: 'url:' + p.pad, name: p.pad, source: p.pad, live: true};
+  }
   const raw = sourceUrlParam();
-  if(!raw) return;
+  if(!raw) return null;
   let url;
   /* Relative Angaben gegen die Seite auflösen; nur http(s) zulassen (kein
      file:/data:/javascript: — die Notation selbst erlaubt ohnehin nur http(s)). */
-  try{ url = new URL(raw, location.href); }catch(_){
-    /* Fehlerdetail bewusst technisch/englisch wie die Browser-Meldungen
-       („Failed to fetch", „HTTP 404") — der Rahmentext ist lokalisiert. */
-    sourceWarning = {type:'sourceLoad', url: raw, error: 'invalid URL'};
-    render();
-    return;
-  }
-  if(url.protocol !== 'http:' && url.protocol !== 'https:'){
-    sourceWarning = {type:'sourceLoad', url: url.href, error: url.protocol};
+  /* Fehlerdetail bewusst technisch/englisch wie die Browser-Meldungen
+     („Failed to fetch", „HTTP 404") — der Rahmentext ist lokalisiert. */
+  try{ url = new URL(raw, location.href); }catch(_){ return {bad: raw, error: 'invalid URL'}; }
+  if(url.protocol !== 'http:' && url.protocol !== 'https:') return {bad: url.href, error: url.protocol};
+  return {fetchUrl: url.href, id: 'url:' + url.href, name: url.href, source: url.href, live: false};
+}
+
+/* `timeoutMs` nur beim Pad-Takt (D31): Hängt die Gegenseite, muss der Abruf
+   abbrechen, sonst bliebe der Riegel `padBusy` für immer zu und es käme nie
+   wieder etwas. Der erste Ladeversuch wartet unbegrenzt wie bisher (D23). */
+async function fetchRemote(url, timeoutMs){
+  const ctl = timeoutMs ? new AbortController() : null;
+  const timer = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null;
+  try{
+    const resp = await fetch(url, {cache:'no-store', credentials:'omit',
+                                   signal: ctl ? ctl.signal : undefined});
+    if(!resp.ok) throw new Error('HTTP ' + resp.status);
+    return await resp.text();
+  } finally { if(timer) clearTimeout(timer); }
+}
+async function loadRemoteSource(){
+  const s = remoteSource();
+  if(!s) return;
+  if(s.bad !== undefined){
+    sourceWarning = {type:'sourceLoad', url: s.bad, error: s.error};
     render();
     return;
   }
   try{
-    const resp = await fetch(url.href, {cache:'no-store', credentials:'omit'});
-    if(!resp.ok) throw new Error('HTTP ' + resp.status);
-    const text = await resp.text();
-    const id = 'url:' + url.href;
+    const text = await fetchRemote(s.fetchUrl);
     flushActive();                     /* laufende Bearbeitung nicht verlieren */
-    let d = docs.find(x => x.id === id);
-    if(d){ d.text = text; d.name = url.href; }
-    else { d = {id, name: url.href, text, source: url.href}; docs.push(d); }
-    d.source = url.href;
-    activeId = id;
+    let d = docs.find(x => x.id === s.id);
+    if(d){ d.text = text; d.name = s.name; }
+    else { d = {id: s.id, name: s.name, text}; docs.push(d); }
+    d.source = s.source;
+    activeId = s.id;
     sourceWarning = null;
-    computeFresh(id, text);   /* was ist seit dem letzten Ansehen in Produktion? (D28) */
+    if(s.live) padSource = s;   /* vor loadActiveIntoEditor: setzt den Schreibschutz */
+    computeFresh(s.id, text);   /* was ist seit dem letzten Ansehen in Produktion? (D28) */
     loadActiveIntoEditor();
     persistDocs();
+    if(s.live) startPadPolling();
   }catch(err){
     /* CORS-Fehler melden sich als „TypeError: Failed to fetch" ohne Details —
        der Warntext nennt CORS daher ausdrücklich als wahrscheinliche Ursache. */
-    sourceWarning = {type:'sourceLoad', url: url.href, error: (err && err.message) || String(err)};
+    sourceWarning = {type:'sourceLoad', url: s.fetchUrl, error: (err && err.message) || String(err)};
     render();
   }
+}
+
+/* ---------- Pad: regelmäßig neu holen (D31) ----------
+   Stumm bei Fehlschlägen — der erste Ladeversuch hat bereits gewarnt, ein
+   Netzaussetzer soll den Warnbereich nicht fluten. Nicht abrufen, solange der
+   Tab im Hintergrund liegt: der Export rendert jedes Mal das ganze Pad, und die
+   Gegenseite ist fremde Infrastruktur. */
+const PAD_FETCH_TIMEOUT_MS = 10000;
+let padSource = null;    /* Beschreiber der aktiven Pad-Quelle, oder null */
+let padTimer = null;
+let padPending = null;   /* geholter, noch nicht übernommener Text (Stabilitätstakt) */
+let padBusy = false;     /* höchstens ein Abruf unterwegs (siehe pollPad) */
+function startPadPolling(){
+  if(padTimer) clearInterval(padTimer);
+  padTimer = setInterval(pollPad, PAD_POLL_MS);
+}
+/* Bei Rückkehr in den sichtbaren Zustand sofort holen: nach einer langen Pause
+   stünde sonst bis zum nächsten Takt ein veralteter Stand da. */
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && padSource) pollPad();
+});
+async function pollPad(){
+  const s = padSource;
+  /* `padBusy`: höchstens ein Abruf unterwegs. Ist die Gegenseite langsamer als
+     der Takt, stapelten sich sonst die Anfragen — und eine spät eintreffende
+     alte Antwort überschriebe neueren Text (im Netzwerk-Mitschnitt beobachtet). */
+  if(!s || padBusy || document.visibilityState === 'hidden') return;
+  const d = docs.find(x => x.id === s.id);
+  if(!d) return;                       /* Dokument gelöscht — nichts nachtragen */
+  let text;
+  padBusy = true;
+  try{ text = await fetchRemote(s.fetchUrl, PAD_FETCH_TIMEOUT_MS); }
+  catch(_){ return; }                  /* stumm; `finally` gibt den Riegel frei */
+  finally{ padBusy = false; }
+  if(text === d.text){ padPending = null; return; }
+  /* Stabilitätstakt: erst übernehmen, wenn zwei Abrufe hintereinander denselben
+     neuen Text liefern. Sonst sieht man die anderen mitten im Tippen, und eine
+     halb geschriebene Zeile ist eine kaputte Zeile — Diagramm und Warnungen
+     flackerten. Kostet im Mittel einen Takt. */
+  if(padPending !== text){ padPending = text; return; }
+  padPending = null;
+  d.text = text;
+  persistDocs();
+  if(activeId !== d.id) return;        /* im Hintergrund still aktualisiert */
+  /* Auswahl und Scrollstand erhalten — der Sprung aus dem Diagramm (D25) und
+     die Cursor-Zeile sollen einen Abruf überleben. */
+  const top = src.scrollTop, a = src.selectionStart, b = src.selectionEnd;
+  src.value = text;
+  try{ src.setSelectionRange(a, b); }catch(_){}
+  src.scrollTop = top;
+  computeFresh(d.id, text);            /* Basis bleibt die zuletzt bestätigte Fassung */
+  render();
+  updateFreshBtn();
+}
+
+/* Ein Pad-Dokument wird im Pad bearbeitet, nicht hier (D31): Textfeld
+   schreibgeschützt, Knopf in der Titelzeile öffnet das Pad im neuen Tab. Ohne
+   den Schutz verschwände getippter Text beim nächsten Abruf. */
+const padLink = document.getElementById('padLink');
+function updatePadLink(){
+  const d = activeDoc();
+  const isPad = !!(d && padSource && d.id === padSource.id);
+  src.readOnly = isPad;
+  src.classList.toggle('readonly', isPad);
+  if(isPad) src.title = t('padReadonly'); else src.removeAttribute('title');
+  if(!padLink) return;
+  padLink.hidden = !isPad;
+  if(!isPad) return;
+  padLink.href = padSource.source;
+  const tip = t('padEdit');
+  padLink.title = tip;
+  padLink.setAttribute('aria-label', tip);
 }
 docTrigger.addEventListener('click', e => {
   /* Desktop: ist der Editor minimiert, stellt ein Klick ihn wieder her
@@ -1995,7 +2120,7 @@ try{ startLang = localStorage.getItem('werkbaum-lang') || detectLang(); }catch(_
 applyLang(I18N[startLang] ? startLang : 'de');   /* setzt Texte + rendert */
 initDocs();      /* Dokumente laden + aktiven Text in den Editor (nach Sprache) */
 applyMobile();   /* Mobil-Verhalten (nach Sprache/Restore) anwenden */
-loadFromSourceUrl();   /* ?sourceUrl= nachladen (asynchron, D23) */
+loadRemoteSource();    /* ?sourceUrl= / ?etherpad= nachladen (asynchron, D23/D31) */
 
 /* ---------- Build-Hinweis (Vorschau/Dev + „latest build") ----------
    Kennzeichnet einen nicht-produktiven Build mit einem kleinen Symbol samt

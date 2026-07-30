@@ -276,6 +276,37 @@ Scheitert das Laden (häufigster Fall: das Ziel sendet keinen
 `Access-Control-Allow-Origin`-Header, außerdem 404/Netzfehler), bleibt der
 bisherige Stand stehen und es erscheint eine **Warnung**. Siehe D23.
 
+### Gemeinsam an einem Pad arbeiten (`?etherpad=`)
+Für Zusammenarbeit in Echtzeit nimmt der Editor die Adresse eines
+**Etherpad-Pads** — die Adresse, die im Browser steht, ohne Export-Pfad:
+`…?etherpad=https://pad.example.org/p/mein-plan`. Werkbaum hängt den
+Klartext-Export (`/export/txt`) selbst an; ein versehentlich mitgegebener
+Export- oder `/timeslider`-Pfad wird abgeschnitten.
+
+- **Das Pad ist die Schreibfläche, Werkbaum die Ansicht.** Alle bearbeiten den
+  Notationstext im Pad, jeder Betrachter sieht das Diagramm mitwachsen. Das
+  Zusammenführen gleichzeitiger Änderungen macht Etherpad; Werkbaum tut es
+  nicht.
+- Deshalb ist das Textfeld für ein solches Dokument **schreibgeschützt** — ein
+  Knopf in der Editor-Titelzeile öffnet das Pad im neuen Tab. Ohne den Schutz
+  verschwände getippter Text beim nächsten Abruf.
+- Geholt wird **regelmäßig** (Voreinstellung 2,5 s; nicht, solange der Tab im
+  Hintergrund liegt). Übernommen wird eine Änderung erst, wenn zwei Abrufe
+  hintereinander **denselben** neuen Text liefern — sonst sähe man die anderen
+  mitten im Tippen, und halb geschriebene Zeilen ließen Diagramm und Warnungen
+  flackern.
+- **Name ist die vollständige Pad-URL** (nicht der bloße Pad-Name — zwei Pads
+  gleichen Namens auf verschiedenen Hosts wären sonst nicht zu unterscheiden),
+  wie bei `?sourceUrl=`. Identität und Name leiten sich von der **Pad**-Adresse
+  ab, nicht von der Export-Adresse — derselbe Pad ergibt damit genau ein
+  Dokument, gleich in welcher Schreibweise der Link kam.
+- `?sourceUrl=` bleibt unverändert: statische Datei, einmal pro Laden geholt.
+  Der eigene Parameter trägt gerade den Unterschied.
+- Fehler (CORS, 404, Netz) melden sich wie bei `?sourceUrl=`; ein einzelner
+  Aussetzer beim Abrufen bleibt stumm und lässt den letzten Stand stehen.
+
+Siehe D31.
+
 ### Legende im Editor-Panel
 Neben dem Textfeld steht eine aufklappbare **Legende** (Notation in Kurzform,
 abschließend eine Bedienungs-Zeile). Sie ist **scrollbar**, wenn ihr Inhalt
@@ -287,7 +318,8 @@ Ausrichtungen getrennt erhalten. Die Legende belegt höchstens 85 % des Panels,
 damit das Textfeld nie ganz verschwindet. Siehe D26.
 
 ### Was ist neu? (Dokumente von außen)
-Bei Dokumenten, die von außen kommen (mitgeliefert oder per `?sourceUrl=`), wird
+Bei Dokumenten, die von außen kommen (mitgeliefert, per `?sourceUrl=` oder
+`?etherpad=`), wird
 gezeigt, was sich seit dem letzten Besuch getan hat. **„Neu" heißt: neu in
 Produktion** — ein Knoten trägt jetzt `[^]` und tat es in der zuletzt gesehenen
 Fassung nicht. Solche Knoten bekommen einen **gelben Strahlenkranz** nach außen

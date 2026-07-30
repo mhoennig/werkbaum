@@ -979,3 +979,108 @@ einem absichtlich ausgeweiteten `sed` in einem Wegwerf-Worktree.
 bleibt eine bewusste Handlung. `deploy-prod.sh` warnt stattdessen, wenn HEAD
 noch nicht auf `origin` liegt: der Footer-Versionslink zeigt sonst auf einen
 Commit, den GitHub nicht kennt.
+
+## D31 — Echtzeit-Zusammenarbeit über ein Etherpad, eigener Parameter `?etherpad=`
+Werkbaum hat kein Backend (D13 ist Plan, nicht Bestand), und der Plan setzt
+Zusammenarbeit als `[?] Live editing, several people at once (XL)` an — mit
+`[!] Merging simultaneous edits (L)` als der eigentlichen Arbeit. Genau diese
+Arbeit ist in Etherpad seit Jahren getan. Also wird sie geliehen statt
+nachgebaut: **Das Pad ist die Schreibfläche, Werkbaum die Ansicht.**
+
+**Das Fundament war schon da.** Etherpad liefert pro Pad einen Klartext-Export
+(`/p/<pad>/export/txt`), und `?sourceUrl=` (D23) lädt jede Textdatei über
+http(s), ohne Endung oder `Content-Type` zu prüfen (D24). Nachgemessen an
+`pad.hostsharing.net`:
+
+- `Access-Control-Allow-Origin: *` und `Content-Type: text/plain; charset=utf-8`
+  — die eigentliche Hürde aus D23 (CORS) fällt also weg;
+- das kanonische Beispiel aus SPEC §10 kommt **byte-identisch** zurück
+  (führende Leerzeichen, `-`/`+`/`|`, Statusboxen, `%%`, UTF-8);
+- der HTML-Export zeigt **kein** Listen-Markup: Etherpad speichert die
+  Einrückung als echte Leerzeichen und deutet das `-` nicht zur Aufzählung um.
+  Das war das Risiko, das die Idee hätte erledigen können.
+
+(Gemessen wurde Import → Speicher → Export. Das *Tippen* im Etherpad-Editor —
+Tab-Einrückung, mögliches Auto-Bullet — ist damit **nicht** geprüft; dafür
+braucht es einen echten Browser. Vgl. die Lehre aus D25: synthetische Ereignisse
+beweisen nur die eigene Logik.)
+
+**Eigener Parameter statt `?sourceUrl=`.** Drei Gründe, der erste ist der
+schwächste:
+
+1. Die URL, die ein Mensch in der Hand hat, ist die **Pad**-URL — die aus der
+   Adresszeile. `/export/txt` ist eine Implementierungseinzelheit und gehört
+   nicht in die Schnittstelle; Werkbaum hängt sie selbst an.
+2. Der Parameter **lizenziert anderes Verhalten**. `sourceUrl` heißt „statische
+   Datei, einmal pro Laden geholt" — das ist D23 wörtlich und bleibt
+   unangetastet. `etherpad` heißt „lebendes Pad", und daran hängt das
+   regelmäßige Abrufen. Ohne die Trennung müsste D23 seine Semantik ändern und
+   bestehende Links bekämen ungefragt Polling.
+3. Die **Pad**-URL ist mehr wert als die Export-URL: nur mit ihr sind der
+   „im Pad bearbeiten"-Knopf und ein späteres Einbetten (siehe unten) ohne
+   weiteren Parameter erreichbar, und Identität/Name des Dokuments werden aus
+   ihr gebildet — derselbe Pad ergibt so genau **ein** Dokument, auch wenn
+   jemand versehentlich die Export-URL einträgt (sie wird normalisiert).
+
+**Der Dokumentname ist die vollständige Pad-URL**, nicht der bloße Pad-Name.
+Kurz wäre schöner (`mein-plan` statt 45 Zeichen in einer schmalen Titelzeile),
+aber Pad-Namen sind nur **pro Instanz** eindeutig, nicht global: zwei Hosts mit
+je einem Pad `plan` ergäben zwei gleichnamige Dokumente im Wähler, ohne
+Möglichkeit sie zu unterscheiden. Damit gilt dieselbe Regel wie in D23 — und der
+Ellipsen-Schnitt in der Titelzeile samt vollständiger URL im Tooltip ist dafür
+schon eingerichtet.
+
+Der Name `?etherpad=` statt des neutraleren `?pad=`: Das Anhängen von
+`/export/txt` **ist** produktspezifisch. Das ehrlich zu benennen ist besser, als
+Allgemeinheit vorzutäuschen, die beim nächsten Werkzeug (HedgeDoc, CryptPad —
+andere Export-Pfade) doch einen Typ-Diskriminator bräuchte.
+
+**Das Textfeld ist schreibgeschützt.** Ohne das verschwände getippter Text beim
+nächsten Abruf — Datenverlust, und zwar überraschend, weil nichts darauf
+hindeutet. Der Schutz ist zugleich die ehrliche Aussage: Werkbaum kann
+gleichzeitige Änderungen nicht zusammenführen, das Pad kann es. Deshalb
+erscheint in der Editor-Titelzeile ein Knopf, der das Pad im neuen Tab öffnet
+(nur bei solchen Dokumenten sichtbar).
+
+**Stabilitäts-Verzögerung statt rohem Polling.** Beim Abrufen sieht man die
+anderen mitten im Tippen; eine halb geschriebene Zeile ist eine kaputte Zeile,
+das Diagramm zuckt und die Warnungen flackern. Übernommen wird ein neuer Text
+deshalb erst, wenn **zwei** Abrufe hintereinander denselben liefern. Das kostet
+im Mittel einen Takt Verzögerung und macht die Ansicht ruhig. Bei `?sourceUrl=`
+gibt es das Problem nicht (man lädt bewusst neu) — es ist also spezifisch für
+diesen Parameter, wie das Polling selbst.
+
+Getaktet wird mit 2,5 s und **nicht**, solange der Tab im Hintergrund liegt: Der
+Export rendert bei jedem Abruf das ganze Pad, und die Gegenseite ist fremde
+Infrastruktur. Ein Fehlschlag beim Abrufen bleibt **stumm** und lässt den
+letzten Stand stehen (nur der erste Ladeversuch warnt) — sonst flutete ein
+Netzaussetzer den Warnbereich.
+
+**Verhältnis zu D20 („keine externen Requests").** Unverändert wie bei D23: Die
+App lädt von sich aus nichts; der Request entsteht nur, weil der Nutzer eine
+URL angibt, und geht nur an genau diesen Host (`credentials:'omit'`, nur
+`http`/`https`). Neu und ausdrücklich zu benennen ist die andere Richtung:
+**Der Plantext liegt jetzt auf fremder Infrastruktur**, und ein Pad ist für
+jeden lesbar, der die Adresse kennt. Das ist bei einem Projektplan etwas
+anderes als bei einer Schriftart. Es bleibt die Entscheidung dessen, der den
+Link baut — Werkbaum legt von sich aus kein Pad an.
+
+**Verworfene und aufgeschobene Alternativen:**
+- **`?sourceUrl=` um Polling erweitern** — hätte bestehenden Links ungefragt
+  wiederholte Requests verpasst und D23 seine klare Semantik gekostet.
+- **Das Pad als `<iframe>` einbetten** (aufgeschoben, nicht verworfen): Bringt
+  Cursor, Namen, Farben und Chat mit. Kostet aber **beide** Richtungen von D25
+  — in einem cross-origin-iframe gibt es keinen DOM-Zugriff, also kein
+  Alt+Klick → Zeile und keine Cursor-Zeile → Knoten. Bei 75 Knoten ist das die
+  Orientierung. Der Knopf „im Pad bearbeiten" ist die kleine Lösung desselben
+  Bedürfnisses; das Einbetten bleibt möglich, weil die Pad-URL vorliegt.
+- **Echter Etherpad-Client** (socket.io + Easysync-Changesets): Rettet D25 und
+  erlaubt Schreiben aus Werkbaum heraus, kostet aber zwei **Laufzeit**-
+  Abhängigkeiten und damit „eine self-contained Datei ohne
+  Laufzeit-Abhängigkeiten" (D11/D19/D20) — und die Diff-Hälfte müsste man
+  selbst schreiben. Das ist der XL-Knoten aus dem Plan, nur mit fremdem
+  Protokoll statt fremdem CRDT. Wenn, dann zusammen mit dem eigenen Backend
+  (D13) und dann besser mit einem Text-CRDT, wie der Plan es vorsieht.
+- **Etherpads HTTP-API** (`/api/1/getText?apikey=…`) — der API-Schlüssel ist ein
+  Administrationsschlüssel für **alle** Pads der Instanz und hat in einer
+  Client-Anwendung nichts zu suchen. Der Export-Endpunkt braucht ihn nicht.

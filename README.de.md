@@ -91,6 +91,32 @@ GitLab-Raw-Links tun das; ein beliebiger Webserver oft nicht. Scheitert das
 Laden, bleibt der bisherige Stand stehen und eine Warnung nennt die Ursache.
 Zugelassen sind nur `http`/`https`.
 
+### Zusammen an einem Plan arbeiten (Etherpad)
+
+Für Zusammenarbeit in Echtzeit braucht Werkbaum kein eigenes Backend — es leiht
+sich ein **Etherpad**. Angegeben wird die Pad-Adresse, wie sie im Browser steht
+(ohne Export-Pfad, den hängt Werkbaum selbst an):
+
+```
+https://werkbaum.javagil.de/?etherpad=https://pad.hostsharing.net/p/mein-plan
+```
+
+Alle bearbeiten den Notationstext **im Pad**, jeder Betrachter sieht das Diagramm
+mitwachsen (Abruf alle 2,5 s; nicht, während der Tab im Hintergrund liegt). Das
+Zusammenführen gleichzeitiger Änderungen macht Etherpad — genau darum geht es.
+
+Weil das Pad die Schreibfläche ist, ist das Textfeld hier **schreibgeschützt**;
+ein Knopf in der Editor-Titelzeile öffnet das Pad im neuen Tab. Ohne den Schutz
+verschwände getippter Text beim nächsten Abruf.
+
+Getestet gegen Etherpad: Der Klartext-Export sendet
+`Access-Control-Allow-Origin: *`, und die Notation kommt **byte-identisch**
+zurück — führende Leerzeichen, `-`/`+`/`|`, Statusboxen und `%%` überleben
+Etherpads Speichermodell, das `-` wird nicht zur Aufzählung umgedeutet.
+
+**Bedenke:** Der Plantext liegt damit auf fremder Infrastruktur, und ein Pad ist
+für jeden lesbar, der die Adresse kennt. Siehe `docs/DECISIONS.md` D31.
+
 ### Lokal ausführen
 
 Die Editor-Quelle liegt jetzt als ES-Module unter `frontend/src/`, gebündelt mit

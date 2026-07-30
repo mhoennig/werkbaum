@@ -329,6 +329,10 @@
   .copybtn .ic-done{display:none}
   .copybtn.done .ic-copy{display:none}
   .copybtn.done .ic-done{display:block}
+  /* „im Pad bearbeiten" (D31) — nur bei einem ?etherpad=-Dokument sichtbar.
+     Das [hidden] braucht die eigene Regel, weil .copybtn ein display setzt. */
+  .padlink{text-decoration:none}
+  .padlink[hidden]{display:none}
   .dlbtn{gap:3px}
   .dl-label{font-family:'IBM Plex Mono',monospace;font-size:.62rem;font-weight:600;letter-spacing:.02em}
   /* Download-Gruppe: Desktop zeigt SVG/PNG inline, der Trigger ist versteckt.
@@ -398,6 +402,11 @@
     color:var(--ink);background:var(--card);
     tab-size:2;
   }
+  /* Pad-Dokument (D31): hier nur lesen, geschrieben wird im Pad. Abgesetzt über
+     den Hintergrund, damit der Schreibschutz nicht als hängendes Textfeld
+     erscheint — die Schrift bleibt aber Tinte: hier wird gelesen, der Plantext
+     ist der Hauptinhalt und kein ausgegrautes Formularfeld. */
+  textarea.readonly{background:#F1F4F7;cursor:default}
   .hint{
     padding:12px 16px;border-top:1px dashed rgba(36,52,71,.18);
     font-size:.8rem;color:var(--muted);line-height:1.7;

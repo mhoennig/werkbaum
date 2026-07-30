@@ -86,6 +86,32 @@ http(s) regardless of extension or content type.
 do; an arbitrary web server often does not. If loading fails the previous
 content stays and a warning explains why. Only `http`/`https` are allowed.
 
+### Working on one plan together (Etherpad)
+
+For real-time collaboration Werkbaum needs no backend of its own — it borrows an
+**Etherpad**. Pass the pad address as it appears in your browser (no export path,
+Werkbaum appends that itself):
+
+```
+https://werkbaum.javagil.de/?etherpad=https://pad.hostsharing.net/p/my-plan
+```
+
+Everyone edits the notation text **in the pad**, and every viewer watches the
+diagram grow (fetched every 2.5 s; not while the tab is in the background).
+Merging simultaneous edits is Etherpad's job — that is the whole point.
+
+Because the pad is the writing surface, the text area here is **read-only**; a
+button in the editor title bar opens the pad in a new tab. Without that
+protection, anything you typed would vanish on the next fetch.
+
+Verified against Etherpad: the plain-text export sends
+`Access-Control-Allow-Origin: *`, and the notation comes back **byte-identical** —
+leading spaces, `-`/`+`/`|`, status boxes and `%%` survive Etherpad's storage
+model, and `-` is not turned into a bullet list.
+
+**Be aware:** your plan text then lives on third-party infrastructure, and a pad
+is readable by anyone who knows its address. See `docs/DECISIONS.md` D31.
+
 ### Running it locally
 
 The editor source now lives as ES modules under `frontend/src/`, bundled by

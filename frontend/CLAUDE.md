@@ -135,6 +135,26 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Endung `.werkbaum` ist reine Konvention (D24, SPEC §12). Beispieldateien zum
   Ausprobieren: `docs/examples/*.werkbaum` (nacheinander geöffnet ergeben sie
   mehrere Dokumente im Wähler).
+- `?etherpad=` (D31): `remoteSource()` liefert **einen** Beschreiber für beide
+  Eingänge (`?sourceUrl=` und `?etherpad=`), `loadRemoteSource()` holt und legt
+  das Dokument an — ein Fetch-Pfad, ein Warnkanal. Die Normalisierung der
+  Pad-Adresse steht headless in **`remote.js`** (`padUrls`, Tests in
+  `tests/remote.test.js`): Export-/Timeslider-Pfad, Query, Fragment und
+  Schrägstriche fallen weg, verlangt wird `/p/<name>` am Ende. Name und id sind
+  die **vollständige** Pad-URL (Pad-Namen sind nur pro Instanz eindeutig).
+  `padSource` muss **vor** `loadActiveIntoEditor()` gesetzt werden — daran hängt
+  der Schreibschutz. `pollPad()` hat drei Riegel, jeder aus einem echten Fehler:
+  `padBusy` (höchstens ein Abruf unterwegs — sonst stapeln sich Anfragen und eine
+  spät eintreffende alte Antwort überschreibt neueren Text, im
+  Netzwerk-Mitschnitt beobachtet), `PAD_FETCH_TIMEOUT_MS` (ohne Abbruch bliebe
+  `padBusy` bei hängender Gegenseite für immer zu) und `visibilityState`
+  (+ `visibilitychange`-Handler, der bei Rückkehr sofort holt). Fehlschläge im
+  Takt bleiben **stumm**; nur der erste Ladeversuch warnt. Der Stabilitätstakt
+  (`padPending`) übernimmt erst beim zweiten gleichen Abruf — sonst sieht man die
+  anderen mitten im Tippen. Beim Prüfen im Vorschau-Browser: `visibilityState`
+  ist dort `hidden` (Polling also aus) und HMR lädt bei jeder Quelländerung neu —
+  ein Reload sieht wie eine geglückte Übernahme aus. Marker auf `window` setzen
+  und hinterher prüfen, sonst beweist der Test nichts.
 - Sprung Diagramm ↔ Text (D25): `render.js` schreibt die Parser-Zeilennummer als
   `data-line` an jeden Knoten (Geister-Knoten bekommen keine). `jumpToLine()` in
   `app.js` klappt bei Bedarf das Editor-Panel auf (`revealEditor()`), markiert die
