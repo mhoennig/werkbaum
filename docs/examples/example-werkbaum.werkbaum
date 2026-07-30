@@ -8,7 +8,7 @@
       - [^] T-shirt size and the "decompose from M" rule (S)
       - [^] People tags, bare URLs, %% comments (XS)
     - [^] And/or decomposition (S)
-    - [x] Optional nodes — neither required nor an alternative (S)
+    - [^] Optional nodes — neither required nor an alternative (S)
     - [-] A separate storage format for the structure (L)  %% the text is the format
     - [ ] Ticket references #123 (S)
     - [?] Benefit per node, not only cost (M)
@@ -38,7 +38,7 @@
       - [^] Load a document from ?sourceUrl= (S)
     - [^] Jump between diagram and text (S)
     - [ ] Open and save .werkbaum files (S)
-    + [x] Show what is new since your last visit (S)
+    + [^] Show what is new since your last visit (S)
     + [?] A pastel colour per person (S)
     - [?] Dates and milestones (M)
       | [?] An attribute in the line (S)
@@ -62,13 +62,13 @@
       | [?] Single user, one token (S)
       | [?] Log in with OIDC (L)
   - [~] Working together on one plan (XL)
-    - [x] Watch a shared Etherpad — it merges, we render (S)
-      - [x] Load the pad's plain-text export (XS)
-      - [x] Reload on demand (XS)  %% a timer only trips Etherpad's rate limit
-      - [x] Embed the pad, keep the text mirror beside it (M)
-        - [x] Three views: pad and text, pad only, text only (S)
-        - [x] Splitter between pad and mirror (XS)
-      - [x] A shared pointer: !!! focuses a node for everyone (XS)
+    - [^] Watch a shared Etherpad — it merges, we render (S)
+      - [^] Load the pad's plain-text export (XS)
+      - [^] Reload on demand (XS)  %% a timer only trips Etherpad's rate limit
+      - [^] Embed the pad, keep the text mirror beside it (M)
+        - [^] Three views: pad and text, pad only, text only (S)
+        - [^] Splitter between pad and mirror (XS)
+      - [^] A shared pointer: !!! focuses a node for everyone (XS)
     - [ ] Git as the shared store (L)
       | [ ] A file in a repository, changed by pull request (S)  %% works today, no code
       | [?] The backend commits every change (L)
