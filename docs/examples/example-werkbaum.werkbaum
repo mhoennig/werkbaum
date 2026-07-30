@@ -76,9 +76,8 @@
         | [?] Our own Etherpad beside Werkbaum (M)  %% then every setting below is ours
           - [ ] Node and a real database in userland (S)  %% the flatfile store is not for production
           - [ ] Book the RAM quota for an own daemon (XS)
-          - [!] How the daemon is reached over https (S)  %% Passenger on Apache has no websockets
-            | [ ] Long polling only — Etherpad still works (XS)
-            | [?] Ask for a proxy that passes the upgrade (S)
+          - [ ] Reverse proxy in .htaccess, websockets included (S)  %% Mattermost does it, wiki shows how
+          - [ ] systemd user unit so it survives a reboot (XS)
           - [!] Keeping a public service patched (S)  %% indefinitely, that is the real cost
         | [?] Admin raises the export rate limit (XS)  %% default is 10 per 90 s
         | [?] Admin installs a plugin that pushes the text (S)  %% postMessage to the page
