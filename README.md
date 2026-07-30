@@ -116,8 +116,23 @@ Verified against Etherpad: the plain-text export sends
 leading spaces, `-`/`+`/`|`, status boxes and `%%` survive Etherpad's storage
 model, and `-` is not turned into a bullet list.
 
+The pad can also be **embedded** in the editor panel: a selector in the title bar
+cycles through *pad and text* (split by a draggable divider), *pad only* and *text
+only*. The narrow text mirror keeps its purpose — the jump between diagram and
+text works on it, and in *pad only* a jump brings it back by itself. The frame is
+only loaded while it is visible, because a loaded pad connects and shows you in
+the pad's list of people.
+
+**A shared pointer:** write `!!!` on a line and that node is highlighted and
+scrolled into view — for **everyone** looking at the pad, which is something a
+cursor cannot do. Recognised only as a standalone token, so `Careful!!!` stays an
+ordinary label. It stays in the text until someone deletes it.
+
 **Be aware:** your plan text then lives on third-party infrastructure, and a pad
-is readable by anyone who knows its address. See `docs/DECISIONS.md` D31.
+is readable by anyone who knows its address. In an embedded frame Etherpad's
+author cookie (`SameSite=Lax`) is not sent, so you count as a new author on every
+load — fixable only on the server (`cookie.sameSite: "None"`). See
+`docs/DECISIONS.md` D31 and D32.
 
 ### Running it locally
 

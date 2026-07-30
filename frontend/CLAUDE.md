@@ -170,6 +170,19 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Nichts. Das Markup: `#srcArea` umschließt Rahmen + Splitter + `#src`, damit die
   Legenden-Aufteilung unberührt bleibt — `.editor-body textarea` ist ein
   Nachfahren-Selektor und greift weiter.
+- Fokusmarke `!!!` (D32, SPEC §1): Parser setzt `focus`, Renderer die Klasse
+  `focusmark`, CSS teilt die Regel mit `.node.current` (ein Begriff „hier
+  schauen"). Erkannt **nur alleinstehend** — `(^|\s)!!!(?=\s|$)`, bewusst ohne
+  Lookbehind (Safari erst ab 16.4), sonst verlöre `Achtung!!!` seine
+  Ausrufezeichen. Extraktion **nach** den Tags; der Kommentar fällt vorher weg,
+  eine Marke hinter `%%` wirkt also nicht. `revealFocusMark()` scrollt **nur bei
+  Änderung** (Schlüssel = Label-Text, nicht Zeilennummer — Umsortieren im Pad soll
+  nicht neu scrollen), sonst zöge jeder Neubau den Blick zurück. Die Regel braucht
+  den `#out`-Präfix wie `.current` (`ul.or .node{box-shadow:none}` ist
+  spezifischer) **und** die Ausnahme
+  `.cheap-on .node:not(.cheap).focusmark{opacity:1;filter:none}` — sonst blasst die
+  Pfad-Inversion genau den Knoten aus, auf den gezeigt wird (bei einer nicht
+  gewählten Alternative gemessen: Deckkraft 0,32).
 - Sprung Diagramm ↔ Text (D25): `render.js` schreibt die Parser-Zeilennummer als
   `data-line` an jeden Knoten (Geister-Knoten bekommen keine). `jumpToLine()` in
   `app.js` klappt bei Bedarf das Editor-Panel auf (`revealEditor()`), markiert die

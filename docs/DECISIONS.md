@@ -1164,3 +1164,77 @@ Name und Farbe halten nicht. Reparieren lässt sich das nur **serverseitig**
 Auf kleinem Bildschirm wurde „beide" nachgemessen statt geschätzt: bei 375 × 812
 bleiben Pad 317 px und Spiegel 180 px, per Splitter verschiebbar — knapp, aber
 brauchbar. Eine Sonderregel für Mobil braucht es deshalb nicht.
+
+## D32 — `!!!` als Fokusmarke: ein geteilter Zeigefinger im Text
+Beim gemeinsamen Arbeiten an einem Pad (D31) fehlt das Naheliegendste: „schau
+mal hier". Etherpad zeigt die Cursor der anderen im **Pad**, aber Werkbaum
+kommt nicht an sie heran — ein fremdstämmiger Rahmen gibt keinen DOM-Zugriff,
+und der Klartext-Export überträgt ohnehin nur Text. Eine Marke **im Text** ist
+damit nicht der Notbehelf, sondern der einzige Weg.
+
+Sie hat sogar etwas, das ein Cursor nicht hat: **alle sehen dieselbe Stelle.**
+Ein Cursor ist privat, `!!!` ist eine Aussage im gemeinsamen Dokument.
+
+**Syntax `!!!`.** Vorgeschlagen und **verworfen** war `%%!` — eine
+Kommentar-Variante (`- [ ] Backend %%! schau mal hier`). Deren Vorzug: Bleibt die
+Marke liegen, ist sie harmlos, denn `%%` ist längst ein Kommentar (SPEC §8);
+jedes andere Werkzeug und jeder Leser überliest sie, und der Resttext hätte die
+Begründung tragen können. Der Nutzer hat `!!!` gewählt, „am einfachsten schnell
+mal zu tippen" — und das ist das entscheidende Kriterium, weil der Moment des
+Zeigens genau der Moment ist, in dem man **nicht** über Syntax nachdenken will.
+Bewusst in Kauf genommen: Die Marke bleibt sichtbar im Plan stehen, bis jemand
+sie löscht (Werkbaum kann sie nicht entfernen — auf das Pad gibt es keinen
+Schreibzugriff), und in einer committeten Datei sieht sie nach einer Aussage über
+den Knoten aus. Ebenfalls verworfen: `@@` als Pseudo-Tag — `@` bedeutet in dieser
+Notation „zuständig" (SPEC §7), ein `@@` daneben lädt zur Verwechslung ein.
+
+**Nur alleinstehend.** Erkannt wird `!!!` am Zeilenanfang/-ende oder von Leerraum
+umgeben. Ohne diese Einschränkung verlöre jedes `Achtung!!!` seine
+Ausrufezeichen — und niemand fände den Grund, weil die Zeile im Diagramm nur
+stumm anders aussieht. `!!` und `!!!!` zählen nicht, `!!!` innerhalb einer URL
+bleibt Teil der URL. Regex bewusst **ohne Lookbehind** (`(^|\s)!!!(?=\s|$)`,
+führender Leerraum wird mitgefangen und wieder eingesetzt): Safari kennt
+Lookbehind erst ab 16.4, und die Notation soll nicht an einer Browserversion
+hängen.
+
+Position in der Extraktionsreihenfolge (SPEC §1): **nach** den Tags, vor dem
+Label. Kollisionsfrei, weil `!!!` weder `@` noch Klammern noch `:` enthält. Der
+Kommentar fällt als Erstes weg — eine Marke **im** Kommentar wirkt deshalb nicht,
+was richtig ist: Was hinter `%%` steht, ist Beiwerk.
+
+**Darstellung: dieselbe wie die Cursor-Zeile** (weißer Halo + Ring in Tinte,
+D25), plus Scrollen ins Bild. Erwogen war ein eigenes Aussehen (Petrol-Ring mit
+Sprechblasen-Spitze); der Nutzer entschied für die vorhandene Hervorhebung. Das
+ist die sparsamere Wahl: Es gibt nur **einen** Begriff „hier schauen", und neben
+Fokusrahmen (Petrol), Strahlenkranz (gelb, D28) und Cursor-Ring wäre ein vierter
+Ring ein Zeichen zu viel. **Preis:** Im Bild ist nicht zu unterscheiden, ob ein
+Knoten wegen der eigenen Cursor-Zeile oder wegen einer fremden Marke leuchtet.
+Für Screenreader wird der Unterschied benannt (`a11yFocusMark`, „hierhin
+schauen"), weil ein `box-shadow` dort ohnehin nicht ankommt.
+
+**Ins Bild geholt wird nur bei Änderung.** Schlüssel ist der **Label-Text** des
+markierten Knotens, nicht die Zeilennummer: Umsortieren im Pad soll nicht als
+neue Marke gelten. Ohne diese Bedingung zöge jeder Neubau des Baums den Blick
+zurück — man könnte nicht wegscrollen, und bei einem Pad-Dokument wird oft neu
+gebaut.
+
+**Beim Hinsehen gefunden: die Pfad-Inversion verschluckte den Zeigefinger.**
+`.cheap-on .node:not(.cheap)` setzt `opacity:.32; filter:saturate(.4)` — und die
+erste markierte Alternative im Test war genau ein nicht gewählter any-of-Zweig
+(„Headless CMS"). Gemessen: Deckkraft 0,32, der Ring praktisch unsichtbar. Der
+Zeiger zeigte auf nichts. Dieselbe Ausnahme wie für „neu in Produktion" (D28)
+behebt es, und hier ist sie noch zwingender: „Sollten wir diese verworfene
+Alternative noch einmal ansehen?" ist einer der wahrscheinlichsten Gründe,
+überhaupt zu zeigen. Anders als beim optionalen Knoten (D29), wo das
+Zurücktreten die Aussage **ist** — dort bleibt die Schwäche bewusst stehen.
+
+**Nicht im Druck, nicht im Grafikexport** — wie die Cursor-Zeile. Die Marke sagt
+„schau jetzt hierhin", nicht „so ist der Plan"; ein Export wäre für jeden
+Betrachter etwas anderes. Der Export erbt das ohnehin, weil `diagramToSvg()` nie
+`box-shadow` ausliest (D25).
+
+**Dritte, unabhängige Achse.** Die Marke sagt nichts über Fortschritt (§4) oder
+Notwendigkeit (§3) — test-abgedeckt, damit niemand später Status oder `optional`
+daran koppelt. **Nicht** in das kanonische Beispiel (SPEC §10) aufgenommen: Das
+ist zugleich Test-Fixture, und ein dauerhafter Zeigefinger darin wäre eine
+Aussage, die niemand gemacht hat.

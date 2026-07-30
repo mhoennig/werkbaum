@@ -21,14 +21,14 @@ export const STATUS_BY_CODE = {
 
 /* Parst den Notationstext zu { roots, warnings }.
    Jeder Knoten: {label, type:'and'|'or', optional, status, url, size, tags,
-   children, line}.
+   focus, children, line}.
    `type` ist das Gate der Geschwistergruppe, `optional` (Zeichen `+`, SPEC §3)
    eine Eigenschaft des einzelnen Knotens: er hängt an derselben Und-Zerlegung
    (`type:'and'`), ist darin aber entbehrlich. Dadurch bleibt die
    Gemischt-Warnung unverändert richtig — sie schlägt nur an, wenn `|` mit
    `-`/`+` gemischt wird.
    Extraktionsreihenfolge (SPEC §1): Kommentar -> Zeichen/Status -> URL -> Größe
-   -> Tags -> Label. Hierarchie über Einrückungsbreite (Tab = 2 Leerzeichen);
+   -> Tags -> Fokusmarke -> Label. Hierarchie über Einrückungsbreite (Tab = 2 Leerzeichen);
    Elternknoten ist die nächste vorangehende Zeile mit kleinerer Breite. */
 export function parse(text){
   const virtualRoot = {label:'', type:'and', children:[]};
@@ -52,6 +52,11 @@ export function parse(text){
     rest = rest.replace(/https?:\/\/\S+/i, s => { url = s; return ''; });
     rest = rest.replace(/\((XXL|XS|XL|S|M|L)\)/i, (s, g) => { size = g.toUpperCase(); return ''; });
     rest = rest.replace(/@([\p{L}\p{N}._-]+)/gu, (s, g) => { tags.push(g); return ''; });
+    /* Fokusmarke `!!!` (SPEC §1) — nur ALLEINSTEHEND, damit „Achtung!!!" ein
+       gewöhnliches Label bleibt. Kein Lookbehind (Safari kennt es erst ab 16.4):
+       der führende Leerraum wird mitgefangen und wieder eingesetzt. */
+    let focus = false;
+    rest = rest.replace(/(^|\s)!!!(?=\s|$)/g, (s, pre) => { focus = true; return pre; });
     const label = rest.replace(/\s+/g, ' ').trim();
     if(!label) return;
 
@@ -64,7 +69,7 @@ export function parse(text){
     while(stack.length > 1 && stack[stack.length-1].width >= width) stack.pop();
     const parent = stack[stack.length-1].node;
 
-    const node = {label, type, optional, status, url, size, tags, children:[], line:i+1};
+    const node = {label, type, optional, status, url, size, tags, focus, children:[], line:i+1};
     parent.children.push(node);
     stack.push({node, width});
   });

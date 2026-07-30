@@ -532,7 +532,12 @@
      im Druck. Der `#out`-Präfix ist nötig: `ul.or .node{box-shadow:none}`
      (weiter unten) ist spezifischer als `.node.current` und schluckte den Ring
      sonst überall unterhalb einer any-of-Gruppe. */
-  #out .node.current{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink)}
+  /* Die Fokusmarke `!!!` (SPEC §1) trägt bewusst DIESELBE Hervorhebung: Es gibt
+     nur einen Begriff „hier schauen", und ein dritter Ring neben Fokusring,
+     Strahlenkranz und Cursor-Ring wäre ein Zeichen zu viel. Der Unterschied
+     steht im `aria-label`. */
+  #out .node.current,
+  #out .node.focusmark{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink)}
   /* Neu in Produktion seit dem letzten Besuch (D28): gelber Strahlenkranz um den
      Knoten. Bewusst ein Schein nach AUSSEN statt Farbe im Knoten — die Füllung
      gehört dem Status (SPEC §4) und bleibt lesbar. Kein Blinken: WCAG 2.2.2/2.3.1
@@ -609,6 +614,12 @@
      unsichtbar), und gerade bei einer nicht gewählten Alternative ist „das ist
      jetzt live" die interessantere Nachricht (D28). */
   .cheap-on .node:not(.cheap).fresh{opacity:1;filter:none}
+  /* Dasselbe für die Fokusmarke `!!!` (SPEC §1), und hier noch zwingender: Ein
+     Zeigefinger, der auf einen ausgeblassten Knoten zeigt, zeigt auf nichts —
+     und „sollten wir diese verworfene Alternative noch einmal ansehen?" ist einer
+     der wahrscheinlichsten Gründe, überhaupt zu zeigen. Anders als beim
+     optionalen Knoten (D29), wo das Zurücktreten die Aussage IST. */
+  .cheap-on .node:not(.cheap).focusmark{opacity:1;filter:none}
   /* implizit als M angenommene Größe: invertiertes Badge (weiß statt petrol) */
   .size.implicit{background:var(--card);color:var(--or);border-color:var(--or)}
   /* Günstigster-Pfad-Linie: gestrichelt, geschwungen, petrol — fädelt durch
@@ -964,7 +975,8 @@
     *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
     /* Knoten nicht über den Seitenrand zerschneiden */
     #out li{break-inside:avoid}
-    .node.current{box-shadow:none!important}   /* Editierhilfe, nicht drucken (D25) */
+    /* Editierhilfe bzw. Zuruf, nicht drucken (D25, Fokusmarke SPEC §1) */
+    .node.current,.node.focusmark{box-shadow:none!important}
     .node.fresh{box-shadow:none!important}     /* „neu seit dem letzten Besuch" ist persönlich (D28) */
     @page{margin:12mm}
   }

@@ -7,7 +7,7 @@ Syntaxänderungen werden zuerst hier dokumentiert, dann implementiert.
 ## 1. Zeilenformat
 
 ```
-[Einrückung][Zeichen] [Statusbox] Label (Größe) URL @tag … %% Kommentar
+[Einrückung][Zeichen] [Statusbox] Label (Größe) URL @tag … !!! %% Kommentar
 ```
 
 Alle Bestandteile außer dem Label sind optional. Die Extraktion erfolgt in
@@ -18,12 +18,36 @@ dieser Reihenfolge (wichtig für Kollisionsfreiheit):
 3. URL: erstes Token, das auf `https?://\S+` passt (dadurch stören `@` in URLs nicht).
 4. Größe: erstes `(XS|S|M|L|XL|XXL)`, Groß-/Kleinschreibung egal.
 5. Tags: alle `@name`-Vorkommen.
-6. Rest, whitespace-normalisiert = Label. Leeres Label ⇒ Zeile ignorieren.
+6. Fokusmarke: `!!!` als **alleinstehendes** Token (siehe unten).
+7. Rest, whitespace-normalisiert = Label. Leeres Label ⇒ Zeile ignorieren.
+
+**Fokusmarke `!!!`** — „schau hier hin": Der Knoten wird im Diagramm
+hervorgehoben und ins Bild geholt (§9). Gedacht für das gemeinsame Arbeiten an
+einem Pad (§9, `?etherpad=`): Weil dort niemand den Cursor der anderen sieht,
+ist eine Marke **im Text** der einzige Weg, auf eine Stelle zu zeigen — und sie
+hat etwas, das ein Cursor nicht hat: **alle** sehen dieselbe Stelle.
+
+- Erkannt nur **alleinstehend**, also am Zeilenanfang/-ende oder von Leerraum
+  umgeben. `Achtung!!!` bleibt damit ein gewöhnliches Label; auch `!!!`
+  innerhalb einer URL bleibt Teil der URL.
+- Die Marke gehört **nicht** zum Label und ist an jeder Position der Zeile
+  zulässig. Mehrere Marken sind erlaubt: alle markierten Knoten werden
+  hervorgehoben, ins Bild geholt wird der **erste**.
+- Sie sagt nichts über Fortschritt (§4) oder Notwendigkeit (§3) — eine dritte,
+  unabhängige Achse.
+- Sie bleibt im Text stehen, bis jemand sie löscht; ein Werkzeug entfernt sie
+  nicht von selbst.
 
 Referenz-Regex der Implementierung:
 
 ```
 ^([ \t]*)([-|+])?\s*(?:\[([ ?~xX^/-])\]\s*)?(.*)$
+```
+
+Für die Fokusmarke (Schritt 6):
+
+```
+(^|\s)!!!(?=\s|$)
 ```
 
 ## 2. Hierarchie
@@ -371,6 +395,21 @@ verknüpft (siehe D25):
   einer Bedienungs-Zeile ab.
 - Die Hervorhebung ist eine reine Editierhilfe: nicht im Grafikexport, nicht im
   Druck.
+
+### Fokusmarke im Diagramm (`!!!`, §1)
+Ein mit `!!!` markierter Knoten trägt **dieselbe Hervorhebung wie die
+Cursor-Zeile** (weißer Halo + Ring in Tinte) und wird ins Bild geholt — bewusst
+kein eigenes Aussehen: Es gibt nur einen Begriff „hier schauen", und ein
+dritter Ring neben Fokusrahmen, Strahlenkranz (§9) und Cursor-Ring wäre ein
+Zeichen zu viel.
+
+- Ins Bild geholt wird nur, wenn sich die Marke **ändert** — sonst zöge das
+  Diagramm bei jedem Neubau den Blick zurück und man könnte nicht wegscrollen.
+- Weil `!!!` im Text steht, sehen **alle** dieselbe Stelle. Der Unterschied zur
+  eigenen Cursor-Zeile ist im Bild nicht zu erkennen; für Screenreader benennt
+  das `aria-label` die Marke ausdrücklich.
+- Wie die Cursor-Zeile erscheint sie **nicht** im Druck und **nicht** im
+  Grafikexport: Sie sagt „schau jetzt hierhin", nicht „so ist der Plan".
 
 ### Grafikexport des Diagramms
 Das Diagramm wird aus der Live-Geometrie in ein eigenständiges SVG (nur Formen

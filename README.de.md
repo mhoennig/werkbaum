@@ -121,8 +121,25 @@ Getestet gegen Etherpad: Der Klartext-Export sendet
 zurück — führende Leerzeichen, `-`/`+`/`|`, Statusboxen und `%%` überleben
 Etherpads Speichermodell, das `-` wird nicht zur Aufzählung umgedeutet.
 
+Das Pad lässt sich auch **im Editor-Panel einbetten**: Ein Wähler in der
+Titelzeile schaltet reihum zwischen *Pad und Text* (durch einen Splitter frei
+geteilt), *nur Pad* und *nur Text*. Der schmal gezogene Textspiegel behält seinen
+Zweck — der Sprung zwischen Diagramm und Text arbeitet auf ihm, und in *nur Pad*
+holt ein Sprung ihn selbst zurück. Der Rahmen wird nur geladen, solange er
+sichtbar ist, denn ein geladenes Pad verbindet sich und zeigt dich in dessen
+Anwesenden-Liste.
+
+**Der gemeinsame Zeigefinger:** Schreib `!!!` in eine Zeile, und dieser Knoten
+wird hervorgehoben und ins Bild geholt — bei **allen**, die auf das Pad schauen.
+Das kann ein Cursor nicht. Erkannt nur als alleinstehendes Token, `Achtung!!!`
+bleibt also ein gewöhnliches Label. Die Marke bleibt stehen, bis jemand sie
+löscht.
+
 **Bedenke:** Der Plantext liegt damit auf fremder Infrastruktur, und ein Pad ist
-für jeden lesbar, der die Adresse kennt. Siehe `docs/DECISIONS.md` D31.
+für jeden lesbar, der die Adresse kennt. Im eingebetteten Rahmen wird Etherpads
+Autoren-Cookie (`SameSite=Lax`) nicht mitgesendet — man gilt bei jedem Laden als
+neuer Autor, was nur serverseitig zu beheben ist (`cookie.sameSite: "None"`).
+Siehe `docs/DECISIONS.md` D31 und D32.
 
 ### Lokal ausführen
 

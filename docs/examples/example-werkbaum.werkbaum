@@ -68,6 +68,7 @@
       - [x] Embed the pad, keep the text mirror beside it (M)
         - [x] Three views: pad and text, pad only, text only (S)
         - [x] Splitter between pad and mirror (XS)
+      - [x] A shared pointer: !!! focuses a node for everyone (XS)
     - [ ] Git as the shared store (L)
       | [ ] A file in a repository, changed by pull request (S)  %% works today, no code
       | [?] The backend commits every change (L)

@@ -20,7 +20,7 @@ import { gateOf, needsBreakdown, visibleChildren, cheapCls } from './model.js';
 function extraCls(n, opts){
   const cheap = cheapCls(n, opts.cheapSet);
   const fresh = opts.freshSet && opts.freshSet.has(n) ? 'fresh' : '';
-  return [cheap, fresh, n.optional ? 'opt' : ''].filter(Boolean).join(' ');
+  return [cheap, fresh, n.optional ? 'opt' : '', n.focus ? 'focusmark' : ''].filter(Boolean).join(' ');
 }
 
 /* Klassen des <li>: Gate der eigenen Kinder (steuert die Anordnung) plus
@@ -52,6 +52,10 @@ function nodeAria(n, opts){
   else if(cheapPath) parts.push(t('a11ySizeImplicit'));
   if(n.tags && n.tags.length) parts.push(t('a11yTags', {names: n.tags.join(', ')}));
   if(n.optional) parts.push(t('a11yOptional'));
+  /* Die Fokusmarke ist rein als box-shadow sichtbar — ohne diese Ansage wüsste
+     ein Screenreader nichts davon. Zugleich der einzige Ort, an dem sie sich von
+     der eigenen Cursor-Zeile unterscheidet (SPEC §9). */
+  if(n.focus) parts.push(t('a11yFocusMark'));
   if(n.url) parts.push(t('a11yLink'));
   return parts.join(', ');
 }
