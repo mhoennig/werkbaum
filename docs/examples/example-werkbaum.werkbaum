@@ -37,6 +37,7 @@
       - [^] Switcher in the editor title bar (S)
       - [^] Load a document from ?sourceUrl= (S)
     - [^] Jump between diagram and text (S)
+    - [x] Line numbers in the text editor (XS)  %% the warnings name them
     - [ ] Open and save .werkbaum files (S)
     + [^] Show what is new since your last visit (S)
     + [?] A pastel colour per person (S)

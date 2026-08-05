@@ -386,6 +386,13 @@ verknüpft (siehe D25):
   hervorgehoben (weißer Halo + Ring in Tinte) und beim Zeilenwechsel ins Bild
   gescrollt. Zeilen ohne Knoten (Kommentar, Leerzeile, ausgeblendetes
   verworfenes Element) heben nichts hervor.
+- **Text → Diagramm, ausdrücklich:** **Alt+Klick** im Textfeld (Tastatur:
+  **Alt+Enter**) holt den Knoten der Cursor-Zeile in die **Mitte** des Diagramms
+  und gibt ihm den Tastaturfokus — dieselbe Geste in beide Richtungen. Sie
+  ergänzt das Mitlaufen der Cursor-Zeile: Das scrollt bewusst nur so weit wie
+  nötig und nur beim Zeilenwechsel (sonst ruckelte das Diagramm beim Tippen).
+  Wer einen Knoten wirklich **sehen** will, sagt es mit Alt. Auf einer Zeile ohne
+  Knoten geschieht nichts.
 - Der **einfache** Klick bleibt unverändert der Link (§6): Ein Knoten mit URL
   öffnet sie weiterhin im neuen Tab. Deshalb Alt und nicht der einfache Klick.
 - **Auffindbarkeit:** Solange **Alt gedrückt** ist, zeigen alle Knoten den
@@ -395,6 +402,20 @@ verknüpft (siehe D25):
   einer Bedienungs-Zeile ab.
 - Die Hervorhebung ist eine reine Editierhilfe: nicht im Grafikexport, nicht im
   Druck.
+
+### Zeilennummern im Texteditor
+Links neben dem Textfeld steht ein schmaler Streifen mit den **Zeilennummern** —
+dieselben, die die Warnungen nennen („Zeile 12: …", §4). Ohne ihn muss man sie
+im Text abzählen.
+
+- Gezählt werden **logische** Zeilen des Notationstexts. Eine weich umbrochene
+  Zeile behält **eine** Nummer; die Nummer steht an ihrer ersten Bildzeile.
+- Die **Cursor-Zeile** und Zeilen mit einer **Warnung** heben sich ab (Warnung in
+  `--warn`, `#B45309`) — genau die beiden Fälle, für die man hinsieht.
+- Reine Lesehilfe: kein Bestandteil des Notationstexts, nicht im Grafikexport
+  und nicht im Druck (dort ist ohnehin nur das Diagramm zu sehen).
+
+Siehe D33.
 
 ### Fokusmarke im Diagramm (`!!!`, §1)
 Ein mit `!!!` markierter Knoten trägt einen **Strahlenkranz in Petrol** —

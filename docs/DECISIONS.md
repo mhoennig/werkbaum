@@ -587,6 +587,38 @@ es nur auf einem Gerät), sowie ein eigener Umschalter dafür (weiteres
 Bedienelement in einer engen Kopfzeile plus i18n in 9 Sprachen, für ein
 Verhalten, das kaum jemand umstellen will).
 
+**Nachtrag — Alt+Klick gibt es jetzt auch im Textfeld.** Gemeldet als „das
+Alt+Klick muss im Text-Editor wieder funktionieren, um den Knoten im Diagramm zu
+fokussieren". Nachgesehen: Die Geste hat es dort nie gegeben — die Rückrichtung
+lief bisher **allein** über die Cursor-Zeile. Das ist trotzdem kein
+Missverständnis, sondern ein Befund: Die Rückrichtung fühlt sich schwächer an,
+weil sie es ist.
+
+Der Grund steckt in ihrer eigenen Auslegung. Die Cursor-Zeile scrollt bewusst
+**nur beim Zeilenwechsel** und **nur `nearest`** — beides notwendig, sonst
+ruckelte das Diagramm bei jedem Tastendruck. Genau das macht sie aber als *Zeig
+mir das* untauglich: Wer denselben Knoten noch einmal sucht, bekommt nichts, und
+wer ihn am Bildrand hat, bekommt ihn an den Bildrand. Es fehlte also nicht die
+Verknüpfung, sondern eine **ausdrückliche** Geste daneben.
+
+Deshalb: **Alt+Klick im Textfeld** (Tastatur **Alt+Enter**) zentriert den Knoten
+der Cursor-Zeile und gibt ihm den **Tastaturfokus**. Derselbe Modifier wie in der
+Gegenrichtung — eine Geste, zwei Richtungen, nichts Neues zu lernen; die
+vorhandene Legenden-Zeile (`hint_jump`) nennt jetzt beide Richtungen, statt einen
+zehnten i18n-Schlüssel in neun Sprachen aufzumachen.
+
+**Der Fokus wandert wirklich mit** (`el.focus({preventScroll:true})`, dann
+bewusst `scrollIntoView({block:'center'})`). Erwogen war, nur zu scrollen und den
+Cursor im Text zu lassen — weniger störend beim Tippen. Dagegen sprechen zwei
+Dinge: Die Gegenrichtung nimmt den Fokus ebenso mit (in den Text hinein), und ein
+Screenreader erfährt vom Scrollen nichts. Mit Fokus wird daraus ein
+vollständiger Hin- und Rückweg: Alt+Klick in den Baum, dort mit Tab/Pfeil
+weiter, Alt+Enter zurück in die Zeile.
+
+`preventDefault()` beim Tastaturweg ist Pflicht, sonst bekommt der Text einen
+Umbruch. Auf einer Zeile ohne Knoten (Kommentar, Leerzeile, ausgeblendetes
+Verworfenes) geschieht nichts — dieselbe stille Regel wie bei der Cursor-Zeile.
+
 ## D26 — Legende scrollbar: eigener Container statt `<details>`, plus Splitter
 Die Legende („Agenda") im Editor-Panel war zu hoch für ihren Platz und wurde
 **abgeschnitten** statt scrollbar zu sein — obwohl `.hint` seit jeher
@@ -1389,3 +1421,53 @@ Die Alternativen stehen als any-of-Gruppe im mitgelieferten Plan
 gemessenen Sackgassen als `[-]` mit dem Messergebnis im Kommentar, damit niemand
 sie erneut aufmacht. Der günstigste Pfad wählt dort von selbst die
 Rate-Limit-Anhebung — die billigste wirksame Änderung.
+
+## D33 — Zeilennummern im Texteditor, gemessen statt gerechnet
+Die Warnungen nennen Zeilennummern („Zeile 12: unbekannter Statuscode", SPEC §4)
+— und das Textfeld zeigte keine. Man musste abzählen. Der Streifen links vom
+Textfeld schließt diese Lücke; sie ist umso spürbarer, je größer der Plan ist
+(der mitgelieferte hat 143 Zeilen).
+
+**Ein eigener Kasten neben dem Textfeld, kein Markup im Text.** Ein `<textarea>`
+kennt keine Auszeichnung — man kann in seinen Textfluss nichts einfügen. Also
+ein zweiter Kasten, der nicht selbst scrollt, sondern gegen `src.scrollTop`
+verschoben wird (`translateY`). So kann er nicht auseinanderlaufen: Es gibt nur
+eine Scrollposition, nicht zwei.
+
+**Die Zahlen stehen auf gemessenen Höhen, nicht auf „Zeilenhöhe × n".** Der Text
+bricht weich um; eine lange Zeile belegt mehrere Bildzeilen, behält aber **eine**
+Nummer. Gerechnet liefe der Streifen deshalb schon nach der ersten langen Zeile
+davon — im Test bei 375 px Breite brechen 134 der 143 Zeilen um, meist vierfach.
+Gemessen wird am **Spiegel-`div`**, das es für das Scrollen beim Sprung schon
+gibt (D25): ein Marker je Zeile, einmal schreiben, dann alle `offsetTop` in einem
+Durchgang lesen — sonst erzwingt jede einzelne Messung ein eigenes Neu-Layout.
+
+**Dabei fiel ein Fehler im Spiegel auf, der schon D25 betraf.** Der Spiegel bekam
+`width = src.clientWidth`, war aber `content-box`: `clientWidth` **enthält** die
+Innenabstände, der Spiegel war also um genau 32 px breiter als das Textfeld und
+brach später um. Mit `box-sizing:border-box` stimmen die Umbrüche jetzt
+nachweislich überein — Zeilen im Spiegel und Bildzeilen im Textfeld ergeben
+dieselbe Gesamthöhe (gemessen: 170 Zeilen beide). Vorher war der Sprung zu einer
+langen Zeile um die Höhe der übersprungenen Umbrüche daneben.
+
+**Zwei Zeilen heben sich ab: die Cursor-Zeile und Zeilen mit Warnung** (in
+`--warn`). Genau die beiden Fälle, für die man in den Streifen sieht. Die
+Warnungsmenge kommt aus **derselben** Liste, die im Warnungsbereich steht —
+`render()` reicht sie weiter, statt sie ein zweites Mal zu ermitteln; sonst
+liefen Text und Streifen irgendwann auseinander.
+
+**Verworfen: `wrap="off"`.** Ohne weichen Umbruch wäre jede logische Zeile genau
+eine Bildzeile, die Rechnung trivial und der Spiegel überflüssig. Preis wäre
+waagerechtes Scrollen — im schmalen Spiegel neben einem eingebetteten Pad (D31)
+oder auf dem Telefon (D17) wäre der Text damit unlesbar. Der Umbruch ist die
+wichtigere Eigenschaft.
+
+**Kein Umschalter.** Die Kopfzeile ist eng (D17), und ein Bedienelement kostet
+i18n in neun Sprachen für etwas, das keinen Zustand hat, den jemand pflegen
+will. Der Streifen ist so schmal wie die Ziffern es verlangen
+(`calc(<Stellen>ch + 12px)`), auf dem Telefon sind das 36 px.
+
+**Stolperfalle bei der Prüfung:** Ein programmatisch gesetztes `scrollTop` löst
+`scroll` erst im nächsten Bild aus — in einem nicht gezeichneten Tab womöglich
+gar nicht. `scrollEditorToOffset()` zieht die Zahlen deshalb selbst gleich mit,
+statt sich auf das Ereignis zu verlassen.

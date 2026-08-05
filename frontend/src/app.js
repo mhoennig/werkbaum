@@ -34,6 +34,10 @@ const INITIAL = `%% Project structure – Sprint 14
 const src  = document.getElementById('src');
 const out  = document.getElementById('out');
 const warnBox = document.getElementById('warn');
+/* Zeilennummern-Streifen (D33) — hier oben geholt, weil render() ihn füllt. */
+const srcWrap = document.getElementById('srcWrap');
+const lineNoBox = document.getElementById('lineNos');
+const lineNoInner = lineNoBox.firstElementChild;
 
 /* Baum-/Kostenlogik (gateOf, needsBreakdown, visibleChildren, günstigster
    Pfad) lebt headless in model.js, das HTML-Erzeugen in render.js. Hier bleibt
@@ -44,6 +48,11 @@ let cheapPathOn = true;
    kann — weiter unten stünde sie dann noch in der temporalen Todeszone. */
 const PAD_VIEWS = ['both', 'pad', 'text'];
 let padView = 'both';
+/* Cursor-Zeile (D25) — bleibt `null`, bis der Cursor das erste Mal bewegt wurde,
+   sonst wäre nach dem Laden ungefragt die Wurzel markiert. Hier oben deklariert
+   wie `padView`: der Zeilennummern-Streifen (D33) liest sie, und der hängt an
+   render(). */
+let caretLine = null, currentNodeEl = null;
 /* Warnung des ?sourceUrl-Ladens (D23) — zeilenlos und persistent, siehe render(). */
 let sourceWarning = null;
 /* „Was ist neu?" (D28): Knoten, die gegenüber der zuletzt GESEHENEN Fassung neu
@@ -90,6 +99,10 @@ function render(){
 
   warnings = warnings.slice().sort((a, b) => (a.line || 0) - (b.line || 0));
   warnBox.innerHTML = warnings.map(w => `<div>⚠ ${formatWarning(w, t)}</div>`).join('');
+  /* Der Zeilennummern-Streifen zeigt genau die Zeilen an, die hier genannt
+     werden — deshalb hängt er an derselben Warnungsliste (D33). */
+  lineNoWarn = new Set(warnings.map(w => w.line).filter(Boolean));
+  renderLineNos();
   applyOptStairs();   /* muss vor dem Messen laufen — es verschiebt Knoten */
   alignStems();
   drawCheapPath();
@@ -488,11 +501,17 @@ function lineRange(line){
    an weichen Umbrüchen (lange Zeilen belegen mehrere Bildzeilen), deshalb ein
    unsichtbarer Spiegel mit gleicher Typografie und Breite plus Marker-Span. */
 let mirrorEl = null;
-function offsetTopInEditor(offset){
+function syncMirror(){
   if(!mirrorEl){
     mirrorEl = document.createElement('div');
     mirrorEl.setAttribute('aria-hidden', 'true');
+    /* `box-sizing:border-box` ist Pflicht: `src.clientWidth` **enthält** die
+       Innenabstände. Ohne das ist der Spiegel um genau diese 32 px breiter als
+       das Textfeld und bricht später um — lange Zeilen landeten dadurch zu weit
+       oben (fiel beim Bau der Zeilennummern auf, D33; betraf auch schon das
+       Scrollen beim Sprung, D25). */
     mirrorEl.style.cssText = 'position:absolute;visibility:hidden;top:0;left:-9999px;' +
+                             'box-sizing:border-box;' +
                              'white-space:pre-wrap;overflow-wrap:break-word;';
     document.body.appendChild(mirrorEl);
   }
@@ -502,20 +521,104 @@ function offsetTopInEditor(offset){
     mirrorEl.style[p] = cs[p];
   }
   mirrorEl.style.width = src.clientWidth + 'px';
-  mirrorEl.textContent = src.value.slice(0, offset);
+  return mirrorEl;
+}
+const ZWSP = '​';
+function offsetTopInEditor(offset){
+  const m = syncMirror();
+  m.textContent = src.value.slice(0, offset);
   const marker = document.createElement('span');
-  marker.textContent = '​';
-  mirrorEl.appendChild(marker);
+  marker.textContent = ZWSP;
+  m.appendChild(marker);
   const top = marker.offsetTop;
-  mirrorEl.textContent = '';
+  m.textContent = '';
   return top;
 }
+
+/* Oberkante jeder **logischen** Zeile, im selben Koordinatensystem wie
+   `src.scrollTop` (die Innenabstände stecken schon drin). Ein Marker je Zeile
+   im selben Spiegel: einmal schreiben, dann alle `offsetTop` in einem Durchgang
+   lesen — sonst erzwingt jede Messung ein eigenes Neu-Layout. */
+function lineTops(){
+  const m = syncMirror();
+  m.textContent = '';
+  const marks = [];
+  for(const line of src.value.split('\n')){
+    const s = document.createElement('span');
+    s.textContent = ZWSP;
+    m.appendChild(s);
+    marks.push(s);
+    m.appendChild(document.createTextNode(line + '\n'));
+  }
+  const tops = marks.map(s => s.offsetTop);
+  m.textContent = '';
+  return tops;
+}
+
+/* ---------- Zeilennummern (D33) ----------
+   Die Warnungen nennen Zeilennummern (SPEC §4); ohne Streifen muss man sie im
+   Textfeld abzählen. Der Streifen ist ein eigener Kasten neben dem Textfeld —
+   in den Textfluss lässt sich nichts einfügen, ein `<textarea>` kennt kein
+   Markup. Gescrollt wird er nicht selbst, sondern gegen `src.scrollTop`
+   verschoben; so kann er nie auseinanderlaufen. */
+let lineNoWarn = new Set();
+function renderLineNos(){
+  const tops = lineTops();
+  /* Der Marker ist ein Inline-Kasten und steht in seiner Zeilenbox mittig — sein
+     `offsetTop` liegt also ein paar Pixel unter der Zeilen**oberkante**. Die Zahl
+     bekommt eine eigene Zeilenbox gleicher Höhe und muss deshalb an der
+     Oberkante ansetzen, sonst stünde sie durchgehend zu tief. Der Versatz ist an
+     der ersten Zeile ablesbar: dort ist die Oberkante der obere Innenabstand. */
+  const drop = tops.length ? tops[0] - (parseFloat(getComputedStyle(src).paddingTop) || 0) : 0;
+  /* Breite nur schreiben, wenn sie sich ändert: sie ändert die Breite des
+     Textfelds, das weckt den ResizeObserver — und der ruft wieder hierher. */
+  const w = 'calc(' + String(tops.length).length + 'ch + 12px)';
+  if(lineNoBox.style.width !== w) lineNoBox.style.width = w;
+  /* Vorhandene Zahlen weiterverwenden: bei jedem Tastendruck N Elemente neu zu
+     bauen wäre Müll für nichts — die Zahlen ändern sich fast nie, nur ihre Höhe. */
+  const have = lineNoInner.children.length;
+  for(let i = have; i < tops.length; i++){
+    lineNoInner.appendChild(document.createElement('span'));
+  }
+  for(let i = have - 1; i >= tops.length; i--) lineNoInner.children[i].remove();
+  for(let i = 0; i < tops.length; i++){
+    const s = lineNoInner.children[i], n = i + 1;
+    if(s.textContent !== String(n)) s.textContent = n;
+    s.style.top = (tops[i] - drop) + 'px';
+    s.classList.toggle('warn', lineNoWarn.has(n));
+  }
+  markCurrentLineNo();
+  syncLineNoScroll();
+}
+function syncLineNoScroll(){
+  lineNoInner.style.transform = 'translateY(' + (-src.scrollTop) + 'px)';
+}
+function markCurrentLineNo(){
+  const cur = lineNoInner.querySelector('span.cur');
+  if(cur) cur.classList.remove('cur');
+  const s = caretLine == null ? null : lineNoInner.children[caretLine - 1];
+  if(s) s.classList.add('cur');
+}
+src.addEventListener('scroll', syncLineNoScroll);
+/* Der Umbruch hängt an der Breite: Splitter, Fenster, Drehung, Tastatur. Beim
+   Ziehen am Splitter kämen sonst je Bild mehrere Messungen — einmal je Bild
+   genügt. */
+let lineNoPending = false;
+if(window.ResizeObserver) new ResizeObserver(() => {
+  if(lineNoPending) return;
+  lineNoPending = true;
+  requestAnimationFrame(() => { lineNoPending = false; renderLineNos(); });
+}).observe(src);
 
 /* Nur scrollen, wenn die Zeile nicht ohnehin bequem sichtbar ist. */
 function scrollEditorToOffset(offset){
   const top = offsetTopInEditor(offset), h = src.clientHeight;
   if(top < src.scrollTop + 8 || top > src.scrollTop + h - 28){
     src.scrollTop = Math.max(0, top - h / 2);
+    /* Das `scroll`-Ereignis kommt erst im nächsten Bild. Wer selbst scrollt,
+       zieht die Zeilennummern deshalb gleich mit — sonst stünden sie bis dahin
+       um eine ganze Bildhöhe daneben. */
+    syncLineNoScroll();
   }
 }
 
@@ -623,11 +726,9 @@ out.addEventListener('touchend', e => {
 out.addEventListener('touchcancel', disarmPress);
 out.addEventListener('contextmenu', e => { if(pressTimer || armedEl) e.preventDefault(); });
 
-/* Text -> Diagramm: Knoten der Cursor-Zeile hervorheben. `caretLine` bleibt
-   null, bis der Cursor das erste Mal bewegt wurde — sonst wäre nach dem Laden
-   ohne Zutun die Wurzel markiert. */
-let caretLine = null, currentNodeEl = null;
+/* Text -> Diagramm: Knoten der Cursor-Zeile hervorheben (`caretLine` steht oben). */
 function highlightCurrentNode(scroll){
+  markCurrentLineNo();   /* die eine Stelle, an der die Cursor-Zeile neu gesetzt wird */
   if(currentNodeEl) currentNodeEl.classList.remove('current');
   currentNodeEl = caretLine == null
     ? null
@@ -637,13 +738,40 @@ function highlightCurrentNode(scroll){
   /* Nur beim Zeilenwechsel scrollen, sonst ruckelte das Diagramm beim Tippen. */
   if(scroll) currentNodeEl.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
 }
+function caretLineOf(){
+  return src.value.slice(0, src.selectionStart).split('\n').length;
+}
 function syncCaret(){
-  const line = src.value.slice(0, src.selectionStart).split('\n').length;
+  const line = caretLineOf();
   const moved = line !== caretLine;
   caretLine = line;
   highlightCurrentNode(moved);
 }
 for(const ev of ['click','keyup','input','focus']) src.addEventListener(ev, syncCaret);
+
+/* Gegenstück zum Alt+Klick am Knoten (D25, Nachtrag): Alt+Klick im Textfeld —
+   Tastatur Alt+Enter — holt den Knoten der Cursor-Zeile in die **Mitte** des
+   Diagramms und gibt ihm den Fokus. Der gewöhnliche Klick markiert ihn zwar
+   ohnehin, scrollt aber absichtlich nur `nearest` und nur beim Zeilenwechsel
+   (sonst ruckelte das Diagramm beim Tippen) — genau das reicht nicht, wenn man
+   den Knoten wirklich **sehen** will. Derselbe Modifier in beide Richtungen:
+   eine Geste, zwei Richtungen. */
+function focusNodeOfCaret(){
+  const line = caretLineOf();
+  const el = out.querySelector('.node[data-line="' + line + '"]');
+  if(!el) return;              /* Kommentar, Leerzeile, ausgeblendet Verworfenes */
+  caretLine = line;
+  highlightCurrentNode(false);
+  /* Erst den Fokus (ohne eigenes Scrollen), dann bewusst zentrieren. */
+  el.focus({preventScroll: true});
+  el.scrollIntoView({block:'center', inline:'center', behavior:'smooth'});
+}
+src.addEventListener('click', e => { if(e.altKey) focusNodeOfCaret(); });
+src.addEventListener('keydown', e => {
+  if(e.key !== 'Enter' || !e.altKey) return;
+  e.preventDefault();          /* sonst bekäme der Text einen Umbruch */
+  focusNodeOfCaret();
+});
 
 /* Alt-Modus sichtbar machen: solange Alt gedrückt ist, zeigt jeder Knoten den
    Sprung-Cursor und der Knoten unter dem Zeiger einen Petrol-Ring. Das ist die
@@ -976,7 +1104,7 @@ const I18N = {
     hint_break:"Ab (M) gilt: weiter untergliedern — fehlt die Untergliederung, erscheint ein Platzhalter im Diagramm.",
     hint_comment:"Kommentare mit %% — als ganze Zeile oder am Zeilenende.",
     hint_people:"Personen mit @name — erscheinen unten rechts am Knoten.",
-    hint_jump:"Alt+Klick auf einen Knoten (mobil: langer Druck) springt zur zugehörigen Textzeile."
+    hint_jump:"Alt+Klick auf einen Knoten (mobil: langer Druck) springt zur zugehörigen Textzeile; Alt+Klick im Text holt den Knoten ins Bild."
   },
   en: {
     subtitle:"Werkbaum – Work Breakdown Structure / Lean Pathfinding · Project structure editor (also feature-tree & requirements)",
@@ -1040,7 +1168,7 @@ const I18N = {
     hint_break:"From (M) on: break it down further — if the breakdown is missing, a placeholder appears in the diagram.",
     hint_comment:"Comments with %% — whole line or at the end of a line.",
     hint_people:"People with @name — shown at the bottom-right of the node.",
-    hint_jump:"Alt+click a node (long press on touch) jumps to its line in the text."
+    hint_jump:"Alt+click a node (long press on touch) jumps to its line in the text; Alt+click in the text brings the node into view."
   },
   es: {
     subtitle:"Werkbaum – EDT / Lean Pathfinding · Editor de estructura de proyectos (también árboles de características y requisitos)",
@@ -1104,7 +1232,7 @@ const I18N = {
     hint_break:"A partir de (M): sigue desglosando — si falta el desglose, aparece un marcador de posición en el diagrama.",
     hint_comment:"Comentarios con %% — línea completa o al final de la línea.",
     hint_people:"Personas con @nombre — aparecen abajo a la derecha del nodo.",
-    hint_jump:"Alt+clic en un nodo (pulsación larga en táctil) salta a su línea en el texto."
+    hint_jump:"Alt+clic en un nodo (pulsación larga en táctil) salta a su línea en el texto; Alt+clic en el texto trae el nodo a la vista."
   },
   fr: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · Éditeur de structure de projet (aussi pour arbres de fonctionnalités et d'exigences)",
@@ -1168,7 +1296,7 @@ const I18N = {
     hint_break:"À partir de (M) : décomposer davantage — si la décomposition manque, un espace réservé apparaît dans le diagramme.",
     hint_comment:"Commentaires avec %% — ligne entière ou en fin de ligne.",
     hint_people:"Personnes avec @nom — affichées en bas à droite du nœud.",
-    hint_jump:"Alt+clic sur un nœud (appui long sur tactile) saute à sa ligne dans le texte."
+    hint_jump:"Alt+clic sur un nœud (appui long sur tactile) saute à sa ligne dans le texte ; Alt+clic dans le texte amène le nœud à l’écran."
   },
   pl: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · Edytor struktury projektów (również dla drzew funkcji i wymagań)",
@@ -1232,7 +1360,7 @@ const I18N = {
     hint_break:"Od (M): dziel dalej — gdy brakuje podziału, w diagramie pojawia się symbol zastępczy.",
     hint_comment:"Komentarze z %% — cały wiersz lub na końcu wiersza.",
     hint_people:"Osoby z @nazwa — pokazywane w prawym dolnym rogu węzła.",
-    hint_jump:"Alt+kliknięcie węzła (długie naciśnięcie na dotyku) przechodzi do jego wiersza w tekście."
+    hint_jump:"Alt+kliknięcie węzła (długie naciśnięcie na dotyku) przechodzi do jego wiersza w tekście; Alt+kliknięcie w tekście pokazuje węzeł na diagramie."
   },
   ru: {
     subtitle:"Werkbaum – СДР / Lean Pathfinding · Редактор структуры проектов (также для деревьев функций и требований)",
@@ -1296,7 +1424,7 @@ const I18N = {
     hint_break:"С (M): дробите дальше — если декомпозиции нет, в диаграмме появляется заполнитель.",
     hint_comment:"Комментарии через %% — вся строка или в конце строки.",
     hint_people:"Люди через @имя — показываются справа внизу узла.",
-    hint_jump:"Alt+клик по узлу (долгое нажатие на сенсоре) переходит к его строке в тексте."
+    hint_jump:"Alt+клик по узлу (долгое нажатие на сенсоре) переходит к его строке в тексте; Alt+клик в тексте показывает узел на диаграмме."
   },
   hi: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · परियोजना संरचना संपादक (फ़ीचर और रिक्वायरमेंट ट्री के लिए भी)",
@@ -1360,7 +1488,7 @@ const I18N = {
     hint_break:"(M) से आगे: और विभाजित करें — विभाजन न होने पर आरेख में प्लेसहोल्डर दिखता है।",
     hint_comment:"%% से टिप्पणियाँ — पूरी पंक्ति या पंक्ति के अंत में।",
     hint_people:"@नाम से व्यक्ति — नोड के नीचे-दाएँ दिखते हैं।",
-    hint_jump:"किसी नोड पर Alt+क्लिक (टच पर लंबा दबाव) टेक्स्ट में उसकी पंक्ति पर ले जाता है।"
+    hint_jump:"किसी नोड पर Alt+क्लिक (टच पर लंबा दबाव) टेक्स्ट में उसकी पंक्ति पर ले जाता है; टेक्स्ट में Alt+क्लिक उस नोड को आरेख में दिखाता है।"
   },
   zh: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · 项目结构编辑器（也支持功能树和需求树）",
@@ -1424,7 +1552,7 @@ const I18N = {
     hint_break:"从 (M) 起：继续细分——若缺少细分，图表中会出现占位符。",
     hint_comment:"用 %% 注释——整行或行尾。",
     hint_people:"用 @姓名 表示人员——显示在节点右下角。",
-    hint_jump:"Alt+点击节点（触摸屏为长按）可跳转到文本中对应的行。"
+    hint_jump:"Alt+点击节点（触摸屏为长按）可跳转到文本中对应的行；在文本中 Alt+点击则把该节点带入视野。"
   },
   ja: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · プロジェクト構造エディター（フィーチャーツリーと要件ツリーにも対応）",
@@ -1488,7 +1616,7 @@ const I18N = {
     hint_break:"(M) 以上：さらに分解 — 分解がないと図にプレースホルダーが表示されます。",
     hint_comment:"%% でコメント — 行全体または行末。",
     hint_people:"@名前 で担当者 — ノードの右下に表示されます。",
-    hint_jump:"ノードを Alt+クリック（タッチでは長押し）すると、テキストの該当行へ移動します。"
+    hint_jump:"ノードを Alt+クリック（タッチでは長押し）すると、テキストの該当行へ移動します。テキスト内で Alt+クリックすると、そのノードが図の中央に表示されます。"
   }
 };
 let lang = 'de';
@@ -2203,6 +2331,7 @@ function updatePadLink(){
   const isPad = !!(d && padSource && d.id === padSource.id);
   src.readOnly = isPad;
   src.classList.toggle('readonly', isPad);
+  if(srcWrap) srcWrap.classList.toggle('readonly', isPad);   /* Streifen mit abtönen */
   if(isPad) src.title = t('padReadonly'); else src.removeAttribute('title');
   if(padLink){
     padLink.hidden = !isPad;

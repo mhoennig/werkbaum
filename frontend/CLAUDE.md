@@ -208,6 +208,31 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   die Klasse `alt` an `#out` (Cursor + Ring am Knoten unter dem Zeiger) — der
   `blur`-Handler ist Pflicht, sonst bleibt der Modus nach Alt+Tab hängen; dazu
   `jumpHint` im Knoten-Tooltip und `hint_jump` als letzte Zeile der Legende.
+- Alt+Klick **im Textfeld** (D25, Nachtrag): `focusNodeOfCaret()` zentriert den
+  Knoten der Cursor-Zeile und gibt ihm den Fokus (`focus({preventScroll:true})`
+  **vor** `scrollIntoView({block:'center'})` — sonst scrollt der Browser zweimal).
+  Das ist nicht dasselbe wie das Mitlaufen der Cursor-Zeile: `syncCaret()` scrollt
+  absichtlich nur `nearest` und nur beim Zeilenwechsel. Beim Tastaturweg
+  (Alt+Enter) ist `preventDefault()` Pflicht, sonst bekommt der Text einen
+  Umbruch. Die Legenden-Zeile `hint_jump` nennt **beide** Richtungen — kein
+  eigener i18n-Schlüssel.
+- Zeilennummern (D33): `renderLineNos()` misst die Zeilenoberkanten am
+  Spiegel-`div` (`lineTops()`) — **nicht** `Zeilenhöhe × n`, das läuft beim
+  ersten weichen Umbruch davon. Der Streifen scrollt nicht selbst, sondern wird
+  per `translateY(-src.scrollTop)` mitgezogen (`syncLineNoScroll()`); wer
+  `src.scrollTop` **selbst** setzt, muss ihn gleich mitziehen — das
+  `scroll`-Ereignis kommt erst im nächsten Bild (`scrollEditorToOffset()` tut es).
+  Der Spiegel braucht `box-sizing:border-box`: `src.clientWidth` enthält die
+  Innenabstände, ohne das ist er 32 px zu breit und bricht später um (betraf
+  vorher auch schon das Scrollen beim Sprung, D25). Der Marker ist ein
+  Inline-Kasten und sitzt in seiner Zeilenbox mittig — die Zahlen müssen um
+  diesen Versatz (`drop`) nach oben, sonst stehen sie durchgehend zu tief.
+  Aufgerufen wird aus `render()` (dort kommt auch die Warnungsmenge her) und aus
+  einem `ResizeObserver` auf `#src` (Umbruch hängt an der Breite). Markup:
+  `#srcWrap` umschließt Streifen + Textfeld; die Pad-Regeln (D31) teilen gegen
+  **diese Spalte** (`.src-area.pv-both>.src-wrap`), nicht gegen das nackte
+  Textfeld. `caretLine` steht deshalb **oben** bei `padView` — der Streifen liest
+  sie und hängt an `render()` (temporale Todeszone, siehe D31).
 - Touch-Langdruck (D25): Der Timer (500 ms) setzt **nur** die Klasse `armed`
   (Petrol-Ring); `jumpToLine()` läuft im `touchend`-Handler. Nicht zurück in den
   Timer verlegen — **`focus()` aus einem Timer gilt in mobilen Browsern nicht als

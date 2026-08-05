@@ -217,13 +217,17 @@
   .src-area{display:flex;align-items:stretch;flex:1 1 auto;min-width:0;min-height:0}
   .padframe{flex:1 1 auto;min-width:0;min-height:0;border:0;background:var(--card)}
   .padframe[hidden]{display:none}
-  .src-area.pv-both>textarea{
+  /* Zeilennummern + Textfeld sind eine Spalte (`.src-wrap`). Der Pad-Splitter
+     teilt gegen diese Spalte — nicht gegen das nackte Textfeld, sonst stünde der
+     Zahlenstreifen außerhalb der geteilten Breite. */
+  .src-wrap{display:flex;align-items:stretch;flex:1 1 auto;min-width:0;min-height:0}
+  .src-area.pv-both>.src-wrap{
     flex:0 0 var(--pcol,300px);max-width:85%;
     border-left:1px dashed rgba(36,52,71,.18);
   }
-  .src-area.pv-pad>textarea{display:none}
+  .src-area.pv-pad>.src-wrap{display:none}
   .side .src-area,body.mobile .src-area{flex-direction:column}
-  .side .src-area.pv-both>textarea,body.mobile .src-area.pv-both>textarea{
+  .side .src-area.pv-both>.src-wrap,body.mobile .src-area.pv-both>.src-wrap{
     flex:0 0 var(--prow,180px);max-width:none;max-height:85%;
     border-left:0;border-top:1px dashed rgba(36,52,71,.18);
   }
@@ -459,6 +463,28 @@
      erscheint — die Schrift bleibt aber Tinte: hier wird gelesen, der Plantext
      ist der Hauptinhalt und kein ausgegrautes Formularfeld. */
   textarea.readonly{background:#F1F4F7;cursor:default}
+  /* Zeilennummern (D33). Die Warnungen nennen Zeilennummern — ohne Streifen
+     muss man sie im Textfeld abzählen. Weich umbrochene Zeilen belegen mehrere
+     Bildzeilen, deshalb steht jede Zahl auf einer **gemessenen** Höhe
+     (`renderLineNos()` in app.js), nicht auf „Zeilenhöhe × n". Typografie muss
+     mit dem Textfeld übereinstimmen, sonst wandern die Zahlen weg. */
+  .lineno{
+    position:relative;overflow:hidden;flex:0 0 auto;
+    background:var(--card);border-right:1px solid rgba(36,52,71,.10);
+    font-family:'IBM Plex Mono',monospace;font-size:.85rem;line-height:1.7;
+    color:var(--muted);
+    -webkit-user-select:none;user-select:none;
+  }
+  .src-wrap.readonly .lineno{background:#F1F4F7}
+  .lineno-inner{position:absolute;top:0;left:0;right:0}
+  .lineno-inner span{
+    position:absolute;right:6px;
+    opacity:.5;font-variant-numeric:tabular-nums;
+  }
+  /* Cursor-Zeile und Zeilen mit Warnung heben sich ab — genau die beiden Fälle,
+     für die man im Streifen überhaupt nachsieht. */
+  .lineno-inner span.cur{opacity:1;color:var(--ink);font-weight:600}
+  .lineno-inner span.warn{opacity:1;color:var(--warn);font-weight:600}
   .hint{
     padding:12px 16px;border-top:1px dashed rgba(36,52,71,.18);
     font-size:.8rem;color:var(--muted);line-height:1.7;
