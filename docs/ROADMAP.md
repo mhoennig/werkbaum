@@ -104,3 +104,29 @@ Tastendruck ein Commit); und wer bei einem Backend eigentlich was darf
   erweitert D18 (heute rein statisch/kostenminimierend) um Nutzen- und
   Status-/Zeitachse.
 - Attribut-Syntax für Termine/Meilensteine.
+
+## Features für vollständiges Lean-Pathfinding
+
+- **Ein-/Ausklappbare Teilbäume**  
+  Teilbäume können im Text mit einer kompakten Zeichensyntax als initial eingeklappt markiert werden. `>` steht dabei für „ab hier einklappen“, `<` kann innerhalb eines eingeklappten Bereichs gezielt wieder sichtbare Teilbäume hervorholen. Im Diagramm kann anschließend unabhängig vom Text interaktiv ein- und ausgeklappt werden.
+
+- **Knoten-IDs**  
+  Knoten können über eine kompakte ID wie `#auth` eindeutig adressiert werden. IDs bestehen aus einem whitespace-freien Bezeichner und dienen insbesondere als Ziel für Querverweise und Abhängigkeiten.
+
+- **Abhängigkeiten zwischen Knoten**  
+  Mit einer Syntax wie `:#auth,#api` kann ein Knoten von anderen Knoten außerhalb seines eigenen Teilbaums abhängig gemacht werden. Dependencies beeinflussen nicht, wann Arbeiten beginnen dürfen, sondern den **effektiven Status** eines Knotens.
+
+- **Intrinsischer und effektiver Status**  
+  Der intrinsische Status beschreibt den tatsächlichen Bearbeitungsstand eines Knotens. Der effektive Status berücksichtigt zusätzlich seine Abhängigkeiten. Ein intrinsisch fertiger Knoten kann daher effektiv noch nicht vollständig fertig sein, solange Dependencies nicht erfüllt sind.
+
+- **Dependency-aware Lean Pathfinding**  
+  Das Lean Pathfinding berücksichtigt künftig nicht nur den Restaufwand innerhalb des gewählten Teilbaums, sondern die gesamte notwendige **Dependency Closure**. Gemeinsam benötigte Dependencies werden dabei nur einmal berechnet. Zyklen sind zulässig und entsprechen gemeinsam fertigzustellenden Gruppen.
+
+- **Visualisierung von Dependencies**  
+  Abhängigkeiten werden als optisch sekundäre Querverbindungen im Diagramm dargestellt, etwa dünn oder gestrichelt. Bei Auswahl eines Knotens können dessen ein- und ausgehende Dependencies hervorgehoben werden.
+
+- **XOR / exklusives Oder**  
+  Zusätzlich zu `all-of`, `any-of` und optionalen Knoten soll eine echte XOR-Gruppe unterstützt werden: Genau eine Alternative darf realisiert werden. Als kompakte Syntax bietet sich beispielsweise `x` an.
+
+- **Knotenbeschreibungen / Detailtexte**  
+  Knoten können zusätzliche Erläuterungstexte erhalten, die im Diagramm als Tooltip oder Pop-up angezeigt werden. Vorgesehen sind kurze, direkt beim Knoten eingerückte Texte sowie längere, über die Knoten-ID referenzierte Beschreibungsblöcke am Ende des Dokuments.
