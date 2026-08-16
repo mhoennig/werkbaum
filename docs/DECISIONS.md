@@ -458,11 +458,11 @@ http(s) erreichbare Textdatei unabhängig von Endung und Content-Type. Es gibt
 also keinen Bruch für bestehende Links.
 
 **Beispieldateien liegen unter `docs/examples/`** (`example-plan-0…3.werkbaum`,
-`example-werkbaum.werkbaum`) statt einzeln in `docs/`. Mehrere Beispiele, weil
+`werkbaum.werkbaum`) statt einzeln in `docs/`. Mehrere Beispiele, weil
 sich das Umschalten zwischen Dokumenten (D22) erst mit mehreren *geladenen*
 Dokumenten zeigen lässt: jeder `?sourceUrl=`-Link legt ein eigenes Dokument an
 (id aus der URL, D23), nacheinander geöffnet stehen sie danach alle im Wähler.
-`example-werkbaum.werkbaum` beschreibt Werkbaum selbst (Bestand + mögliche
+`werkbaum.werkbaum` beschreibt Werkbaum selbst (Bestand + mögliche
 Weiterentwicklung, destilliert aus ROADMAP/TASKS/DECISIONS) — zugleich
 Beispiel und lebende Projektübersicht; bei größeren Änderungen mitpflegen.
 
@@ -504,7 +504,7 @@ unsichtbaren `div` mit gleicher Typografie und Breite plus Marker-Span
 (`offsetTop`). Gescrollt wird nur, wenn die Zeile nicht ohnehin sichtbar ist.
 
 **Gegenrichtung (Cursor-Zeile → Knoten)** ist bei großen Bäumen die nützlichere
-Hälfte: `example-werkbaum.werkbaum` hat 75 sichtbare Knoten, ohne Markierung
+Hälfte: `werkbaum.werkbaum` hat 75 sichtbare Knoten, ohne Markierung
 verliert man beim Tippen die Orientierung. Der Knoten der Cursor-Zeile bekommt
 die Klasse `current`; ins Bild gescrollt wird **nur beim Zeilenwechsel**, sonst
 ruckelte das Diagramm bei jedem Tastendruck. Vor der ersten Cursor-Bewegung ist
@@ -660,7 +660,7 @@ einen `?sourceUrl=`-Link erreichbar; zugleich dient er als lebende
 Projektübersicht.
 
 **Eine Quelle, keine Kopie.** Der Text wird per `?raw`-Import aus
-`docs/examples/example-werkbaum.werkbaum` gezogen — derselben Datei, die auch
+`examples/werkbaum.werkbaum` gezogen — derselben Datei, die auch
 der `?sourceUrl=`-Link lädt. Vite bettet sie beim Build in die eine Ausgabedatei
 ein (D19), es wird nichts nachgeladen (D20). Eine zweite, abgetippte Fassung im
 Quelltext würde unweigerlich auseinanderlaufen. (Nebenwirkung: die Beispieldatei
@@ -989,7 +989,7 @@ war. Beide stehen jetzt auf `[x]` und leuchten beim nächsten Prod-Deploy als ne
 auf, was genau der Wahrheit entspricht.
 
 **Umfang: genau eine Datei, bewusst kein Muster.** Befördert wird nur
-`docs/examples/example-werkbaum.werkbaum` — allein der Werkbaum-eigene Plan sagt
+`examples/werkbaum.werkbaum` — allein der Werkbaum-eigene Plan sagt
 etwas über das Deployment aus. `[x]` steht im Repo an mehreren Stellen, wo eine
 Beförderung falsch bis unsinnig wäre:
 
@@ -1417,7 +1417,7 @@ Betrachter hinter derselben IP. Das ist ehrlich machbar, aber es sind nicht die
 gewünschten 2 s — und es ist schlechter als der Knopf, sobald mehrere zuschauen.
 
 Die Alternativen stehen als any-of-Gruppe im mitgelieferten Plan
-(`docs/examples/example-werkbaum.werkbaum`, unter „Update by itself"); die beiden
+(`examples/werkbaum.werkbaum`, unter „Update by itself"); die beiden
 gemessenen Sackgassen als `[-]` mit dem Messergebnis im Kommentar, damit niemand
 sie erneut aufmacht. Der günstigste Pfad wählt dort von selbst die
 Rate-Limit-Anhebung — die billigste wirksame Änderung.

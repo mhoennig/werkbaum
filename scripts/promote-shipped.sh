@@ -2,7 +2,7 @@
 #
 # Werkbaum — „fertig" auf „in Produktion" befördern.
 #
-# Der mitgelieferte Plan docs/examples/example-werkbaum.werkbaum beschreibt
+# Der mitgelieferte Plan docs/examples/werkbaum.werkbaum beschreibt
 # Werkbaum selbst. SPEC §4 unterscheidet `[x]` fertig (abgeschlossen) von `[^]`
 # in Produktion (deployed/live) — und die zweite Aussage kann erst der Deploy
 # wahr machen. Konvention deshalb: beim Mergen `[x]`, unmittelbar VOR dem

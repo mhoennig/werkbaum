@@ -27,7 +27,7 @@ Integrations-Backend.
 - Keine neuen Laufzeit-Abhängigkeiten ohne Rückfrage (gilt in beiden Teilen).
 - Der Notationstext ist das führende Datenformat; kein Teil erfindet ein
   eigenes Speicherformat für die Struktur.
-- Im mitgelieferten Plan `docs/examples/example-werkbaum.werkbaum` bekommt eine
+- Im mitgelieferten Plan `docs/examples/werkbaum.werkbaum` bekommt eine
   fertige Funktion beim Mergen **`[x]`**, nicht `[^]`. Auf „in Produktion"
   befördert erst der Deploy der stabilen Instanz
   (`scripts/promote-shipped.sh`, von `deploy-prod.sh` aufgerufen) — nur er macht

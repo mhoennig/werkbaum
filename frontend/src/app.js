@@ -8,7 +8,7 @@ import { padUrls } from './remote.js';
    Dieselbe Datei, die auch per ?sourceUrl= geladen werden kann; `?raw` bettet
    sie beim Build in die eine Ausgabedatei ein (D19), es wird nichts nachgeladen
    (D20). Quelle bleibt docs/examples/ — keine Kopie, die auseinanderläuft. */
-import WERKBAUM_DOC from '../../docs/examples/example-werkbaum.werkbaum?raw';
+import WERKBAUM_DOC from '../../docs/examples/werkbaum.werkbaum?raw';
 
 const INITIAL = `%% Project structure – Sprint 14
 [~] Website relaunch (XL) https://wiki.example.com/relaunch

@@ -253,7 +253,7 @@ SSH (target in `.env`, template `.env.example`). Unlike Pages this is a
 **deliberate** step, so it is also the moment a feature actually goes live.
 
 The script therefore starts by running `scripts/promote-shipped.sh`, which turns
-`[x]` (done) into `[^]` (in production) in `docs/examples/example-werkbaum.werkbaum`
+`[x]` (done) into `[^]` (in production) in `docs/examples/werkbaum.werkbaum`
 — the shipped plan describing Werkbaum itself — and records that as its own
 commit. The convention is: mark a finished feature `[x]` when it is merged and
 let the deploy promote it. That keeps the plan honest on both instances and
