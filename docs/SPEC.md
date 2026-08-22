@@ -423,6 +423,24 @@ werden die für die günstigste Realisierung **nötigen** Knoten:
 - **Fehlende Größe wird als `M` gewertet** (nur für diese Kostenschätzung; die
   SPEC-Semantik der Größen in §5 bleibt unberührt).
 
+**Mit Abhängigkeiten (§1) zählt die Dependency Closure.** Jeder nötige Knoten
+zieht seine `:#…`-Ziele samt deren Realisierung in die nötige Menge; gemeinsam
+Gebrauchtes zählt über die Mengen-Vereinigung nur **einmal**. Regeln:
+
+- Abhängigkeiten ziehen ihr Ziel auch dann, wenn es **optional** ist oder in
+  einer **nicht gewählten Alternative** steht — gebraucht ist gebraucht; im
+  Diagramm bleibt so ein einzelner heller Knoten in einem zurückgetretenen
+  Zweig stehen. Nur **verworfene** Ziele werden nie gezogen (verworfen zählt
+  nie); dass so ein Knoten nicht fertig werden kann, zeigt der effektive
+  Status (§4).
+- Damit ist die Wahl je Alternativgruppe **nicht mehr lokal**: Eine teurere
+  Alternative kann gewinnen, weil ihre Abhängigkeiten anderswo ohnehin
+  bezahlt werden. **Verfahren (D42): erschöpfende Suche** über die
+  **gekoppelten** Gruppen (Gruppen, deren Teilbäume Abhängigkeiten enthalten
+  oder gebraucht werden); alle übrigen wählen lokal wie bisher, bei
+  Gleichstand die erste. Wird die Suche zu groß, rechnet die Anzeige **gierig
+  und sagt es** — Warnung `cheapApprox`, zeilenlos.
+
 Darstellung per **Inversion**: nicht benötigte Knoten (nicht-gewählte
 any-of-Alternativen und optionale Knoten, je samt Teilbaum) treten zurück
 (blass, entsättigt); der
@@ -758,11 +776,9 @@ Knoten, Hervorhebung am ausgewählten Knoten. Begründung: D41.
 
 ### Günstigster Pfad mit Abhängigkeiten
 
-Die Kostenrechnung aus §9 zählt heute nur den gewählten Teilbaum. Mit
-Abhängigkeiten zählt die **Dependency Closure**: alles, was zusätzlich nötig
-ist, damit der gewählte Knoten effektiv fertig werden kann. Gemeinsam
-benötigte Abhängigkeiten werden dabei **nur einmal** gezählt. Genau das macht
-die Rechnung schwerer als heute — siehe D34.
+**Umgesetzt** — siehe §9 (Dependency Closure): Vereinigung statt Teilbaum,
+gemeinsam Gebrauchtes zählt einmal, erschöpfende Suche über die gekoppelten
+Gruppen mit benanntem gierigem Rückfall. Begründung: D42.
 
 ### Knotenbeschreibungen (`"` und `---`)
 

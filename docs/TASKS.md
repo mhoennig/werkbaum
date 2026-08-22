@@ -90,10 +90,15 @@ entscheiden, **bevor** Code entsteht.
       Minimum); **Knotenfarbe = effektiver Status**, bei Diskrepanz die eigene
       Statusbox als Marke unten links in den eigenen Farben (auch im Export);
       Tooltip + `a11yEffective`; `tests/effective.test.js`.
-- [ ] Günstigsten Pfad auf die Dependency Closure umstellen (gemeinsame
+- [x] Günstigsten Pfad auf die Dependency Closure umstellen (gemeinsame
       Abhängigkeiten nur einmal zählen). Erweitert D18; die gierige Wahl je
       Alternativgruppe ist damit nicht mehr optimal — Verfahren wählen und
       **benennen**.
+      → Umgesetzt (D42): erschöpfende Suche über die gekoppelten Gruppen
+      (`computeCheapPlan` in model.js), ungekoppelte wählen lokal wie bisher;
+      oberhalb des Suchlimits gierig mit zeilenloser Warnung `cheapApprox`.
+      Abhängigkeiten ziehen auch optionale/nicht gewählte Ziele, verworfene
+      nie; `tests/closure.test.js`.
 - [x] Querverbindungen zeichnen (eigene SVG-Ebene, optisch sekundär);
       bei ausgewähltem Knoten ein-/ausgehende hervorheben.
       → Umgesetzt (D41): gekrümmte blassgraue Kanten mit Pfeilspitze auf das

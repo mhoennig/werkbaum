@@ -52,23 +52,119 @@ export function cheapestCost(n){
   }
   return c;
 }
-export function markCheapest(n, set){
-  set.add(n);
-  const kids = pathChildren(n);
-  if(!kids.length) return;
-  if(gateOf(kids) !== 'and'){
-    let best = null, bc = Infinity;
-    for(const k of kids){ const c = cheapestCost(k); if(c < bc){ bc = c; best = k; } }
-    if(best) markCheapest(best, set);
-  } else {
-    for(const k of kids) markCheapest(k, set);
+/* ---------- Günstigster Pfad auf der Dependency Closure (SPEC §9, D42) ----
+   Mit Abhängigkeiten zählt nicht mehr der gewählte Teilbaum, sondern die
+   HÜLLE: Jeder nötige Knoten zieht seine `:#…`-Ziele samt deren Realisierung
+   nach; gemeinsam Gebrauchtes zählt über die Mengen-Vereinigung nur EINMAL.
+   Damit ist die Wahl je Alternativgruppe nicht mehr lokal optimal (D34).
+
+   Verfahren — gewählt und benannt (D42): ERSCHÖPFENDE SUCHE, aber nur über
+   die GEKOPPELTEN Gruppen — disjunktive Gruppen, in deren Teilbäumen
+   Abhängigkeiten stehen oder auf deren Knoten Abhängigkeiten zeigen. Alle
+   übrigen Gruppen sind von der Kopplung unberührt und wählen lokal wie
+   bisher (kleinste rekursive Kosten, Gleichstand ⇒ erste). Ohne
+   Abhängigkeiten gibt es keine gekoppelten Gruppen und genau eine
+   Auswertung — das alte Verhalten. Übersteigt das Produkt der
+   Gruppengrößen EXACT_LIMIT, fällt die Rechnung auf die gierige lokale
+   Wahl zurück und SAGT es (`exact:false` ⇒ Warnung `cheapApprox`).
+
+   Regeln der Hülle: Abhängigkeiten ziehen ihr Ziel auch dann, wenn es
+   optional ist oder in einer nicht gewählten Alternative steht — gebraucht
+   ist gebraucht; nur verworfene Ziele nie (§9: verworfen zählt nie), deren
+   Unerfüllbarkeit zeigt der effektive Status (D39). Bei doppelter ID gilt
+   die erste Vergabe (D36); Zyklen enden über die Mengen-Prüfung von selbst. */
+const EXACT_LIMIT = 20000;
+export function computeCheapPlan(roots){
+  const nodes = [], byId = new Map(), referenced = new Set();
+  (function walk(ns){
+    for(const n of ns){
+      nodes.push(n);
+      if(n.id != null && !byId.has(n.id)) byId.set(n.id, n);
+      walk(n.children);
+    }
+  })(roots);
+  for(const n of nodes) for(const d of n.deps || []) referenced.add(d);
+  const anyDeps = referenced.size > 0;
+
+  /* Teilbaum berührt die Kopplung? (hat Abhängigkeiten oder wird gebraucht) */
+  const touches = new Map();
+  const touch = n => {
+    let v = (n.deps && n.deps.length > 0) || (n.id != null && referenced.has(n.id));
+    for(const k of n.children) v = touch(k) || v;
+    touches.set(n, v);
+    return v;
+  };
+  roots.forEach(touch);
+
+  /* Wahlpunkte: disjunktive Gruppen mit mehr als einer Alternative.
+     Lokale Wahl vorab (kleinste rekursive Kosten, Gleichstand ⇒ erste) —
+     sie gilt für ungekoppelte Gruppen und für den gierigen Rückfall. */
+  const coupled = [], localChoice = new Map();
+  const groups = [];
+  /* Nur Kindergruppen — Wurzeln sind immer alle nötig (wie bisher). */
+  (function groupsOf(ns){
+    for(const n of ns){
+      const kids = pathChildren(n);
+      if(kids.length > 1 && gateOf(kids) !== 'and') groups.push(kids);
+      groupsOf(n.children);
+    }
+  })(roots);
+  for(const kids of groups){
+    let best = kids[0], bc = cheapestCost(kids[0]);
+    for(const k of kids.slice(1)){ const c = cheapestCost(k); if(c < bc){ bc = c; best = k; } }
+    localChoice.set(kids[0], best);   /* Schlüssel: erstes Kind der Gruppe */
+    if(anyDeps && kids.some(k => touches.get(k))) coupled.push(kids);
   }
+
+  /* Nötige Menge für eine Belegung der gekoppelten Gruppen. */
+  const needed = choice => {
+    const set = new Set(), queue = [...roots];
+    while(queue.length){
+      const n = queue.pop();
+      if(set.has(n)) continue;
+      set.add(n);
+      const kids = pathChildren(n);
+      if(kids.length){
+        if(gateOf(kids) !== 'and'){
+          queue.push(kids.length === 1 ? kids[0]
+            : (choice.get(kids[0]) || localChoice.get(kids[0])));
+        } else for(const k of kids) queue.push(k);
+      }
+      for(const d of n.deps || []){
+        const t = byId.get(d);
+        if(t && !(t.status && t.status.key === 'verworfen')) queue.push(t);
+      }
+    }
+    return set;
+  };
+  const costOf = set => { let c = 0; set.forEach(n => c += ownCost(n)); return c; };
+
+  let product = 1;
+  for(const kids of coupled){ product *= kids.length; if(product > EXACT_LIMIT) break; }
+  if(product > EXACT_LIMIT){
+    /* Gierig, aber benannt (D42): lokale Wahl überall, Hülle trotzdem. */
+    return {set: needed(new Map()), exact: false};
+  }
+
+  /* Erschöpfend, lexikografisch — frühere Gruppen wechseln zuletzt, strikt
+     kleiner gewinnt: Bei Gleichstand bleibt so die erste Alternative (§9). */
+  const idx = coupled.map(() => 0);
+  let best = null, bc = Infinity;
+  for(;;){
+    const choice = new Map();
+    coupled.forEach((kids, g) => choice.set(kids[0], kids[idx[g]]));
+    const set = needed(choice);
+    const c = costOf(set);
+    if(c < bc){ bc = c; best = set; }
+    let g = coupled.length - 1;
+    while(g >= 0 && ++idx[g] >= coupled[g].length){ idx[g] = 0; g--; }
+    if(g < 0) break;
+  }
+  return {set: best, exact: true};
 }
-/* Menge der nötigen Knoten über alle Wurzeln. */
+/* Menge der nötigen Knoten über alle Wurzeln (Rückgabe wie bisher). */
 export function computeCheapSet(roots){
-  const set = new Set();
-  roots.forEach(r => markCheapest(r, set));
-  return set;
+  return computeCheapPlan(roots).set;
 }
 /* CSS-Klassen für den günstigen Pfad. Leere `cheapSet` (Pfad aus) ⇒ ''.
    Endknoten (kein Kind liegt auf dem Pfad) bekommt zusätzlich 'cheap-leaf'. */

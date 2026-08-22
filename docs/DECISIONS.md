@@ -1985,3 +1985,44 @@ Kante — ein Kreis von einem Knoten zu sich selbst sagte nichts.
 auf dem DOM; headless getestet sind die `data-id`/`data-deps`-Attribute des
 Renderers, geprüft wurde im Browser (alle drei Modi, Fokus- und
 Cursor-Hervorhebung, Export).
+
+## D42 — Closure-Pfad: erschöpfend über die gekoppelten Gruppen, gierig nur benannt
+Die letzte Baustelle aus D34: Mit Abhängigkeiten zählt der günstigste Pfad
+nicht mehr den gewählten Teilbaum, sondern die **Hülle** — jeder nötige Knoten
+zieht seine Ziele samt Realisierung nach, gemeinsam Gebrauchtes zählt über die
+Mengen-Vereinigung nur einmal. Damit ist die Wahl je Alternativgruppe nicht
+mehr lokal optimal (das D34-Beispiel: `A (S) :#db` schlägt `B (M)`, sobald
+`#db` ohnehin bezahlt wird). Die Entscheidungen:
+
+**Verfahren: erschöpfende Suche — aber nur über die gekoppelten Gruppen.**
+D34 stellte „exakt, die Bäume sind klein“ gegen „gierig, aber benannt“;
+gebaut sind beide, mit einer Beobachtung dazwischen, die die exakte Suche
+praktisch immer billig macht: **Nur Gruppen, in deren Teilbäumen
+Abhängigkeiten stehen oder auf deren Knoten welche zeigen, koppeln
+überhaupt.** Alle übrigen wählen weiterhin lokal (kleinste rekursive Kosten,
+Gleichstand ⇒ erste) — ohne Abhängigkeiten gibt es null gekoppelte Gruppen
+und genau eine Auswertung, also exakt das alte Verhalten zum alten Preis.
+Über die gekoppelten Gruppen läuft ein lexikografischer Odometer (frühe
+Gruppen wechseln zuletzt, strikt `<` gewinnt — bei Gleichstand bleibt so die
+erste Alternative, §9). Übersteigt das Produkt der Gruppengrößen das
+Suchlimit (20 000), fällt die Rechnung auf die gierige lokale Wahl zurück
+und **sagt es**: zeilenlose Warnung `cheapApprox` — die in D34 verlangte
+Benennung, statt stillschweigend Optimalität zu suggerieren.
+
+**Abhängigkeiten ziehen, was sie brauchen — auch Optionales und nicht
+Gewähltes.** `+` heißt „für das Ganze entbehrlich“, aber wer per `:#…` darauf
+zeigt, braucht es eben doch; und ein Ziel in einer nicht gewählten
+Alternative wird trotzdem realisiert, wenn etwas Nötiges davon abhängt. Im
+Diagramm bleibt so ein einzelner heller Knoten im zurückgetretenen Zweig
+stehen — sichtbar „das hier wird gebraucht, egal wie ihr wählt“. Nur
+**verworfene** Ziele werden nie gezogen (§9: verworfen zählt nie): Sie werden
+nicht realisiert, und dass der Abhängige deshalb nie fertig wird, sagt schon
+der effektive Status (D39) — der Pfad muss die Lüge nicht einpreisen.
+Gezogen wird das Ziel samt **Abwärts**-Realisierung, nicht seine Vorfahren:
+Der Elternknoten braucht sein Kind, nicht umgekehrt.
+
+**API: `computeCheapPlan(roots)` → `{set, exact}`.** `computeCheapSet` bleibt
+als Hülle für Tests und Kompatibilität; `render()` liest `exact` für die
+Warnung. `markCheapest` entfällt — die Menge entsteht jetzt in einem
+Worklist-Durchlauf je Belegung (Zyklen enden über die Mengen-Prüfung von
+selbst; erste ID-Vergabe gewinnt, D36/D39).

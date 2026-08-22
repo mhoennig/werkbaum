@@ -1,6 +1,6 @@
 import './style.css';
 import { parse } from './parser.js';
-import { computeCheapSet, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus } from './model.js';
+import { computeCheapPlan, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus } from './model.js';
 import { esc, renderTreeHtml } from './render.js';
 import { formatWarning } from './warnings.js';
 import { padUrls } from './remote.js';
@@ -90,7 +90,15 @@ function render(){
     freshSet = new Set();
     foldByLine = new Map();
   } else {
-    const cheapSet = cheapPathOn ? computeCheapSet(roots) : new Set();
+    /* Günstigster Pfad auf der Dependency Closure (D42): scheitert die exakte
+       Suche an zu vielen gekoppelten Gruppen, wird die gierige Schätzung
+       BENANNT statt stillschweigend geliefert (zeilenlose Warnung). */
+    let cheapSet = new Set();
+    if(cheapPathOn){
+      const plan = computeCheapPlan(roots);
+      cheapSet = plan.set;
+      if(!plan.exact) warnings = warnings.concat([{type: 'cheapApprox'}]);
+    }
     out.classList.toggle('cheap-on', cheapPathOn);
     /* Die Menge MUSS aus denselben Knotenobjekten gebildet werden, die gerade
        gerendert werden — `freshProdSet` liefert Knoten aus `roots`. Eine früher
@@ -1277,6 +1285,7 @@ const I18N = {
     unknownDepWarn:"Zeile {line}: Abhängigkeit #{id} — es gibt keinen Knoten mit dieser ID.",
     unknownDescWarn:"Zeile {line}: Beschreibung für #{id} — es gibt keinen Knoten mit dieser ID.",
     descStrayWarn:"Zeile {line}: Beschreibungszeile ohne Bezug — ihr fehlt der Knoten bzw. der #id-Block davor.",
+    cheapApproxWarn:"Zu viele gekoppelte Alternativgruppen für die exakte Suche — der günstigste Pfad ist gierig geschätzt (je Gruppe lokal gewählt).",
     st_idee:"Idee", st_geplant:"geplant", st_arbeit:"in Arbeit", st_durchstich:"Durchstich",
     st_fertig:"fertig", st_prod:"in Produktion", st_highrisk:"High Risk", st_verworfen:"verworfen",
     unknownStatusWarn:"Zeile {line}: unbekanntes Statuszeichen „{code}“ — als neutral dargestellt.",
@@ -1352,6 +1361,7 @@ const I18N = {
     unknownDepWarn:"Line {line}: dependency #{id} — no node has this ID.",
     unknownDescWarn:"Line {line}: description for #{id} — no node has this ID.",
     descStrayWarn:"Line {line}: description line with nothing to attach to — it needs a node or an #id block before it.",
+    cheapApproxWarn:"Too many coupled alternative groups for the exact search — the cheapest path is a greedy estimate (chosen locally per group).",
     st_idee:"idea", st_geplant:"planned", st_arbeit:"in progress", st_durchstich:"walking skeleton",
     st_fertig:"done", st_prod:"in production", st_highrisk:"high risk", st_verworfen:"discarded",
     unknownStatusWarn:"Line {line}: unknown status code “{code}” — shown as neutral.",
@@ -1427,6 +1437,7 @@ const I18N = {
     unknownDepWarn:"Línea {line}: dependencia #{id} — ningún nodo tiene esta ID.",
     unknownDescWarn:"Línea {line}: descripción para #{id} — ningún nodo tiene esta ID.",
     descStrayWarn:"Línea {line}: línea de descripción sin referencia — le falta un nodo o un bloque #id delante.",
+    cheapApproxWarn:"Demasiados grupos de alternativas acoplados para la búsqueda exacta — el camino más barato es una estimación voraz (elección local por grupo).",
     st_idee:"idea", st_geplant:"planificado", st_arbeit:"en curso", st_durchstich:"prototipo funcional",
     st_fertig:"terminado", st_prod:"en producción", st_highrisk:"alto riesgo", st_verworfen:"descartado",
     unknownStatusWarn:"Línea {line}: código de estado desconocido «{code}» — mostrado como neutral.",
@@ -1502,6 +1513,7 @@ const I18N = {
     unknownDepWarn:"Ligne {line} : dépendance #{id} — aucun nœud ne porte cet ID.",
     unknownDescWarn:"Ligne {line} : description pour #{id} — aucun nœud ne porte cet ID.",
     descStrayWarn:"Ligne {line} : ligne de description sans rattachement — il lui manque un nœud ou un bloc #id avant.",
+    cheapApproxWarn:"Trop de groupes d’alternatives couplés pour la recherche exacte — le chemin le moins cher est une estimation gloutonne (choix local par groupe).",
     st_idee:"idée", st_geplant:"planifié", st_arbeit:"en cours", st_durchstich:"squelette fonctionnel",
     st_fertig:"terminé", st_prod:"en production", st_highrisk:"risque élevé", st_verworfen:"abandonné",
     unknownStatusWarn:"Ligne {line} : code de statut inconnu « {code} » — affiché comme neutre.",
@@ -1577,6 +1589,7 @@ const I18N = {
     unknownDepWarn:"Wiersz {line}: zależność #{id} — żaden węzeł nie ma tego ID.",
     unknownDescWarn:"Wiersz {line}: opis dla #{id} — żaden węzeł nie ma tego ID.",
     descStrayWarn:"Wiersz {line}: wiersz opisu bez odniesienia — brakuje węzła lub bloku #id przed nim.",
+    cheapApproxWarn:"Zbyt wiele sprzężonych grup alternatyw dla dokładnego wyszukiwania — najtańsza ścieżka jest oszacowana zachłannie (wybór lokalny w każdej grupie).",
     st_idee:"pomysł", st_geplant:"zaplanowane", st_arbeit:"w toku", st_durchstich:"działający szkielet",
     st_fertig:"gotowe", st_prod:"w produkcji", st_highrisk:"wysokie ryzyko", st_verworfen:"odrzucone",
     unknownStatusWarn:"Wiersz {line}: nieznany znak statusu „{code}” — pokazany jako neutralny.",
@@ -1652,6 +1665,7 @@ const I18N = {
     unknownDepWarn:"Строка {line}: зависимость #{id} — узла с таким ID нет.",
     unknownDescWarn:"Строка {line}: описание для #{id} — узла с таким ID нет.",
     descStrayWarn:"Строка {line}: строка описания без привязки — перед ней нет узла или блока #id.",
+    cheapApproxWarn:"Слишком много связанных групп альтернатив для точного поиска — самый дешёвый путь оценён жадно (локальный выбор в каждой группе).",
     st_idee:"идея", st_geplant:"запланировано", st_arbeit:"в работе", st_durchstich:"сквозной прототип",
     st_fertig:"готово", st_prod:"в эксплуатации", st_highrisk:"высокий риск", st_verworfen:"отклонено",
     unknownStatusWarn:"Строка {line}: неизвестный код статуса «{code}» — показан как нейтральный.",
@@ -1727,6 +1741,7 @@ const I18N = {
     unknownDepWarn:"पंक्ति {line}: निर्भरता #{id} — इस आईडी वाला कोई नोड नहीं है।",
     unknownDescWarn:"पंक्ति {line}: #{id} के लिए विवरण — इस आईडी वाला कोई नोड नहीं है।",
     descStrayWarn:"पंक्ति {line}: विवरण पंक्ति बिना संदर्भ — इससे पहले कोई नोड या #id ब्लॉक नहीं है।",
+    cheapApproxWarn:"सटीक खोज के लिए बहुत सारे युग्मित विकल्प-समूह — सबसे सस्ता पथ लालची अनुमान है (प्रति समूह स्थानीय चयन)।",
     st_idee:"विचार", st_geplant:"नियोजित", st_arbeit:"प्रगति पर", st_durchstich:"कार्यशील ढाँचा",
     st_fertig:"पूर्ण", st_prod:"उत्पादन में", st_highrisk:"उच्च जोखिम", st_verworfen:"अस्वीकृत",
     unknownStatusWarn:"पंक्ति {line}: अज्ञात स्थिति कोड „{code}“ — तटस्थ रूप में दिखाया गया।",
@@ -1802,6 +1817,7 @@ const I18N = {
     unknownDepWarn:"第 {line} 行：依赖 #{id}——没有节点使用此 ID。",
     unknownDescWarn:"第 {line} 行：#{id} 的描述——没有节点使用此 ID。",
     descStrayWarn:"第 {line} 行：描述行没有归属——前面缺少节点或 #id 块。",
+    cheapApproxWarn:"耦合的备选组过多，无法精确搜索——最便宜路径为贪心估计（每组就地选择）。",
     st_idee:"想法", st_geplant:"已计划", st_arbeit:"进行中", st_durchstich:"可运行骨架",
     st_fertig:"已完成", st_prod:"已上线", st_highrisk:"高风险", st_verworfen:"已放弃",
     unknownStatusWarn:"第 {line} 行：未知状态代码“{code}”——显示为中性。",
@@ -1877,6 +1893,7 @@ const I18N = {
     unknownDepWarn:"{line} 行目：依存 #{id} — この ID を持つノードはありません。",
     unknownDescWarn:"{line} 行目：#{id} の説明 — この ID を持つノードはありません。",
     descStrayWarn:"{line} 行目：説明行の帰属先がありません — 直前にノードまたは #id ブロックが必要です。",
+    cheapApproxWarn:"結合された選択肢グループが多すぎるため厳密探索は不可 — 最安パスは貪欲法による推定です（グループごとに局所選択）。",
     st_idee:"アイデア", st_geplant:"計画済み", st_arbeit:"作業中", st_durchstich:"ウォーキングスケルトン",
     st_fertig:"完了", st_prod:"本番稼働", st_highrisk:"高リスク", st_verworfen:"破棄",
     unknownStatusWarn:"{line} 行目: 不明なステータス記号「{code}」— 中立として表示。",

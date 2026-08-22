@@ -25,6 +25,9 @@
                                       Beschreibungsteil ohne #id-Block; meldet
                                       auch die von einem versehentlichen
                                       `---` verschluckten Knotenzeilen
+   - cheapApprox   { }              — günstigster Pfad nur gierig geschätzt:
+                                      zu viele gekoppelte Gruppen für die
+                                      exakte Suche (D42); zeilenlos
    - sourceLoad    { url, error }   — ?sourceUrl= nicht ladbar (D23); ohne
                                       Zeilennummer, erscheint dadurch zuoberst
    - padRateLimit  { seconds }      — zu früh nachgeladen; Werkbaum hat gar nicht
@@ -55,6 +58,8 @@ export function formatWarning(w, t){
       return t('unknownDescWarn', {line: w.line, id: esc(w.id)});
     case 'descStray':
       return t('descStrayWarn', {line: w.line});
+    case 'cheapApprox':
+      return t('cheapApproxWarn');
     case 'sourceLoad':
       return t('sourceLoadWarn', {url: esc(w.url), error: esc(w.error)});
     case 'padRateLimit':
