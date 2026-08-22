@@ -18,9 +18,9 @@
       - [x] Cycles are legal — they mean "finished together" (XS)
       - [x] An id with no node behind it is a warning (XS)
     - [x] XOR, = — exactly one alternative, not at least one (S)
-    - [ ] Node descriptions, shown as a tooltip or pop-up (M)
-      - [ ] A short text right at the node (S)  %% decided: a " line below the node
-      - [ ] A long block at the end, addressed by its id (S)  %% decided: behind a --- separator
+    - [x] Node descriptions, shown as a tooltip (M)
+      - [x] A short text right at the node (S)  %% a " line below the node
+      - [x] A long block at the end, addressed by its id (S)  %% behind a --- separator
     - [-] A separate storage format for the structure (L)  %% the text is the format
     - [ ] Ticket references (#123) (S)
     - [?] Benefit per node, not only cost (M)
@@ -33,19 +33,19 @@
         - [^] Horizontal fan (S)
         - [^] Vertical, transposed (S)
         - [^] Compact (S)
-      - [?] Cross links for dependencies (M)
-        - [?] Visually secondary — the tree carries the message (S)
-        - [?] Highlight what a selected node needs and feeds (S)
+      - [x] Cross links for dependencies (M)
+        - [x] Visually secondary — the tree carries the message (S)
+        - [x] Highlight what a selected node needs and feeds (S)
     - [^] Cheapest path (M)
       - [^] Cost model, missing size counts as M (S)
       - [^] Metro-map line through the leaves (S)
-      - [?] Count the whole dependency closure (M)
-        - [?] Shared dependencies counted only once (S)
-        - [!] The cheapest alternative is no longer the local one (M)  %% see D34
-          | [?] Search exactly, the trees are small enough (M)
-            - [?] Enumerate the any-of choices (S)
-            - [?] Cost is the size of the union (S)
-          | [ ] Stay greedy, but say so (XS)
+      - [x] Count the whole dependency closure #closure (M)
+        - [x] Shared dependencies counted only once (S)
+        - [x] The cheapest alternative is no longer the local one (M)  %% see D34, D42
+          | [x] Search exactly, the trees are small enough (M)
+            - [x] Enumerate the coupled any-of choices (S)
+            - [x] Cost is the size of the union (S)
+          | [x] Stay greedy, but say so (XS)  %% built as the named fallback
     - [^] Export (M)
       - [^] SVG and PNG download (S)
       - [^] PNG to the clipboard (S)
@@ -76,18 +76,19 @@
     - [-] Deploy through a gh-pages branch (S)  %% GitHub Actions instead
     - [-] Fonts from Google (XS)  %% self-hosted, no third-party request
   - [ ] Backend (XL)
-    - [ ] Kotlin and Spring Boot scaffold (M)
+    - [ ] Kotlin and Spring Boot scaffold #scaffold (M)
       - [ ] Gradle Kotlin DSL, JDK 21 (S)
       - [ ] Health endpoint and CI (S)
-    - [ ] Documents on the server (L)
+    - [ ] Documents on the server #docs (L) :#scaffold
       - [ ] Text plus metadata, no structure format (M)
         - [ ] REST endpoints (S)
         - [ ] Persistence (S)
       - [ ] Share by link (S)
-    - [?] Accounts and permissions (L)
+    - [?] Accounts and permissions (L) :#docs
       | [?] Single user, one token (S)
       | [?] Log in with OIDC (L)
   - [~] Collaborating on a Diagram (XL)
+    " The pad merges concurrent edits, Werkbaum renders the plan.
     - [^] Watch a shared Etherpad — it merges, we render (S)
       - [^] Load the pad's plain-text export (XS)
       - [^] Reload on demand (XS)  %% a timer only trips Etherpad's rate limit
@@ -98,7 +99,7 @@
           | [?] Ask the admin for cookie.sameSite = None (XS)
           | [ ] Live with it: edit in the pad's own tab (XS)
       - [^] A shared pointer: !!! focuses a node for everyone (XS)
-      - [?] Update by itself, within about 2 s (M)
+      - > [?] Update by itself, within about 2 s (M)
         | [?] Our own Etherpad beside Werkbaum (M)  %% then every setting below is ours
           - [ ] Node and a real database in userland (S)  %% the flatfile store is not for production
           - [ ] Book the RAM quota for an own daemon (XS)
@@ -107,19 +108,19 @@
           - [!] Keeping a public service patched (S)  %% indefinitely, that is the real cost
         | [?] Admin raises the export rate limit (XS)  %% default is 10 per 90 s
         | [?] Admin installs a plugin that pushes the text (S)  %% postMessage to the page
-        | [?] Our own backend holds one socket and fans out (XXL)
+        | [?] Our own backend holds one socket and fans out (XXL) :#scaffold
         | [ ] Poll inside the budget, at best every 9 s (S)  %% legal, but not 2 s
         | [-] Our own socket straight to the pad (L)  %% measured: upgrade refused
         | [-] Read the pad's HTML instead of the export (M)  %% measured: no CORS header
     - [ ] Git as the shared store (L)
       | [ ] A file in a repository, changed by pull request (S)  %% works today, no code
-      | [?] The backend commits every change (L)
+      | [?] The backend commits every change (L) :#scaffold
         - [?] History and restore (M)
           - [?] Diff between two versions (S)
           - [?] Who changed this line (S)
         - [?] A branch per scenario (S)
     - [?] Live editing, several people at once (XL)
-      - [ ] Transport over a websocket (S)  %% the easy half
+      - [ ] Transport over a websocket (S) :#scaffold  %% the easy half
       - [!] Merging simultaneous edits (L)  %% the actual work
         | [?] Text CRDT — the plan is plain text, so it fits (L)
         | [?] Operational transformation (XL)
@@ -138,7 +139,7 @@
     - [?] Registration with Mermaid (M)
       | [?] External diagram, self-hosted pages only (M)
       | [?] Pull request into Mermaid itself (L)
-  - [?] IntelliJ IDEA plugin (XL)
+  - > [?] IntelliJ IDEA plugin (XL)
     - [?] Show the diagram in the IDE (L)
       | [?] Through Mermaid, once Werkbaum is part of Mermaid itself (M)
         - [?] Fenced werkbaum blocks render in Markdown (S)
@@ -154,15 +155,27 @@
         - [?] Completion for status, size and tags (S)
         - [?] Structure view and folding (S)
       - [?] Kotlin with the Gradle IntelliJ plugin (S)
-      - [!] A second parser that must not drift from the SPEC (M)  %% exactly what D14 warns about
+      - < [!] A second parser that must not drift from the SPEC (M)  %% exactly what D14 warns about
         | [?] Both parsers test against the same fixtures (S)
         | [?] Run the one JS parser inside the IDE (M)
-  - [?] Tracker integration (XL)
-    | [?] Taiga (L) https://taiga.io
-      - [ ] Resolve "#123" over the REST API (M)
+  - [?] Tracker integration (XL)  %% exactly one of these, hence =
+    = [?] Taiga (L) https://taiga.io
+      - [ ] Resolve "#123" over the REST API #resolve (M)
         - [ ] Read title, link and status (S)
         - [ ] Map the workflow onto the states (S)
-      - [?] Write the status back (M)
+      - [?] Write the status back (M) :#resolve
       - [-] A plugin inside Taiga itself (L)  %% legacy frontend, self-hosted only
-    | [?] Tenzu, the successor (XXL) https://tenzu.net
-    | [ ] No tracker, plain text is enough (XS)
+    = [?] Tenzu, the successor (XXL) https://tenzu.net
+    = [ ] No tracker, plain text is enough (XS)
+
+---
+#closure
+  The cheapest path pulls every dependency of a needed node into the
+  needed set, and shared targets count only once. That is why an
+  alternative can win although it looks more expensive locally: its
+  dependencies are already paid for elsewhere (see D34 and D42).
+
+#scaffold
+  Spring Initializr project with Gradle Kotlin DSL on JDK 21.
+  Everything server-side hangs off this one node — that is what the
+  :#scaffold dependencies across the tree point at.
