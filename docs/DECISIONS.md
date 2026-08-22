@@ -1947,3 +1947,41 @@ zusätzlich einzeln anzuprangern wäre nur Lärm (SKIP-Ziel im Parser).
 Einzige Ausnahme ist `%%`: Der Kommentar fällt im ganzen Dokument als
 Erstes weg (einheitliche Regel, §1) — so lassen sich auch Beschreibungen
 kommentieren.
+
+## D41 — Querverbindungen: Krümmung statt Farbe, Pfeil auf das Gebrauchte
+Die Abhängigkeits-Kanten (SPEC §9) sind die erste Linienart, die nicht der
+Zerlegung folgt — §11 verlangte dafür eine eigene Zeichenebene. Gebaut wie der
+Pfad-Spline (D18): Overlay-SVGs in `#out`, die den CSS-`zoom` erben, neu
+gezeichnet nach Render und Moduswechsel. Die Bau-Entscheidungen:
+
+**Das Unterscheidungsmerkmal ist die Krümmung, nicht eine neue Farbe.** Die
+Palette ist vergeben: Tinte und Grau gehören den Baumlinien, Petrol der
+Interaktion und dem günstigsten Pfad, `--warn` dem Geister-Knoten — und Rot
+ist bewusst nicht vergeben (D34 zu LEAN-PATHFINDING). Also tragen die Kanten
+dasselbe Blassgrau wie die any-of-Führung, aber **geschwungen** (quadratische
+Kurve mit seitlichem Bauch): Alle Zerlegungslinien sind achsenparallel, jede
+gekrümmte Linie ist damit auf einen Blick „keine Zerlegung“ — dasselbe Mittel,
+mit dem sich der Pfad-Spline absetzt. Dünn (1,5 px) und blass (0,35), denn der
+Baum trägt die Hauptaussage; die **Pfeilspitze zeigt auf das Gebrauchte**
+(„braucht“-Richtung), Endpunkte auf den Knotenkanten statt -mitten, damit die
+Spitze sichtbar bleibt.
+
+**„Ausgewählt“ hat zwei Lesarten, beide gelten:** der Knoten mit
+Tastaturfokus im Diagramm, sonst der Knoten der Cursor-Zeile (D25). Dessen
+ein- und ausgehende Kanten wandern auf eine vordere Ebene in Tinte (2 px,
+0,9) — vorn dürfen sie den Baum überlagern, denn die Hervorhebung ist
+flüchtig und gerade angefragt. Kein Klick-Auswahlzustand: Der einfache Klick
+ist der Link (§6), und Knoten fokussieren sich beim Klicken ohnehin.
+
+**Kanten enden an sichtbaren Knoten oder gar nicht.** Ziel eingeklappt (D38)
+oder als verworfen ausgeblendet → keine Kante; eine Kante zum eingeklappten
+Vorfahren wäre eine falsche Aussage über das Ziel. Bei doppelter ID zielt die
+Kante auf die erste Vergabe — dieselbe Auflösung wie beim effektiven Status
+(D39). Die Basis-Kanten gehören in Export und Druck (Aussage über den Plan);
+die Hervorhebung nicht (Interaktion). Selbst-Abhängigkeiten zeichnen keine
+Kante — ein Kreis von einem Knoten zu sich selbst sagte nichts.
+
+**Nicht durch Tests gedeckt:** `drawDepLinks()` arbeitet wie `alignStems()`
+auf dem DOM; headless getestet sind die `data-id`/`data-deps`-Attribute des
+Renderers, geprüft wurde im Browser (alle drei Modi, Fokus- und
+Cursor-Hervorhebung, Export).

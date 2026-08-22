@@ -91,6 +91,10 @@ function nodeHtml(n, extra, opts, fold){
      für die Gegenrichtung (Cursor-Zeile -> Knoten hervorheben). Der Hinweis im
      Tooltip macht die sonst unsichtbare Alt-Klick-Geste auffindbar. */
   const lineAttr = n.line ? ` data-line="${n.line}"` : '';
+  /* ID und Abhängigkeiten als data-Attribute (D41): Grundlage für die
+     Querverbindungs-Ebene und den Export — beide arbeiten auf dem DOM. */
+  const idAttr = n.id ? ` data-id="${attr(n.id)}"` : '';
+  const depsAttr = n.deps && n.deps.length ? ` data-deps="${attr(n.deps.join(' '))}"` : '';
   /* Beschreibung zuerst im Tooltip (mehrzeilig, D40), dann die Kurz-Fakten. */
   const tip = [n.desc || '',
                n.id ? '#' + n.id : '',
@@ -139,8 +143,8 @@ function nodeHtml(n, extra, opts, fold){
                 ownChip;
   const aria = ` aria-label="${attr(nodeAria(n, opts, fold))}"`;
   const html = n.url
-    ? `<a class="${cls}" href="${attr(n.url)}" target="_blank" rel="noopener"${lineAttr}${aria}${expanded}${title}>${inner}</a>`
-    : `<div class="${cls}" tabindex="0"${lineAttr}${aria}${expanded}${title}>${inner}</div>`;
+    ? `<a class="${cls}" href="${attr(n.url)}" target="_blank" rel="noopener"${lineAttr}${idAttr}${depsAttr}${aria}${expanded}${title}>${inner}</a>`
+    : `<div class="${cls}" tabindex="0"${lineAttr}${idAttr}${depsAttr}${aria}${expanded}${title}>${inner}</div>`;
   const ghostTip = attr(t('ghostTooltip'));
   const ghost = `<div class="ghost-node" aria-label="${ghostTip}" title="${ghostTip}">${esc(t('ghost'))}</div>`;
   return html + (need ? ghost : '');

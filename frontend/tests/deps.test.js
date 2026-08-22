@@ -79,4 +79,13 @@ describe('Darstellung — Tooltip und aria, kein eigenes Zeichen', () => {
     expect(html).not.toContain('a11yDeps');
     expect(html).not.toContain('→');
   });
+
+  /* Grundlage der Querverbindungs-Ebene (D41): sie arbeitet auf dem DOM und
+     braucht ID und Abhängigkeiten als data-Attribute. */
+  it('schreibt data-id und data-deps an die Knoten', () => {
+    const {html} = render(`[ ] A #a\n[ ] B #b\n[ ] C :#a,#b`);
+    expect(html).toContain('data-id="a"');
+    expect(html).toContain('data-deps="a b"');
+    expect(html).not.toContain('data-deps=""');
+  });
 });

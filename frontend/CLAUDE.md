@@ -292,6 +292,15 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Knoten-Referenzen; der Parser prüft nur Existenz (`unknownDep`), Zyklen
   werden bewusst nicht einmal erkannt (zulässig, „gemeinsam fertig"). Keine
   Diagramm-Darstellung — nur Tooltip (`→ #a, #b`) und `a11yDeps`.
+- Querverbindungen (SPEC §9, D41): `drawDepLinks()` zeichnet die
+  Abhängigkeits-Kanten als Overlay-SVGs (wie `drawCheapPath`, `/zoom`
+  umrechnen) aus den Renderer-Attributen `data-id`/`data-deps` — gekrümmt
+  (Merkmal gegenüber den orthogonalen Baumlinien), blassgrau hinter den
+  Knoten, Pfeil aufs Gebrauchte; Hervorhebung (Fokus bzw. Cursor-Zeile,
+  `activeDepNode()`) in Tinte auf der vorderen Ebene. Aufgerufen aus
+  `highlightCurrentNode()` (läuft in jedem `render()`), `applyLayout()` und
+  den focusin/focusout-Handlern — NICHT doppelt in `render()` einhängen.
+  Export zeichnet nur die Basis-Kanten (Schritt 1a).
 - Effektiver Status (SPEC §4/§9, D39): `effectiveStatus(roots)` in model.js
   liefert NUR die Diskrepanzen (Map Knoten → effektiver Status-Key; Minimum
   des Fortschritts-Rangs über die Abhängigkeits-Hülle, Fixpunkt — Zyklen

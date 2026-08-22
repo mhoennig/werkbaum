@@ -702,6 +702,14 @@
      Blättern zeigen, welche Knoten wirklich auf dem Pfad enden — durchquerte
      Fremdknoten tragen keinen Punkt. Reihenfolge im DOM steuert vorn/hinten. */
   .cheap-overlay{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+  /* Querverbindungen der Abhängigkeiten (SPEC §9, D41): dünn, blassgrau,
+     gekrümmt — die Krümmung unterscheidet sie von den orthogonalen Baumlinien.
+     Hervorgehobene Kanten (fokussierter Knoten/Cursor-Zeile) in Tinte. */
+  .dep-overlay{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+  .dep-edge{fill:none;stroke:var(--muted);stroke-width:1.5;opacity:.35;stroke-linecap:round}
+  .dep-arrow{fill:var(--muted);opacity:.35}
+  .dep-edge.hl{stroke:var(--line);stroke-width:2;opacity:.9}
+  .dep-arrow.hl{fill:var(--line);opacity:.9}
   .cheap-path{fill:none;stroke:var(--or);stroke-width:2.5;stroke-linecap:round;
               stroke-dasharray:8 6;opacity:.9}
   .cheap-path.faint{opacity:.2}

@@ -127,6 +127,8 @@ function render(){
   applyOptStairs();   /* muss vor dem Messen laufen — es verschiebt Knoten */
   alignStems();
   drawCheapPath();
+  /* Querverbindungen (D41) zeichnet highlightCurrentNode() unten mit —
+     es kennt die zweite Hälfte der Auswahl (Cursor-Zeile). */
   /* Der Baum ist neu gebaut — die Markierung der Cursor-Zeile neu setzen (D25).
      Ohne Scrollen: beim Tippen soll das Diagramm stehen bleiben. */
   highlightCurrentNode(false);
@@ -277,6 +279,95 @@ function drawCheapPath(){
   out.appendChild(front);
 }
 
+/* ---------- Querverbindungen der Abhängigkeiten (SPEC §9, D41) ----------
+   Die erste Linienart, die nicht der Zerlegung folgt — deshalb eine eigene
+   Zeichenebene wie beim Pfad-Spline. Basis-Kanten dünn, blassgrau und
+   GEKRÜMMT (die Krümmung unterscheidet sie von den orthogonalen Baumlinien),
+   hinter den Knoten, mit Pfeilspitze auf das Gebrauchte. Die Kanten des
+   fokussierten Knotens bzw. der Cursor-Zeile liegen hervorgehoben in Tinte
+   auf einer vorderen Ebene. */
+function depEdges(){
+  const byId = new Map();
+  out.querySelectorAll('.node[data-id]').forEach(el => {
+    if(!byId.has(el.dataset.id)) byId.set(el.dataset.id, el);   /* erste Vergabe gewinnt (D36) */
+  });
+  const edges = [];
+  out.querySelectorAll('.node[data-deps]').forEach(el => {
+    for(const d of el.dataset.deps.split(' ')){
+      const target = byId.get(d);
+      /* verborgene (eingeklappte/ausgeblendete) oder unbekannte Ziele: keine Kante */
+      if(target && target !== el) edges.push([el, target]);
+    }
+  });
+  return edges;
+}
+/* Gekrümmte Kante zwischen zwei Knotenkästen: Endpunkte auf den Kanten
+   (Strahl von Mitte zu Mitte, am Rechteck geklippt), Kontrollpunkt senkrecht
+   zur Verbindung versetzt. */
+function depCurve(a, b){
+  const dx = b.cx - a.cx, dy = b.cy - a.cy;
+  const len = Math.hypot(dx, dy) || 1;
+  const clip = (r, tx, ty) => {
+    const ex = tx - r.cx, ey = ty - r.cy;
+    const sx = ex ? (r.w/2) / Math.abs(ex) : Infinity;
+    const sy = ey ? (r.h/2) / Math.abs(ey) : Infinity;
+    const s = Math.min(sx, sy, 1);
+    return {x: r.cx + ex*s, y: r.cy + ey*s};
+  };
+  const p1 = clip(a, b.cx, b.cy), p2 = clip(b, a.cx, a.cy);
+  const bow = Math.min(40, len/4);
+  const ctrl = {x:(p1.x + p2.x)/2 - dy/len*bow, y:(p1.y + p2.y)/2 + dx/len*bow};
+  return {d:`M${p1.x.toFixed(1)},${p1.y.toFixed(1)} Q${ctrl.x.toFixed(1)},${ctrl.y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`,
+          end:p2, ctrl};
+}
+function depArrow(end, from){
+  const dx = end.x - from.x, dy = end.y - from.y;
+  const l = Math.hypot(dx, dy) || 1;
+  const ux = dx/l, uy = dy/l, s = 5;
+  const a = {x: end.x - ux*s*1.8 - uy*s, y: end.y - uy*s*1.8 + ux*s};
+  const b = {x: end.x - ux*s*1.8 + uy*s, y: end.y - uy*s*1.8 - ux*s};
+  return `M${end.x.toFixed(1)},${end.y.toFixed(1)} L${a.x.toFixed(1)},${a.y.toFixed(1)} L${b.x.toFixed(1)},${b.y.toFixed(1)} Z`;
+}
+/* „Ausgewählt" heißt: Tastaturfokus im Diagramm, sonst der Knoten der
+   Cursor-Zeile (D25) — beide Lesarten von „ich schaue auf diesen Knoten". */
+function activeDepNode(){
+  const f = document.activeElement;
+  if(f && out.contains(f) && f.closest) {
+    const n = f.closest('.node[data-line]');
+    if(n) return n;
+  }
+  return currentNodeEl;
+}
+function drawDepLinks(){
+  out.querySelectorAll('svg.dep-overlay').forEach(e => e.remove());
+  const edges = depEdges();
+  if(!edges.length) return;
+  const outRect = out.getBoundingClientRect();
+  if(!outRect.width || !outRect.height) return;   /* Panel eingeklappt */
+  const z = zoom || 1;
+  const rect = el => { const r = el.getBoundingClientRect();
+    return {x:(r.left - outRect.left)/z, y:(r.top - outRect.top)/z,
+            w:r.width/z, h:r.height/z,
+            cx:(r.left - outRect.left + r.width/2)/z,
+            cy:(r.top - outRect.top + r.height/2)/z}; };
+  const w = outRect.width/z, h = outRect.height/z;
+  const back = overlaySvg('dep-overlay dep-back', w, h);
+  const front = overlaySvg('dep-overlay dep-front', w, h);
+  const hi = activeDepNode();
+  for(const [from, to] of edges){
+    const hl = hi && (from === hi || to === hi);
+    const c = depCurve(rect(from), rect(to));
+    const layer = hl ? front : back;
+    layer.appendChild(svgEl('path', {class:'dep-edge' + (hl ? ' hl' : ''), d:c.d}));
+    layer.appendChild(svgEl('path', {class:'dep-arrow' + (hl ? ' hl' : ''), d:depArrow(c.end, c.ctrl)}));
+  }
+  out.insertBefore(back, out.firstChild);
+  if(front.childNodes.length) out.appendChild(front);
+}
+/* Hervorhebung folgt dem Fokus; die Basis-Kanten selbst ändern sich nicht. */
+out.addEventListener('focusin', drawDepLinks);
+out.addEventListener('focusout', () => setTimeout(drawDepLinks, 0));
+
 /* ---------- Diagramm als Grafik (SVG → PNG) ---------- */
 /* Das gerenderte Diagramm wird aus der Live-Geometrie in ein eigenständiges
    SVG (nur Formen + Text, keine externen Ressourcen) nachgezeichnet und als
@@ -381,6 +472,14 @@ function diagramToSvg(){
         optMarks.push({x: b.x, y: b.cy});
       }
     });
+  });
+
+  /* 1a) Querverbindungen der Abhängigkeiten (D41) — Basis-Kanten hinter den
+     Knoten; die Fokus-Hervorhebung ist Interaktion und wird nicht exportiert. */
+  depEdges().forEach(([from, to]) => {
+    const c = depCurve(R(from), R(to));
+    parts.push(`<path d="${c.d}" fill="none" stroke="#6B7A8C" stroke-width="1.5" opacity="0.35" stroke-linecap="round"/>`);
+    parts.push(`<path d="${depArrow(c.end, c.ctrl)}" fill="#6B7A8C" opacity="0.35"/>`);
   });
 
   /* 1b) Günstigster-Pfad: kräftige Linie hinter den Knoten */
@@ -814,8 +913,11 @@ function highlightCurrentNode(scroll){
   currentNodeEl = caretLine == null
     ? null
     : out.querySelector('.node[data-line="' + caretLine + '"]');
-  if(!currentNodeEl) return;
+  if(!currentNodeEl){ drawDepLinks(); return; }
   currentNodeEl.classList.add('current');
+  /* Die Cursor-Zeile ist die zweite Lesart von „ausgewählt" — ihre
+     Abhängigkeits-Kanten hervorheben (D41). */
+  drawDepLinks();
   /* Nur beim Zeilenwechsel scrollen, sonst ruckelte das Diagramm beim Tippen. */
   if(scroll) currentNodeEl.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
 }
@@ -873,6 +975,7 @@ function applyLayout(mode){
   applyOptStairs();   /* Treppe gilt nur im Fächer — beim Moduswechsel bauen/auflösen */
   alignStems();       /* Stiel gilt nur im Fächer — beim Moduswechsel neu setzen/löschen */
   drawCheapPath();    /* Blatt-Positionen ändern sich mit dem Modus */
+  drawDepLinks();     /* Knoten-Positionen ebenso (D41) */
 }
 document.querySelectorAll('input[name="layout"]').forEach(radio => {
   radio.addEventListener('change', () => { if(radio.checked) applyLayout(radio.value); });

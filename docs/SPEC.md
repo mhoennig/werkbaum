@@ -620,6 +620,23 @@ fokussierten Knoten (WAI-ARIA-Baum-Idiom).
 
 Siehe D38.
 
+### Querverbindungen der Abhängigkeiten (`:#…`, §1)
+Abhängigkeiten werden als **optisch sekundäre** Kanten gezeichnet: dünn,
+blassgrau (`#6B7A8C`), **geschwungen** — die Krümmung unterscheidet sie von
+den orthogonalen Baumlinien (dasselbe Mittel wie beim Pfad-Spline) — auf einer
+eigenen Zeichenebene **hinter** den Knoten, mit einer kleinen **Pfeilspitze
+auf das Gebrauchte** („braucht“-Richtung). Der Baum trägt weiterhin die
+Hauptaussage.
+
+- Die Kanten des **ausgewählten** Knotens — Tastaturfokus im Diagramm, sonst
+  der Knoten der Cursor-Zeile — liegen hervorgehoben in Tinte auf einer
+  vorderen Ebene, ein- wie ausgehende.
+- Kanten zu gerade nicht sichtbaren Knoten (eingeklappt §9, verworfen
+  ausgeblendet §4) entfallen; bei doppelter ID zielt die Kante auf die erste
+  Vergabe (D36/D39).
+- Die Basis-Kanten erscheinen auch im **Grafikexport** und im **Druck**; die
+  Hervorhebung ist Interaktion und erscheint nicht. Siehe D41.
+
 ### Grafikexport des Diagramms
 Das Diagramm wird aus der Live-Geometrie in ein eigenständiges SVG (nur Formen
 + Text, keine externen Ressourcen) nachgezeichnet. Zwei Icon-Schaltflächen:
@@ -735,12 +752,9 @@ Diskrepanz-Marke unten links). Siehe D39.
 
 ### Querverbindungen im Diagramm
 
-Abhängigkeiten werden als **optisch sekundäre** Querverbindungen gezeichnet
-(dünn oder gestrichelt) — sie dürfen den Baum nicht überlagern, der die
-Hauptaussage trägt. Bei ausgewähltem Knoten werden dessen ein- und ausgehende
-Abhängigkeiten hervorgehoben. Das ist die erste Linienart, die **nicht** der
-Zerlegung folgt; sie braucht deshalb eine eigene Zeichenebene (SVG, wie der
-Pfad-Spline in §9), nicht die Rahmenkanten der Knoten.
+**Umgesetzt** — siehe §9 (Querverbindungen der Abhängigkeiten): eigene
+SVG-Zeichenebene, gekrümmte blassgraue Kanten mit Pfeilspitze hinter den
+Knoten, Hervorhebung am ausgewählten Knoten. Begründung: D41.
 
 ### Günstigster Pfad mit Abhängigkeiten
 

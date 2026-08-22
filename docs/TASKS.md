@@ -94,8 +94,11 @@ entscheiden, **bevor** Code entsteht.
       Abhängigkeiten nur einmal zählen). Erweitert D18; die gierige Wahl je
       Alternativgruppe ist damit nicht mehr optimal — Verfahren wählen und
       **benennen**.
-- [ ] Querverbindungen zeichnen (eigene SVG-Ebene, optisch sekundär);
+- [x] Querverbindungen zeichnen (eigene SVG-Ebene, optisch sekundär);
       bei ausgewähltem Knoten ein-/ausgehende hervorheben.
+      → Umgesetzt (D41): gekrümmte blassgraue Kanten mit Pfeilspitze auf das
+      Gebrauchte, hinter den Knoten (`drawDepLinks`); Hervorhebung in Tinte
+      für Fokus-Knoten bzw. Cursor-Zeile; Basis-Kanten auch im Export/Druck.
 - [x] Faltmarken `>` / `<` parsen; interaktives Auf-/Zuklappen im Diagramm.
       → Schreibweise und Export-Verhalten entschieden (D34-Nachtrag): Marke
       hinter dem Zerlegungszeichen (`- > [x] …`), Export/Druck folgen der
