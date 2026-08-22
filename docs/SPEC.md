@@ -508,21 +508,34 @@ anderweitig verwenden** — nicht: schon entschieden. Die endgültige Schreibwei
 wird hier festgelegt, **bevor** sie gebaut wird; wo unten „offen“ steht, ist sie
 das auch. Begründung und Zusammenhang: D34.
 
-### Referenzen, Schlagworte und Knoten-IDs (`#`)
+### Referenzen und Knoten-IDs (`#`)
 
 - `#123` — Referenz auf externe Tickets (geplant für Taiga-Integration).
-- `#tag` — freie Schlagworte.
+  Ticket-Referenzen werden **so** notiert, weil es die etablierte
+  Kurzschreibweise ist; sie haben unter den `#`-Verwendungen Vorrang.
 - `#auth` — **Knoten-ID**: ein whitespace-freier Bezeichner, der einen Knoten im
   ganzen Dokument eindeutig benennt. Ziel für Abhängigkeiten und
   Beschreibungsblöcke (siehe unten). Zwei Knoten mit derselben ID sind ein
   Fehler und bekommen eine Warnung mit Zeilennummer (§4).
 
-**Offen: `#` trägt damit drei Bedeutungen.** `#123` ist rein numerisch und
-bleibt unterscheidbar; **ID und Schlagwort sehen einander gleich**. Vor der
-Implementierung ist eine Trennregel zu entscheiden — etwa „das erste
-`#`-Token einer Zeile ist die ID, jedes weitere ein Schlagwort“ oder ein
-eigenes Zeichen für eine der beiden Rollen. Solange das offen ist, ist auch
-`#tag` nicht gebaut.
+Beide Rollen vertragen sich: Oft **ist** die Ticket-Nummer die natürliche
+Knoten-ID. Als Ticket-Link behandelt wird heuristisch das rein **numerische**
+`#123`; wo das nicht reicht, schafft eine Präfix-Konvention (z. B. `#t123`)
+Eindeutigkeit. Freie Schlagworte liegen **nicht** mehr auf `#` — siehe `&tag`
+unten; damit ist die frühere Dreifach-Rolle von `#` aufgelöst (D34).
+
+### Schlagworte (`&tag`) — reserviert, bewusst ungebaut
+
+- `&tag` — freies Schlagwort: benennt eine **Menge** von Knoten quer zur
+  Hierarchie (die ID benennt genau einen). Mehrere pro Zeile, Position egal,
+  gleiche Zeichenmenge wie `@name` (§7: Unicode-Buchstaben, Ziffern, `.`,
+  `_`, `-`).
+- Erkannt nur **alleinstehend** angesetzt (`(^|\s)&\w`, wie `!!!` in §1) —
+  „R&D“ und „Drag & Drop“ bleiben damit gewöhnliche Labels.
+- **Niedrig priorisiert:** Ohne ein Feature, das Schlagworte auswertet
+  (Filter-/Hervorheben-Linse, Taiga-Label-Sync), sind sie nur Kommentare mit
+  Extra-Syntax — gebaut werden sie erst **zusammen mit** dem ersten solchen
+  Konsumenten. Bis dahin gilt allein: `&` nicht anderweitig vergeben.
 
 ### Abhängigkeiten zwischen Knoten (`:#auth,#api`)
 

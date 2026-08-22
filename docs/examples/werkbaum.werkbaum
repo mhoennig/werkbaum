@@ -9,7 +9,9 @@
       - [^] People tags, bare URLs, %% comments (XS)
     - [^] And/or decomposition (S)
     - [^] Optional nodes — neither required nor an alternative (S)
-    - [?] Node IDs, #auth (S)  %% but # already means tickets and tags, see SPEC §11
+    - [?] Node IDs, #auth (S)  %% often just the ticket number, see SPEC §11
+    + [?] Free tags, &tag (M)  %% only together with a consumer, see D34
+      - [?] A lens: highlight every node tagged &x (S)
     - [?] Dependencies across the tree, :#auth,#api (M)
       - [?] They constrain the status, not when work may start (S)
       - [?] Effective status: intrinsic, plus what it depends on (S)

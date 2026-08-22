@@ -1545,3 +1545,32 @@ mit `:#id` überholt — ein Verweis auf den Titel bricht beim Umbenennen, und R
 ist in dieser Palette nicht vergeben (SPEC §4 nutzt Pastelltöne für Status,
 `--warn` für Hinweise). Die Datei ist entsprechend korrigiert; die dortigen
 Phasen bleiben, was sie sind: eine Wunschliste, kein Beschluss.
+
+**Nachtrag — die `#`-Doppelrolle ist aufgelöst, durch Wegfall statt Trennregel.**
+Entschieden: **Ticket-Referenzen haben auf `#` Vorrang** — `#123` ist die
+etablierte Kurzschreibweise, und oft ist die Ticket-Nummer ohnehin die
+natürliche Knoten-ID; die beiden Rollen vertragen sich (numerisch = Ticket als
+Heuristik, notfalls Präfix-Konvention wie `#t123`). Knifflig bleibt allein das
+heuristische Erzeugen von Taiga-Links — das ist benannt und liegt beim
+Taiga-Spike.
+
+**Freie Schlagworte verlassen `#` und gehen auf `&tag`** — als **niedrig
+priorisierte Idee**, ausdrücklich ungebaut. Der Schritt zurück („wofür brauchen
+wir überhaupt Tags?") ergab: Es gibt bisher keinen Konsumenten. Die
+Reservierung stammt aus D7 als Beifang der Kommentarzeichen-Entscheidung; kein
+geplantes Feature wertet Schlagworte aus. Ihr einziges echtes Argument ist,
+dass der Baum genau **eine** Zerlegung ist — ein Tag benennt eine **Menge** von
+Knoten quer dazu (die ID benennt einen, Abhängigkeiten verbinden Paare). Ohne
+Auswerter (Filter-/Hervorheben-Linse im Diagramm, Taiga-Label-Sync) sind Tags
+nur Kommentare mit Extra-Syntax; `%% frontend` sagt dem Leser heute dasselbe.
+Gebaut werden sie deshalb erst **zusammen mit** dem ersten Konsumenten.
+
+Zeichenwahl `&` nach den D32-Kriterien (schnell zu tippen, kollisionsfrei,
+keine Markdown-Bedeutung): Shift-Taste auf DE- wie US-Layout, nie ein Dead-Key
+— anders als `~`, das auf deutschen Macs hinter Alt+N klemmt und mit
+Zirka-Angaben („~3 Wochen") kollidiert. „R&D" und „Drag & Drop" bleiben durch
+die Alleinstehend-Regel (wie `!!!`) Labels. Der Einwand „`&` heißt und" trägt
+nicht: Das Und der Notation ist `-` am Zeilenanfang — `&` ist gerade deshalb
+frei. Verworfen: `$` (Preis-Kollision), `%` (ein Tippfehler vom
+Auskommentieren), `:` (zu nah an `:#…`), `§` (fehlt auf US-Tastaturen), `*`
+(Markdown, schon in D29 verworfen).

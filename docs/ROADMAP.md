@@ -104,6 +104,13 @@ Tastendruck ein Commit); und wer bei einem Backend eigentlich was darf
   erweitert D18 (heute rein statisch/kostenminimierend) um Nutzen- und
   Status-/Zeitachse.
 - Attribut-Syntax für Termine/Meilensteine.
+- Schlagworte `&tag` mit einer Filter-/Hervorheben-Linse im Diagramm: Der Baum
+  ist genau eine Zerlegung — ein Tag benennt eine Menge von Knoten quer dazu
+  (z. B. `&frontend` in feature-geschnittenen Slices). Schreibweise reserviert
+  (SPEC §11, D34-Nachtrag); bewusst erst zusammen mit dem ersten Konsumenten
+  bauen (Linse oder Taiga-Label-Sync) — ohne Auswerter sind Tags nur
+  Kommentare mit Extra-Syntax. Die Inversions-Mechanik der Linse gibt es durch
+  den günstigsten Pfad (D18) schon.
 
 ## Vollständiges Lean-Pathfinding
 

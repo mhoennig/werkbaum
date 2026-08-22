@@ -66,8 +66,11 @@ Reihenfolge ist nicht beliebig: ohne IDs keine Abhängigkeiten, ohne die keinen
 effektiven Status und keine Closure-Rechnung. Jeder Punkt beginnt in
 [SPEC §11](SPEC.md) — die dort benannten offenen Schreibweisen sind zu
 entscheiden, **bevor** Code entsteht.
-- [ ] `#`-Doppelrolle auflösen (Knoten-ID vs. Schlagwort) und in SPEC §11
-      festschreiben; `#tag` hängt an derselben Entscheidung.
+- [x] `#`-Doppelrolle auflösen und in SPEC §11 festschreiben.
+      → Durch Wegfall statt Trennregel: Tickets haben Vorrang (`#123`
+      numerisch, oft zugleich die natürliche Knoten-ID; notfalls Präfix wie
+      `#t123`); Schlagworte gehen auf `&tag` — niedrig priorisiert, gebaut
+      erst mit dem ersten Konsumenten (D34-Nachtrag).
 - [ ] Knoten-IDs parsen; doppelte ID → Warnung mit Zeilennummer.
 - [ ] Abhängigkeiten `:#a,#b` parsen; unbekannte ID → Warnung, Zyklen erlaubt.
 - [ ] Effektiven Status rechnen (intrinsisch + Abhängigkeiten); Darstellung
