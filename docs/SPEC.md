@@ -47,9 +47,10 @@ sie ist die Adresse für Abhängigkeiten und Beschreibungsblöcke (§11).
   Label, und der für Abhängigkeiten reservierte Doppelpunkt `:#a,#b` (§11)
   kollidiert nicht.
 - Das **erste** solche Token der Zeile ist die ID; weitere `#`-Token bleiben im
-  Label stehen (dort liegt die reservierte Ticket-Referenz `#123`, §11). Eine
-  rein numerische ID ist zugleich die künftige Ticket-Referenz — oft ist die
-  Ticket-Nummer die natürliche Knoten-ID (D34).
+  Label stehen (dort liegt die reservierte Ticket-Referenz, §11). Eine ID, die
+  dem Muster des angebundenen Trackers entspricht (`#123`, `#US-123`), ist
+  zugleich die künftige Ticket-Referenz — oft ist die Ticket-Kennung die
+  natürliche Knoten-ID (D34).
 - Die ID gehört **nicht** zum Label. Eine eigene Darstellung im Diagramm hat
   sie (noch) nicht; sichtbar ist sie im Knoten-Tooltip und im `aria-label`.
 - **Doppelte ID:** Warnung `duplicateId` mit beiden Zeilennummern; die spätere
@@ -730,18 +731,23 @@ das auch. Begründung und Zusammenhang: D34.
 
 ### Referenzen und Knoten-IDs (`#`)
 
-- `#123` — Referenz auf externe Tickets (geplant für Taiga-Integration).
-  Ticket-Referenzen werden **so** notiert, weil es die etablierte
-  Kurzschreibweise ist; sie haben unter den `#`-Verwendungen Vorrang.
+- `#123`, `#US-123` — Referenz auf externe Tickets (geplant für die
+  Tracker-Integration). Ticket-Referenzen werden **so** notiert, weil es die
+  etablierte Kurzschreibweise ist; sie haben unter den `#`-Verwendungen
+  Vorrang. Ticket-Kennungen sind **auch alphanumerisch** (Taiga schreibt
+  `#US-123` für eine User Story, Jira `#ABC-123`) — die Zeichenmenge der
+  Knoten-ID (§1) deckt sie ab.
 - `#auth` — **Knoten-ID**: **umgesetzt**, Definition jetzt in §1 (Zeichenmenge,
   Alleinstehend-Regel, Warnung `duplicateId`). Ziel für Abhängigkeiten und
   Beschreibungsblöcke (siehe unten).
 
-Beide Rollen vertragen sich: Oft **ist** die Ticket-Nummer die natürliche
-Knoten-ID. Als Ticket-Link behandelt wird heuristisch das rein **numerische**
-`#123`; wo das nicht reicht, schafft eine Präfix-Konvention (z. B. `#t123`)
-Eindeutigkeit. Freie Schlagworte liegen **nicht** mehr auf `#` — siehe `&tag`
-unten; damit ist die frühere Dreifach-Rolle von `#` aufgelöst (D34).
+Beide Rollen vertragen sich: Oft **ist** die Ticket-Kennung die natürliche
+Knoten-ID. Als Ticket-Link behandelt wird ein Token **nicht an seiner Form**
+(die frühere Heuristik „rein numerisch" trägt bei alphanumerischen Kennungen
+nicht), sondern am **Muster des angebundenen Trackers** — konfigurierbar,
+z. B. `US-\d+`/`\d+` bei Taiga; festzulegen im Taiga-Spike (D34-Nachtrag).
+Freie Schlagworte liegen **nicht** mehr auf `#` — siehe `&tag` unten; damit
+ist die frühere Dreifach-Rolle von `#` aufgelöst (D34).
 
 ### Schlagworte (`&tag`) — reserviert, bewusst ungebaut
 

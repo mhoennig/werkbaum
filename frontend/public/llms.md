@@ -182,5 +182,7 @@ One node per line. Everything except the label is optional.
 
 ## Reserved — do not use for other purposes
 
-- Purely numeric `#123`: ticket references (planned tracker integration).
+- Ticket references like `#123` or `#US-123` (Taiga user story, Jira
+  `#ABC-123`): planned tracker integration will resolve node IDs that match
+  the connected tracker's reference pattern.
 - Free-standing `&tag`: keywords across the hierarchy (reserved, unbuilt).

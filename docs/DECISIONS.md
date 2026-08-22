@@ -1601,6 +1601,19 @@ frei. Verworfen: `$` (Preis-Kollision), `%` (ein Tippfehler vom
 Auskommentieren), `:` (zu nah an `:#…`), `§` (fehlt auf US-Tastaturen), `*`
 (Markdown, schon in D29 verworfen).
 
+**Nachtrag — Ticket-Kennungen sind auch alphanumerisch; die
+Numerik-Heuristik ist gestrichen.** Der ältere Nachtrag oben nahm an, als
+Ticket-Link genüge heuristisch das rein numerische `#123`. Das trägt nicht:
+Taiga schreibt `#US-123` für eine User Story, Jira `#ABC-123` — Kennungen
+sind alphanumerisch (Nutzer-Hinweis). Statt die Form-Heuristik auszuweiten
+(jedes `GROSS-123` als Ticket zu raten, kollidierte mit gewöhnlichen
+Knoten-IDs), wird ein Token künftig am **Muster des angebundenen Trackers**
+erkannt — konfigurierbar je Integration, z. B. `US-\d+` und `\d+` bei Taiga.
+Die Zeichenmenge der Knoten-ID (§1: Buchstaben, Ziffern, `.`, `_`, `-`)
+deckt solche Kennungen bereits ab; am Parser ändert sich nichts, die
+Festlegung des Musters liegt beim Taiga-Spike. SPEC §11 ist entsprechend
+umformuliert.
+
 **Nachtrag — das XOR-Zeichen ist entschieden: `=`.** Das in §11 zunächst
 vorgeschlagene `x` ist verworfen; ausschlaggebend war, **wann** seine
 Glyph-Kollision auftritt: `x` teilt sich das Zeichen mit dem Statuscode für
