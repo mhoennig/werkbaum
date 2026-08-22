@@ -18,6 +18,13 @@
    - unknownDep    { line, id }     — Abhängigkeit auf eine ID ohne Knoten
                                       (SPEC §1/D37); Zyklen sind dagegen
                                       zulässig und warnen nie
+   - unknownDesc   { line, id }     — Beschreibungsblock für eine ID ohne
+                                      Knoten (SPEC §11/D40)
+   - descStray     { line }         — Beschreibungszeile ohne Bezug: `"`-Zeile
+                                      ohne Knoten davor bzw. Zeile im
+                                      Beschreibungsteil ohne #id-Block; meldet
+                                      auch die von einem versehentlichen
+                                      `---` verschluckten Knotenzeilen
    - sourceLoad    { url, error }   — ?sourceUrl= nicht ladbar (D23); ohne
                                       Zeilennummer, erscheint dadurch zuoberst
    - padRateLimit  { seconds }      — zu früh nachgeladen; Werkbaum hat gar nicht
@@ -44,6 +51,10 @@ export function formatWarning(w, t){
       return t('duplicateIdWarn', {line: w.line, id: esc(w.id), firstLine: w.firstLine});
     case 'unknownDep':
       return t('unknownDepWarn', {line: w.line, id: esc(w.id)});
+    case 'unknownDesc':
+      return t('unknownDescWarn', {line: w.line, id: esc(w.id)});
+    case 'descStray':
+      return t('descStrayWarn', {line: w.line});
     case 'sourceLoad':
       return t('sourceLoadWarn', {url: esc(w.url), error: esc(w.error)});
     case 'padRateLimit':

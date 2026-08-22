@@ -72,6 +72,8 @@ function nodeAria(n, opts, fold){
      der eigenen Cursor-Zeile unterscheidet (SPEC §9). */
   if(n.focus) parts.push(t('a11yFocusMark'));
   if(n.url) parts.push(t('a11yLink'));
+  /* Beschreibung (SPEC §11/D40): der Text selbst — die ”-Marke ist aria-hidden. */
+  if(n.desc) parts.push(n.desc.replace(/\s+/g, ' '));
   return parts.join(', ');
 }
 
@@ -89,7 +91,9 @@ function nodeHtml(n, extra, opts, fold){
      für die Gegenrichtung (Cursor-Zeile -> Knoten hervorheben). Der Hinweis im
      Tooltip macht die sonst unsichtbare Alt-Klick-Geste auffindbar. */
   const lineAttr = n.line ? ` data-line="${n.line}"` : '';
-  const tip = [n.id ? '#' + n.id : '',
+  /* Beschreibung zuerst im Tooltip (mehrzeilig, D40), dann die Kurz-Fakten. */
+  const tip = [n.desc || '',
+               n.id ? '#' + n.id : '',
                n.deps && n.deps.length ? '→ ' + n.deps.map(d => '#' + d).join(', ') : '',
                effKey
                  ? t('heldTooltip', {eff: t('st_' + effKey), own: t('st_' + n.status.key)})
@@ -123,6 +127,11 @@ function nodeHtml(n, extra, opts, fold){
     : '';
   const inner = foldHtml +
                 esc(n.label) +
+                /* ”-Marke (D40): macht die sonst unsichtbare Beschreibung
+                   auffindbar (Lehre aus D25) — spiegelt das "-Zeichen der
+                   Notation. Nicht im Export: Der Text selbst kann dort nicht
+                   erscheinen, eine Marke ohne Ziel wäre Rauschen. */
+                (n.desc ? '<span class="desc-mark" aria-hidden="true">”</span>' : '') +
                 (n.url ? '<span class="ext" aria-hidden="true">↗</span>' : '') +
                 riskMark +
                 sizeBadge +

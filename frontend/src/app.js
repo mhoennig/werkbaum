@@ -403,7 +403,7 @@ function diagramToSvg(){
        §9/D38 — das Bild darf keine Vollständigkeit behaupten); das ▾ offener
        Knoten ist Bedienelement und fällt weg. */
     const stripFold = node.classList.contains('folded') ? '' : ',.fold';
-    clone.querySelectorAll('.size,.tags,.ext,.risk,.ownst' + stripFold).forEach(e => e.remove());
+    clone.querySelectorAll('.size,.tags,.ext,.risk,.ownst,.desc-mark' + stripFold).forEach(e => e.remove());
     const label = clone.textContent.replace(/\s+/g,' ').trim();
     const deco = cs.textDecorationLine.includes('line-through') ? ' text-decoration="line-through"' : '';
     parts.push(`<text x="${b.cx.toFixed(1)}" y="${(b.cy+5).toFixed(1)}" text-anchor="middle" fill="${cs.color}" font-size="14" font-weight="${cs.fontWeight}"${deco}>${esc(label)}</text>`);
@@ -1172,6 +1172,8 @@ const I18N = {
     xorConflictWarn:"Zeile {line}: „{label}“ ist eine weitere realisierte Alternative — eine =-Gruppe erlaubt genau eine.",
     duplicateIdWarn:"Zeile {line}: Die ID #{id} ist schon vergeben (Zeile {firstLine}).",
     unknownDepWarn:"Zeile {line}: Abhängigkeit #{id} — es gibt keinen Knoten mit dieser ID.",
+    unknownDescWarn:"Zeile {line}: Beschreibung für #{id} — es gibt keinen Knoten mit dieser ID.",
+    descStrayWarn:"Zeile {line}: Beschreibungszeile ohne Bezug — ihr fehlt der Knoten bzw. der #id-Block davor.",
     st_idee:"Idee", st_geplant:"geplant", st_arbeit:"in Arbeit", st_durchstich:"Durchstich",
     st_fertig:"fertig", st_prod:"in Produktion", st_highrisk:"High Risk", st_verworfen:"verworfen",
     unknownStatusWarn:"Zeile {line}: unbekanntes Statuszeichen „{code}“ — als neutral dargestellt.",
@@ -1192,6 +1194,7 @@ const I18N = {
     hint_id:"Knoten-ID mit #name — erscheint im Tooltip des Knotens.",
     hint_deps:"Abhängigkeiten mit :#name,#name — erscheinen im Tooltip.",
     hint_eff:"Die Knotenfarbe zeigt den effektiven Status (mit Abhängigkeiten); ist der eigene weiter, steht er als Marke unten links.",
+    hint_desc:"Beschreibungen: \" Zeile unter dem Knoten; Langtext hinter --- als eingerückter #id-Block — beides im Tooltip (”).",
     hint_fold:"Falten: - > [x] … startet eingeklappt, < holt hervor; ▾/▸ am Knoten klappt um (Tastatur: ←/→).",
     hint_jump:"Alt+Klick auf einen Knoten (mobil: langer Druck) springt zur zugehörigen Textzeile; Alt+Klick im Text holt den Knoten ins Bild."
   },
@@ -1244,6 +1247,8 @@ const I18N = {
     xorConflictWarn:"Line {line}: “{label}” is another realized alternative — an = group allows exactly one.",
     duplicateIdWarn:"Line {line}: ID #{id} is already taken (line {firstLine}).",
     unknownDepWarn:"Line {line}: dependency #{id} — no node has this ID.",
+    unknownDescWarn:"Line {line}: description for #{id} — no node has this ID.",
+    descStrayWarn:"Line {line}: description line with nothing to attach to — it needs a node or an #id block before it.",
     st_idee:"idea", st_geplant:"planned", st_arbeit:"in progress", st_durchstich:"walking skeleton",
     st_fertig:"done", st_prod:"in production", st_highrisk:"high risk", st_verworfen:"discarded",
     unknownStatusWarn:"Line {line}: unknown status code “{code}” — shown as neutral.",
@@ -1264,6 +1269,7 @@ const I18N = {
     hint_id:"Node ID with #name — shown in the node's tooltip.",
     hint_deps:"Dependencies with :#name,#name — shown in the tooltip.",
     hint_eff:"Node colour shows the effective status (with dependencies); if its own is further along, it appears as a mark at the bottom left.",
+    hint_desc:"Descriptions: a \" line below the node; long text behind --- as an indented #id block — both in the tooltip (”).",
     hint_fold:"Folding: - > [x] … starts collapsed, < brings it back; ▾/▸ on a node toggles (keyboard: ←/→).",
     hint_jump:"Alt+click a node (long press on touch) jumps to its line in the text; Alt+click in the text brings the node into view."
   },
@@ -1316,6 +1322,8 @@ const I18N = {
     xorConflictWarn:"Línea {line}: «{label}» es otra alternativa realizada — un grupo = permite exactamente una.",
     duplicateIdWarn:"Línea {line}: la ID #{id} ya está asignada (línea {firstLine}).",
     unknownDepWarn:"Línea {line}: dependencia #{id} — ningún nodo tiene esta ID.",
+    unknownDescWarn:"Línea {line}: descripción para #{id} — ningún nodo tiene esta ID.",
+    descStrayWarn:"Línea {line}: línea de descripción sin referencia — le falta un nodo o un bloque #id delante.",
     st_idee:"idea", st_geplant:"planificado", st_arbeit:"en curso", st_durchstich:"prototipo funcional",
     st_fertig:"terminado", st_prod:"en producción", st_highrisk:"alto riesgo", st_verworfen:"descartado",
     unknownStatusWarn:"Línea {line}: código de estado desconocido «{code}» — mostrado como neutral.",
@@ -1336,6 +1344,7 @@ const I18N = {
     hint_id:"ID de nodo con #nombre — visible en el tooltip del nodo.",
     hint_deps:"Dependencias con :#nombre,#nombre — visibles en el tooltip.",
     hint_eff:"El color del nodo muestra el estado efectivo (con dependencias); si el propio va más adelante, aparece como marca abajo a la izquierda.",
+    hint_desc:"Descripciones: línea \" bajo el nodo; texto largo tras --- como bloque #id sangrado — ambos en el tooltip (”).",
     hint_fold:"Plegado: - > [x] … empieza plegado, < lo recupera; ▾/▸ en el nodo alterna (teclado: ←/→).",
     hint_jump:"Alt+clic en un nodo (pulsación larga en táctil) salta a su línea en el texto; Alt+clic en el texto trae el nodo a la vista."
   },
@@ -1388,6 +1397,8 @@ const I18N = {
     xorConflictWarn:"Ligne {line} : « {label} » est une alternative réalisée de plus — un groupe = n’en autorise qu’une seule.",
     duplicateIdWarn:"Ligne {line} : l’ID #{id} est déjà attribué (ligne {firstLine}).",
     unknownDepWarn:"Ligne {line} : dépendance #{id} — aucun nœud ne porte cet ID.",
+    unknownDescWarn:"Ligne {line} : description pour #{id} — aucun nœud ne porte cet ID.",
+    descStrayWarn:"Ligne {line} : ligne de description sans rattachement — il lui manque un nœud ou un bloc #id avant.",
     st_idee:"idée", st_geplant:"planifié", st_arbeit:"en cours", st_durchstich:"squelette fonctionnel",
     st_fertig:"terminé", st_prod:"en production", st_highrisk:"risque élevé", st_verworfen:"abandonné",
     unknownStatusWarn:"Ligne {line} : code de statut inconnu « {code} » — affiché comme neutre.",
@@ -1408,6 +1419,7 @@ const I18N = {
     hint_id:"ID de nœud avec #nom — visible dans l’infobulle du nœud.",
     hint_deps:"Dépendances avec :#nom,#nom — visibles dans l’infobulle.",
     hint_eff:"La couleur du nœud montre le statut effectif (avec dépendances) ; si le sien est plus avancé, il apparaît en marque en bas à gauche.",
+    hint_desc:"Descriptions : ligne \" sous le nœud ; texte long après --- en bloc #id indenté — les deux dans l’infobulle (”).",
     hint_fold:"Pliage : - > [x] … démarre replié, < le fait ressortir ; ▾/▸ sur le nœud bascule (clavier : ←/→).",
     hint_jump:"Alt+clic sur un nœud (appui long sur tactile) saute à sa ligne dans le texte ; Alt+clic dans le texte amène le nœud à l’écran."
   },
@@ -1460,6 +1472,8 @@ const I18N = {
     xorConflictWarn:"Wiersz {line}: „{label}” to kolejna zrealizowana alternatywa — grupa = dopuszcza dokładnie jedną.",
     duplicateIdWarn:"Wiersz {line}: ID #{id} jest już zajęte (wiersz {firstLine}).",
     unknownDepWarn:"Wiersz {line}: zależność #{id} — żaden węzeł nie ma tego ID.",
+    unknownDescWarn:"Wiersz {line}: opis dla #{id} — żaden węzeł nie ma tego ID.",
+    descStrayWarn:"Wiersz {line}: wiersz opisu bez odniesienia — brakuje węzła lub bloku #id przed nim.",
     st_idee:"pomysł", st_geplant:"zaplanowane", st_arbeit:"w toku", st_durchstich:"działający szkielet",
     st_fertig:"gotowe", st_prod:"w produkcji", st_highrisk:"wysokie ryzyko", st_verworfen:"odrzucone",
     unknownStatusWarn:"Wiersz {line}: nieznany znak statusu „{code}” — pokazany jako neutralny.",
@@ -1480,6 +1494,7 @@ const I18N = {
     hint_id:"ID węzła przez #nazwa — widoczne w podpowiedzi węzła.",
     hint_deps:"Zależności przez :#nazwa,#nazwa — widoczne w podpowiedzi.",
     hint_eff:"Kolor węzła pokazuje status efektywny (z zależnościami); jeśli własny jest dalej, widnieje jako znacznik u dołu po lewej.",
+    hint_desc:"Opisy: wiersz \" pod węzłem; dłuższy tekst za --- jako wcięty blok #id — oba w podpowiedzi (”).",
     hint_fold:"Zwijanie: - > [x] … zaczyna zwinięte, < przywraca; ▾/▸ na węźle przełącza (klawiatura: ←/→).",
     hint_jump:"Alt+kliknięcie węzła (długie naciśnięcie na dotyku) przechodzi do jego wiersza w tekście; Alt+kliknięcie w tekście pokazuje węzeł na diagramie."
   },
@@ -1532,6 +1547,8 @@ const I18N = {
     xorConflictWarn:"Строка {line}: «{label}» — ещё одна реализованная альтернатива, а группа = допускает ровно одну.",
     duplicateIdWarn:"Строка {line}: ID #{id} уже занят (строка {firstLine}).",
     unknownDepWarn:"Строка {line}: зависимость #{id} — узла с таким ID нет.",
+    unknownDescWarn:"Строка {line}: описание для #{id} — узла с таким ID нет.",
+    descStrayWarn:"Строка {line}: строка описания без привязки — перед ней нет узла или блока #id.",
     st_idee:"идея", st_geplant:"запланировано", st_arbeit:"в работе", st_durchstich:"сквозной прототип",
     st_fertig:"готово", st_prod:"в эксплуатации", st_highrisk:"высокий риск", st_verworfen:"отклонено",
     unknownStatusWarn:"Строка {line}: неизвестный код статуса «{code}» — показан как нейтральный.",
@@ -1552,6 +1569,7 @@ const I18N = {
     hint_id:"ID узла через #имя — виден во всплывающей подсказке узла.",
     hint_deps:"Зависимости через :#имя,#имя — видны в подсказке.",
     hint_eff:"Цвет узла показывает фактический статус (с учётом зависимостей); если собственный дальше, он показан меткой слева внизу.",
+    hint_desc:"Описания: строка \" под узлом; длинный текст после --- как блок #id с отступом — оба в подсказке (”).",
     hint_fold:"Сворачивание: - > [x] … открывается свёрнутым, < возвращает; ▾/▸ на узле переключает (клавиши: ←/→).",
     hint_jump:"Alt+клик по узлу (долгое нажатие на сенсоре) переходит к его строке в тексте; Alt+клик в тексте показывает узел на диаграмме."
   },
@@ -1604,6 +1622,8 @@ const I18N = {
     xorConflictWarn:"पंक्ति {line}: „{label}“ एक और साकार विकल्प है — = समूह में केवल एक की अनुमति है।",
     duplicateIdWarn:"पंक्ति {line}: आईडी #{id} पहले से प्रयुक्त है (पंक्ति {firstLine})।",
     unknownDepWarn:"पंक्ति {line}: निर्भरता #{id} — इस आईडी वाला कोई नोड नहीं है।",
+    unknownDescWarn:"पंक्ति {line}: #{id} के लिए विवरण — इस आईडी वाला कोई नोड नहीं है।",
+    descStrayWarn:"पंक्ति {line}: विवरण पंक्ति बिना संदर्भ — इससे पहले कोई नोड या #id ब्लॉक नहीं है।",
     st_idee:"विचार", st_geplant:"नियोजित", st_arbeit:"प्रगति पर", st_durchstich:"कार्यशील ढाँचा",
     st_fertig:"पूर्ण", st_prod:"उत्पादन में", st_highrisk:"उच्च जोखिम", st_verworfen:"अस्वीकृत",
     unknownStatusWarn:"पंक्ति {line}: अज्ञात स्थिति कोड „{code}“ — तटस्थ रूप में दिखाया गया।",
@@ -1624,6 +1644,7 @@ const I18N = {
     hint_id:"#नाम से नोड आईडी — नोड के टूलटिप में दिखती है।",
     hint_deps:":#नाम,#नाम से निर्भरताएँ — टूलटिप में दिखती हैं।",
     hint_eff:"नोड का रंग प्रभावी स्थिति दिखाता है (निर्भरताओं सहित); यदि अपनी स्थिति आगे है, तो वह नीचे-बाएँ चिह्न के रूप में दिखती है।",
+    hint_desc:"विवरण: नोड के नीचे \" पंक्ति; --- के बाद #id ब्लॉक में लंबा पाठ — दोनों टूलटिप में (”)।",
     hint_fold:"फ़ोल्डिंग: - > [x] … समेटा हुआ खुलता है, < वापस लाता है; नोड पर ▾/▸ टॉगल करता है (कीबोर्ड: ←/→)।",
     hint_jump:"किसी नोड पर Alt+क्लिक (टच पर लंबा दबाव) टेक्स्ट में उसकी पंक्ति पर ले जाता है; टेक्स्ट में Alt+क्लिक उस नोड को आरेख में दिखाता है।"
   },
@@ -1676,6 +1697,8 @@ const I18N = {
     xorConflictWarn:"第 {line} 行：「{label}」是又一个已实现的备选项——= 组只允许恰好一个。",
     duplicateIdWarn:"第 {line} 行：ID #{id} 已被占用（第 {firstLine} 行）。",
     unknownDepWarn:"第 {line} 行：依赖 #{id}——没有节点使用此 ID。",
+    unknownDescWarn:"第 {line} 行：#{id} 的描述——没有节点使用此 ID。",
+    descStrayWarn:"第 {line} 行：描述行没有归属——前面缺少节点或 #id 块。",
     st_idee:"想法", st_geplant:"已计划", st_arbeit:"进行中", st_durchstich:"可运行骨架",
     st_fertig:"已完成", st_prod:"已上线", st_highrisk:"高风险", st_verworfen:"已放弃",
     unknownStatusWarn:"第 {line} 行：未知状态代码“{code}”——显示为中性。",
@@ -1696,6 +1719,7 @@ const I18N = {
     hint_id:"用 #名称 指定节点 ID——显示在节点提示中。",
     hint_deps:"用 :#名称,#名称 表示依赖——显示在提示中。",
     hint_eff:"节点颜色显示实际状态（含依赖）；若自身状态更靠前，会以左下角标记显示。",
+    hint_desc:"描述：节点下方的 \" 行；--- 之后的缩进 #id 块为长文本——均显示在提示中（”）。",
     hint_fold:"折叠：- > [x] … 打开时即折叠，< 将其展开；节点上的 ▾/▸ 切换（键盘：←/→）。",
     hint_jump:"Alt+点击节点（触摸屏为长按）可跳转到文本中对应的行；在文本中 Alt+点击则把该节点带入视野。"
   },
@@ -1748,6 +1772,8 @@ const I18N = {
     xorConflictWarn:"{line} 行目：「{label}」も実現済みの選択肢です — = グループで実現できるのは 1 つだけです。",
     duplicateIdWarn:"{line} 行目：ID #{id} は既に使われています（{firstLine} 行目）。",
     unknownDepWarn:"{line} 行目：依存 #{id} — この ID を持つノードはありません。",
+    unknownDescWarn:"{line} 行目：#{id} の説明 — この ID を持つノードはありません。",
+    descStrayWarn:"{line} 行目：説明行の帰属先がありません — 直前にノードまたは #id ブロックが必要です。",
     st_idee:"アイデア", st_geplant:"計画済み", st_arbeit:"作業中", st_durchstich:"ウォーキングスケルトン",
     st_fertig:"完了", st_prod:"本番稼働", st_highrisk:"高リスク", st_verworfen:"破棄",
     unknownStatusWarn:"{line} 行目: 不明なステータス記号「{code}」— 中立として表示。",
@@ -1768,6 +1794,7 @@ const I18N = {
     hint_id:"#名前 でノード ID — ノードのツールチップに表示されます。",
     hint_deps:":#名前,#名前 で依存関係 — ツールチップに表示されます。",
     hint_eff:"ノードの色は実効ステータス（依存関係込み）を示します。自身が先行している場合は左下のマークで表示されます。",
+    hint_desc:"説明：ノード直下の \" 行。--- 以降は #id ブロック（字下げ）で長文 — どちらもツールチップに表示（”）。",
     hint_fold:"折りたたみ：- > [x] … は折りたたんだ状態で開き、< は呼び戻します。ノードの ▾/▸ で切替（キー：←/→）。",
     hint_jump:"ノードを Alt+クリック（タッチでは長押し）すると、テキストの該当行へ移動します。テキスト内で Alt+クリックすると、そのノードが図の中央に表示されます。"
   }
@@ -1804,6 +1831,7 @@ function buildHint(){
     ${esc(t('hint_id'))}
     ${esc(t('hint_deps'))}
     ${esc(t('hint_eff'))}
+    ${esc(t('hint_desc'))}
     ${esc(t('hint_fold'))}
     <code>!!!</code>&nbsp; ${esc(t('hint_focus'))}
     <div class="hint-op">${esc(t('hint_jump'))}</div>`;

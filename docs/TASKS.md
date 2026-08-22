@@ -111,8 +111,10 @@ entscheiden, **bevor** Code entsteht.
       realisierter Alternative; Darstellung als any-of plus „1“-Plakette an der
       Sammelleiste (auch im Grafikexport); Legende + i18n in 9 Sprachen;
       `tests/xor.test.js`.
-- [ ] Knotenbeschreibungen: Schreibweise für kurze und lange Form festlegen
+- [x] Knotenbeschreibungen: Schreibweise für kurze und lange Form festlegen
       (Einrückung ist bereits Hierarchie), dann Tooltip/Pop-up.
       → Schreibweise entschieden (D34-Nachtrag): Kurzform als `"`-Zeile unter
       dem Knoten (Leerraum-Regel), Langform als eingerückte ID-Blöcke hinter
-      einem `---`-Trenner (SPEC §11). Zu bauen: Parser + Anzeige.
+      einem `---`-Trenner (SPEC §11). Umgesetzt (D40): Parser (`desc` am
+      Knoten, Warnungen `unknownDesc`/`descStray`), Anzeige im Tooltip +
+      `aria-label` mit ”-Marke am Knoten; `tests/desc.test.js`.

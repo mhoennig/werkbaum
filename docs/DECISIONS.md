@@ -1909,3 +1909,41 @@ heißt Kosten investiert, und investiert ist investiert, auch wenn
 Abhängigkeiten den Knoten zurückhalten; und „Was ist neu?“ (D28) — der gelbe
 Kranz meldet das `[^]` im Text, also den Deploy des Knotens selbst. Beide
 Prüfungen laufen im Parser bzw. auf dem Text und bleiben unberührt.
+
+## D40 — Knotenbeschreibungen gebaut: Tooltip statt Pop-up, ”-Marke, laute Strays
+Die in D34 entschiedene Schreibweise (`"`-Zeilen, `---`-Beschreibungsteil) ist
+umgesetzt (SPEC §1/§9). Die Bau-Entscheidungen:
+
+**Anzeige im Tooltip, kein eigenes Pop-up.** SPEC §11 ließ „Tooltip oder
+Pop-up“ offen. Ein Pop-up bräuchte eine eigene Geste (Klick ist der Link,
+Alt+Klick der Sprung, der lange Druck ebenso — es bliebe nur ein weiteres
+Klickziel neben dem Falt-Zeichen), Positionierung, Schließen-Logik und
+Mobil-Verhalten. Der Tooltip kostet nichts davon: Der Beschreibungstext steht
+**zuerst** (mehrzeilig — `title` zeigt Zeilenumbrüche), danach die
+Kurz-Fakten (ID, Abhängigkeiten, Status). Bekannte Grenze: Auf Touch-Geräten
+gibt es keine Tooltips — dort bleibt der Text vorerst nur im `aria-label`;
+ein Pop-up kann später ergänzt werden, die Syntax ändert sich dadurch nicht.
+
+**Auffindbarkeit: die ”-Marke.** Eine Beschreibung, die nur im Tooltip lebt,
+wäre unsichtbar (die D25-Lehre: was niemand sieht, ist keine Funktion). Ein
+Knoten mit Beschreibung trägt deshalb ein kleines ” hinter dem Label — es
+spiegelt das `"`-Zeichen der Notation, wie die `[x]`-Marke (D39) deren
+Statusboxen spiegelt; kein neues Symbol zu lernen. **Nicht im Export**: Der
+Text selbst kann im statischen Bild nicht erscheinen, eine Marke ohne Ziel
+wäre Rauschen — anders als „▸ n“ (D38), das eine nachprüfbare Aussage über
+verborgene Knoten trifft. Screenreader bekommen den Text im `aria-label`.
+
+**Strays warnen einzeln, Blöcke unter unbekannter ID schlucken still.** Die
+beiden Fehlerfälle sind verschieden: Eine verwaiste Zeile (uneingerückt und
+keine ID-Zeile, oder eingerückt ohne offenen Block) ist wahrscheinlich ein
+**verrutschter Knoten** — genau der Fall des versehentlichen Trenners mitten
+im Plan — und meldet sich je Zeile (`descStray`), damit nichts still
+verschwindet. Ein Block unter einer **unbekannten ID** dagegen ist als
+Beschreibung erkennbar und schon mit `unknownDesc` gemeldet; seine Textzeilen
+zusätzlich einzeln anzuprangern wäre nur Lärm (SKIP-Ziel im Parser).
+
+**Freitext heißt Freitext:** In Beschreibungszeilen findet keine
+§1-Extraktion statt — `(M)`, `@name`, `#id` oder URLs im Text bleiben Text.
+Einzige Ausnahme ist `%%`: Der Kommentar fällt im ganzen Dokument als
+Erstes weg (einheitliche Regel, §1) — so lassen sich auch Beschreibungen
+kommentieren.

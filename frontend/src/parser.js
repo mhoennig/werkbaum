@@ -27,7 +27,10 @@ const REALIZED = new Set(['arbeit', 'durchstich', 'fertig', 'prod']);
 
 /* Parst den Notationstext zu { roots, warnings }.
    Jeder Knoten: {label, type:'and'|'or'|'xor', optional, fold, status, url,
-   size, tags, id, deps, focus, children, line}.
+   size, tags, id, deps, desc, focus, children, line}.
+   `desc` (SPEC §11/D40) ist der Beschreibungstext: `"`-Zeilen unter dem
+   Knoten (Kurzform) und ID-Blöcke aus dem `---`-Beschreibungsteil (Langform),
+   in Dokumentreihenfolge mit Zeilenumbrüchen zusammengefügt; null ohne.
    `fold` ('>'|'<'|null, SPEC §1/D38) ist nur der ANFANGSZUSTAND der Faltung —
    den wirksamen Zustand rechnet `initialCollapsed()` in model.js.
    `deps` sind ID-Strings, keine Knoten-Referenzen — aufgelöst wird erst beim
@@ -46,10 +49,62 @@ export function parse(text){
   const stack = [{node:virtualRoot, width:-1}];
   const warnings = [];
   const idLines = new Map();   /* Knoten-ID -> Zeile der ersten Vergabe (D36) */
+  const idNodes = new Map();   /* Knoten-ID -> Knoten der ersten Vergabe */
+  /* Beschreibungen (SPEC §11, D40): gesammelt je Knoten, am Ende zu `desc`
+     zusammengefügt. `lastNode` trägt die Kurzform-Zuordnung („vorangehender
+     Knoten"), `descTarget` den offenen Block des Beschreibungsteils; SKIP
+     schluckt Blocktext unter einer unbekannten ID, ohne je Zeile zu warnen. */
+  const descLines = new Map();
+  const SKIP = {};
+  let lastNode = null, inDesc = false, descTarget = null;
+  const addDesc = (node, text) => {
+    let arr = descLines.get(node);
+    if(!arr) descLines.set(node, arr = []);
+    if(text === '' && (!arr.length || arr[arr.length-1] === '')) return;
+    arr.push(text);
+  };
 
   text.split('\n').forEach((raw, i) => {
     raw = raw.replace(/%%.*$/, '');   /* %%-Kommentare entfernen (Mermaid-Konvention) */
+    /* Trenner `---` (SPEC §11, D40): drei oder mehr Bindestriche, umgebender
+       Leerraum erlaubt — ab hier gilt der Beschreibungsteil. Es gibt keinen
+       Schlusszaun; weitere Trennzeilen darin haben keine Bedeutung. */
+    if(/^[ \t]*-{3,}[ \t]*$/.test(raw)){ inDesc = true; return; }
+    if(inDesc){
+      if(!raw.trim()){
+        if(descTarget && descTarget !== SKIP) addDesc(descTarget, '');   /* Absatztrenner */
+        return;
+      }
+      if(/^[ \t]/.test(raw)){                       /* eingerückt: Blocktext */
+        if(descTarget == null){ warnings.push({type:'descStray', line:i+1}); return; }
+        if(descTarget !== SKIP) addDesc(descTarget, raw.trim());
+        return;
+      }
+      const idm = raw.match(/^#([\p{L}\p{N}._-]+)\s*$/u);
+      if(!idm){
+        /* Uneingerückt, keine ID-Zeile — bei einem versehentlichen Trenner
+           mitten im Plan melden sich die verschluckten Knotenzeilen so
+           zeilengenau selbst (SPEC §11). */
+        warnings.push({type:'descStray', line:i+1});
+        descTarget = null;
+        return;
+      }
+      const target = idNodes.get(idm[1]);
+      if(!target){ warnings.push({type:'unknownDesc', line:i+1, id:idm[1]}); descTarget = SKIP; }
+      else descTarget = target;
+      return;
+    }
     if(!raw.trim()) return;
+    /* Kurzform `"` (SPEC §11, D40): Beschreibung des VORANGEHENDEN Knotens,
+       nur mit folgendem Leerraum (Leerraum-Regel) und nur auf Zeilen ohne
+       Zerlegungszeichen — `"Zitat"` und `- " Zitat" …` bleiben Labels.
+       Die Einrückung der Zeile hat keine Bedeutung. */
+    const ts = raw.replace(/^[ \t]*/, '');
+    if(ts[0] === '"' && /[ \t]/.test(ts[1] || '')){
+      if(lastNode) addDesc(lastNode, ts.slice(2).trim());
+      else warnings.push({type:'descStray', line:i+1});
+      return;
+    }
     /* Statusbox tolerant erfassen: irgendein einzelnes Zeichen in [ ] an der
        Statusposition. Gültige Codes -> Status; unbekannte -> Warnung + neutral
        (fehlertolerant: die Zeile geht nicht verloren). */
@@ -109,9 +164,19 @@ export function parse(text){
     while(stack.length > 1 && stack[stack.length-1].width >= width) stack.pop();
     const parent = stack[stack.length-1].node;
 
-    const node = {label, type, optional, fold, status, url, size, tags, id, deps, focus, children:[], line:i+1};
+    const node = {label, type, optional, fold, status, url, size, tags, id, deps, desc:null, focus, children:[], line:i+1};
     parent.children.push(node);
     stack.push({node, width});
+    lastNode = node;
+    if(id != null && !idNodes.has(id)) idNodes.set(id, node);
+  });
+
+  /* Beschreibungen zusammensetzen: Zeilen in Dokumentreihenfolge, Leerzeilen
+     bleiben als Absatztrenner, Ränder getrimmt (SPEC §11, D40). */
+  descLines.forEach((lines, node) => {
+    while(lines.length && lines[lines.length-1] === '') lines.pop();
+    while(lines.length && lines[0] === '') lines.shift();
+    if(lines.length) node.desc = lines.join('\n');
   });
 
   /* Unbekannte Abhängigkeits-IDs (SPEC §1): erst nach dem Einlesen prüfbar —

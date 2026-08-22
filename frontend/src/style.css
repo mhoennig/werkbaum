@@ -561,6 +561,10 @@
   /* Der dunkle Wurzelknoten braucht ein helleres Zeichen als das Grau. */
   .root-node .fold{color:rgba(255,255,255,.75)}
   .root-node .fold:hover{color:#fff}
+  /* ”-Marke (SPEC §9, D40): der Knoten trägt eine Beschreibung — im Tooltip
+     nachlesbar. Spiegelt das "-Zeichen der Notation; gedeckt, kein Klickziel. */
+  .node .desc-mark{color:var(--muted);margin-left:4px;font-weight:600}
+  .root-node .desc-mark{color:rgba(255,255,255,.75)}
   /* Sichtbarer Tastatur-Fokus (Knoten sind fokussierbar: Fokusreihenfolge =
      Lese-/Dokumentreihenfolge; Screenreader liest den aria-label). */
   .node:focus-visible{outline:2px solid var(--or);outline-offset:2px;box-shadow:0 2px 8px rgba(36,52,71,.22)}
