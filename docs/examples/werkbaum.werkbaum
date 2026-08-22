@@ -18,9 +18,9 @@
       - [x] Cycles are legal — they mean "finished together" (XS)
       - [x] An id with no node behind it is a warning (XS)
     - [x] XOR, = — exactly one alternative, not at least one (S)
-    - [?] Node descriptions, shown as a tooltip or pop-up (M)
-      - [?] A short text right at the node (S)  %% indentation already means hierarchy
-      - [?] A long block at the end, addressed by its id (S)
+    - [ ] Node descriptions, shown as a tooltip or pop-up (M)
+      - [ ] A short text right at the node (S)  %% decided: a " line below the node
+      - [ ] A long block at the end, addressed by its id (S)  %% decided: behind a --- separator
     - [-] A separate storage format for the structure (L)  %% the text is the format
     - [ ] Ticket references (#123) (S)
     - [?] Benefit per node, not only cost (M)

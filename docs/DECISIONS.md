@@ -1656,6 +1656,41 @@ eingeklappter Knoten sichtbar gekennzeichnet (etwa „▸“ oder die Anzahl der
 verborgenen Kinder); die genaue Form entscheidet sich beim Bauen, die
 SPEC-Aussage ist nur: sichtbare Struktur, Einklappung gekennzeichnet.
 
+**Nachtrag — die Knotenbeschreibungen sind entschieden: `"`-Zeilen und ein
+`---`-Beschreibungsteil.** Die letzte offene Schreibweise der fünf
+Erweiterungen. Entschieden vom Nutzer in zwei Schritten:
+
+**Kurzform: eine neue Zeile mit `"`.** Ein eigenes einleitendes Zeichen war
+die einzige Möglichkeit — Einrückung bedeutet Hierarchie (§2), eine
+eingerückte Folgezeile ist ein Kindknoten. `"` liest sich als Zitat („was der
+Autor dazu sagt“), ist auf DE- (Shift+2) wie US-Layout direkt tippbar und an
+dieser Position frei. Die Leerraum-Regel (wie `=`, `>`/`<`) hält gequotete
+Labels (`"Zitat"`) heraus; auf Zeilen mit Zerlegungszeichen gilt das Zeichen
+nicht, ein `- " Zitat" …`-Label bleibt also unberührt.
+
+**Langform: hinter einem `---`-Trenner, nur mit Einrückung — ohne weitere
+Zeichen.** Vorgeschlagen waren zeilenweise `"`-Präfixe (robust, aber lästig
+beim Einfügen längerer Texte) und ein `"""`-Zaun (einfügefreundlich, aber ein
+vergessener Schlusszaun verschluckte den Rest des Dokuments — der hässlichste
+Fehlermodus in einem bis dahin zeilenlokalen Format). Der Nutzer wählte die
+dritte, bessere Form: **ein `---`-Trenner nach YAML-/Frontmatter-Vorbild**
+beendet den Baumteil; dahinter eröffnen ID-Zeilen (`#auth`) Blöcke, deren
+eingerückte Zeilen der Text sind. Das nimmt dem Zaun beide Schwächen
+zugleich: Es gibt **keinen Schlusszaun, den man vergessen könnte** (der
+Beschreibungsteil läuft planmäßig bis zum Dateiende), und der Parser-Zustand
+ist ein einziger Einweg-Schalter statt offen/zu. Die Wurzelknoten-Regel gilt
+hinter dem Trenner nicht mehr — darum braucht dort keine Zeile ein Zeichen.
+
+Der Fehlermodus „versehentlicher Trenner mitten im Plan“ ist bewusst laut
+gemacht: Uneingerückte Nicht-ID-Zeilen und verwaiste eingerückte Zeilen im
+Beschreibungsteil geben je eine Warnung mit Zeilennummer — verschluckte
+Knotenzeilen melden sich also zeilengenau selbst, statt still zu
+verschwinden (dieselbe Haltung wie bei `unknownStatus`, §4).
+
+Zwei bewusste Verhaltensänderungen, beide dokumentiert (§11): `---` ergab
+bisher einen Knoten mit Label `--`, und eine zeichenlose Zeile, die mit
+`" ` beginnt, war bisher ein Wurzelknoten mit `"`-Label.
+
 ## D35 — XOR (`=`) umgesetzt: „realisiert“ definiert, „1“-Plakette, keine neue Linienart
 Das in D34 entschiedene XOR-Gate ist gebaut (SPEC §1/§3/§9); beim Bauen waren
 drei Dinge zu entscheiden, die die SPEC bis dahin offen ließ:

@@ -711,17 +711,69 @@ ist, damit der gewählte Knoten effektiv fertig werden kann. Gemeinsam
 benötigte Abhängigkeiten werden dabei **nur einmal** gezählt. Genau das macht
 die Rechnung schwerer als heute — siehe D34.
 
-### Knotenbeschreibungen
+### Knotenbeschreibungen (`"` und `---`)
 
 Erläuternder Text zu einem Knoten, im Diagramm als Tooltip oder Pop-up.
-Vorgesehen sind zwei Formen: ein **kurzer Text unmittelbar beim Knoten** und
-ein **längerer Block am Ende des Dokuments**, über die Knoten-ID zugeordnet.
+Beide Schreibweisen sind **entschieden** (D34-Nachtrag), noch nicht gebaut.
+Der Kern des Problems war: Einrückung bedeutet Hierarchie (§2) — eine
+eingerückte Folgezeile **ist** ein Kindknoten, und jede Zeile ohne Zeichen ist
+ein Wurzelknoten. Die Kurzform löst das mit einem eigenen Zeichen, die
+Langform, indem sie den Geltungsbereich dieser Regeln beendet.
 
-**Offen — und hier liegt die eigentliche Arbeit:** Die kurze Form kann nicht
-einfach eine eingerückte Folgezeile sein. Einrückung bedeutet in dieser
-Notation Hierarchie (§2); eine eingerückte Zeile **ist** ein Kindknoten. Die
-kurze Form braucht deshalb ein eigenes einleitendes Zeichen, die lange Form
-eine Blockform, die sich nicht mit einem Wurzelknoten verwechseln lässt.
+**Kurzform — `"`-Zeile unter dem Knoten:**
+
+```
+- [~] Auth-Dienst #auth (L)
+  " Kapselt Login, Tokens und Rollen.
+```
+
+- Eine Zeile, deren erstes Zeichen nach der Einrückung `"` ist (**mit
+  folgendem Leerraum**, Leerraum-Regel wie bei `=` und `>`/`<` — ein Label wie
+  `"Zitat"` bleibt damit ein Label), ist **Beschreibung, kein Knoten**.
+- Sie gehört zum **vorangehenden Knoten**; mehrere `"`-Zeilen hintereinander
+  setzen dieselbe Beschreibung fort. Die Einrückung der `"`-Zeile hat keine
+  Bedeutung (Konvention: wie ein Kind eingerückt). Eine `"`-Zeile ohne
+  vorangehenden Knoten ist eine Warnung mit Zeilennummer.
+- Der Inhalt ist **Freitext**: Die §1-Extraktion (Größe, Tags, IDs, URL …)
+  findet darin nicht statt. Nur `%%`-Kommentare werden weiterhin entfernt —
+  der Kommentar fällt als Erstes (§1), einheitlich im ganzen Dokument.
+- Nur auf Zeilen **ohne** Zerlegungszeichen: `- " Zitat" als Label` bleibt ein
+  gewöhnlicher Knoten.
+
+**Langform — Beschreibungsteil hinter `---`:**
+
+```
+[~] Auth-Dienst #auth (L)
+  - [ ] Login
+
+---
+#auth
+  Hintergrund, Entscheidungen, Verweise — freier Text,
+  zeilenweise eingerückt. Leerzeilen trennen Absätze.
+#api
+  Der nächste Block.
+```
+
+- Eine Zeile aus **drei oder mehr `-`** (nur Bindestriche, umgebender Leerraum
+  erlaubt) trennt den Baumteil vom **Beschreibungsteil**; alles danach gehört
+  zu ihm (YAML-/Frontmatter-Konvention: „ab hier etwas anderes“). Es gibt
+  keinen Schlusszaun — er kann also nicht vergessen werden.
+- Im Beschreibungsteil eröffnet eine **uneingerückte Zeile mit genau einer
+  Knoten-ID** (`#auth`, allein) einen Block; die **eingerückten** Zeilen
+  darunter sind sein Text (um den Einzug gekürzt; Leerzeilen bleiben als
+  Absatztrenner erhalten). Anführungszeichen braucht es hier nicht — die
+  Wurzelknoten-Regel (§2) gilt hinter dem Trenner nicht mehr.
+- **Fehlertoleranz:** Eine ID ohne zugehörigen Knoten → Warnung (wie
+  `unknownDep`). Eine uneingerückte Zeile, die keine ID-Zeile ist, oder
+  eingerückte Zeilen ohne eröffneten Block → Warnung mit Zeilennummer. Ein
+  versehentlicher Trenner mitten im Plan fällt dadurch sofort auf: Die
+  verschluckten Knotenzeilen werden zeilengenau gemeldet.
+- Mehrere Blöcke zur selben ID werden in Dokumentreihenfolge aneinander-
+  gehängt; Kurz- und Langform zum selben Knoten dürfen koexistieren
+  (Anzeige-Details werden beim Bauen festgelegt). Weitere `---`-Zeilen im
+  Beschreibungsteil haben keine Bedeutung.
+- Bewusste Verhaltensänderung: Eine Zeile `---` ergab bisher einen Knoten mit
+  Label `--`; sie ist jetzt der Trenner.
 
 ## 12. Dateiendung
 

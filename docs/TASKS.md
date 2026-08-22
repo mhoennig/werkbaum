@@ -113,3 +113,6 @@ entscheiden, **bevor** Code entsteht.
       `tests/xor.test.js`.
 - [ ] Knotenbeschreibungen: Schreibweise für kurze und lange Form festlegen
       (Einrückung ist bereits Hierarchie), dann Tooltip/Pop-up.
+      → Schreibweise entschieden (D34-Nachtrag): Kurzform als `"`-Zeile unter
+      dem Knoten (Leerraum-Regel), Langform als eingerückte ID-Blöcke hinter
+      einem `---`-Trenner (SPEC §11). Zu bauen: Parser + Anzeige.

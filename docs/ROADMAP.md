@@ -142,7 +142,8 @@ Pfad, der die Wahrheit sagt.
 - **Knotenbeschreibungen** — Erläuterungstext zum Knoten, im Diagramm als
   Tooltip oder Pop-up: kurz direkt beim Knoten, lang als Block am Dokumentende
   über die ID zugeordnet. Die Arbeit steckt nicht im Anzeigen, sondern in der
-  Schreibweise: Einrückung bedeutet hier bereits Hierarchie.
+  Schreibweise: Einrückung bedeutet hier bereits Hierarchie. Die Schreibweise
+  ist entschieden (D34-Nachtrag): `"`-Zeilen bzw. ID-Blöcke hinter `---`.
 
 **Was daraus folgt.**
 
