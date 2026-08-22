@@ -446,6 +446,10 @@
     padding:5px 8px;font-family:inherit;font-size:.78rem;white-space:nowrap;
   }
   .docact:hover{border-color:var(--or);color:var(--or)}
+  /* „Original wiederherstellen" (D22-Nachtrag): sichtbar, sobald ein
+     mitgeliefertes Dokument aktiv ist; ausgegraut, solange es unverändert ist. */
+  .docact:disabled{opacity:.45;cursor:default}
+  .docact:disabled:hover{border-color:rgba(36,52,71,.2);color:var(--muted)}
   .docdel:hover{border-color:#D897A8;color:#B4415E}
   .togglebtn[aria-pressed="true"]{background:var(--or);color:#fff;border-color:var(--or)}
   .togglebtn[aria-pressed="true"]:hover{color:#fff}

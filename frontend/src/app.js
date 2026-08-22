@@ -2306,8 +2306,12 @@ function shippedStateOf(id){
 function updateRestoreBtn(){
   const d = activeDoc();
   const shipped = d && shippedStateOf(d.id);
-  document.getElementById('docRestore').hidden =
-    !shipped || (d.text === shipped.text && d.name === shipped.name);
+  const btn = document.getElementById('docRestore');
+  /* Immer zeigen, wenn ein MITGELIEFERTES Dokument aktiv ist — nur ausgegraut,
+     solange es dem Auslieferungsstand entspricht. Ganz versteckt war der
+     Eintrag nicht auffindbar (Nutzer: „ich sehe keinen Reset-Button"). */
+  btn.hidden = !shipped;
+  btn.disabled = !!shipped && d.text === shipped.text && d.name === shipped.name;
 }
 function restoreDoc(){
   const d = activeDoc();
