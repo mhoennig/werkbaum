@@ -7,15 +7,16 @@ Syntaxänderungen werden zuerst hier dokumentiert, dann implementiert.
 ## 1. Zeilenformat
 
 ```
-[Einrückung][Zeichen] [Statusbox] Label (Größe) URL @tag … !!! %% Kommentar
+[Einrückung][Zeichen] [Faltmarke] [Statusbox] Label (Größe) URL @tag … !!! %% Kommentar
 ```
 
 Alle Bestandteile außer dem Label sind optional. Die Extraktion erfolgt in
 dieser Reihenfolge (wichtig für Kollisionsfreiheit):
 
 1. Kommentar entfernen: alles ab `%%` bis Zeilenende.
-2. Einrückung, Zeichen (`-` / `+` / `|` / `=`) und Statusbox `[…]` per
-   Zeilen-Regex; `=` nur mit folgendem Leerraum (§3).
+2. Einrückung, Zeichen (`-` / `+` / `|` / `=`), Faltmarke (`>` / `<`) und
+   Statusbox `[…]` per Zeilen-Regex; `=` nur mit folgendem Leerraum (§3),
+   die Faltmarke ebenso (siehe unten).
 3. URL: erstes Token, das auf `https?://\S+` passt (dadurch stören `@` in URLs nicht).
 4. Größe: erstes `(XS|S|M|L|XL|XXL)`, Groß-/Kleinschreibung egal.
 5. Tags: alle `@name`-Vorkommen.
@@ -23,6 +24,19 @@ dieser Reihenfolge (wichtig für Kollisionsfreiheit):
 7. Abhängigkeiten: alle alleinstehend angesetzten `:#a,#b`-Token (siehe unten).
 8. Fokusmarke: `!!!` als **alleinstehendes** Token (siehe unten).
 9. Rest, whitespace-normalisiert = Label. Leeres Label ⇒ Zeile ignorieren.
+
+**Faltmarke `>` / `<`** — bestimmt, wie das Dokument **eröffnet** wird:
+
+- Steht **zwischen** Zerlegungszeichen und Statusbox (`- > [x] Backend`); bei
+  Wurzelknoten (ohne Zeichen) am Zeilenanfang. Erkannt nur mit **folgendem
+  Leerraum** — `- >Achtung` bleibt damit ein Label. Begründung der Stellung:
+  D34-Nachtrag.
+- `>` heißt: der Teilbaum dieses Knotens ist beim Öffnen **eingeklappt**.
+- `<` innerhalb eines eingeklappten Bereichs holt den **eigenen Teilbaum**
+  gezielt wieder hervor (Mechanik: §9).
+- Die Marken bestimmen nur den **Anfangszustand** — im Diagramm wird danach
+  unabhängig vom Text gefaltet (§9). Sie sagen nichts über Fortschritt (§4)
+  oder Notwendigkeit (§3) und ändern weder Kosten noch Warnungen.
 
 **Knoten-ID `#name`** — benennt einen Knoten im **ganzen Dokument** eindeutig;
 sie ist die Adresse für Abhängigkeiten und Beschreibungsblöcke (§11).
@@ -83,7 +97,7 @@ hat etwas, das ein Cursor nicht hat: **alle** sehen dieselbe Stelle.
 Referenz-Regex der Implementierung:
 
 ```
-^([ \t]*)([-|+]|=(?=[ \t]))?\s*(?:\[([ ?~xX^/-])\]\s*)?(.*)$
+^([ \t]*)([-|+]|=(?=[ \t]))?\s*(?:([><])(?=[ \t])\s*)?(?:\[([ ?~xX^/-])\]\s*)?(.*)$
 ```
 
 Für die Knoten-ID (Schritt 6, nur der erste Treffer):
@@ -508,6 +522,36 @@ gehört und lesbar bleibt. Kein Blinken.
 - Wie die Cursor-Zeile erscheint sie **nicht** im Druck und **nicht** im
   Grafikexport: Sie sagt „schau jetzt hierhin", nicht „so ist der Plan".
 
+### Ein- und ausklappbare Teilbäume (`>` / `<`, §1)
+Jeder Knoten mit sichtbaren Kindern trägt ein kleines **Falt-Zeichen** vor dem
+Label: **▾** offen, **„▸ n“** eingeklappt (n = Zahl der verborgenen Knoten).
+Klick auf das Zeichen klappt um — der einfache Klick auf den Knoten selbst
+bleibt der Link (§6); Tastatur: **←** klappt zu, **→** klappt auf am
+fokussierten Knoten (WAI-ARIA-Baum-Idiom).
+
+- **Anfangszustand aus dem Text (§1):** `>` klappt ein. `<` holt seinen
+  Teilbaum hervor, indem die Faltung die Pfad-Ebenen **hinunterwandert**:
+  Jeder eingeklappte Vorfahr öffnet sich, seine übrigen Kinder stehen
+  stattdessen als einzelne eingeklappte Knoten da — sichtbar ist genau der
+  Pfad samt Teilbaum, der Rest bleibt kompakt. Ein `>` **innerhalb** des
+  hervorgeholten Teilbaums bleibt respektiert.
+- Auch ein **`!!!`-markierter Knoten** (§1) holt sich auf diese Weise hervor —
+  ein Zeigefinger auf etwas Unsichtbares zeigte ins Leere.
+- Der interaktive Eingriff gilt **je Knoten** (Identität = Label-Pfad, wie bei
+  „Was ist neu?“) und **für die Sitzung**; er wird nicht gespeichert — die
+  dauerhafte Aussage steht im Text (D34). Ein Dokumentwechsel setzt zurück.
+- Faltung ist **reine Ansicht**: Warnungen aus eingeklappten Teilbäumen werden
+  weiter gemeldet (sie gelten dem Text), und der günstigste Pfad rechnet
+  unverändert über den ganzen Baum — seine Linie zeigt nur die sichtbaren
+  Endknoten.
+- **Export und Druck folgen der sichtbaren Faltung** (dieselbe Regel wie beim
+  „verworfene einblenden“-Filter): Verborgene Teilbäume fehlen, eingeklappte
+  Knoten behalten die Kennzeichnung „▸ n“ — das Bild behauptet damit keine
+  Vollständigkeit. Das ▾ offener Knoten ist ein Bedienelement und erscheint
+  weder im Export noch im Druck.
+
+Siehe D38.
+
 ### Grafikexport des Diagramms
 Das Diagramm wird aus der Live-Geometrie in ein eigenständiges SVG (nur Formen
 + Text, keine externen Ressourcen) nachgezeichnet. Zwei Icon-Schaltflächen:
@@ -645,26 +689,6 @@ Abhängigkeiten zählt die **Dependency Closure**: alles, was zusätzlich nötig
 ist, damit der gewählte Knoten effektiv fertig werden kann. Gemeinsam
 benötigte Abhängigkeiten werden dabei **nur einmal** gezählt. Genau das macht
 die Rechnung schwerer als heute — siehe D34.
-
-### Ein- und ausklappbare Teilbäume (`>` / `<`)
-
-- `>` an einem Knoten heißt: **ab hier eingeklappt** — sein Teilbaum ist beim
-  Öffnen des Dokuments zunächst verborgen.
-- `<` innerhalb eines eingeklappten Bereichs holt einen einzelnen Teilbaum
-  gezielt wieder hervor.
-- Im Diagramm wird danach **unabhängig vom Text** interaktiv auf- und
-  zugeklappt; die Marken im Text bestimmen nur den Anfangszustand.
-- **Stellung im Zeilenformat (entschieden):** **hinter** dem Zerlegungszeichen,
-  vor der Statusbox — `- > [x] Backend`. Die Spalte der Zerlegungszeichen
-  bleibt so bündig (an ihr liest das Auge die Hierarchie ab), und ein `>` am
-  Zeilenanfang wäre die Markdown-Blockquote-Konvention. Wurzelknoten (ohne
-  Zeichen) tragen die Marke am Zeilenanfang. Begründung: D34-Nachtrag.
-- **Grafikexport und Druck (entschieden):** folgen der **sichtbar
-  eingeklappten** Struktur — dieselbe Regel wie beim „verworfene
-  einblenden“-Filter (§9: „Es wird genau die sichtbare Struktur exportiert“).
-  Damit das Bild nicht stillschweigend Vollständigkeit behauptet, wird ein
-  eingeklappter Knoten **gekennzeichnet** (z. B. „▸“ oder die Anzahl der
-  verborgenen Kinder; genaue Form wird beim Bauen festgelegt).
 
 ### Knotenbeschreibungen
 

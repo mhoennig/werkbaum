@@ -25,8 +25,10 @@ export const STATUS_BY_CODE = {
 const REALIZED = new Set(['arbeit', 'durchstich', 'fertig', 'prod']);
 
 /* Parst den Notationstext zu { roots, warnings }.
-   Jeder Knoten: {label, type:'and'|'or'|'xor', optional, status, url, size,
-   tags, id, deps, focus, children, line}.
+   Jeder Knoten: {label, type:'and'|'or'|'xor', optional, fold, status, url,
+   size, tags, id, deps, focus, children, line}.
+   `fold` ('>'|'<'|null, SPEC §1/D38) ist nur der ANFANGSZUSTAND der Faltung —
+   den wirksamen Zustand rechnet `initialCollapsed()` in model.js.
    `deps` sind ID-Strings, keine Knoten-Referenzen — aufgelöst wird erst beim
    Konsumenten (D37); der Parser prüft nur die Existenz (`unknownDep`).
    `type` ist das Gate der Geschwistergruppe, `optional` (Zeichen `+`, SPEC §3)
@@ -51,14 +53,18 @@ export function parse(text){
        Statusposition. Gültige Codes -> Status; unbekannte -> Warnung + neutral
        (fehlertolerant: die Zeile geht nicht verloren). */
     /* `=` (XOR, SPEC §3) nur mit folgendem Leerraum — die Leerraum-Regel hält
-       Labels wie `=SUMME(A1:B2)` heraus; `-`/`+`/`|` bleiben wie bisher. */
-    const m = raw.match(/^([ \t]*)([-|+]|=(?=[ \t]))?\s*(?:\[([^\]])\]\s*)?(.*)$/);
+       Labels wie `=SUMME(A1:B2)` heraus; `-`/`+`/`|` bleiben wie bisher.
+       Die Faltmarke `>`/`<` (SPEC §1, D38) steht zwischen Zeichen und
+       Statusbox (bei Wurzeln am Zeilenanfang), ebenfalls nur mit folgendem
+       Leerraum — `- >Achtung` bleibt ein Label. */
+    const m = raw.match(/^([ \t]*)([-|+]|=(?=[ \t]))?\s*(?:([><])(?=[ \t])\s*)?(?:\[([^\]])\]\s*)?(.*)$/);
     const width = m[1].replace(/\t/g,'  ').length;
     const type  = m[2] === '|' ? 'or' : m[2] === '=' ? 'xor' : 'and';
     const optional = m[2] === '+';
-    const boxChar = m[3];   // undefined, wenn keine Statusbox
+    const fold = m[3] || null;
+    const boxChar = m[4];   // undefined, wenn keine Statusbox
 
-    let rest = m[4], url = null, size = null;
+    let rest = m[5], url = null, size = null;
     const tags = [];
     rest = rest.replace(/https?:\/\/\S+/i, s => { url = s; return ''; });
     rest = rest.replace(/\((XXL|XS|XL|S|M|L)\)/i, (s, g) => { size = g.toUpperCase(); return ''; });
@@ -102,7 +108,7 @@ export function parse(text){
     while(stack.length > 1 && stack[stack.length-1].width >= width) stack.pop();
     const parent = stack[stack.length-1].node;
 
-    const node = {label, type, optional, status, url, size, tags, id, deps, focus, children:[], line:i+1};
+    const node = {label, type, optional, fold, status, url, size, tags, id, deps, focus, children:[], line:i+1};
     parent.children.push(node);
     stack.push({node, width});
   });

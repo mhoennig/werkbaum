@@ -100,6 +100,46 @@ function walkKeys(nodes, parentKey, fn){
     walkKeys(n.children, key, fn);
   }
 }
+/* Knoten -> stabiler Schlüssel (Label-Pfad) über den ganzen Baum. Dieselbe
+   Identität wie bei „Was ist neu?" — sie überlebt Umsortieren und Neu-Parsen;
+   genutzt für die interaktiven Falt-Eingriffe (D38). */
+export function nodeKeys(roots){
+  const map = new Map();
+  walkKeys(roots, '', (key, n) => map.set(n, key));
+  return map;
+}
+
+/* ---------- Faltmarken (SPEC §1/§9, D38) ----------
+   Anfangszustand der Faltung aus den Textmarken: `>` klappt den Knoten ein.
+   `<` (und mit `rescueFocus` auch die Fokusmarke `!!!`) holt den eigenen
+   Teilbaum hervor, indem die Faltung die Pfad-Ebenen HINUNTERWANDERT: Jeder
+   eingeklappte Vorfahr wird geöffnet, seine Nicht-Pfad-Kinder werden
+   stattdessen eingeklappt. Sichtbar ist genau der Pfad samt Teilbaum, die
+   Geschwister stehen als einzelne eingeklappte Knoten da — und jede
+   gezeichnete Kante bleibt eine echte. Ein `>` innerhalb des hervorgeholten
+   Teilbaums bleibt respektiert. */
+export function initialCollapsed(roots, rescueFocus){
+  const set = new Set();
+  const paths = [];
+  const walk = (n, path) => {
+    const p = path.concat(n);
+    if(n.fold === '>') set.add(n);
+    if(n.fold === '<' || (rescueFocus && n.focus)) paths.push(p);
+    n.children.forEach(c => walk(c, p));
+  };
+  roots.forEach(r => walk(r, []));
+  for(const p of paths){
+    for(let i = 0; i < p.length - 1; i++){
+      if(!set.has(p[i])) continue;
+      set.delete(p[i]);
+      for(const c of p[i].children)
+        if(c !== p[i+1] && c.children.length) set.add(c);
+    }
+    set.delete(p[p.length - 1]);   /* der geholte Knoten selbst ist offen */
+  }
+  return set;
+}
+
 /* key -> Status-Schlüssel ('' für neutrale Knoten) über den ganzen Baum. */
 export function statusByKey(roots){
   const map = new Map();

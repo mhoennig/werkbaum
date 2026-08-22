@@ -91,10 +91,14 @@ entscheiden, **bevor** Code entsteht.
       **benennen**.
 - [ ] Querverbindungen zeichnen (eigene SVG-Ebene, optisch sekundär);
       bei ausgewähltem Knoten ein-/ausgehende hervorheben.
-- [ ] Faltmarken `>` / `<` parsen; interaktives Auf-/Zuklappen im Diagramm.
+- [x] Faltmarken `>` / `<` parsen; interaktives Auf-/Zuklappen im Diagramm.
       → Schreibweise und Export-Verhalten entschieden (D34-Nachtrag): Marke
       hinter dem Zerlegungszeichen (`- > [x] …`), Export/Druck folgen der
       sichtbar eingeklappten Struktur mit Kennzeichnung am Knoten.
+      Umgesetzt (D38): `initialCollapsed()` (`<` wandert die Faltung die
+      Pfad-Ebenen hinunter, `!!!` holt sich mit hervor); Falt-Zeichen ▾/„▸ n"
+      + Tastatur ←/→; Eingriffe je Label-Pfad, nur für die Sitzung; Warnungen
+      aus eingeklappten Teilbäumen bleiben; `tests/fold.test.js`.
 - [x] XOR-Gruppe (`=`) parsen (nur mit folgendem Leerraum, Mischung →
       `mixedGate`), zwei realisierte Alternativen melden.
       → Zeichen entschieden: `=` statt `x` (D34-Nachtrag). Umgesetzt (D35):

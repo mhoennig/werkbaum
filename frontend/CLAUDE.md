@@ -267,6 +267,19 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   passiert: Zähler stimmte, nichts leuchtete). Vorgehalten wird nur
   `freshPrevRoots` (Basis, einmal geparst). Basis je Dokument in `werkbaum-seen`,
   fortgeschrieben **erst beim Bestätigen** über `#freshBtn`.
+- Faltmarken `>`/`<` (SPEC §1/§9, D38): Parser setzt nur `fold` ('>'|'<'|null,
+  Leerraum-Regel); den wirksamen Anfangszustand rechnet `initialCollapsed()`
+  in model.js — `<` (und die Fokusmarke) wandert die Faltung die Pfad-Ebenen
+  **hinunter** statt Vorfahren bloß zu öffnen. `render()` überlagert ihn mit
+  `foldOverrides` (Schlüssel = Label-Pfad via `nodeKeys()`, Sitzung, beim
+  Dokumentwechsel geleert) und übergibt `collapsedSet` an den Renderer; der
+  lässt eingeklappte Kinder **weg** (nicht CSS-verstecken — Export, Messungen
+  und Pfadlinie bleiben so von selbst konsistent), meldet deren Warnungen aber
+  weiter (`walkFolded`, zählt zugleich fürs „▸ n"). Umklappen: Klick aufs
+  `.fold`-Zeichen (preventDefault — es sitzt bei Link-Knoten im `<a>`) oder
+  ←/→ am fokussierten Knoten; nach `render()` den Fokus per `data-line`
+  wiederherstellen. Export/Druck: „▸ n" bleibt, das ▾ offener Knoten fällt weg
+  (`stripFold` in `diagramToSvg`, Print-Regel `.node:not(.folded) .fold`).
 - Knoten-IDs `#name` (SPEC §1/D36): nur **alleinstehend angesetzt** und nur
   der **erste** Treffer der Zeile (kein `/g`!) — weitere `#`-Token bleiben im
   Label (reservierte Ticket-Referenzen), und `:#a,#b` (künftige Abhängigkeiten)

@@ -164,6 +164,7 @@ Pfad, der die Wahrheit sagt.
   Anfangszustand — im Diagramm wird danach unabhängig gefaltet. Schreibweise
   und Export-Verhalten sind entschieden (D34-Nachtrag): `- > [x] …`,
   Export/Druck folgen der sichtbaren Faltung mit Kennzeichnung.
+  **Umgesetzt** (SPEC §1/§9, D38).
 
 Der gestaffelte „günstigste Pfad" aus *Kleinere Ideen* (Status-Bewusstsein,
 Ausbaustufen) baut hierauf auf: Er braucht denselben Umbau der Kostenrechnung

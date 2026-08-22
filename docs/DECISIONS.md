@@ -1771,3 +1771,66 @@ auch die Selbst-Abhängigkeit ist stumm.
 dieselbe Zurückhaltung wie bei den IDs (D36): keine eigene Diagramm-
 Darstellung, bis die Querverbindungen (§11) gebaut sind; der Pfeil im Tooltip
 sagt die Richtung („hängt ab von“), ohne ein neues Zeichen einzuführen.
+
+## D38 — Faltmarken gebaut: `<` wandert die Faltung hinunter, Eingriffe sind flüchtig
+Die in D34 entschiedene Schreibweise (`- > [x] …`, Export folgt der Faltung)
+ist umgesetzt (SPEC §1/§9). Die Bau-Entscheidungen:
+
+**`<` holt seinen Teilbaum hervor, indem die Faltung die Pfad-Ebenen
+hinunterwandert.** Die naive Lesart — `<` öffnet einfach alle Vorfahren —
+machte das `>` am Vorfahren wirkungslos: Öffnen zeigt **alle** Kinder samt
+Teilbäumen, nicht den einen gemeinten. Die andere naheliegende Lesart — nur
+den Pfad einblenden, alles andere desselben Vorfahren verbergen — bräuchte
+Knoten, die ohne ihre sichtbaren Eltern gezeichnet werden, oder Kanten, die
+Ebenen überspringen: Beides log über die Struktur (dieselbe Sorte Fehler, die
+D29 beim Treppen-Export korrigiert hat). Das Hinunterwandern vermeidet beides:
+Der eingeklappte Vorfahr öffnet sich, seine **übrigen** Kinder werden
+stattdessen eingeklappt — sichtbar ist der Pfad samt Teilbaum, die Geschwister
+stehen als je ein Knoten mit „▸ n“ da, und jede gezeichnete Kante ist eine
+echte. Ein `>` innerhalb des hervorgeholten Teilbaums bleibt respektiert.
+Ausdrückbar ist das alles in einem schlichten Je-Knoten-Zustand
+(`initialCollapsed()` in model.js, headless getestet).
+
+**Auch die Fokusmarke `!!!` holt sich hervor** — über denselben Mechanismus
+(sie geht als zweite Rettungsmarke in `initialCollapsed()` ein). Ein
+Zeigefinger auf etwas Unsichtbares zeigte ins Leere; und weil Nutzer-Eingriffe
+den Anfangszustand **überlagern**, kann man den Bereich danach trotzdem wieder
+zuklappen — die Marke reißt ihn nicht bei jedem Neubau wieder auf.
+
+**Interaktive Eingriffe: je Knoten, Label-Pfad-Identität, nur für die
+Sitzung.** Der Baum wird bei jedem Tastendruck neu geparst — ein Eingriff muss
+Neu-Renderings überleben, also hängt er nicht am Knotenobjekt, sondern am
+**Label-Pfad** (dieselbe Identität wie „Was ist neu?“, D28: Umsortieren
+überlebt, Umbenennen gilt als neuer Knoten). **Nicht persistiert**: Die
+dauerhafte Aussage über den Anfangszustand steht im Text (D34 — „so wird
+dieses Dokument eröffnet“); der localStorage-Ansichtszustand ist zudem global
+über alle Dokumente (D22), ein Je-Dokument-Faltzustand wäre dort ein
+Fremdkörper. Dokumentwechsel setzt zurück.
+
+**Bedienung: Falt-Zeichen ▾/„▸ n“ vor dem Label, Pfeiltasten ←/→.** Der
+einfache Klick ist der Link (§6), Alt+Klick der Sprung (D25), der lange Druck
+ebenso — für das Falten blieb nur ein eigenes Klickziel oder eine weitere
+Modifier-Geste; das sichtbare Zeichen ist zugleich die Auffindbarkeit (die
+Lehre aus D25: eine Geste, die niemand sieht, ist keine Funktion). ←/→ am
+fokussierten Knoten ist das WAI-ARIA-Baum-Idiom; Enter bleibt dem Link,
+Alt+Enter dem Sprung. Der Zähler nennt **alle** verborgenen Knoten (nicht nur
+die direkten Kinder) — er sagt, wie viel Plan dort zusammengefaltet liegt.
+Nach dem Umklappen wird der Fokus auf denselben Knoten zurückgesetzt (der
+Neubau hätte ihn sonst verschluckt und die Tastaturbedienung abgerissen).
+
+**Faltung ist reine Ansicht — mit zwei bewussten Konsequenzen.** Warnungen
+aus eingeklappten Teilbäumen werden weiter gemeldet: `renderChildren()`
+überspringt nur das HTML, ein eigener Lauf (`walkFolded`) sammelt Warnungen
+und zählt zugleich die verborgenen Knoten — sonst verschwände eine
+`mixedGate`-Meldung je nach Faltzustand, obwohl sie den **Text** betrifft.
+Und der günstigste Pfad rechnet unverändert über den ganzen Baum; seine
+Spline-Linie läuft ohnehin nur durch DOM-Knoten, führt also durch die
+sichtbaren Endknoten. Ein eingeklappter Zweig kann Pfadknoten verbergen —
+hinnehmbar, die Inversion an den sichtbaren Knoten bleibt richtig.
+
+**Export und Druck:** Verborgene Kinder stehen nicht im DOM — Export,
+Stiel-Messung, Treppe und Pfadlinie sind damit ohne Zusatzcode konsistent
+(derselbe Grund, aus dem der Renderer sie gar nicht erst erzeugt, statt sie
+per CSS zu verstecken). Die Kennzeichnung „▸ n“ ist Teil des Knotentexts und
+wandert von selbst in den SVG-Export; das ▾ offener Knoten wird dort und im
+Druck entfernt — es ist Bedienelement, keine Aussage über den Plan.

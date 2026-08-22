@@ -110,7 +110,9 @@ describe('renderTreeHtml — Moduswechsel ist CSS, nicht Renderer', () => {
    (die als <a> gerendert werden) und Knoten in any-of-Gruppen. */
 describe('renderTreeHtml — data-line je Knoten (D25)', () => {
   const lineOf = (html, label) => {
-    const re = new RegExp('<(?:a|div) class="node[^"]*"[^>]*?data-line="(\\d+)"[^>]*>' + label);
+    /* Eltern-Knoten tragen seit D38 das Falt-Zeichen (▾/▸) vor dem Label. */
+    const re = new RegExp('<(?:a|div) class="node[^"]*"[^>]*?data-line="(\\d+)"[^>]*>'
+      + '(?:<span class="fold"[^>]*>[^<]*</span>)?' + label);
     const m = html.match(re);
     return m ? Number(m[1]) : null;
   };

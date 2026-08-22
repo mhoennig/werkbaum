@@ -60,9 +60,9 @@
       - [^] Load a document from ?sourceUrl= (S)
     - [^] Jump between diagram and text (S)
     - [x] Line numbers in the text editor (XS)  %% the warnings name them
-    - [?] Collapsible subtrees (M)
-      - [?] Initial state from the text: > collapses, < re-opens (S)
-      - [?] Fold and unfold in the diagram, independently of the text (S)
+    - [x] Collapsible subtrees (M)
+      - [x] Initial state from the text: > collapses, < re-opens (S)
+      - [x] Fold and unfold in the diagram, independently of the text (S)
     - [ ] Open and save .werkbaum files (S)
     + [^] Show what is new since your last visit (S)
     + [?] A pastel colour per person (S)

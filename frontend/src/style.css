@@ -549,6 +549,18 @@
   }
   a.node{text-decoration:none;cursor:pointer}
   a.node:hover{box-shadow:0 2px 8px rgba(36,52,71,.22)}
+  /* Falt-Zeichen (SPEC §9, D38): ▾ offen / „▸ n" eingeklappt, Klickziel fürs
+     Umklappen. Gedeckt in Grau — es ist Bedienelement, keine Statusaussage;
+     beim Zeigen färbt es sich zur Tinte. */
+  .node .fold{
+    cursor:pointer;color:var(--muted);
+    font-size:.72em;margin-right:6px;
+    user-select:none;-webkit-user-select:none;
+  }
+  .node .fold:hover{color:var(--line)}
+  /* Der dunkle Wurzelknoten braucht ein helleres Zeichen als das Grau. */
+  .root-node .fold{color:rgba(255,255,255,.75)}
+  .root-node .fold:hover{color:#fff}
   /* Sichtbarer Tastatur-Fokus (Knoten sind fokussierbar: Fokusreihenfolge =
      Lese-/Dokumentreihenfolge; Screenreader liest den aria-label). */
   .node:focus-visible{outline:2px solid var(--or);outline-offset:2px;box-shadow:0 2px 8px rgba(36,52,71,.22)}
@@ -1040,5 +1052,8 @@
     /* Editierhilfe bzw. Zuruf, nicht drucken (D25, Fokusmarke SPEC §1) */
     .node.current,.node.focusmark{box-shadow:none!important}
     .node.fresh{box-shadow:none!important}     /* „neu seit dem letzten Besuch" ist persönlich (D28) */
+    /* Faltung (D38): das ▾ offener Knoten ist Bedienelement — nicht drucken;
+       das „▸ n" eingeklappter Knoten ist Kennzeichnung und bleibt. */
+    .node:not(.folded) .fold{display:none!important}
     @page{margin:12mm}
   }

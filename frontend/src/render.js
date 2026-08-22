@@ -10,6 +10,7 @@
      cheapPath,     // günstigster Pfad aktiv? (steuert das implizite M-Badge)
      cheapSet,      // Set der nötigen Knoten (leer, wenn Pfad aus)
      freshSet,      // optional: Knoten, die neu in Produktion sind (D28)
+     collapsedSet,  // optional: eingeklappte Knoten (Faltung, SPEC §9/D38)
    } */
 
 import { gateOf, needsBreakdown, visibleChildren, cheapCls } from './model.js';
@@ -44,9 +45,12 @@ function attr(s){ return esc(String(s)).replace(/"/g,'&quot;'); }
    Link. Die visuellen Badges (Größe, Tags, ↗) sind aria-hidden — ihre
    Information steckt hier, sonst würde der Screenreader Kryptisches („M",
    „anna", „↗") vorlesen. */
-function nodeAria(n, opts){
+function nodeAria(n, opts, fold){
   const { t, cheapPath } = opts;
   const parts = [n.label];
+  /* Eingeklappt (SPEC §9/D38): das ▾/▸-Zeichen ist aria-hidden — ohne diese
+     Ansage wüsste ein Screenreader nicht, dass hier etwas verborgen ist. */
+  if(fold && fold.collapsed) parts.push(t('a11yFolded', {n: fold.count}));
   if(n.status) parts.push(t('a11yStatus', {status: t('st_' + n.status.key)}));
   if(n.size) parts.push(t('a11ySize', {size: n.size}));
   else if(cheapPath) parts.push(t('a11ySizeImplicit'));
@@ -65,10 +69,11 @@ function nodeAria(n, opts){
   return parts.join(', ');
 }
 
-function nodeHtml(n, extra, opts){
+function nodeHtml(n, extra, opts, fold){
   const { t, cheapPath } = opts;
   const need = needsBreakdown(n);
-  const cls = ['node', extra || '', n.status ? 'st-' + n.status.key : '']
+  const cls = ['node', extra || '', fold && fold.collapsed ? 'folded' : '',
+               n.status ? 'st-' + n.status.key : '']
     .filter(Boolean).join(' ');
   /* Zeilennummer am Knoten (D25): Grundlage für den Sprung ins Textfeld und
      für die Gegenrichtung (Cursor-Zeile -> Knoten hervorheben). Der Hinweis im
@@ -92,18 +97,60 @@ function nodeHtml(n, extra, opts){
   const riskMark = n.status && n.status.key === 'highrisk'
     ? `<span class="risk" aria-hidden="true" title="${attr(t('riskTooltip'))}">⚠︎</span>`
     : '';
-  const inner = esc(n.label) +
+  /* Falt-Zeichen (SPEC §9/D38): ▾ offen, „▸ n" eingeklappt — das Klickziel
+     fürs Umklappen (der einfache Klick auf den Knoten bleibt der Link, §6).
+     aria-hidden: die Information steht im aria-label (a11yFolded). */
+  const foldHtml = fold
+    ? `<span class="fold" aria-hidden="true">${fold.collapsed ? '▸ ' + fold.count : '▾'}</span>`
+    : '';
+  const expanded = fold ? ` aria-expanded="${!fold.collapsed}"` : '';
+  const inner = foldHtml +
+                esc(n.label) +
                 (n.url ? '<span class="ext" aria-hidden="true">↗</span>' : '') +
                 riskMark +
                 sizeBadge +
                 tagsHtml;
-  const aria = ` aria-label="${attr(nodeAria(n, opts))}"`;
+  const aria = ` aria-label="${attr(nodeAria(n, opts, fold))}"`;
   const html = n.url
-    ? `<a class="${cls}" href="${attr(n.url)}" target="_blank" rel="noopener"${lineAttr}${aria}${title}>${inner}</a>`
-    : `<div class="${cls}" tabindex="0"${lineAttr}${aria}${title}>${inner}</div>`;
+    ? `<a class="${cls}" href="${attr(n.url)}" target="_blank" rel="noopener"${lineAttr}${aria}${expanded}${title}>${inner}</a>`
+    : `<div class="${cls}" tabindex="0"${lineAttr}${aria}${expanded}${title}>${inner}</div>`;
   const ghostTip = attr(t('ghostTooltip'));
   const ghost = `<div class="ghost-node" aria-label="${ghostTip}" title="${ghostTip}">${esc(t('ghost'))}</div>`;
   return html + (need ? ghost : '');
+}
+
+/* Eingeklappter Teilbaum (SPEC §9/D38): Das HTML entfällt, aber die
+   Warnungen des verborgenen Teils werden trotzdem gemeldet — sie sind eine
+   Aussage über den TEXT, nicht über die Ansicht. Derselbe Lauf zählt die
+   verborgenen Knoten für das „▸ n"-Kennzeichen. */
+function walkFolded(node, warnings, opts){
+  const kids = visibleChildren(node, opts.showDiscarded);
+  if(!kids.length) return 0;
+  const types = new Set(kids.map(k => k.type));
+  if(types.size > 1){
+    warnings.push({type: 'mixedGate', line: kids[0].line, label: node.label});
+  }
+  let count = kids.length;
+  for(const k of kids) count += walkFolded(k, warnings, opts);
+  return count;
+}
+
+/* Ein Knoten samt <li> und (sofern nicht eingeklappt) seiner Kinder. */
+function itemHtml(n, extra, warnings, opts){
+  const vk = visibleChildren(n, opts.showDiscarded);
+  const canFold = vk.length > 0;
+  const collapsed = canFold && !!(opts.collapsedSet && opts.collapsedSet.has(n));
+  const fold = canFold
+    ? {collapsed, count: collapsed ? walkFolded(n, warnings, opts) : 0}
+    : null;
+  /* `opt` auch am <li>: den Abzweig zeichnen dessen Pseudoelemente, er wird
+     für optionale Knoten gestrichelt (D29). Eingeklappt ist der Knoten ein
+     Blatt — kein has-*-Layout, keine Kinderliste. */
+  const liCls = liClass(collapsed ? [] : vk, opts, n.optional);
+  return `<li${liCls}>` +
+         nodeHtml(n, extra, opts, fold) +
+         (collapsed ? '' : renderChildren(n, warnings, opts)) +
+         `</li>`;
 }
 
 function renderChildren(node, warnings, opts){
@@ -122,16 +169,7 @@ function renderChildren(node, warnings, opts){
      die Klasse `or` (alle Modi, Export-Routing); `xor` ergänzt nur die
      „1"-Plakette an der Sammelleiste (D35). */
   const ulCls = gate === 'xor' ? 'or xor' : gate;
-  const items = kids.map(k => {
-    const vk = visibleChildren(k, opts.showDiscarded);
-    /* `opt` auch am <li>: den Abzweig zeichnen dessen Pseudoelemente, er wird
-       für optionale Knoten gestrichelt (D29). */
-    const liCls = liClass(vk, opts, k.optional);
-    return `<li${liCls}>` +
-           nodeHtml(k, extraCls(k, opts), opts) +
-           renderChildren(k, warnings, opts) +
-           `</li>`;
-  }).join('');
+  const items = kids.map(k => itemHtml(k, extraCls(k, opts), warnings, opts)).join('');
   return `<ul class="${ulCls}">${items}</ul>`;
 }
 
@@ -140,13 +178,8 @@ function renderChildren(node, warnings, opts){
    Leere Wurzelliste ⇒ leerer String. */
 export function renderTreeHtml(roots, opts){
   const warnings = [];
-  const html = roots.map(root => {
-    const vk = visibleChildren(root, opts.showDiscarded);
-    const liCls = liClass(vk, opts, root.optional);
-    return `<li${liCls}>` +
-           nodeHtml(root, ('root-node ' + extraCls(root, opts)).trim(), opts) +
-           renderChildren(root, warnings, opts) +
-           `</li>`;
-  }).join('');
+  const html = roots.map(root =>
+    itemHtml(root, ('root-node ' + extraCls(root, opts)).trim(), warnings, opts)
+  ).join('');
   return { html, warnings };
 }
