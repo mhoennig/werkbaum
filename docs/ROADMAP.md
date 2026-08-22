@@ -138,7 +138,7 @@ Pfad, der die Wahrheit sagt.
 - **XOR** (`=`) — neben „mindestens eine" (`|`) eine Gruppe, in der **genau
   eine** Alternative realisiert werden darf. Für die Pfadrechnung ändert das
   nichts (die wählt bei `|` ohnehin eine); es kommt eine Regel hinzu, die
-  verletzt werden kann und dann gemeldet wird.
+  verletzt werden kann und dann gemeldet wird. **Umgesetzt** (SPEC §3, D35).
 - **Knotenbeschreibungen** — Erläuterungstext zum Knoten, im Diagramm als
   Tooltip oder Pop-up: kurz direkt beim Knoten, lang als Block am Dokumentende
   über die ID zugeordnet. Die Arbeit steckt nicht im Anzeigen, sondern in der

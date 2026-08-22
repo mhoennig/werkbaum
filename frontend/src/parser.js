@@ -19,14 +19,19 @@ export const STATUS_BY_CODE = {
   '!': {key:'highrisk',   name:'High Risk – Aufwand unklar'}
 };
 
+/* Status, die als „realisiert" zählen (XOR-Regel, SPEC §3/D35): Kosten sind
+   investiert oder mehr. Absicht (`[?]`, `[ ]`, `[!]`), Ablehnung (`[-]`) und
+   neutrale Knoten zählen nicht. */
+const REALIZED = new Set(['arbeit', 'durchstich', 'fertig', 'prod']);
+
 /* Parst den Notationstext zu { roots, warnings }.
-   Jeder Knoten: {label, type:'and'|'or', optional, status, url, size, tags,
-   focus, children, line}.
+   Jeder Knoten: {label, type:'and'|'or'|'xor', optional, status, url, size,
+   tags, focus, children, line}.
    `type` ist das Gate der Geschwistergruppe, `optional` (Zeichen `+`, SPEC §3)
    eine Eigenschaft des einzelnen Knotens: er hängt an derselben Und-Zerlegung
    (`type:'and'`), ist darin aber entbehrlich. Dadurch bleibt die
-   Gemischt-Warnung unverändert richtig — sie schlägt nur an, wenn `|` mit
-   `-`/`+` gemischt wird.
+   Gemischt-Warnung unverändert richtig — sie schlägt an, wenn `|` oder `=`
+   mit `-`/`+` (oder untereinander) gemischt wird.
    Extraktionsreihenfolge (SPEC §1): Kommentar -> Zeichen/Status -> URL -> Größe
    -> Tags -> Fokusmarke -> Label. Hierarchie über Einrückungsbreite (Tab = 2 Leerzeichen);
    Elternknoten ist die nächste vorangehende Zeile mit kleinerer Breite. */
@@ -41,9 +46,11 @@ export function parse(text){
     /* Statusbox tolerant erfassen: irgendein einzelnes Zeichen in [ ] an der
        Statusposition. Gültige Codes -> Status; unbekannte -> Warnung + neutral
        (fehlertolerant: die Zeile geht nicht verloren). */
-    const m = raw.match(/^([ \t]*)([-|+])?\s*(?:\[([^\]])\]\s*)?(.*)$/);
+    /* `=` (XOR, SPEC §3) nur mit folgendem Leerraum — die Leerraum-Regel hält
+       Labels wie `=SUMME(A1:B2)` heraus; `-`/`+`/`|` bleiben wie bisher. */
+    const m = raw.match(/^([ \t]*)([-|+]|=(?=[ \t]))?\s*(?:\[([^\]])\]\s*)?(.*)$/);
     const width = m[1].replace(/\t/g,'  ').length;
-    const type  = m[2] === '|' ? 'or' : 'and';
+    const type  = m[2] === '|' ? 'or' : m[2] === '=' ? 'xor' : 'and';
     const optional = m[2] === '+';
     const boxChar = m[3];   // undefined, wenn keine Statusbox
 
@@ -73,6 +80,24 @@ export function parse(text){
     parent.children.push(node);
     stack.push({node, width});
   });
+
+  /* XOR-Regel (SPEC §3): In einer `=`-Gruppe darf genau EINE Alternative
+     realisiert sein. Jede weitere wird einzeln gemeldet — die Warnung zeigt so
+     auf die Zeile, die man ansehen muss, statt pauschal auf die Gruppe (D35).
+     Gruppen-Gate nach dem ersten Kind, wie in der Darstellung (§3). */
+  (function checkXor(node){
+    const kids = node.children;
+    if(kids.length && kids[0].type === 'xor'){
+      let realized = 0;
+      for(const k of kids){
+        if(k.status && REALIZED.has(k.status.key)){
+          realized++;
+          if(realized > 1) warnings.push({type:'xorConflict', line:k.line, label:k.label});
+        }
+      }
+    }
+    kids.forEach(checkXor);
+  })(virtualRoot);
 
   return {roots: virtualRoot.children, warnings};
 }

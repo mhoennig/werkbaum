@@ -82,8 +82,12 @@ entscheiden, **bevor** Code entsteht.
 - [ ] Querverbindungen zeichnen (eigene SVG-Ebene, optisch sekundär);
       bei ausgewähltem Knoten ein-/ausgehende hervorheben.
 - [ ] Faltmarken `>` / `<` parsen; interaktives Auf-/Zuklappen im Diagramm.
-- [ ] XOR-Gruppe (`=`) parsen (nur mit folgendem Leerraum, Mischung →
+- [x] XOR-Gruppe (`=`) parsen (nur mit folgendem Leerraum, Mischung →
       `mixedGate`), zwei realisierte Alternativen melden.
-      → Zeichen entschieden: `=` statt `x` (D34-Nachtrag).
+      → Zeichen entschieden: `=` statt `x` (D34-Nachtrag). Umgesetzt (D35):
+      „realisiert“ = `[~]`/`[/]`/`[x]`/`[^]`, Warnung `xorConflict` je weiterer
+      realisierter Alternative; Darstellung als any-of plus „1“-Plakette an der
+      Sammelleiste (auch im Grafikexport); Legende + i18n in 9 Sprachen;
+      `tests/xor.test.js`.
 - [ ] Knotenbeschreibungen: Schreibweise für kurze und lange Form festlegen
       (Einrückung ist bereits Hierarchie), dann Tooltip/Pop-up.

@@ -14,7 +14,8 @@ Alle Bestandteile außer dem Label sind optional. Die Extraktion erfolgt in
 dieser Reihenfolge (wichtig für Kollisionsfreiheit):
 
 1. Kommentar entfernen: alles ab `%%` bis Zeilenende.
-2. Einrückung, Zeichen (`-` / `+` / `|`) und Statusbox `[…]` per Zeilen-Regex.
+2. Einrückung, Zeichen (`-` / `+` / `|` / `=`) und Statusbox `[…]` per
+   Zeilen-Regex; `=` nur mit folgendem Leerraum (§3).
 3. URL: erstes Token, das auf `https?://\S+` passt (dadurch stören `@` in URLs nicht).
 4. Größe: erstes `(XS|S|M|L|XL|XXL)`, Groß-/Kleinschreibung egal.
 5. Tags: alle `@name`-Vorkommen.
@@ -41,7 +42,7 @@ hat etwas, das ein Cursor nicht hat: **alle** sehen dieselbe Stelle.
 Referenz-Regex der Implementierung:
 
 ```
-^([ \t]*)([-|+])?\s*(?:\[([ ?~xX^/-])\]\s*)?(.*)$
+^([ \t]*)([-|+]|=(?=[ \t]))?\s*(?:\[([ ?~xX^/-])\]\s*)?(.*)$
 ```
 
 Für die Fokusmarke (Schritt 6):
@@ -55,8 +56,8 @@ Für die Fokusmarke (Schritt 6):
 - Die Einrückung bestimmt die Ebene. Es gibt keine feste Schrittweite:
   Elternknoten ist die nächste vorangehende Zeile mit **kleinerer**
   Einrückungsbreite (Tab zählt als 2 Leerzeichen).
-- Zeilen ohne Zeichen (`-`/`+`/`|`) sind Wurzelknoten. Mehrere Wurzeln = mehrere
-  Bäume nebeneinander.
+- Zeilen ohne Zeichen (`-`/`+`/`|`/`=`) sind Wurzelknoten. Mehrere Wurzeln =
+  mehrere Bäume nebeneinander.
 
 ## 3. Zerlegungsart (Gate)
 
@@ -65,14 +66,26 @@ Für die Fokusmarke (Schritt 6):
 | `-` | all of (Und-Zerlegung) | Alle Teilpakete sind erforderlich. |
 | `+` | optional (Zugabe) | Einzelnes zusätzliches Teilpaket, nicht erforderlich. |
 | `\|` | any of (Oder-Zerlegung) | Mindestens eine Alternative wird gewählt. |
+| `=` | exactly one (XOR-Zerlegung) | Genau eine Alternative wird realisiert. |
 
-- `-` und `|` sind Eigenschaften der **Geschwistergruppe**; `+` ist eine
+- `-`, `|` und `=` sind Eigenschaften der **Geschwistergruppe**; `+` ist eine
   Eigenschaft des **einzelnen Knotens** (er hängt an derselben Und-Zerlegung,
   ist darin aber entbehrlich).
 - Daraus folgt die Mischregel: Eine Gruppe ist entweder **konjunktiv** — dann
-  dürfen `-` und `+` frei nebeneinander stehen — oder **disjunktiv** (`|`).
-  `|` mit `-`/`+` zu mischen ist ungültig: Darstellung nach dem **ersten** Kind,
-  plus Warnung `mixedGate` mit Zeilennummer.
+  dürfen `-` und `+` frei nebeneinander stehen — oder **disjunktiv**
+  (einheitlich `|` oder einheitlich `=`). Jede andere Mischung ist ungültig:
+  Darstellung nach dem **ersten** Kind, plus Warnung `mixedGate` mit
+  Zeilennummer.
+- **Leerraum-Regel:** Als Gate wird `=` nur mit **folgendem Leerraum** erkannt —
+  ein Label wie `=SUMME(A1:B2)` bleibt damit ein Label. `=` ist das einzige
+  Gate, das diese Regel braucht; für `-`/`+`/`|` ändert sich nichts.
+- **XOR-Regel:** In einer `=`-Gruppe darf genau **eine** Alternative realisiert
+  werden. **Realisiert** heißt: Kosten sind investiert oder mehr — Status `[~]`,
+  `[/]`, `[x]` oder `[^]` (§4); `[?]`, `[ ]`, `[!]`, `[-]` und neutrale Knoten
+  zählen nicht. Jede **weitere** realisierte Alternative ergibt eine Warnung
+  `xorConflict` mit ihrer Zeilennummer. Die Regel ist verletzbar, kein
+  Parse-Fehler: Der Baum wird unverändert dargestellt. Für den günstigsten
+  Pfad (§9) verhält sich `=` wie `|` — der wählt ohnehin genau eine.
 - Ein `+`-Knoten zerlegt sich weiter wie jeder andere; das Gate seiner eigenen
   Kinder ist davon unabhängig. Optionalität vererbt sich nicht ausdrücklich —
   wer unter einem `+`-Knoten hängt, ist mit ihm zusammen entbehrlich.
@@ -154,6 +167,12 @@ nebeneinander (schmales Diagramm rechts).
 **gestrichelt in Grau** (`#6B7A8C`). Auch der **Rahmen der Alternative-Knoten**
 ist grau (`#6B7A8C`) — kein Petrol mehr im Diagramm. Der Modus ändert nur die
 **Anordnung**, nicht die Linienfarbe.
+
+**XOR-Gruppen (`=`, §3)** werden wie any-of gezeichnet (gestrichelt in Grau,
+gleiche Anordnung). Zusätzlich sitzt am **Austritt der Sammelleiste** — auf dem
+Stück zwischen Elternknoten und erstem Abzweig — eine kleine **„1“-Plakette**
+(weißer Kreis mit grauem Rand, graue Ziffer): „genau eine“. Sie erscheint auch
+im Grafikexport. Siehe D35.
 
 **Optionale Knoten (`+`, §3):** Sie hängen an der normalen all-of-Zerlegung,
 die Anordnung bleibt unverändert. Zwei Kennzeichen, beide auch im Grafikexport:
@@ -595,29 +614,6 @@ die Rechnung schwerer als heute — siehe D34.
 - **Offen:** die Stellung im Zeilenformat (§1) — vor oder hinter dem
   Zerlegungszeichen — und ob eingeklappte Teilbäume in Grafikexport und Druck
   eingeklappt bleiben.
-
-### XOR — genau eine Alternative (`=`)
-
-Neben `-` (all of), `+` (Zugabe) und `|` (any of, **mindestens** eine) soll es
-eine Gruppe geben, in der **genau eine** Alternative realisiert werden darf.
-Zeichen: **`=`**, an derselben Stelle wie die übrigen Zerlegungszeichen
-(entschieden; Begründung und verworfene Kandidaten: D34-Nachtrag).
-
-- Für den günstigsten Pfad ändert das nichts: Der wählt bei `|` ohnehin genau
-  eine (§9). XOR fügt eine **Regel** hinzu, die verletzt werden kann — zwei
-  realisierte Alternativen ergeben eine Warnung.
-- `=` ist **disjunktiv** wie `|`; die Mischregel aus §3 gilt entsprechend:
-  Eine Gruppe ist einheitlich `-`/`+`, einheitlich `|` oder einheitlich `=` —
-  jede Mischung mit `=` ist ungültig (`mixedGate`). Auch die Darstellung folgt
-  any-of (gestrichelt in Grau); wie die Gruppe zusätzlich als „genau eine"
-  gekennzeichnet wird, ist offen (z. B. eine kleine „1" an der Sammelleiste).
-- **Leerraum-Regel:** Als Gate wird `=` nur mit **folgendem Leerraum**
-  erkannt — ein Label wie `=SUMME(A1:B2)` bleibt damit ein Label. `=` ist das
-  erste Gate, das diese Regel braucht; für `-`/`+`/`|` ändert sich nichts.
-- Das ursprünglich vorgeschlagene `x` ist verworfen: `x [x] …` stünde als
-  Endzustand jeder entschiedenen Gruppe **dauerhaft** im Text (genau eine
-  Alternative soll ja fertig werden), und als Buchstabe kollidierte es ohne
-  Leerraum-Regel mit gewöhnlichen Labels (`XSS-Schutz` → Gate `X`).
 
 ### Knotenbeschreibungen
 

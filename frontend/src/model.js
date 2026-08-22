@@ -5,10 +5,14 @@
 
 import { SIZE_RANK } from './parser.js';
 
-/* Gate der Geschwistergruppe: 'or', wenn das erste Kind '|' trägt, sonst 'and'
-   (SPEC §3 — Darstellung nach dem ersten Kind). */
+/* Gate der Geschwistergruppe nach dem ERSTEN Kind (SPEC §3): 'or' (`|`),
+   'xor' (`=`) oder 'and' (`-`/`+`). 'xor' bleibt ein eigener Wert, damit die
+   mixedGate-Warnung Mischungen mit `|` meldet; wer nur konjunktiv/disjunktiv
+   unterscheidet, prüft `!== 'and'` (D35). */
 export function gateOf(children){
-  return children.length && children[0].type === 'or' ? 'or' : 'and';
+  if(!children.length) return 'and';
+  const t = children[0].type;
+  return t === 'or' || t === 'xor' ? t : 'and';
 }
 
 /* Untergliederungspflicht ab Größe M ohne Kinder (SPEC §5); verworfene nie. */
@@ -25,7 +29,7 @@ export function visibleChildren(n, showDiscarded){
 
 /* ---------- Günstigster Pfad (D18) ----------
    Nötige Knoten für die günstigste Realisierung: all-of ⇒ alle Kinder,
-   any-of ⇒ nur die günstigste Alternative. „Günstig" = kleinste rekursive
+   any-of und XOR ⇒ nur die günstigste Alternative. „Günstig" = kleinste rekursive
    Kosten (eigene Größe + Kinder; any-of das Minimum). Verworfene zählen nie
    mit (unabhängig vom Einblenden-Toggle). Gleichstand ⇒ erste. Fehlende
    Größe = M.
@@ -43,7 +47,7 @@ export function cheapestCost(n){
   const kids = pathChildren(n);
   let c = ownCost(n);
   if(kids.length){
-    if(gateOf(kids) === 'or') c += Math.min(...kids.map(cheapestCost));
+    if(gateOf(kids) !== 'and') c += Math.min(...kids.map(cheapestCost));
     else c += kids.reduce((s, k) => s + cheapestCost(k), 0);
   }
   return c;
@@ -52,7 +56,7 @@ export function markCheapest(n, set){
   set.add(n);
   const kids = pathChildren(n);
   if(!kids.length) return;
-  if(gateOf(kids) === 'or'){
+  if(gateOf(kids) !== 'and'){
     let best = null, bc = Infinity;
     for(const k of kids){ const c = cheapestCost(k); if(c < bc){ bc = c; best = k; } }
     if(best) markCheapest(best, set);

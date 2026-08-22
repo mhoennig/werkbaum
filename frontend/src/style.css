@@ -722,6 +722,20 @@
   ul.or::before{
     content:'';position:absolute;top:0;left:9px;height:14px;border-left:2px dashed var(--muted);
   }
+  /* XOR (`=`, SPEC §3/§9, D35): Geometrie kommt komplett von `ul.or` (der
+     Renderer gibt `class="or xor"` aus); `.xor` ergänzt nur die „1"-Plakette
+     am Austritt der Sammelleiste — „genau eine". Grau wie die any-of-Führung
+     (Gate-Codierung, keine Signalfarbe, D15); sitzt mittig auf dem
+     14-px-Einlaufstück (left:9px = Leisten-x in allen Modi). */
+  ul.xor::after{
+    content:'1';
+    position:absolute;left:9px;top:7px;transform:translate(-50%,-50%);
+    width:13px;height:13px;border-radius:50%;
+    background:var(--card);border:1.5px solid var(--muted);
+    box-sizing:border-box;
+    color:var(--muted);font-size:9px;font-weight:600;line-height:10px;
+    text-align:center;
+  }
   ul.or>li{position:relative;align-items:flex-start;padding:5px 0 5px 30px}
   /* Abzweig auf Höhe der Knoten-Mitte (5px li-Padding + halbe Knotenhöhe), nicht Mitte des Teilbaums */
   ul.or>li::before{

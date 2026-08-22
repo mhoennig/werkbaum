@@ -1624,3 +1624,39 @@ der Kandidaten nötig gewesen.
   nachdenken will (D32).
 - **`°`** — fehlt auf US-Layouts, und der kleine Kreis kollidierte semantisch
   mit dem hohlen Kreis, der im Diagramm bereits *optional* bedeutet (D29).
+
+## D35 — XOR (`=`) umgesetzt: „realisiert“ definiert, „1“-Plakette, keine neue Linienart
+Das in D34 entschiedene XOR-Gate ist gebaut (SPEC §1/§3/§9); beim Bauen waren
+drei Dinge zu entscheiden, die die SPEC bis dahin offen ließ:
+
+**„Realisiert“ heißt: Kosten investiert oder mehr** — Status `[~]`, `[/]`,
+`[x]`, `[^]`. Die XOR-Regel („genau eine Alternative darf realisiert werden“)
+soll genau dann anschlagen, wenn der Plan tatsächlich doppelt einkauft — und
+das beginnt mit `[~]`: Wer an zwei Alternativen zugleich **arbeitet**, verletzt
+das „genau eine“ bereits, nicht erst beim zweiten `[x]`. `[?]`, `[ ]` und `[!]`
+sind Absicht ohne Investition, `[-]` ist die Entscheidung dagegen, neutral sagt
+nichts — alle fünf zählen nicht. Gemeldet wird **jede weitere** realisierte
+Alternative einzeln (Warnung `xorConflict` mit ihrer Zeilennummer und ihrem
+Label): Die Meldung zeigt so auf die Zeile, die man ansehen muss, statt
+pauschal auf die Gruppe. Bewusst eine **Warnung, kein Fehler** — die Notation
+bleibt fehlertolerant (§4), der Baum wird unverändert dargestellt.
+
+**Kennzeichnung: „1“-Plakette am Austritt der Sammelleiste.** Der D34-Nachtrag
+hielt fest, dass `=` optisch bei der konjunktiven Familie steht und das
+Diagramm die Lesart korrigieren muss. Die Linien übernehmen das schon
+(gestrichelt grau wie any-of); die Plakette — kleiner weißer Kreis, graue
+Ziffer, auf dem Leitungsstück zwischen Elternknoten und erstem Abzweig — sagt
+das „genau eine“, das der Linienstil allein nicht sagen kann. Grau statt
+Petrol, weil sie zur Gate-Codierung gehört (D15: keine Signalfarbe im
+Diagramm); an der Sammelleiste statt am Knoten, weil sie eine Aussage über die
+**Gruppe** ist und die Knoten-Ecken belegt sind (D18). Sie erscheint auch im
+Grafikexport (dort nach den Knoten gezeichnet, wie der Optional-Kreis aus D29).
+
+**Keine neue Linienart, keine neue CSS-Familie:** Der Renderer gibt
+XOR-Gruppen als `<ul class="or xor">` aus — die gesamte any-of-Geometrie
+(alle drei Modi, D18-Sonderfälle, Export-Routing) gilt damit automatisch;
+`.xor` ergänzt nur die Plakette. Die Alternative — ein eigener Gruppentyp mit
+kopierten Regeln — hätte jede künftige Layoutänderung doppelt pflegen lassen.
+Im Modell ist `'xor'` ein eigener Gate-Wert (`gateOf`), damit die
+`mixedGate`-Warnung Mischungen mit `|` von selbst meldet; alle
+Disjunktiv-Abfragen prüfen `!== 'and'`.

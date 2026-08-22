@@ -266,6 +266,14 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   passiert: Zähler stimmte, nichts leuchtete). Vorgehalten wird nur
   `freshPrevRoots` (Basis, einmal geparst). Basis je Dokument in `werkbaum-seen`,
   fortgeschrieben **erst beim Bestätigen** über `#freshBtn`.
+- XOR-Gruppen `=` (SPEC §3/D35): Der Parser setzt `type:'xor'` (nur mit
+  folgendem Leerraum — `=SUMME(…)` bleibt Label); der Renderer gibt
+  `<ul class="or xor">` aus, damit die **gesamte** any-of-Geometrie (alle drei
+  Modi, D18-Sonderfälle, Export-Routing) automatisch gilt — `.xor` ergänzt nur
+  die „1"-Plakette (`ul.xor::after`, im Export `xorMarks`). Disjunktiv-Abfragen
+  auf `gateOf` prüfen `!== 'and'`, nie `=== 'or'`. Die `xorConflict`-Warnung
+  (mehr als eine realisierte Alternative: `[~]`/`[/]`/`[x]`/`[^]`) entsteht im
+  **Parser** (Post-Pass), nicht im Renderer.
 - Optionale Knoten `+` (D29): Der Parser setzt **`optional:true` und lässt
   `type:'and'`** — `+` gehört zum Knoten, nicht zur Gruppe. Deshalb bleiben
   `gateOf()` und die `mixedGate`-Warnung unverändert richtig (sie meldet nur

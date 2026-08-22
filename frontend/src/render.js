@@ -28,7 +28,7 @@ function extraCls(n, opts){
    Abzweigs). Leere Liste ⇒ gar kein Attribut. */
 function liClass(visibleKids, opts, optional){
   const cls = [
-    visibleKids.length ? (gateOf(visibleKids) === 'or' ? 'has-or' : 'has-and') : '',
+    visibleKids.length ? (gateOf(visibleKids) !== 'and' ? 'has-or' : 'has-and') : '',
     optional ? 'opt' : ''
   ].filter(Boolean);
   return cls.length ? ` class="${cls.join(' ')}"` : '';
@@ -103,14 +103,18 @@ function renderChildren(node, warnings, opts){
   const kids = visibleChildren(node, opts.showDiscarded);
   if(!kids.length) return '';
   /* Gemischte Gates (SPEC §3): Da `+` nur `optional` setzt und `type:'and'`
-     behält, schlägt das hier weiterhin genau dann an, wenn `|` mit `-`/`+`
-     gemischt wird — `-` neben `+` ist erlaubt und still. */
+     behält, schlägt das hier genau dann an, wenn `|` oder `=` mit `-`/`+`
+     (oder untereinander) gemischt wird — `-` neben `+` ist erlaubt und still. */
   const types = new Set(kids.map(k => k.type));
   if(types.size > 1){
     /* strukturierte Warnung (Typ + Zeile); Formatierung in warnings.js */
     warnings.push({type: 'mixedGate', line: kids[0].line, label: node.label});
   }
   const gate = gateOf(kids);
+  /* XOR-Gruppen (`=`, SPEC §3/§9) erben die komplette any-of-Geometrie über
+     die Klasse `or` (alle Modi, Export-Routing); `xor` ergänzt nur die
+     „1"-Plakette an der Sammelleiste (D35). */
+  const ulCls = gate === 'xor' ? 'or xor' : gate;
   const items = kids.map(k => {
     const vk = visibleChildren(k, opts.showDiscarded);
     /* `opt` auch am <li>: den Abzweig zeichnen dessen Pseudoelemente, er wird
@@ -121,7 +125,7 @@ function renderChildren(node, warnings, opts){
            renderChildren(k, warnings, opts) +
            `</li>`;
   }).join('');
-  return `<ul class="${gate}">${items}</ul>`;
+  return `<ul class="${ulCls}">${items}</ul>`;
 }
 
 /* Baut den inneren HTML-String für #out aus (bereits gefilterten) Wurzeln und
