@@ -11,6 +11,8 @@
      cheapSet,      // Set der nötigen Knoten (leer, wenn Pfad aus)
      freshSet,      // optional: Knoten, die neu in Produktion sind (D28)
      collapsedSet,  // optional: eingeklappte Knoten (Faltung, SPEC §9/D38)
+     effStatus,     // optional: Map Knoten -> effektiver Status-Key, nur
+                    // Diskrepanzen (effectiveStatus() in model.js, D39)
    } */
 
 import { gateOf, needsBreakdown, visibleChildren, cheapCls } from './model.js';
@@ -52,6 +54,10 @@ function nodeAria(n, opts, fold){
      Ansage wüsste ein Screenreader nicht, dass hier etwas verborgen ist. */
   if(fold && fold.collapsed) parts.push(t('a11yFolded', {n: fold.count}));
   if(n.status) parts.push(t('a11yStatus', {status: t('st_' + n.status.key)}));
+  /* Diskrepanz (D39): die Farbe zeigt den effektiven Status — der Screenreader
+     bekommt beide, wie der Tooltip. */
+  const effKey = opts.effStatus ? opts.effStatus.get(n) : undefined;
+  if(effKey) parts.push(t('a11yEffective', {status: t('st_' + effKey)}));
   if(n.size) parts.push(t('a11ySize', {size: n.size}));
   else if(cheapPath) parts.push(t('a11ySizeImplicit'));
   if(n.tags && n.tags.length) parts.push(t('a11yTags', {names: n.tags.join(', ')}));
@@ -72,8 +78,12 @@ function nodeAria(n, opts, fold){
 function nodeHtml(n, extra, opts, fold){
   const { t, cheapPath } = opts;
   const need = needsBreakdown(n);
+  /* Die Knotenfarbe zeigt den EFFEKTIVEN Status (SPEC §9/D39); bei Diskrepanz
+     trägt die Marke unten links die eigene Statusbox in den eigenen Farben. */
+  const effKey = opts.effStatus ? opts.effStatus.get(n) : undefined;
   const cls = ['node', extra || '', fold && fold.collapsed ? 'folded' : '',
-               n.status ? 'st-' + n.status.key : '']
+               effKey ? 'held' : '',
+               n.status ? 'st-' + (effKey || n.status.key) : '']
     .filter(Boolean).join(' ');
   /* Zeilennummer am Knoten (D25): Grundlage für den Sprung ins Textfeld und
      für die Gegenrichtung (Cursor-Zeile -> Knoten hervorheben). Der Hinweis im
@@ -81,7 +91,9 @@ function nodeHtml(n, extra, opts, fold){
   const lineAttr = n.line ? ` data-line="${n.line}"` : '';
   const tip = [n.id ? '#' + n.id : '',
                n.deps && n.deps.length ? '→ ' + n.deps.map(d => '#' + d).join(', ') : '',
-               n.status ? t('st_' + n.status.key) : '',
+               effKey
+                 ? t('heldTooltip', {eff: t('st_' + effKey), own: t('st_' + n.status.key)})
+                 : (n.status ? t('st_' + n.status.key) : ''),
                n.optional ? t('a11yOptional') : '', t('jumpHint')]
     .filter(Boolean).join(' · ');
   const title = ` title="${attr(tip)}"`;
@@ -104,12 +116,18 @@ function nodeHtml(n, extra, opts, fold){
     ? `<span class="fold" aria-hidden="true">${fold.collapsed ? '▸ ' + fold.count : '▾'}</span>`
     : '';
   const expanded = fold ? ` aria-expanded="${!fold.collapsed}"` : '';
+  /* Diskrepanz-Marke: die eigene Statusbox in den eigenen §4-Farben —
+     „selbst schon [x], wartet auf Abhängigkeiten" (D39). */
+  const ownChip = effKey
+    ? `<span class="chip ownst st-${n.status.key}" aria-hidden="true">[${n.status.code}]</span>`
+    : '';
   const inner = foldHtml +
                 esc(n.label) +
                 (n.url ? '<span class="ext" aria-hidden="true">↗</span>' : '') +
                 riskMark +
                 sizeBadge +
-                tagsHtml;
+                tagsHtml +
+                ownChip;
   const aria = ` aria-label="${attr(nodeAria(n, opts, fold))}"`;
   const html = n.url
     ? `<a class="${cls}" href="${attr(n.url)}" target="_blank" rel="noopener"${lineAttr}${aria}${expanded}${title}>${inner}</a>`

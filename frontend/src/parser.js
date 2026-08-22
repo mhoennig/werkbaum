@@ -6,17 +6,18 @@
 /* T-Shirt-Größen (SPEC §5), aufsteigend geordnet. */
 export const SIZE_RANK = { XS: 0, S: 1, M: 2, L: 3, XL: 4, XXL: 5 };
 
-/* Status-Vokabular (SPEC §4): Checkbox-Code -> {key, name}.
-   `name` ist der deutsche Anzeigename (Quellsprache). */
+/* Status-Vokabular (SPEC §4): Checkbox-Code -> {code, key, name}.
+   `name` ist der deutsche Anzeigename (Quellsprache); `code` das kanonische
+   Box-Zeichen (für die Diskrepanz-Marke des effektiven Status, D39). */
 export const STATUS_BY_CODE = {
-  '?': {key:'idee',       name:'Idee'},
-  ' ': {key:'geplant',    name:'geplant'},
-  '~': {key:'arbeit',     name:'in Arbeit'},
-  '/': {key:'durchstich', name:'Durchstich – funktionsbereit, Feinarbeiten offen'},
-  'x': {key:'fertig',     name:'fertig'},
-  '^': {key:'prod',       name:'in Produktion'},
-  '-': {key:'verworfen', name:'verworfen'},
-  '!': {key:'highrisk',   name:'High Risk – Aufwand unklar'}
+  '?': {code:'?', key:'idee',       name:'Idee'},
+  ' ': {code:' ', key:'geplant',    name:'geplant'},
+  '~': {code:'~', key:'arbeit',     name:'in Arbeit'},
+  '/': {code:'/', key:'durchstich', name:'Durchstich – funktionsbereit, Feinarbeiten offen'},
+  'x': {code:'x', key:'fertig',     name:'fertig'},
+  '^': {code:'^', key:'prod',       name:'in Produktion'},
+  '-': {code:'-', key:'verworfen',  name:'verworfen'},
+  '!': {code:'!', key:'highrisk',   name:'High Risk – Aufwand unklar'}
 };
 
 /* Status, die als „realisiert" zählen (XOR-Regel, SPEC §3/D35): Kosten sind

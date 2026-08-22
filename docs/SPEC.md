@@ -190,6 +190,24 @@ Codiert als Checkbox nach dem Zeichen (Erweiterung der Markdown-Task-Syntax):
   verloren, Folgezeilen bleiben unberührt. (Eine mehrzeichige Klammer wie
   `[xyz]` ist keine Statusbox und bleibt Teil des Labels.)
 
+**Intrinsischer und effektiver Status (Abhängigkeiten, §1).** Der Status in
+der Box ist der **intrinsische** — der Bearbeitungsstand des Knotens selbst.
+Der **effektive** Status berücksichtigt die Abhängigkeiten: Ein Knoten kann
+effektiv nicht weiter sein als das, was er braucht.
+
+- **Fortschritts-Rang** entlang der Ergebnis-Skala (D5):
+  `[?]` 0 · `[ ]` 1 · `[~]` 2 · `[/]` 3 · `[x]` 4 · `[^]` 5. Außerhalb der
+  Skala zählen neutrale Knoten und `[-]` als Rang 0 („nichts Anrechenbares“),
+  `[!]` als Rang 1 (Absicht ohne Investition, D35).
+- **Effektiver Rang = Minimum des intrinsischen Rangs über die
+  Abhängigkeits-Hülle**: der Knoten selbst plus alles, was er per `:#…` direkt
+  oder mittelbar braucht. Zyklen brauchen keine Sonderregel — alle Knoten
+  eines Zyklus teilen so von selbst ihr Minimum („wird gemeinsam fertig“, §1).
+  Unbekannte IDs zählen nicht (sie sind schon gewarnt); bei doppelter ID gilt
+  die **erste** Vergabe (D36).
+- Der effektive Status wird **gerechnet, nie geschrieben** (D14: der Text ist
+  die eine Quelle der Wahrheit). Darstellung: §9; Begründung: D39.
+
 ## 5. Aufwand (T-Shirt-Größen)
 
 - Werte: `XS < S < M < L < XL < XXL`, notiert in Klammern, z. B. `(L)`.
@@ -240,6 +258,17 @@ gleiche Anordnung). Zusätzlich sitzt am **Austritt der Sammelleiste** — auf d
 Stück zwischen Elternknoten und erstem Abzweig — eine kleine **„1“-Plakette**
 (weißer Kreis mit grauem Rand, graue Ziffer): „genau eine“. Sie erscheint auch
 im Grafikexport. Siehe D35.
+
+**Die Knotenfarbe zeigt den effektiven Status (§4)**, nicht den intrinsischen —
+das Diagramm beantwortet „wie weit ist das wirklich?“. Wo der eigene Status
+**weiter** ist als der effektive (der Knoten wird von Abhängigkeiten
+zurückgehalten), sitzt unten links eine kleine **Status-Marke** mit der
+eigenen Statusbox (z. B. `[x]`) in den §4-Farben des intrinsischen Status;
+Tooltip und `aria-label` benennen beide. Ohne Diskrepanz ändert sich nichts —
+und für die XOR-Regel (§3) und „Was ist neu?“ (unten) zählt weiterhin der
+**intrinsische** Status: Investiert ist investiert, und `[^]` im Text bleibt
+die Deploy-Aussage. Marke und Färbung erscheinen auch im Grafikexport und im
+Druck. Siehe D39.
 
 **Optionale Knoten (`+`, §3):** Sie hängen an der normalen all-of-Zerlegung,
 die Anordnung bleibt unverändert. Zwei Kennzeichen, beide auch im Grafikexport:
@@ -661,17 +690,9 @@ die Closure-Rechnung des günstigsten Pfads (alle drei unten).
 
 ### Intrinsischer und effektiver Status
 
-- Der **intrinsische** Status ist der, der in der Statusbox steht (§4) — der
-  Bearbeitungsstand des Knotens selbst.
-- Der **effektive** Status berücksichtigt zusätzlich die Abhängigkeiten: Ein
-  intrinsisch fertiger Knoten ist effektiv **nicht** fertig, solange eine
-  Abhängigkeit es nicht ist.
-- Der effektive Status wird **gerechnet, nie geschrieben**. Im Notationstext
-  steht ausschließlich der intrinsische — sonst gäbe es zwei Quellen der
-  Wahrheit für dieselbe Aussage.
-- **Offen ist die Darstellung.** Die Knotenfarbe zeigt heute den intrinsischen
-  Status (§4); beide zugleich brauchen entweder einen zweiten visuellen Kanal
-  oder einen Umschalter.
+**Umgesetzt** — Rechenregel in §4 (Fortschritts-Rang, Minimum über die
+Abhängigkeits-Hülle), Darstellung in §9 (Knotenfarbe = effektiver Status,
+Diskrepanz-Marke unten links). Siehe D39.
 
 ### Querverbindungen im Diagramm
 

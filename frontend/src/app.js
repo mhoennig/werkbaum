@@ -1,6 +1,6 @@
 import './style.css';
 import { parse } from './parser.js';
-import { computeCheapSet, freshProdSet, initialCollapsed, nodeKeys } from './model.js';
+import { computeCheapSet, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus } from './model.js';
 import { esc, renderTreeHtml } from './render.js';
 import { formatWarning } from './warnings.js';
 import { padUrls } from './remote.js';
@@ -112,7 +112,8 @@ function render(){
       foldByLine.set(n.line, {key, collapsed, canFold: n.children.length > 0});
     });
     const r = renderTreeHtml(roots, {t, showDiscarded, cheapPath: cheapPathOn, cheapSet,
-                                     freshSet, collapsedSet});
+                                     freshSet, collapsedSet,
+                                     effStatus: effectiveStatus(roots)});
     out.innerHTML = r.html;
     warnings = warnings.concat(r.warnings);
   }
@@ -402,7 +403,7 @@ function diagramToSvg(){
        §9/D38 — das Bild darf keine Vollständigkeit behaupten); das ▾ offener
        Knoten ist Bedienelement und fällt weg. */
     const stripFold = node.classList.contains('folded') ? '' : ',.fold';
-    clone.querySelectorAll('.size,.tags,.ext,.risk' + stripFold).forEach(e => e.remove());
+    clone.querySelectorAll('.size,.tags,.ext,.risk,.ownst' + stripFold).forEach(e => e.remove());
     const label = clone.textContent.replace(/\s+/g,' ').trim();
     const deco = cs.textDecorationLine.includes('line-through') ? ' text-decoration="line-through"' : '';
     parts.push(`<text x="${b.cx.toFixed(1)}" y="${(b.cy+5).toFixed(1)}" text-anchor="middle" fill="${cs.color}" font-size="14" font-weight="${cs.fontWeight}"${deco}>${esc(label)}</text>`);
@@ -417,6 +418,12 @@ function diagramToSvg(){
     node.querySelectorAll('.tag').forEach(tg => {
       const t = getComputedStyle(tg);
       drawBadge(tg, t.backgroundColor, t.color, t.borderTopColor);
+    });
+    /* Diskrepanz-Marke des effektiven Status (D39) — Aussage über den Plan,
+       gehört in den Export wie Größe und Tags. */
+    node.querySelectorAll('.ownst').forEach(c => {
+      const s = getComputedStyle(c);
+      drawBadge(c, s.backgroundColor, s.color, s.borderTopColor);
     });
   });
 
@@ -1170,7 +1177,7 @@ const I18N = {
     unknownStatusWarn:"Zeile {line}: unbekanntes Statuszeichen „{code}“ — als neutral dargestellt.",
     sourceLoadWarn:"„{url}“ konnte nicht geladen werden ({error}). Die Datei muss per http(s) erreichbar sein und CORS erlauben (Access-Control-Allow-Origin).",
     sourceTimeoutWarn:"„{url}“ hat innerhalb von {seconds} s nicht geantwortet — der Abruf wurde abgebrochen. Etherpad begrenzt, wie oft der Export geholt werden darf (serienmäßig 10-mal pro 90 s); warte einen Moment und lade dann erneut.",
-    a11yStatus:"Status: {status}", a11ySize:"Aufwand: {size}", a11ySizeImplicit:"Aufwand: M (angenommen)", a11yTags:"Zuständig: {names}", a11yId:"ID: #{id}", a11yDeps:"hängt ab von: {ids}", a11yFolded:"eingeklappt, {n} verborgen", a11yOptional:"optional", a11yFocusMark:"hierhin schauen", a11yLink:"verlinkt",
+    a11yStatus:"Status: {status}", a11ySize:"Aufwand: {size}", a11ySizeImplicit:"Aufwand: M (angenommen)", a11yTags:"Zuständig: {names}", a11yId:"ID: #{id}", a11yDeps:"hängt ab von: {ids}", a11yFolded:"eingeklappt, {n} verborgen", a11yEffective:"effektiv: {status}", heldTooltip:"effektiv {eff} — selbst schon {own}, wartet auf Abhängigkeiten", a11yOptional:"optional", a11yFocusMark:"hierhin schauen", a11yLink:"verlinkt",
     hint_indent:"Einrückung (2 Leerzeichen oder Tab) definiert die Hierarchie.",
     hint_all:"Teilpaket, alle erforderlich", hint_any:"Alternative, eine wählen",
     hint_xor:"Alternative, genau eine",
@@ -1184,6 +1191,7 @@ const I18N = {
     hint_people:"Personen mit @name — erscheinen unten rechts am Knoten.",
     hint_id:"Knoten-ID mit #name — erscheint im Tooltip des Knotens.",
     hint_deps:"Abhängigkeiten mit :#name,#name — erscheinen im Tooltip.",
+    hint_eff:"Die Knotenfarbe zeigt den effektiven Status (mit Abhängigkeiten); ist der eigene weiter, steht er als Marke unten links.",
     hint_fold:"Falten: - > [x] … startet eingeklappt, < holt hervor; ▾/▸ am Knoten klappt um (Tastatur: ←/→).",
     hint_jump:"Alt+Klick auf einen Knoten (mobil: langer Druck) springt zur zugehörigen Textzeile; Alt+Klick im Text holt den Knoten ins Bild."
   },
@@ -1241,7 +1249,7 @@ const I18N = {
     unknownStatusWarn:"Line {line}: unknown status code “{code}” — shown as neutral.",
     sourceLoadWarn:"Could not load “{url}” ({error}). The file must be reachable via http(s) and allow CORS (Access-Control-Allow-Origin).",
     sourceTimeoutWarn:"“{url}” did not answer within {seconds} s — the request was aborted. Etherpad limits how often the export may be fetched (10 times per 90 s by default); wait a moment, then reload.",
-    a11yStatus:"Status: {status}", a11ySize:"Effort: {size}", a11ySizeImplicit:"Effort: M (assumed)", a11yTags:"Assigned: {names}", a11yId:"ID: #{id}", a11yDeps:"depends on: {ids}", a11yFolded:"collapsed, {n} hidden", a11yOptional:"optional", a11yFocusMark:"look here", a11yLink:"has link",
+    a11yStatus:"Status: {status}", a11ySize:"Effort: {size}", a11ySizeImplicit:"Effort: M (assumed)", a11yTags:"Assigned: {names}", a11yId:"ID: #{id}", a11yDeps:"depends on: {ids}", a11yFolded:"collapsed, {n} hidden", a11yEffective:"effective: {status}", heldTooltip:"effectively {eff} — itself already {own}, waiting on dependencies", a11yOptional:"optional", a11yFocusMark:"look here", a11yLink:"has link",
     hint_indent:"Indentation (2 spaces or a tab) defines the hierarchy.",
     hint_all:"sub-task, all required", hint_any:"alternative, choose one",
     hint_xor:"alternative, exactly one",
@@ -1255,6 +1263,7 @@ const I18N = {
     hint_people:"People with @name — shown at the bottom-right of the node.",
     hint_id:"Node ID with #name — shown in the node's tooltip.",
     hint_deps:"Dependencies with :#name,#name — shown in the tooltip.",
+    hint_eff:"Node colour shows the effective status (with dependencies); if its own is further along, it appears as a mark at the bottom left.",
     hint_fold:"Folding: - > [x] … starts collapsed, < brings it back; ▾/▸ on a node toggles (keyboard: ←/→).",
     hint_jump:"Alt+click a node (long press on touch) jumps to its line in the text; Alt+click in the text brings the node into view."
   },
@@ -1312,7 +1321,7 @@ const I18N = {
     unknownStatusWarn:"Línea {line}: código de estado desconocido «{code}» — mostrado como neutral.",
     sourceLoadWarn:"No se pudo cargar «{url}» ({error}). El archivo debe ser accesible por http(s) y permitir CORS (Access-Control-Allow-Origin).",
     sourceTimeoutWarn:"«{url}» no respondió en {seconds} s — se canceló la petición. Etherpad limita la frecuencia de descarga del export (10 veces por 90 s de forma predeterminada); espera un momento y vuelve a cargar.",
-    a11yStatus:"Estado: {status}", a11ySize:"Esfuerzo: {size}", a11ySizeImplicit:"Esfuerzo: M (asumido)", a11yTags:"Responsable: {names}", a11yId:"ID: #{id}", a11yDeps:"depende de: {ids}", a11yFolded:"plegado, {n} ocultos", a11yOptional:"opcional", a11yFocusMark:"mirar aquí", a11yLink:"con enlace",
+    a11yStatus:"Estado: {status}", a11ySize:"Esfuerzo: {size}", a11ySizeImplicit:"Esfuerzo: M (asumido)", a11yTags:"Responsable: {names}", a11yId:"ID: #{id}", a11yDeps:"depende de: {ids}", a11yFolded:"plegado, {n} ocultos", a11yEffective:"efectivo: {status}", heldTooltip:"efectivamente {eff} — por sí mismo ya {own}, espera dependencias", a11yOptional:"opcional", a11yFocusMark:"mirar aquí", a11yLink:"con enlace",
     hint_indent:"La sangría (2 espacios o un tabulador) define la jerarquía.",
     hint_all:"subtarea, todas obligatorias", hint_any:"alternativa, elige una",
     hint_xor:"alternativa, exactamente una",
@@ -1326,6 +1335,7 @@ const I18N = {
     hint_people:"Personas con @nombre — aparecen abajo a la derecha del nodo.",
     hint_id:"ID de nodo con #nombre — visible en el tooltip del nodo.",
     hint_deps:"Dependencias con :#nombre,#nombre — visibles en el tooltip.",
+    hint_eff:"El color del nodo muestra el estado efectivo (con dependencias); si el propio va más adelante, aparece como marca abajo a la izquierda.",
     hint_fold:"Plegado: - > [x] … empieza plegado, < lo recupera; ▾/▸ en el nodo alterna (teclado: ←/→).",
     hint_jump:"Alt+clic en un nodo (pulsación larga en táctil) salta a su línea en el texto; Alt+clic en el texto trae el nodo a la vista."
   },
@@ -1383,7 +1393,7 @@ const I18N = {
     unknownStatusWarn:"Ligne {line} : code de statut inconnu « {code} » — affiché comme neutre.",
     sourceLoadWarn:"Impossible de charger « {url} » ({error}). Le fichier doit être accessible en http(s) et autoriser CORS (Access-Control-Allow-Origin).",
     sourceTimeoutWarn:"« {url} » n’a pas répondu en {seconds} s — la requête a été interrompue. Etherpad limite la fréquence de récupération de l’export (10 fois par 90 s par défaut) ; attends un instant, puis recharge.",
-    a11yStatus:"Statut : {status}", a11ySize:"Effort : {size}", a11ySizeImplicit:"Effort : M (supposé)", a11yTags:"Responsable : {names}", a11yId:"ID : #{id}", a11yDeps:"dépend de : {ids}", a11yFolded:"replié, {n} masqués", a11yOptional:"facultatif", a11yFocusMark:"regarder ici", a11yLink:"avec lien",
+    a11yStatus:"Statut : {status}", a11ySize:"Effort : {size}", a11ySizeImplicit:"Effort : M (supposé)", a11yTags:"Responsable : {names}", a11yId:"ID : #{id}", a11yDeps:"dépend de : {ids}", a11yFolded:"replié, {n} masqués", a11yEffective:"effectif : {status}", heldTooltip:"effectivement {eff} — lui-même déjà {own}, en attente de dépendances", a11yOptional:"facultatif", a11yFocusMark:"regarder ici", a11yLink:"avec lien",
     hint_indent:"L'indentation (2 espaces ou une tabulation) définit la hiérarchie.",
     hint_all:"sous-tâche, toutes requises", hint_any:"alternative, en choisir une",
     hint_xor:"alternative, exactement une",
@@ -1397,6 +1407,7 @@ const I18N = {
     hint_people:"Personnes avec @nom — affichées en bas à droite du nœud.",
     hint_id:"ID de nœud avec #nom — visible dans l’infobulle du nœud.",
     hint_deps:"Dépendances avec :#nom,#nom — visibles dans l’infobulle.",
+    hint_eff:"La couleur du nœud montre le statut effectif (avec dépendances) ; si le sien est plus avancé, il apparaît en marque en bas à gauche.",
     hint_fold:"Pliage : - > [x] … démarre replié, < le fait ressortir ; ▾/▸ sur le nœud bascule (clavier : ←/→).",
     hint_jump:"Alt+clic sur un nœud (appui long sur tactile) saute à sa ligne dans le texte ; Alt+clic dans le texte amène le nœud à l’écran."
   },
@@ -1454,7 +1465,7 @@ const I18N = {
     unknownStatusWarn:"Wiersz {line}: nieznany znak statusu „{code}” — pokazany jako neutralny.",
     sourceLoadWarn:"Nie udało się wczytać „{url}” ({error}). Plik musi być dostępny przez http(s) i zezwalać na CORS (Access-Control-Allow-Origin).",
     sourceTimeoutWarn:"„{url}” nie odpowiedział w ciągu {seconds} s — żądanie przerwano. Etherpad ogranicza częstość pobierania eksportu (domyślnie 10 razy na 90 s); odczekaj chwilę i wczytaj ponownie.",
-    a11yStatus:"Status: {status}", a11ySize:"Nakład: {size}", a11ySizeImplicit:"Nakład: M (założony)", a11yTags:"Przypisano: {names}", a11yId:"ID: #{id}", a11yDeps:"zależy od: {ids}", a11yFolded:"zwinięte, ukrytych: {n}", a11yOptional:"opcjonalny", a11yFocusMark:"spójrz tutaj", a11yLink:"z linkiem",
+    a11yStatus:"Status: {status}", a11ySize:"Nakład: {size}", a11ySizeImplicit:"Nakład: M (założony)", a11yTags:"Przypisano: {names}", a11yId:"ID: #{id}", a11yDeps:"zależy od: {ids}", a11yFolded:"zwinięte, ukrytych: {n}", a11yEffective:"efektywnie: {status}", heldTooltip:"efektywnie {eff} — sam już {own}, czeka na zależności", a11yOptional:"opcjonalny", a11yFocusMark:"spójrz tutaj", a11yLink:"z linkiem",
     hint_indent:"Wcięcie (2 spacje lub tabulator) definiuje hierarchię.",
     hint_all:"podzadanie, wszystkie wymagane", hint_any:"alternatywa, wybierz jedną",
     hint_xor:"alternatywa, dokładnie jedna",
@@ -1468,6 +1479,7 @@ const I18N = {
     hint_people:"Osoby z @nazwa — pokazywane w prawym dolnym rogu węzła.",
     hint_id:"ID węzła przez #nazwa — widoczne w podpowiedzi węzła.",
     hint_deps:"Zależności przez :#nazwa,#nazwa — widoczne w podpowiedzi.",
+    hint_eff:"Kolor węzła pokazuje status efektywny (z zależnościami); jeśli własny jest dalej, widnieje jako znacznik u dołu po lewej.",
     hint_fold:"Zwijanie: - > [x] … zaczyna zwinięte, < przywraca; ▾/▸ na węźle przełącza (klawiatura: ←/→).",
     hint_jump:"Alt+kliknięcie węzła (długie naciśnięcie na dotyku) przechodzi do jego wiersza w tekście; Alt+kliknięcie w tekście pokazuje węzeł na diagramie."
   },
@@ -1525,7 +1537,7 @@ const I18N = {
     unknownStatusWarn:"Строка {line}: неизвестный код статуса «{code}» — показан как нейтральный.",
     sourceLoadWarn:"Не удалось загрузить «{url}» ({error}). Файл должен быть доступен по http(s) и разрешать CORS (Access-Control-Allow-Origin).",
     sourceTimeoutWarn:"«{url}» не ответил за {seconds} с — запрос прерван. Etherpad ограничивает частоту загрузки экспорта (по умолчанию 10 раз за 90 с); подождите немного и обновите снова.",
-    a11yStatus:"Статус: {status}", a11ySize:"Оценка: {size}", a11ySizeImplicit:"Оценка: M (предполагается)", a11yTags:"Ответственные: {names}", a11yId:"ID: #{id}", a11yDeps:"зависит от: {ids}", a11yFolded:"свёрнуто, скрыто: {n}", a11yOptional:"необязательно", a11yFocusMark:"смотрите здесь", a11yLink:"со ссылкой",
+    a11yStatus:"Статус: {status}", a11ySize:"Оценка: {size}", a11ySizeImplicit:"Оценка: M (предполагается)", a11yTags:"Ответственные: {names}", a11yId:"ID: #{id}", a11yDeps:"зависит от: {ids}", a11yFolded:"свёрнуто, скрыто: {n}", a11yEffective:"фактически: {status}", heldTooltip:"фактически {eff} — сам уже {own}, ждёт зависимости", a11yOptional:"необязательно", a11yFocusMark:"смотрите здесь", a11yLink:"со ссылкой",
     hint_indent:"Отступ (2 пробела или табуляция) задаёт иерархию.",
     hint_all:"подзадача, все обязательны", hint_any:"альтернатива, выберите одну",
     hint_xor:"альтернатива, ровно одна",
@@ -1539,6 +1551,7 @@ const I18N = {
     hint_people:"Люди через @имя — показываются справа внизу узла.",
     hint_id:"ID узла через #имя — виден во всплывающей подсказке узла.",
     hint_deps:"Зависимости через :#имя,#имя — видны в подсказке.",
+    hint_eff:"Цвет узла показывает фактический статус (с учётом зависимостей); если собственный дальше, он показан меткой слева внизу.",
     hint_fold:"Сворачивание: - > [x] … открывается свёрнутым, < возвращает; ▾/▸ на узле переключает (клавиши: ←/→).",
     hint_jump:"Alt+клик по узлу (долгое нажатие на сенсоре) переходит к его строке в тексте; Alt+клик в тексте показывает узел на диаграмме."
   },
@@ -1596,7 +1609,7 @@ const I18N = {
     unknownStatusWarn:"पंक्ति {line}: अज्ञात स्थिति कोड „{code}“ — तटस्थ रूप में दिखाया गया।",
     sourceLoadWarn:"„{url}“ लोड नहीं हो सका ({error})। फ़ाइल http(s) से उपलब्ध होनी चाहिए और CORS की अनुमति देनी चाहिए (Access-Control-Allow-Origin)।",
     sourceTimeoutWarn:"„{url}“ ने {seconds} स॰ में उत्तर नहीं दिया — अनुरोध रद्द कर दिया गया। Etherpad सीमित करता है कि एक्सपोर्ट कितनी बार लिया जा सके (डिफ़ॉल्ट रूप से 90 स॰ में 10 बार); कुछ क्षण रुकें, फिर दोबारा लोड करें।",
-    a11yStatus:"स्थिति: {status}", a11ySize:"आकार: {size}", a11ySizeImplicit:"आकार: M (अनुमानित)", a11yTags:"जिम्मेदार: {names}", a11yId:"आईडी: #{id}", a11yDeps:"निर्भर: {ids}", a11yFolded:"समेटा हुआ, {n} छिपे", a11yOptional:"वैकल्पिक", a11yFocusMark:"यहाँ देखें", a11yLink:"लिंक सहित",
+    a11yStatus:"स्थिति: {status}", a11ySize:"आकार: {size}", a11ySizeImplicit:"आकार: M (अनुमानित)", a11yTags:"जिम्मेदार: {names}", a11yId:"आईडी: #{id}", a11yDeps:"निर्भर: {ids}", a11yFolded:"समेटा हुआ, {n} छिपे", a11yEffective:"प्रभावी: {status}", heldTooltip:"प्रभावी रूप से {eff} — स्वयं {own} है, निर्भरताओं की प्रतीक्षा में", a11yOptional:"वैकल्पिक", a11yFocusMark:"यहाँ देखें", a11yLink:"लिंक सहित",
     hint_indent:"इंडेंट (2 स्पेस या टैब) पदानुक्रम तय करता है।",
     hint_all:"उप-कार्य, सभी आवश्यक", hint_any:"विकल्प, एक चुनें",
     hint_xor:"विकल्प, ठीक एक",
@@ -1610,6 +1623,7 @@ const I18N = {
     hint_people:"@नाम से व्यक्ति — नोड के नीचे-दाएँ दिखते हैं।",
     hint_id:"#नाम से नोड आईडी — नोड के टूलटिप में दिखती है।",
     hint_deps:":#नाम,#नाम से निर्भरताएँ — टूलटिप में दिखती हैं।",
+    hint_eff:"नोड का रंग प्रभावी स्थिति दिखाता है (निर्भरताओं सहित); यदि अपनी स्थिति आगे है, तो वह नीचे-बाएँ चिह्न के रूप में दिखती है।",
     hint_fold:"फ़ोल्डिंग: - > [x] … समेटा हुआ खुलता है, < वापस लाता है; नोड पर ▾/▸ टॉगल करता है (कीबोर्ड: ←/→)।",
     hint_jump:"किसी नोड पर Alt+क्लिक (टच पर लंबा दबाव) टेक्स्ट में उसकी पंक्ति पर ले जाता है; टेक्स्ट में Alt+क्लिक उस नोड को आरेख में दिखाता है।"
   },
@@ -1667,7 +1681,7 @@ const I18N = {
     unknownStatusWarn:"第 {line} 行：未知状态代码“{code}”——显示为中性。",
     sourceLoadWarn:"无法加载“{url}”（{error}）。该文件必须可通过 http(s) 访问并允许 CORS（Access-Control-Allow-Origin）。",
     sourceTimeoutWarn:"“{url}” 在 {seconds} 秒内没有响应 — 请求已中止。Etherpad 会限制导出的获取频率（默认每 90 秒 10 次）；请稍候再重新加载。",
-    a11yStatus:"状态：{status}", a11ySize:"工作量：{size}", a11ySizeImplicit:"工作量：M（假定）", a11yTags:"负责人：{names}", a11yId:"ID：#{id}", a11yDeps:"依赖：{ids}", a11yFolded:"已折叠，隐藏 {n} 项", a11yOptional:"可选", a11yFocusMark:"看这里", a11yLink:"含链接",
+    a11yStatus:"状态：{status}", a11ySize:"工作量：{size}", a11ySizeImplicit:"工作量：M（假定）", a11yTags:"负责人：{names}", a11yId:"ID：#{id}", a11yDeps:"依赖：{ids}", a11yFolded:"已折叠，隐藏 {n} 项", a11yEffective:"实际：{status}", heldTooltip:"实际为 {eff}——自身已是 {own}，等待依赖完成", a11yOptional:"可选", a11yFocusMark:"看这里", a11yLink:"含链接",
     hint_indent:"缩进（2 个空格或制表符）定义层级。",
     hint_all:"子任务，全部必需", hint_any:"备选项，择其一",
     hint_xor:"备选项，恰好一个",
@@ -1681,6 +1695,7 @@ const I18N = {
     hint_people:"用 @姓名 表示人员——显示在节点右下角。",
     hint_id:"用 #名称 指定节点 ID——显示在节点提示中。",
     hint_deps:"用 :#名称,#名称 表示依赖——显示在提示中。",
+    hint_eff:"节点颜色显示实际状态（含依赖）；若自身状态更靠前，会以左下角标记显示。",
     hint_fold:"折叠：- > [x] … 打开时即折叠，< 将其展开；节点上的 ▾/▸ 切换（键盘：←/→）。",
     hint_jump:"Alt+点击节点（触摸屏为长按）可跳转到文本中对应的行；在文本中 Alt+点击则把该节点带入视野。"
   },
@@ -1738,7 +1753,7 @@ const I18N = {
     unknownStatusWarn:"{line} 行目: 不明なステータス記号「{code}」— 中立として表示。",
     sourceLoadWarn:"「{url}」を読み込めませんでした（{error}）。ファイルは http(s) でアクセス可能で、CORS（Access-Control-Allow-Origin）を許可する必要があります。",
     sourceTimeoutWarn:"「{url}」が {seconds} 秒以内に応答しませんでした — 要求を中止しました。Etherpad はエクスポートの取得回数を制限します（既定で 90 秒あたり 10 回）。少し待ってから再読み込みしてください。",
-    a11yStatus:"ステータス: {status}", a11ySize:"規模: {size}", a11ySizeImplicit:"規模: M（想定）", a11yTags:"担当: {names}", a11yId:"ID: #{id}", a11yDeps:"依存先: {ids}", a11yFolded:"折りたたみ中、{n} 件非表示", a11yOptional:"任意", a11yFocusMark:"ここを見る", a11yLink:"リンクあり",
+    a11yStatus:"ステータス: {status}", a11ySize:"規模: {size}", a11ySizeImplicit:"規模: M（想定）", a11yTags:"担当: {names}", a11yId:"ID: #{id}", a11yDeps:"依存先: {ids}", a11yFolded:"折りたたみ中、{n} 件非表示", a11yEffective:"実効: {status}", heldTooltip:"実効では {eff} — 自身は既に {own}、依存待ち", a11yOptional:"任意", a11yFocusMark:"ここを見る", a11yLink:"リンクあり",
     hint_indent:"インデント（スペース2つまたはタブ）で階層を定義します。",
     hint_all:"サブタスク、すべて必須", hint_any:"選択肢、1つを選ぶ",
     hint_xor:"選択肢、ちょうど1つ",
@@ -1752,6 +1767,7 @@ const I18N = {
     hint_people:"@名前 で担当者 — ノードの右下に表示されます。",
     hint_id:"#名前 でノード ID — ノードのツールチップに表示されます。",
     hint_deps:":#名前,#名前 で依存関係 — ツールチップに表示されます。",
+    hint_eff:"ノードの色は実効ステータス（依存関係込み）を示します。自身が先行している場合は左下のマークで表示されます。",
     hint_fold:"折りたたみ：- > [x] … は折りたたんだ状態で開き、< は呼び戻します。ノードの ▾/▸ で切替（キー：←/→）。",
     hint_jump:"ノードを Alt+クリック（タッチでは長押し）すると、テキストの該当行へ移動します。テキスト内で Alt+クリックすると、そのノードが図の中央に表示されます。"
   }
@@ -1787,6 +1803,7 @@ function buildHint(){
     ${esc(t('hint_people'))}
     ${esc(t('hint_id'))}
     ${esc(t('hint_deps'))}
+    ${esc(t('hint_eff'))}
     ${esc(t('hint_fold'))}
     <code>!!!</code>&nbsp; ${esc(t('hint_focus'))}
     <div class="hint-op">${esc(t('hint_jump'))}</div>`;

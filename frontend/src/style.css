@@ -644,6 +644,14 @@
     position:absolute;right:-9px;bottom:-9px;
     display:flex;gap:3px;
   }
+  /* Diskrepanz-Marke des effektiven Status (SPEC §9, D39): die eigene
+     Statusbox in den eigenen §4-Farben (nutzt die .chip-Farbregeln der
+     Legende), unten links — die letzte freie Knoten-Ecke. */
+  .node .chip.ownst{
+    position:absolute;left:-9px;bottom:-9px;
+    font-size:.58rem;font-weight:500;letter-spacing:.02em;
+    padding:1px 5px;line-height:1.4;border-radius:999px;
+  }
   .tag{
     font-family:'IBM Plex Mono',monospace;
     font-size:.58rem;font-weight:500;letter-spacing:.02em;

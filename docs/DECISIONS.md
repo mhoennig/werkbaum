@@ -1834,3 +1834,43 @@ Stiel-Messung, Treppe und Pfadlinie sind damit ohne Zusatzcode konsistent
 per CSS zu verstecken). Die Kennzeichnung „▸ n“ ist Teil des Knotentexts und
 wandert von selbst in den SVG-Export; das ▾ offener Knoten wird dort und im
 Druck entfernt — es ist Bedienelement, keine Aussage über den Plan.
+
+## D39 — Effektiver Status: die Farbe sagt die Wahrheit, die Marke die Box
+Mit den Abhängigkeiten (D37) gibt es zwei Aussagen je Knoten: was in der
+Statusbox steht (intrinsisch) und wie weit er wirklich ist (effektiv, §4).
+Erwogen waren drei Darstellungen — Diskrepanz-Kennzeichnung bei intrinsischer
+Farbe (die ursprüngliche Empfehlung), ein Umschalter, oder Farbe = effektiv.
+**Entschieden (Nutzer): Die Knotenfarbe zeigt den effektiven Status; wo der
+eigene Status weiter ist, kommt eine Diskrepanz-Marke dazu.** Das ist die
+stärkere Wahl: Das Diagramm beantwortet „wie weit ist das wirklich?“ — genau
+die Frage, für die man auf einen Plan schaut. Ein grünes `[x]`, das auf ein
+rosé `[~]` wartet, wäre die hübschere Lüge.
+
+**Die Rechenregel ist ein Minimum über die Abhängigkeits-Hülle.** Jeder Status
+bekommt einen Fortschritts-Rang entlang der Ergebnis-Skala (D5); effektiv ist
+das Minimum des intrinsischen Rangs über den Knoten selbst und alles, was er
+direkt oder mittelbar braucht. Diese Form hat zwei angenehme Folgen: **Zyklen
+brauchen keine Sonderregel** — alle Knoten eines Zyklus teilen ihr Minimum,
+und das ist wörtlich das „wird gemeinsam fertig“ aus D34; und die Rechnung ist
+eine schlichte Fixpunkt-Iteration (Ränge sinken nur, Abbruch garantiert).
+Außerhalb der Skala: neutral und `[-]` zählen als 0 — wer auf etwas
+Verworfenes oder nie Begonnenes zeigt, ist effektiv am Anfang, und genau das
+soll auffallen —, `[!]` als 1 (die Absicht-ohne-Investition-Gruppe aus D35).
+Bei doppelter ID gilt die **erste** Vergabe — das löst das in D36 offen
+gelassene „wer gewinnt bei Verweisen“ konsistent zur `duplicateId`-Warnung.
+
+**Die Diskrepanz-Marke ist die eigene Statusbox in den eigenen Farben.**
+Unten links (die letzte freie Knoten-Ecke: oben rechts Größe, unten rechts
+Tags, oben links ⚠) sitzt ein kleines `[x]`-Etikett in den §4-Farben des
+intrinsischen Status — die Notation kennzeichnet sich mit ihrem eigenen
+Vokabular, niemand lernt ein neues Symbol, und die Farben tragen die ganze
+Geschichte: Knoten rosé (effektiv in Arbeit), Etikett grün (selbst fertig).
+Tooltip („effektiv … — selbst schon …, wartet auf Abhängigkeiten“) und
+`a11yEffective` sagen es in Worten. Marke und Färbung gehören in Export und
+Druck — sie sind eine Aussage über den Plan, nicht über den Betrachter.
+
+**Was beim intrinsischen Status bleibt:** die XOR-Regel (§3) — „realisiert“
+heißt Kosten investiert, und investiert ist investiert, auch wenn
+Abhängigkeiten den Knoten zurückhalten; und „Was ist neu?“ (D28) — der gelbe
+Kranz meldet das `[^]` im Text, also den Deploy des Knotens selbst. Beide
+Prüfungen laufen im Parser bzw. auf dem Text und bleiben unberührt.

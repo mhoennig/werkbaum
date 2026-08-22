@@ -12,9 +12,9 @@
     - [x] Node IDs (#auth) (S)  %% often just the ticket number, see SPEC §11
     + [?] Free tags, &tag (M)  %% only together with a consumer, see D34
       - [?] A lens: highlight every node tagged &x (S)
-    - [~] Dependencies across the tree, (:#auth,#api) (M)
-      - [?] They constrain the status, not when work may start (S)
-      - [?] Effective status: intrinsic, plus what it depends on (S)
+    - [x] Dependencies across the tree, (:#auth,#api) (M)
+      - [x] They constrain the status, not when work may start (S)
+      - [x] Effective status: intrinsic, plus what it depends on (S)
       - [x] Cycles are legal — they mean "finished together" (XS)
       - [x] An id with no node behind it is a warning (XS)
     - [x] XOR, = — exactly one alternative, not at least one (S)

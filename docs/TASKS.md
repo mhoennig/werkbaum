@@ -83,8 +83,13 @@ entscheiden, **bevor** Code entsteht.
       `deps` als ID-Strings am Knoten, Warnung `unknownDep`, Zyklen bewusst
       ungeprüft; sichtbar als `→ #a, #b` im Tooltip + `a11yDeps`;
       SPEC-§11-Teil nach §1 überführt; `tests/deps.test.js`.
-- [ ] Effektiven Status rechnen (intrinsisch + Abhängigkeiten); Darstellung
+- [x] Effektiven Status rechnen (intrinsisch + Abhängigkeiten); Darstellung
       entscheiden — die Knotenfarbe zeigt heute den intrinsischen Status.
+      → Entschieden und umgesetzt (D39): Fortschritts-Rang (SPEC §4), effektiv
+      = Minimum über die Abhängigkeits-Hülle (Fixpunkt, Zyklen teilen ihr
+      Minimum); **Knotenfarbe = effektiver Status**, bei Diskrepanz die eigene
+      Statusbox als Marke unten links in den eigenen Farben (auch im Export);
+      Tooltip + `a11yEffective`; `tests/effective.test.js`.
 - [ ] Günstigsten Pfad auf die Dependency Closure umstellen (gemeinsame
       Abhängigkeiten nur einmal zählen). Erweitert D18; die gierige Wahl je
       Alternativgruppe ist damit nicht mehr optimal — Verfahren wählen und

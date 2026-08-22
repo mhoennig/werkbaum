@@ -78,6 +78,51 @@ export function cheapCls(n, cheapSet){
   return leaf ? 'cheap cheap-leaf' : 'cheap';
 }
 
+/* ---------- Effektiver Status (SPEC §4/§9, D39) ----------
+   Fortschritts-Rang entlang der Ergebnis-Skala (D5). Außerhalb der Skala:
+   neutrale und verworfene Knoten zählen als 0 („nichts Anrechenbares"),
+   High Risk als 1 (Absicht ohne Investition, D35). */
+export const PROGRESS_RANK = { idee:0, geplant:1, highrisk:1, arbeit:2, durchstich:3, fertig:4, prod:5 };
+const RANK_STATUS_KEY = ['idee', 'geplant', 'arbeit', 'durchstich', 'fertig', 'prod'];
+export function progressRank(n){
+  if(!n.status) return 0;
+  const r = PROGRESS_RANK[n.status.key];
+  return r === undefined ? 0 : r;   /* verworfen -> 0 */
+}
+/* Diskrepanzen des effektiven Status: Map Knoten -> effektiver Status-KEY,
+   nur für Knoten, deren eigener Status weiter ist. Effektiver Rang = Minimum
+   des intrinsischen Rangs über die Abhängigkeits-Hülle (Knoten selbst plus
+   alles per `:#…` Erreichbare), als Fixpunkt-Iteration — Ränge sinken nur,
+   Zyklen teilen so von selbst ihr Minimum („wird gemeinsam fertig", §1).
+   Unbekannte IDs zählen nicht (schon gewarnt, `unknownDep`); bei doppelter
+   ID gilt die ERSTE Vergabe (D36/D39). */
+export function effectiveStatus(roots){
+  const nodes = [], byId = new Map();
+  (function walk(ns){
+    for(const n of ns){
+      nodes.push(n);
+      if(n.id != null && !byId.has(n.id)) byId.set(n.id, n);
+      walk(n.children);
+    }
+  })(roots);
+  const eff = new Map(nodes.map(n => [n, progressRank(n)]));
+  let changed = true;
+  while(changed){
+    changed = false;
+    for(const n of nodes){
+      let v = eff.get(n);
+      for(const d of n.deps || []){
+        const target = byId.get(d);
+        if(target && eff.get(target) < v) v = eff.get(target);
+      }
+      if(v < eff.get(n)){ eff.set(n, v); changed = true; }
+    }
+  }
+  const map = new Map();
+  eff.forEach((r, n) => { if(r < progressRank(n)) map.set(n, RANK_STATUS_KEY[r]); });
+  return map;
+}
+
 /* ---------- Was ist neu? (D28) ----------
    „Neu" heißt hier bewusst nicht „Zeile hinzugefügt", sondern **neu in
    Produktion**: ein Knoten, der jetzt `[^]` trägt und es in der zuletzt

@@ -292,6 +292,15 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Knoten-Referenzen; der Parser prüft nur Existenz (`unknownDep`), Zyklen
   werden bewusst nicht einmal erkannt (zulässig, „gemeinsam fertig"). Keine
   Diagramm-Darstellung — nur Tooltip (`→ #a, #b`) und `a11yDeps`.
+- Effektiver Status (SPEC §4/§9, D39): `effectiveStatus(roots)` in model.js
+  liefert NUR die Diskrepanzen (Map Knoten → effektiver Status-Key; Minimum
+  des Fortschritts-Rangs über die Abhängigkeits-Hülle, Fixpunkt — Zyklen
+  teilen ihr Minimum, erste ID-Vergabe gewinnt). Der Renderer färbt dann
+  `st-<effKey>` statt des intrinsischen und hängt die Marke
+  `.chip.ownst.st-<ownKey>` (eigene Statusbox, eigene Farben) unten links an —
+  im Export via `drawBadge`, aus dem Label-Klon entfernen (`.ownst`). XOR-
+  „realisiert" (Parser) und „Was ist neu?" (`[^]` im Text) bleiben bewusst
+  **intrinsisch**.
 - XOR-Gruppen `=` (SPEC §3/D35): Der Parser setzt `type:'xor'` (nur mit
   folgendem Leerraum — `=SUMME(…)` bleibt Label); der Renderer gibt
   `<ul class="or xor">` aus, damit die **gesamte** any-of-Geometrie (alle drei
