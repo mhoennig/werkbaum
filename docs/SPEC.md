@@ -640,8 +640,9 @@ Siehe D38.
 
 ### Querverbindungen der Abhängigkeiten (`:#…`, §1)
 Abhängigkeiten werden als **optisch sekundäre** Kanten gezeichnet: dünn,
-blassgrau (`#6B7A8C`), **geschwungen** — die Krümmung unterscheidet sie von
-den orthogonalen Baumlinien (dasselbe Mittel wie beim Pfad-Spline) — auf einer
+blassgrau (`#6B7A8C`), **gepunktet** und **geschwungen** — Punktierung und
+Krümmung unterscheiden sie doppelt von den Baumlinien (durchgezogen bzw.
+gestrichelt, immer orthogonal) und halten sie zurückhaltend — auf einer
 eigenen Zeichenebene **hinter** den Knoten, mit einer kleinen **Pfeilspitze
 auf das Gebrauchte** („braucht“-Richtung). Der Baum trägt weiterhin die
 Hauptaussage.

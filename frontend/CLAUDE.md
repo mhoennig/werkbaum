@@ -295,8 +295,8 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
 - Querverbindungen (SPEC §9, D41): `drawDepLinks()` zeichnet die
   Abhängigkeits-Kanten als Overlay-SVGs (wie `drawCheapPath`, `/zoom`
   umrechnen) aus den Renderer-Attributen `data-id`/`data-deps` — gekrümmt
-  (Merkmal gegenüber den orthogonalen Baumlinien), blassgrau hinter den
-  Knoten, Pfeil aufs Gebrauchte; Hervorhebung (Fokus bzw. Cursor-Zeile,
+  und GEPUNKTET (doppelt unterschieden von den orthogonalen Baumlinien,
+  D41-Nachtrag), blassgrau hinter den Knoten, Pfeil aufs Gebrauchte; Hervorhebung (Fokus bzw. Cursor-Zeile,
   `activeDepNode()`) in Tinte auf der vorderen Ebene. Aufgerufen aus
   `highlightCurrentNode()` (läuft in jedem `render()`), `applyLayout()` und
   den focusin/focusout-Handlern — NICHT doppelt in `render()` einhängen.

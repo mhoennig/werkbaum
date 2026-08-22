@@ -1986,6 +1986,18 @@ auf dem DOM; headless getestet sind die `data-id`/`data-deps`-Attribute des
 Renderers, geprüft wurde im Browser (alle drei Modi, Fokus- und
 Cursor-Hervorhebung, Export).
 
+**Nachtrag — die Basis-Kanten sind jetzt gepunktet.** „Zurückhaltender“
+(Nutzer): Die durchgezogene Kurve konkurrierte trotz Blässe noch mit dem
+Baum. Punktiert (runde Punkte, `stroke-dasharray: .1 5`) tritt sie weiter
+zurück und ist zugleich **dreifach** von den Baumlinien unterschieden —
+Krümmung, Blässe, Punktierung; durchgezogen gehört „und“, gestrichelt „oder“.
+Der D29-Einwand gegen einen dritten Linienstil greift hier nicht: Er galt den
+**Baum-Abzweigen**, die sich im kompakten Modus allein über den Stil
+unterscheiden müssen — die Querverbindungen liegen auf ihrer eigenen,
+gekrümmten Ebene und begegnen den Rahmenkanten nie. Die **Hervorhebung**
+(fokussierter Knoten) bleibt durchgezogen in Tinte: Sie ist ausdrücklich
+angefordert und soll sich nach vorn drängen. Export identisch nachgezogen.
+
 ## D42 — Closure-Pfad: erschöpfend über die gekoppelten Gruppen, gierig nur benannt
 Die letzte Baustelle aus D34: Mit Abhängigkeiten zählt der günstigste Pfad
 nicht mehr den gewählten Teilbaum, sondern die **Hülle** — jeder nötige Knoten
