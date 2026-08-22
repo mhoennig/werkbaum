@@ -11,7 +11,7 @@
 ## Phase 1: Foundation – Quick Wins
 *Basis-Features für echte Pfad-Optimierung. Priorität: Höchst.*
 
-- [ ] **Abhängigkeits-Marker** — Features können explizit auf andere Features verweisen (`→ andere Feature`). Gestrichelte rote Linien im Diagramm zeigen Blockierungen; Warnungen wenn Abhängigkeiten zirkulär oder nicht erfüllbar sind.
+- [ ] **Abhängigkeits-Marker** — Features können explizit auf andere Features verweisen. Schreibweise ist inzwischen festgelegt: Knoten-ID `#auth`, Abhängigkeit `:#auth,#api` (SPEC §11, D34) — **nicht** der hier ursprünglich vorgeschlagene Verweis auf den Titel (`→ andere Feature`), der beim Umbenennen bricht. Querverbindungen werden optisch **sekundär** gezeichnet (dünn/gestrichelt), nicht rot: Rot ist in dieser Palette nicht vergeben. Zirkuläre Abhängigkeiten sind **zulässig** (sie bedeuten „wird gemeinsam fertig"), nicht erfüllbare — eine ID ohne Knoten — ergeben eine Warnung.
 
 - [ ] **Team-Velocity-basiertes Kostenmodell** — T-Shirt-Größen werden in Story-Points übersetzt (konfigurierbar pro Team). Automatische Timeline-Berechnung: T-Shirt + Team-Velocity → Wochen, mit eingebautem Overhead-Faktor (Meetings 1.2×) und Risk Buffer (1.15×). Warnung: "Feature > 2 Sprints, sollte zerlegt werden".
 
@@ -63,8 +63,11 @@
 ### MVP (Phase 1 + Teile von Phase 2)
 **Ziel:** Abhängigkeits-Tracking + Velocity-basierte Kostenschätzung als Basis.
 
-1. Data Model: Abhängigkeits-Notation in SPEC erweitern (z.B. `→ Feature-Id`)
-2. Parser: `→`-Syntax extrahieren, Dependency Graph validieren
+1. Data Model: Knoten-IDs und Abhängigkeiten in SPEC ausformulieren — reserviert
+   ist `#auth` bzw. `:#auth,#api` (SPEC §11); vorher die dort benannten offenen
+   Punkte entscheiden, allen voran die Doppelrolle von `#`
+2. Parser: IDs und `:#…`-Listen extrahieren, Dependency Graph aufbauen
+   (Zyklen sind erlaubt, unbekannte IDs sind Warnungen)
 3. UI: Dependency-Linien im Diagramm zeichnen; kritische Pfade hervorheben
 4. Timeline-Rechner: T-Shirt + Velocity + Team-Config → Wochen
 5. Tests: Zirkuläre Abhängigkeiten, Kostenberechnung, kritische Pfade

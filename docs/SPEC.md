@@ -503,8 +503,111 @@ Druckdialog „an Seite anpassen“ bzw. Querformat wählen.
 
 ## 11. Reservierte Erweiterungen (noch nicht implementiert)
 
+Vergebene Zeichen und geplante Schreibweisen. **Reserviert heißt: nicht
+anderweitig verwenden** — nicht: schon entschieden. Die endgültige Schreibweise
+wird hier festgelegt, **bevor** sie gebaut wird; wo unten „offen“ steht, ist sie
+das auch. Begründung und Zusammenhang: D34.
+
+### Referenzen, Schlagworte und Knoten-IDs (`#`)
+
 - `#123` — Referenz auf externe Tickets (geplant für Taiga-Integration).
-- `#tag` — freie Schlagworte (deshalb `#` nicht anderweitig verwenden).
+- `#tag` — freie Schlagworte.
+- `#auth` — **Knoten-ID**: ein whitespace-freier Bezeichner, der einen Knoten im
+  ganzen Dokument eindeutig benennt. Ziel für Abhängigkeiten und
+  Beschreibungsblöcke (siehe unten). Zwei Knoten mit derselben ID sind ein
+  Fehler und bekommen eine Warnung mit Zeilennummer (§4).
+
+**Offen: `#` trägt damit drei Bedeutungen.** `#123` ist rein numerisch und
+bleibt unterscheidbar; **ID und Schlagwort sehen einander gleich**. Vor der
+Implementierung ist eine Trennregel zu entscheiden — etwa „das erste
+`#`-Token einer Zeile ist die ID, jedes weitere ein Schlagwort“ oder ein
+eigenes Zeichen für eine der beiden Rollen. Solange das offen ist, ist auch
+`#tag` nicht gebaut.
+
+### Abhängigkeiten zwischen Knoten (`:#auth,#api`)
+
+Ein Knoten kann von Knoten **außerhalb seines eigenen Teilbaums** abhängen;
+notiert als Doppelpunkt mit kommagetrennter ID-Liste.
+
+- Abhängigkeiten sagen **nichts über Reihenfolge oder Startzeitpunkt** — sie
+  sagen etwas über den **Status** (siehe unten). Das ist der Unterschied zu
+  einem Netzplan.
+- **Zyklen sind zulässig** und bedeuten: diese Knoten werden gemeinsam fertig.
+  Sie sind also kein Fehler und bekommen keine Warnung.
+- Eine ID ohne zugehörigen Knoten ist ein Fehler (Warnung mit Zeilennummer).
+- Kollisionsfrei zur bestehenden Zeilenextraktion (§1): Gelesen wird nur ein
+  Doppelpunkt mit **unmittelbar folgendem `#`** — ein Doppelpunkt im Label
+  bleibt damit Label. Die URL wird ohnehin schon in Schritt 3 herausgenommen,
+  vor Größe, Tags und Label.
+
+### Intrinsischer und effektiver Status
+
+- Der **intrinsische** Status ist der, der in der Statusbox steht (§4) — der
+  Bearbeitungsstand des Knotens selbst.
+- Der **effektive** Status berücksichtigt zusätzlich die Abhängigkeiten: Ein
+  intrinsisch fertiger Knoten ist effektiv **nicht** fertig, solange eine
+  Abhängigkeit es nicht ist.
+- Der effektive Status wird **gerechnet, nie geschrieben**. Im Notationstext
+  steht ausschließlich der intrinsische — sonst gäbe es zwei Quellen der
+  Wahrheit für dieselbe Aussage.
+- **Offen ist die Darstellung.** Die Knotenfarbe zeigt heute den intrinsischen
+  Status (§4); beide zugleich brauchen entweder einen zweiten visuellen Kanal
+  oder einen Umschalter.
+
+### Querverbindungen im Diagramm
+
+Abhängigkeiten werden als **optisch sekundäre** Querverbindungen gezeichnet
+(dünn oder gestrichelt) — sie dürfen den Baum nicht überlagern, der die
+Hauptaussage trägt. Bei ausgewähltem Knoten werden dessen ein- und ausgehende
+Abhängigkeiten hervorgehoben. Das ist die erste Linienart, die **nicht** der
+Zerlegung folgt; sie braucht deshalb eine eigene Zeichenebene (SVG, wie der
+Pfad-Spline in §9), nicht die Rahmenkanten der Knoten.
+
+### Günstigster Pfad mit Abhängigkeiten
+
+Die Kostenrechnung aus §9 zählt heute nur den gewählten Teilbaum. Mit
+Abhängigkeiten zählt die **Dependency Closure**: alles, was zusätzlich nötig
+ist, damit der gewählte Knoten effektiv fertig werden kann. Gemeinsam
+benötigte Abhängigkeiten werden dabei **nur einmal** gezählt. Genau das macht
+die Rechnung schwerer als heute — siehe D34.
+
+### Ein- und ausklappbare Teilbäume (`>` / `<`)
+
+- `>` an einem Knoten heißt: **ab hier eingeklappt** — sein Teilbaum ist beim
+  Öffnen des Dokuments zunächst verborgen.
+- `<` innerhalb eines eingeklappten Bereichs holt einen einzelnen Teilbaum
+  gezielt wieder hervor.
+- Im Diagramm wird danach **unabhängig vom Text** interaktiv auf- und
+  zugeklappt; die Marken im Text bestimmen nur den Anfangszustand.
+- **Offen:** die Stellung im Zeilenformat (§1) — vor oder hinter dem
+  Zerlegungszeichen — und ob eingeklappte Teilbäume in Grafikexport und Druck
+  eingeklappt bleiben.
+
+### XOR — genau eine Alternative (`x`)
+
+Neben `-` (all of), `+` (Zugabe) und `|` (any of, **mindestens** eine) soll es
+eine Gruppe geben, in der **genau eine** Alternative realisiert werden darf.
+Vorgeschlagenes Zeichen: `x`, an derselben Stelle wie die übrigen
+Zerlegungszeichen.
+
+- Für den günstigsten Pfad ändert das nichts: Der wählt bei `|` ohnehin genau
+  eine (§9). XOR fügt eine **Regel** hinzu, die verletzt werden kann — zwei
+  realisierte Alternativen ergeben eine Warnung.
+- **Offen** bleibt das Zeichen: `x` kollidiert nicht beim Parsen (das
+  Zerlegungszeichen steht vor der Statusbox), aber `x [x] …` liest sich
+  schlecht, weil `x` zugleich der Statuscode für *fertig* ist.
+
+### Knotenbeschreibungen
+
+Erläuternder Text zu einem Knoten, im Diagramm als Tooltip oder Pop-up.
+Vorgesehen sind zwei Formen: ein **kurzer Text unmittelbar beim Knoten** und
+ein **längerer Block am Ende des Dokuments**, über die Knoten-ID zugeordnet.
+
+**Offen — und hier liegt die eigentliche Arbeit:** Die kurze Form kann nicht
+einfach eine eingerückte Folgezeile sein. Einrückung bedeutet in dieser
+Notation Hierarchie (§2); eine eingerückte Zeile **ist** ein Kindknoten. Die
+kurze Form braucht deshalb ein eigenes einleitendes Zeichen, die lange Form
+eine Blockform, die sich nicht mit einem Wurzelknoten verwechseln lässt.
 
 ## 12. Dateiendung
 

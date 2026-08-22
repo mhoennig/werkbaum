@@ -1471,3 +1471,77 @@ will. Der Streifen ist so schmal wie die Ziffern es verlangen
 `scroll` erst im nächsten Bild aus — in einem nicht gezeichneten Tab womöglich
 gar nicht. `scrollEditorToOffset()` zieht die Zahlen deshalb selbst gleich mit,
 statt sich auf das Ereignis zu verlassen.
+
+## D34 — Abhängigkeiten, IDs, XOR, Falten, Beschreibungen: erst reserviert, dann gebaut
+Fünf Erweiterungen auf einmal — Knoten-**IDs** (`#auth`), **Abhängigkeiten**
+(`:#auth,#api`) samt effektivem Status, **XOR** (`x`), ein- und ausklappbare
+**Teilbäume** (`>` / `<`) und **Knotenbeschreibungen**. Das ist der größte
+Zuwachs an Notation, seit die Sprache steht, und er kommt aus dem Ziel, Lean
+Pathfinding vollständig zu unterstützen (docs/LEAN-PATHFINDING.md).
+
+**Entscheidung: alles zuerst nach SPEC §11, nichts vorab gebaut.** Das ist die
+Hausregel (CLAUDE.md: „Syntaxänderungen: SPEC zuerst, dann Code"), hat hier aber
+einen eigenen Grund: Vier der fünf Erweiterungen belegen Zeichen, und **drei
+davon kollidieren mit etwas, das es schon gibt**. Wer eine davon baut, ohne die
+Kollision vorher aufzulösen, entscheidet sie stillschweigend mit.
+
+**Was entschieden ist:**
+
+- **Abhängigkeiten sagen etwas über den Status, nicht über die Reihenfolge.**
+  Sie legen nicht fest, wann jemand anfangen darf — das trennt Werkbaum von
+  einem Netzplan und hält den Baum als Zerlegung lesbar.
+- **Der effektive Status wird gerechnet, nie geschrieben.** Im Text steht der
+  intrinsische; alles andere gäbe zwei Quellen der Wahrheit für dieselbe
+  Aussage (D14: der Text ist das führende Format).
+- **Zyklen sind zulässig**, keine Warnung: Sie bedeuten „wird gemeinsam fertig"
+  und sind bei sich gegenseitig bedingenden Teilen die ehrliche Aussage. Ein
+  Werkzeug, das sie verbietet, zwingt zum Lügen.
+- **Faltmarken im Text sind der erste Darstellungs-Hinweis in der Notation.**
+  Ansichtszustand (Modus, Zoom, Aufteilung) liegt bisher bewusst **außerhalb**
+  des Textes, im localStorage und global über alle Dokumente (D22). `>` bricht
+  damit — vertretbar, weil es etwas anderes sagt: nicht „so sehe *ich* das
+  gerade", sondern „so wird dieses Dokument **eröffnet**". Das ist eine Aussage
+  des Autors über das Dokument, gehört also hinein. Der Betrachter bleibt frei:
+  im Diagramm wird danach unabhängig gefaltet.
+
+**Was ausdrücklich offen bleibt** (jeweils in SPEC §11 notiert, damit es
+niemand beim Bauen überliest):
+
+- **`#` trägt drei Bedeutungen** — Ticket (`#123`), Schlagwort (`#tag`),
+  Knoten-ID (`#auth`). Das Ticket ist numerisch und bleibt unterscheidbar; ID
+  und Schlagwort sind formgleich. Solange die Trennregel fehlt, ist auch `#tag`
+  blockiert — die ältere Reservierung ist die, die weichen oder sich fügen muss.
+- **`x` für XOR** kollidiert nicht beim Parsen (das Zerlegungszeichen steht vor
+  der Statusbox), aber `x [x] …` liest sich schlecht.
+- **Kurze Beschreibungen können keine eingerückte Folgezeile sein.** Einrückung
+  ist in dieser Notation Hierarchie (SPEC §2) — eine eingerückte Zeile *ist* ein
+  Kindknoten. Hier liegt die eigentliche Arbeit dieser Erweiterung, nicht im
+  Anzeigen eines Tooltips.
+
+**Die Folge, die am weitesten reicht: D18 wird schwerer.** Der günstigste Pfad
+rechnet heute rekursiv über den Baum — bei `any of` gewinnt die Alternative mit
+den kleinsten Eigenkosten, Gleichstand entscheidet die erste. Mit
+Abhängigkeiten zählt nicht mehr der Teilbaum, sondern die **Dependency
+Closure**, und gemeinsam benötigte Abhängigkeiten zählen **nur einmal**. Damit
+ist die Wahl nicht mehr lokal:
+
+> Eine Gruppe hat die Alternativen `A (S) :#db` und `B (M)`. Für sich genommen
+> gewinnt `B`, sobald `#db` mehr als `S` kostet. Wird `#db` aber ohnehin von
+> einem erforderlichen Knoten anderswo im Baum gebraucht, ist es bezahlt — die
+> **zusätzlichen** Kosten von `A` sind dann nur `S`, und `A` gewinnt.
+
+Was billig ist, hängt also davon ab, was der Rest des Plans schon einkauft; bei
+mehreren Alternativgruppen mit geteilten Abhängigkeiten hängen die Wahlen
+zusätzlich voneinander ab. Das ist die Bauform eines Überdeckungsproblems und
+im Allgemeinen nicht mehr gierig optimal zu lösen. Für die Baumgrößen, um die
+es hier geht (ein Plan hat Dutzende, nicht Millionen Knoten), ist eine exakte
+Suche machbar; wird sie zu langsam, bleibt die gierige Rechnung — dann aber
+**benannt**, nicht stillschweigend. Genau darum steht es hier und nicht erst im
+Code.
+
+**Nebenbefund:** `docs/LEAN-PATHFINDING.md` hatte für Abhängigkeiten `→ Feature`
+vorgeschlagen (Verweis auf den **Titel**, mit rot gestrichelten Linien). Das ist
+mit `:#id` überholt — ein Verweis auf den Titel bricht beim Umbenennen, und Rot
+ist in dieser Palette nicht vergeben (SPEC §4 nutzt Pastelltöne für Status,
+`--warn` für Hinweise). Die Datei ist entsprechend korrigiert; die dortigen
+Phasen bleiben, was sie sind: eine Wunschliste, kein Beschluss.

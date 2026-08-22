@@ -60,3 +60,25 @@ Abhaken beim Erledigen; neue Aufgaben unten anfügen.
 - [ ] Mermaid-Plugin-Spike: Detektor + Registrierung, ein Minimalbaum.
 - [ ] Taiga-Spike: `#ref`-Syntax parsen, Status via REST-API auflösen
       (read-only), Mapping konfigurierbar.
+
+## Phase 4 — Vollständiges Lean-Pathfinding (siehe [ROADMAP](ROADMAP.md), D34)
+Reihenfolge ist nicht beliebig: ohne IDs keine Abhängigkeiten, ohne die keinen
+effektiven Status und keine Closure-Rechnung. Jeder Punkt beginnt in
+[SPEC §11](SPEC.md) — die dort benannten offenen Schreibweisen sind zu
+entscheiden, **bevor** Code entsteht.
+- [ ] `#`-Doppelrolle auflösen (Knoten-ID vs. Schlagwort) und in SPEC §11
+      festschreiben; `#tag` hängt an derselben Entscheidung.
+- [ ] Knoten-IDs parsen; doppelte ID → Warnung mit Zeilennummer.
+- [ ] Abhängigkeiten `:#a,#b` parsen; unbekannte ID → Warnung, Zyklen erlaubt.
+- [ ] Effektiven Status rechnen (intrinsisch + Abhängigkeiten); Darstellung
+      entscheiden — die Knotenfarbe zeigt heute den intrinsischen Status.
+- [ ] Günstigsten Pfad auf die Dependency Closure umstellen (gemeinsame
+      Abhängigkeiten nur einmal zählen). Erweitert D18; die gierige Wahl je
+      Alternativgruppe ist damit nicht mehr optimal — Verfahren wählen und
+      **benennen**.
+- [ ] Querverbindungen zeichnen (eigene SVG-Ebene, optisch sekundär);
+      bei ausgewähltem Knoten ein-/ausgehende hervorheben.
+- [ ] Faltmarken `>` / `<` parsen; interaktives Auf-/Zuklappen im Diagramm.
+- [ ] XOR-Gruppe (`x`): Zeichen endgültig wählen, parsen, Verletzung melden.
+- [ ] Knotenbeschreibungen: Schreibweise für kurze und lange Form festlegen
+      (Einrückung ist bereits Hierarchie), dann Tooltip/Pop-up.

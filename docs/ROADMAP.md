@@ -105,28 +105,60 @@ Tastendruck ein Commit); und wer bei einem Backend eigentlich was darf
   Status-/Zeitachse.
 - Attribut-Syntax für Termine/Meilensteine.
 
-## Features für vollständiges Lean-Pathfinding
+## Vollständiges Lean-Pathfinding
 
-- **Ein-/Ausklappbare Teilbäume**  
-  Teilbäume können im Text mit einer kompakten Zeichensyntax als initial eingeklappt markiert werden. `>` steht dabei für „ab hier einklappen“, `<` kann innerhalb eines eingeklappten Bereichs gezielt wieder sichtbare Teilbäume hervorholen. Im Diagramm kann anschließend unabhängig vom Text interaktiv ein- und ausgeklappt werden.
+Werkbaum hat die Grundlagen — Und/Oder-Zerlegung, Größen, günstigster Pfad —,
+aber der Pfad rechnet bisher nur innerhalb des gewählten Teilbaums. Was fehlt,
+ist die Möglichkeit, Bezüge **quer** durch den Baum auszudrücken. Diese Stufe
+holt das nach. Schreibweisen und offene Punkte stehen in **SPEC §11**,
+Begründung und Folgen in **D34**; hier steht, was es dem Werkzeug bringt.
 
-- **Knoten-IDs**  
-  Knoten können über eine kompakte ID wie `#auth` eindeutig adressiert werden. IDs bestehen aus einem whitespace-freien Bezeichner und dienen insbesondere als Ziel für Querverweise und Abhängigkeiten.
+**Fünf Erweiterungen der Notation.** Sie hängen zusammen: ohne IDs keine
+Abhängigkeiten, ohne Abhängigkeiten kein effektiver Status, ohne den kein
+Pfad, der die Wahrheit sagt.
 
-- **Abhängigkeiten zwischen Knoten**  
-  Mit einer Syntax wie `:#auth,#api` kann ein Knoten von anderen Knoten außerhalb seines eigenen Teilbaums abhängig gemacht werden. Dependencies beeinflussen nicht, wann Arbeiten beginnen dürfen, sondern den **effektiven Status** eines Knotens.
+- **Knoten-IDs** (`#auth`) — ein whitespace-freier Bezeichner macht einen Knoten
+  im ganzen Dokument adressierbar. Für sich genommen nutzlos; er ist das Ziel
+  für alles Folgende.
+- **Abhängigkeiten** (`:#auth,#api`) — ein Knoten hängt von Knoten außerhalb
+  seines eigenen Teilbaums ab. Sie sagen nichts über Reihenfolge oder
+  Startzeitpunkt, sondern etwas über den Status; Zyklen sind zulässig und
+  bedeuten „wird gemeinsam fertig".
+- **Intrinsischer und effektiver Status** — was in der Statusbox steht, ist der
+  Bearbeitungsstand des Knotens selbst. Effektiv fertig ist er erst, wenn auch
+  seine Abhängigkeiten es sind. Der effektive Status wird gerechnet, nie
+  geschrieben.
+- **XOR** (`x`) — neben „mindestens eine" (`|`) eine Gruppe, in der **genau
+  eine** Alternative realisiert werden darf. Für die Pfadrechnung ändert das
+  nichts (die wählt bei `|` ohnehin eine); es kommt eine Regel hinzu, die
+  verletzt werden kann und dann gemeldet wird.
+- **Knotenbeschreibungen** — Erläuterungstext zum Knoten, im Diagramm als
+  Tooltip oder Pop-up: kurz direkt beim Knoten, lang als Block am Dokumentende
+  über die ID zugeordnet. Die Arbeit steckt nicht im Anzeigen, sondern in der
+  Schreibweise: Einrückung bedeutet hier bereits Hierarchie.
 
-- **Intrinsischer und effektiver Status**  
-  Der intrinsische Status beschreibt den tatsächlichen Bearbeitungsstand eines Knotens. Der effektive Status berücksichtigt zusätzlich seine Abhängigkeiten. Ein intrinsisch fertiger Knoten kann daher effektiv noch nicht vollständig fertig sein, solange Dependencies nicht erfüllt sind.
+**Was daraus folgt.**
 
-- **Dependency-aware Lean Pathfinding**  
-  Das Lean Pathfinding berücksichtigt künftig nicht nur den Restaufwand innerhalb des gewählten Teilbaums, sondern die gesamte notwendige **Dependency Closure**. Gemeinsam benötigte Dependencies werden dabei nur einmal berechnet. Zyklen sind zulässig und entsprechen gemeinsam fertigzustellenden Gruppen.
+- **Dependency-aware Pathfinding.** Gerechnet wird nicht mehr der Teilbaum,
+  sondern die **Dependency Closure** — alles, was zusätzlich nötig ist, damit
+  der gewählte Knoten effektiv fertig werden kann. Gemeinsam benötigte
+  Abhängigkeiten zählen **nur einmal**. Damit ist die Wahl zwischen
+  Alternativen nicht mehr lokal entscheidbar: Was billig ist, hängt davon ab,
+  was der Rest des Plans ohnehin einkauft (Beispiel und Konsequenz in D34).
+  Das ist die eigentliche Erweiterung von D18, und die einzige Stelle, an der
+  hier echte Algorithmik steckt.
+- **Querverbindungen im Diagramm.** Abhängigkeiten als optisch sekundäre Linien
+  (dünn oder gestrichelt), bei ausgewähltem Knoten seine ein- und ausgehenden
+  hervorgehoben. Erste Linienart, die nicht der Zerlegung folgt — sie braucht
+  eine eigene Zeichenebene (SVG, wie der Pfad-Spline), nicht die Rahmenkanten.
+- **Ein- und ausklappbare Teilbäume** (`>` / `<`). Sobald Pläne quer verbunden
+  sind, wächst das Diagramm über den Bildschirm hinaus; ohne Falten ist ein
+  großer Plan nicht mehr zu lesen. Die Marken im Text bestimmen nur den
+  Anfangszustand — im Diagramm wird danach unabhängig gefaltet.
 
-- **Visualisierung von Dependencies**  
-  Abhängigkeiten werden als optisch sekundäre Querverbindungen im Diagramm dargestellt, etwa dünn oder gestrichelt. Bei Auswahl eines Knotens können dessen ein- und ausgehende Dependencies hervorgehoben werden.
+Der gestaffelte „günstigste Pfad" aus *Kleinere Ideen* (Status-Bewusstsein,
+Ausbaustufen) baut hierauf auf: Er braucht denselben Umbau der Kostenrechnung
+und ist danach im Wesentlichen eine Frage der Auswahl, nicht der Mechanik.
 
-- **XOR / exklusives Oder**  
-  Zusätzlich zu `all-of`, `any-of` und optionalen Knoten soll eine echte XOR-Gruppe unterstützt werden: Genau eine Alternative darf realisiert werden. Als kompakte Syntax bietet sich beispielsweise `x` an.
-
-- **Knotenbeschreibungen / Detailtexte**  
-  Knoten können zusätzliche Erläuterungstexte erhalten, die im Diagramm als Tooltip oder Pop-up angezeigt werden. Vorgesehen sind kurze, direkt beim Knoten eingerückte Texte sowie längere, über die Knoten-ID referenzierte Beschreibungsblöcke am Ende des Dokuments.
+Breitere Feature-Wunschliste zum Thema: `docs/LEAN-PATHFINDING.md`
+(Entwurf, kein Beschluss), Marktumfeld: `docs/MARKET-ANALYSIS.md`.
