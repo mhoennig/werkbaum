@@ -496,7 +496,7 @@ function diagramToSvg(){
      Knoten; die Fokus-Hervorhebung ist Interaktion und wird nicht exportiert. */
   depEdges().forEach(([from, to]) => {
     const c = depCurve(R(from), R(to));
-    parts.push(`<path d="${c.d}" fill="none" stroke="#6B7A8C" stroke-width="1.5" opacity="0.4" stroke-linecap="round" stroke-dasharray="0.1 5"/>`);
+    parts.push(`<path d="${c.d}" fill="none" stroke="#6B7A8C" stroke-width="1.5" opacity="0.4" stroke-linecap="round" stroke-dasharray="0.1 3"/>`);
     parts.push(`<path d="${depArrow(c.end, c.ctrl)}" fill="none" stroke="#6B7A8C" stroke-width="1.5" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/>`);
   });
 
