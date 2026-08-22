@@ -17,7 +17,7 @@
       - [?] Effective status: intrinsic, plus what it depends on (S)
       - [?] Cycles are legal — they mean "finished together" (XS)
       - [ ] An id with no node behind it is a warning (XS)
-    - [?] XOR — exactly one alternative, not at least one (S)
+    - [?] XOR, = — exactly one alternative, not at least one (S)
     - [?] Node descriptions, shown as a tooltip or pop-up (M)
       - [?] A short text right at the node (S)  %% indentation already means hierarchy
       - [?] A long block at the end, addressed by its id (S)

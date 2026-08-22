@@ -135,7 +135,7 @@ Pfad, der die Wahrheit sagt.
   Bearbeitungsstand des Knotens selbst. Effektiv fertig ist er erst, wenn auch
   seine Abhängigkeiten es sind. Der effektive Status wird gerechnet, nie
   geschrieben.
-- **XOR** (`x`) — neben „mindestens eine" (`|`) eine Gruppe, in der **genau
+- **XOR** (`=`) — neben „mindestens eine" (`|`) eine Gruppe, in der **genau
   eine** Alternative realisiert werden darf. Für die Pfadrechnung ändert das
   nichts (die wählt bei `|` ohnehin eine); es kommt eine Regel hinzu, die
   verletzt werden kann und dann gemeldet wird.

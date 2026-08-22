@@ -596,19 +596,28 @@ die Rechnung schwerer als heute — siehe D34.
   Zerlegungszeichen — und ob eingeklappte Teilbäume in Grafikexport und Druck
   eingeklappt bleiben.
 
-### XOR — genau eine Alternative (`x`)
+### XOR — genau eine Alternative (`=`)
 
 Neben `-` (all of), `+` (Zugabe) und `|` (any of, **mindestens** eine) soll es
 eine Gruppe geben, in der **genau eine** Alternative realisiert werden darf.
-Vorgeschlagenes Zeichen: `x`, an derselben Stelle wie die übrigen
-Zerlegungszeichen.
+Zeichen: **`=`**, an derselben Stelle wie die übrigen Zerlegungszeichen
+(entschieden; Begründung und verworfene Kandidaten: D34-Nachtrag).
 
 - Für den günstigsten Pfad ändert das nichts: Der wählt bei `|` ohnehin genau
   eine (§9). XOR fügt eine **Regel** hinzu, die verletzt werden kann — zwei
   realisierte Alternativen ergeben eine Warnung.
-- **Offen** bleibt das Zeichen: `x` kollidiert nicht beim Parsen (das
-  Zerlegungszeichen steht vor der Statusbox), aber `x [x] …` liest sich
-  schlecht, weil `x` zugleich der Statuscode für *fertig* ist.
+- `=` ist **disjunktiv** wie `|`; die Mischregel aus §3 gilt entsprechend:
+  Eine Gruppe ist einheitlich `-`/`+`, einheitlich `|` oder einheitlich `=` —
+  jede Mischung mit `=` ist ungültig (`mixedGate`). Auch die Darstellung folgt
+  any-of (gestrichelt in Grau); wie die Gruppe zusätzlich als „genau eine"
+  gekennzeichnet wird, ist offen (z. B. eine kleine „1" an der Sammelleiste).
+- **Leerraum-Regel:** Als Gate wird `=` nur mit **folgendem Leerraum**
+  erkannt — ein Label wie `=SUMME(A1:B2)` bleibt damit ein Label. `=` ist das
+  erste Gate, das diese Regel braucht; für `-`/`+`/`|` ändert sich nichts.
+- Das ursprünglich vorgeschlagene `x` ist verworfen: `x [x] …` stünde als
+  Endzustand jeder entschiedenen Gruppe **dauerhaft** im Text (genau eine
+  Alternative soll ja fertig werden), und als Buchstabe kollidierte es ohne
+  Leerraum-Regel mit gewöhnlichen Labels (`XSS-Schutz` → Gate `X`).
 
 ### Knotenbeschreibungen
 

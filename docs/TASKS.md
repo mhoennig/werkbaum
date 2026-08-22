@@ -82,6 +82,8 @@ entscheiden, **bevor** Code entsteht.
 - [ ] Querverbindungen zeichnen (eigene SVG-Ebene, optisch sekundär);
       bei ausgewähltem Knoten ein-/ausgehende hervorheben.
 - [ ] Faltmarken `>` / `<` parsen; interaktives Auf-/Zuklappen im Diagramm.
-- [ ] XOR-Gruppe (`x`): Zeichen endgültig wählen, parsen, Verletzung melden.
+- [ ] XOR-Gruppe (`=`) parsen (nur mit folgendem Leerraum, Mischung →
+      `mixedGate`), zwei realisierte Alternativen melden.
+      → Zeichen entschieden: `=` statt `x` (D34-Nachtrag).
 - [ ] Knotenbeschreibungen: Schreibweise für kurze und lange Form festlegen
       (Einrückung ist bereits Hierarchie), dann Tooltip/Pop-up.

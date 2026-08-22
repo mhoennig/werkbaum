@@ -1574,3 +1574,53 @@ nicht: Das Und der Notation ist `-` am Zeilenanfang — `&` ist gerade deshalb
 frei. Verworfen: `$` (Preis-Kollision), `%` (ein Tippfehler vom
 Auskommentieren), `:` (zu nah an `:#…`), `§` (fehlt auf US-Tastaturen), `*`
 (Markdown, schon in D29 verworfen).
+
+**Nachtrag — das XOR-Zeichen ist entschieden: `=`.** Das in §11 zunächst
+vorgeschlagene `x` ist verworfen; ausschlaggebend war, **wann** seine
+Glyph-Kollision auftritt: `x` teilt sich das Zeichen mit dem Statuscode für
+*fertig*, und genau eine Alternative einer XOR-Gruppe **soll** fertig werden —
+`x [x] …` wäre also der Endzustand jeder entschiedenen Gruppe und stünde
+dauerhaft in jedem Plan. Dazu kam ein zweiter, bis dahin unbenannter Befund:
+Das Zerlegungszeichen wird ohne erzwungenes Leerzeichen erkannt (`\s*` in der
+Referenz-Regex darf leer sein); ein Buchstabe als Gate frisst damit
+Label-Anfänge (`XSS-Schutz` → Gate `X`, Label „SS-Schutz“).
+
+`=` ist der einzige Kandidat **ohne jede** Kollision: kein Statuscode, kein
+reserviertes Zeichen, keine Markdown-Bedeutung an dieser Position, auf DE-
+(Shift+0) wie US-Layout (eigene Taste) direkt tippbar, nirgends Dead-Key. Seine
+beiden Schwächen sind benannt und akzeptiert:
+
+- **Die Mnemonik trägt sich nicht selbst** („genau eine“ muss die Legende
+  sagen) — aber das gilt für `|` („mindestens eine“) genauso; jedes Gate steht
+  ohnehin in der Legende.
+- **Optisch steht `=` neben der konjunktiven Familie** (ein doppeltes `-`),
+  gehört aber semantisch zu `|`. Dagegen arbeiten zwei Mechanismen: Im Diagramm
+  bleiben die Linien gestrichelt-grau wie bei any-of (das Bild korrigiert die
+  Lesart sofort), und jede Mischung mit `=` in einer Gruppe gibt die
+  `mixedGate`-Warnung.
+
+Die **Leerraum-Regel** (Gate `=` nur mit folgendem Leerraum, §11) ist die
+erste ihrer Art; sie hält Labels wie `=SUMME(A1:B2)` heraus und wäre bei jedem
+der Kandidaten nötig gewesen.
+
+**Verworfene Kandidaten**, je am entscheidenden Kriterium gescheitert:
+
+- **`x`** — siehe oben; die XOR-Mnemonik (für Informatiker stark) wiegt die
+  dauerhafte `x [x]`-Paarung nicht auf.
+- **`^`** — XOR in C/Python, aber der Dead-Key schlechthin auf deutschen
+  Tastaturen (nicht nur Mac); ihn zu nehmen widerspräche dem im
+  `&tag`-Nachtrag festgehaltenen Kriterium. Zudem dieselbe Endzustands-
+  Kollision wie `x`, nur mit `[^]`: Per D30 befördert der Deploy die gewählte
+  Alternative auf `[^]` — `^ [^] …` stünde ausgerechnet im Vorzeigedokument.
+- **`|1`** (Zweizeichen-Gate in der Pipe-Familie, „genau 1“) — semantisch die
+  ehrlichste Form und kollisionsfrei, dem Nutzer aber schlicht nicht gefällig;
+  Geschmack ist bei einem Zeichen, das man täglich tippt, ein zulässiges
+  Kriterium.
+- **`/`** — das Alltags-Entweder/Oder (ja/nein, m/w/d); teilt sich die Glyphe
+  mit `[/]` *Durchstich* (immerhin nur ein Durchgangszustand) und mit
+  Pfad-Labels (`/api/…`).
+- **`⊕`** — das echte XOR-Symbol, aber ohne Zeichenpicker auf keiner Tastatur
+  tippbar; der Moment des Tippens ist der Moment, in dem man nicht über Syntax
+  nachdenken will (D32).
+- **`°`** — fehlt auf US-Layouts, und der kleine Kreis kollidierte semantisch
+  mit dem hohlen Kreis, der im Diagramm bereits *optional* bedeutet (D29).
