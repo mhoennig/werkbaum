@@ -23,7 +23,7 @@
       - [^] A long block at the end, addressed by its id (S)  %% behind a --- separator
     - [-] A separate storage format for the structure (L)  %% the text is the format
     - [ ] Ticket references (#123,#US-123) (S)  %% Taiga writes #US-123 for a user story
-    - [x] llms.md, the notation explained to AI agents (S)
+    - [^] llms.md, the notation explained to AI agents (S)
     - [?] Benefit per node, not only cost (M)
       | [?] Another sigil next to the size (S)
       | [?] Story points behind the T-shirt sizes (M)
