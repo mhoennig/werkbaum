@@ -698,6 +698,17 @@ Der Altwert `'1'` aus der ersten Fassung sagt nichts über den Textstand; dort
 wird bewusst nichts überschrieben, nur der Merker ersetzt. Wer aus dieser kurzen
 Zwischenfassung kommt, holt den aktuellen Stand über den Reset.
 
+**Nachtrag — das Nachziehen gilt jetzt auch für das Beispiel-Dokument.** Als
+das Beispiel die neuen Notations-Features (IDs, Abhängigkeiten, `=`, Falten,
+Beschreibungen) vorführen sollte, stand es vor demselben Problem wie damals
+der Werkbaum-Plan: Ohne Merker erreicht eine neue INITIAL-Fassung
+Bestandsnutzer nie — ihr unverändertes Beispiel sieht nur wie „bearbeitet“
+aus. Ein zweiter Fingerabdruck (`werkbaum-seeded-example`) überträgt die
+D27-Regeln wörtlich: nachgezogen wird nur, solange der Text exakt die zuletzt
+ausgelieferte Fassung ist; bearbeitete Texte werden nie angefasst; ein
+gelöschtes Beispiel wird vom Nachziehen nicht wiederbelebt (das macht bei
+Bedarf `deleteDoc`/Reset). Der Reset setzt beide Merker mit.
+
 ## D28 — „Was ist neu?": neu in Produktion, gelber Strahlenkranz
 Dokumente von außen (mitgeliefert, D27; per `?sourceUrl=`, D23) ändern sich,
 ohne dass der Betrachter es merkt. Sie zeigen deshalb, was sich seit seinem

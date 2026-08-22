@@ -12,7 +12,8 @@ import WERKBAUM_DOC from '../../docs/examples/werkbaum.werkbaum?raw';
 
 const INITIAL = `%% Project structure – Sprint 14
 [~] Website relaunch (XL) https://wiki.example.com/relaunch
-  - [x] Concept (M)
+  " Folded chapters are done — click the ▸ to peek inside.
+  - > [x] Concept (M)
     - [x] Audience analysis (S)
     - [x] Sitemap (XS)
   - [~] Implementation (XL)
@@ -23,13 +24,20 @@ const INITIAL = `%% Project structure – Sprint 14
         - [ ] Android (M)
         - [ ] iOS (M)
     - [!] Backend (L) @ben @carla
-    - [ ] CMS integration (M)
+    - [ ] CMS integration #cms (M)
       | [ ] WordPress
       | [?] Headless CMS
       | [-] Custom build  %% too much effort
-  - [?] Hosting (M)
-    | Cooperative Community Cloud https://hostsharing.net
-    | On-premise`;
+    - [x] Landing page (S) :#cms  %% done, but effectively waiting for the CMS
+    + [?] Dark mode (S)  %% nice to have, never on the cheapest path
+  - [?] Hosting (M)  %% exactly one of these, hence =
+    = [ ] Cooperative Community Cloud https://hostsharing.net
+    = [?] On-premise
+
+---
+#cms
+  The articles live in the CMS, so everything that shows content
+  depends on it — the dotted arrows point at what is needed.`;
 
 const src  = document.getElementById('src');
 const out  = document.getElementById('out');
@@ -2029,6 +2037,7 @@ fsBtn.addEventListener('click', () => {
 const LS_UI = 'werkbaum-ui', LS_SRC = 'werkbaum-src';
 const LS_DOCS = 'werkbaum-docs', LS_ACTIVE = 'werkbaum-active';
 const LS_SEEDED = 'werkbaum-seeded';   /* mitgelieferte Dokumente schon angelegt? */
+const LS_SEEDED_EXAMPLE = 'werkbaum-seeded-example';   /* Fingerabdruck der ausgelieferten INITIAL-Fassung (D27-Nachtrag) */
 let restoring = false;   /* unterdrückt Speichern während des Wiederherstellens */
 let hadStoredUI = false;  /* gab es beim Laden schon gespeicherte GUI-Einstellungen? */
 
@@ -2094,6 +2103,19 @@ function seedShippedDocs(){
     doc.text = WERKBAUM_DOC;
   }
   try{ localStorage.setItem(LS_SEEDED, fp); }catch(_){}
+  /* Dasselbe Nachziehen für das Beispiel-Dokument (D27-Nachtrag): Ohne den
+     Merker erreichte eine neue Fassung von INITIAL Bestandsnutzer nie —
+     ihr unverändertes Beispiel sähe nur wie „bearbeitet" aus. Nachgezogen
+     wird nur, solange der Text exakt die zuletzt ausgelieferte Fassung ist;
+     ein gelöschtes Beispiel wird hier nicht wiederbelebt. */
+  const exFp = fingerprint(INITIAL);
+  let exSeen = null;
+  try{ exSeen = localStorage.getItem(LS_SEEDED_EXAMPLE); }catch(_){}
+  const ex = docs.find(d => d.id === EXAMPLE_ID);
+  if(exSeen && exSeen !== exFp && ex && fingerprint(ex.text) === exSeen){
+    ex.text = INITIAL;
+  }
+  try{ localStorage.setItem(LS_SEEDED_EXAMPLE, exFp); }catch(_){}
   /* Nur vergleichen, solange der Text der ausgelieferte ist — hat der Nutzer ihn
      bearbeitet, gibt es keine saubere Vergleichsbasis (D28). */
   const shipped = docs.find(d => d.id === WERKBAUM_ID);
@@ -3162,6 +3184,7 @@ function resetToDefaults(){
   /* Merker auf den jetzt ausgelieferten Stand setzen (D27) — sonst hielte ein
      Altwert die spätere Nachzieh-Logik davon ab, den Text je zu aktualisieren. */
   try{ localStorage.setItem(LS_SEEDED, fingerprint(WERKBAUM_DOC)); }catch(_){}
+  try{ localStorage.setItem(LS_SEEDED_EXAMPLE, fingerprint(INITIAL)); }catch(_){}
   activeId = EXAMPLE_ID;
   persistDocs();
   logUpdate('🔄 Mitgelieferte Dokumente und Einstellungen zurückgesetzt');

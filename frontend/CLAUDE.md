@@ -102,7 +102,10 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
 - Beispiel-Dokument (D22): reservierte id `EXAMPLE_ID = 'example'`, fester
   englischer Name `EXAMPLE_NAME = 'Example'` (nicht lokalisiert). `loadDocs()`
   adoptiert einen Alt-Zustand (zufällige id, „Beispiel") nur, wenn dessen
-  `text === INITIAL` (nie echte Nutzerinhalte). `resetToDefaults()` setzt **nur**
+  `text === INITIAL` (nie echte Nutzerinhalte). Eine neue INITIAL-Fassung wird
+  wie beim Werkbaum-Dokument per Fingerabdruck nachgezogen
+  (`werkbaum-seeded-example`, D27-Nachtrag) — nur bei unverändertem Text; der
+  Reset setzt beide Merker. `resetToDefaults()` setzt **nur**
   das Beispiel-Dokument (id `example`) auf `INITIAL`/„Example" zurück und verwirft
   `werkbaum-ui`/`werkbaum-lang`/Update-Flags — **andere Dokumente bleiben stehen**
   (nicht mehr pauschal alle `werkbaum-*` löschen!). Das letzte gelöschte Dokument
