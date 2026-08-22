@@ -2009,6 +2009,11 @@ gekrümmten Ebene und begegnen den Rahmenkanten nie. Die **Hervorhebung**
 (fokussierter Knoten) bleibt durchgezogen in Tinte: Sie ist ausdrücklich
 angefordert und soll sich nach vorn drängen. Export identisch nachgezogen.
 
+Zweiter Schritt derselben Rückmeldung: Auch die **Pfeilspitze** ist jetzt
+**offen** (ein Winkel aus zwei dünnen grauen Strichen) statt eines gefüllten
+Dreiecks — das Dreieck stach als einziger satter Fleck aus der gepunkteten
+Linie heraus. Die Hervorhebung bekommt denselben Winkel in Tinte.
+
 ## D42 — Closure-Pfad: erschöpfend über die gekoppelten Gruppen, gierig nur benannt
 Die letzte Baustelle aus D34: Mit Abhängigkeiten zählt der günstigste Pfad
 nicht mehr den gewählten Teilbaum, sondern die **Hülle** — jeder nötige Knoten

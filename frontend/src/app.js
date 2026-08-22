@@ -336,13 +336,15 @@ function depCurve(a, b){
   return {d:`M${p1.x.toFixed(1)},${p1.y.toFixed(1)} Q${ctrl.x.toFixed(1)},${ctrl.y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`,
           end:p2, ctrl};
 }
+/* Offene Pfeilspitze (Winkel aus zwei Strichen, D41-Nachtrag): ein gefülltes
+   Dreieck stach als einziger satter Fleck aus der gepunkteten Linie heraus. */
 function depArrow(end, from){
   const dx = end.x - from.x, dy = end.y - from.y;
   const l = Math.hypot(dx, dy) || 1;
   const ux = dx/l, uy = dy/l, s = 5;
   const a = {x: end.x - ux*s*1.8 - uy*s, y: end.y - uy*s*1.8 + ux*s};
   const b = {x: end.x - ux*s*1.8 + uy*s, y: end.y - uy*s*1.8 - ux*s};
-  return `M${end.x.toFixed(1)},${end.y.toFixed(1)} L${a.x.toFixed(1)},${a.y.toFixed(1)} L${b.x.toFixed(1)},${b.y.toFixed(1)} Z`;
+  return `M${a.x.toFixed(1)},${a.y.toFixed(1)} L${end.x.toFixed(1)},${end.y.toFixed(1)} L${b.x.toFixed(1)},${b.y.toFixed(1)}`;
 }
 /* „Ausgewählt" heißt: Tastaturfokus im Diagramm, sonst der Knoten der
    Cursor-Zeile (D25) — beide Lesarten von „ich schaue auf diesen Knoten". */
@@ -495,7 +497,7 @@ function diagramToSvg(){
   depEdges().forEach(([from, to]) => {
     const c = depCurve(R(from), R(to));
     parts.push(`<path d="${c.d}" fill="none" stroke="#6B7A8C" stroke-width="1.5" opacity="0.4" stroke-linecap="round" stroke-dasharray="0.1 5"/>`);
-    parts.push(`<path d="${depArrow(c.end, c.ctrl)}" fill="#6B7A8C" opacity="0.4"/>`);
+    parts.push(`<path d="${depArrow(c.end, c.ctrl)}" fill="none" stroke="#6B7A8C" stroke-width="1.5" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/>`);
   });
 
   /* 1b) Günstigster-Pfad: kräftige Linie hinter den Knoten */

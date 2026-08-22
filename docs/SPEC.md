@@ -643,9 +643,9 @@ Abhängigkeiten werden als **optisch sekundäre** Kanten gezeichnet: dünn,
 blassgrau (`#6B7A8C`), **gepunktet** und **geschwungen** — Punktierung und
 Krümmung unterscheiden sie doppelt von den Baumlinien (durchgezogen bzw.
 gestrichelt, immer orthogonal) und halten sie zurückhaltend — auf einer
-eigenen Zeichenebene **hinter** den Knoten, mit einer kleinen **Pfeilspitze
-auf das Gebrauchte** („braucht“-Richtung). Der Baum trägt weiterhin die
-Hauptaussage.
+eigenen Zeichenebene **hinter** den Knoten, mit einer kleinen **offenen
+Pfeilspitze auf das Gebrauchte** („braucht“-Richtung; ein Winkel aus zwei
+Strichen, kein gefülltes Dreieck). Der Baum trägt weiterhin die Hauptaussage.
 
 - Die Kanten des **ausgewählten** Knotens — Tastaturfokus im Diagramm, sonst
   der Knoten der Cursor-Zeile — liegen hervorgehoben in Tinte auf einer

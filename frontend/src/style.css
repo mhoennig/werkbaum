@@ -710,9 +710,11 @@
   .dep-overlay{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
   .dep-edge{fill:none;stroke:var(--muted);stroke-width:1.5;opacity:.4;
             stroke-linecap:round;stroke-dasharray:.1 5}
-  .dep-arrow{fill:var(--muted);opacity:.4}
+  /* Offene Pfeilspitze — grau und dünn wie die Linie, kein gefülltes Dreieck. */
+  .dep-arrow{fill:none;stroke:var(--muted);stroke-width:1.5;opacity:.4;
+             stroke-linecap:round;stroke-linejoin:round}
   .dep-edge.hl{stroke:var(--line);stroke-width:2;opacity:.9;stroke-dasharray:none}
-  .dep-arrow.hl{fill:var(--line);opacity:.9}
+  .dep-arrow.hl{stroke:var(--line);stroke-width:2;opacity:.9}
   .cheap-path{fill:none;stroke:var(--or);stroke-width:2.5;stroke-linecap:round;
               stroke-dasharray:8 6;opacity:.9}
   .cheap-path.faint{opacity:.2}
