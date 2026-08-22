@@ -85,7 +85,7 @@ jobs:
               frontend/dist/index.html > site/index.html
           cp LICENSE site/LICENSE
           # Agenten-Fassung der Notation (D43) — liegt per Vite-public/ in dist/
-          cp frontend/dist/llms.txt site/llms.txt
+          cp frontend/dist/llms.md site/llms.md
 
       - name: Pages-Konfiguration
         uses: actions/configure-pages@v6

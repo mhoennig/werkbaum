@@ -798,11 +798,12 @@ Entscheidung und verworfene Alternativen: D34-Nachtrag, D40.
   `text/plain; charset=utf-8` (dann zeigt der Browser die Datei an, statt sie
   herunterzuladen). Siehe D24.
 
-## 13. Agenten-Fassung (`llms.txt`)
+## 13. Agenten-Fassung (`llms.md`)
 
 Eine **englische Kurzfassung dieser Spezifikation für KI-Agenten** (lesen
-**und** schreiben) liegt als Markdown in `frontend/public/llms.txt` und wird
+**und** schreiben) liegt als Markdown in `frontend/public/llms.md` und wird
 von jeder Instanz unter der Site-Wurzel ausgeliefert
-(`https://werkbaum.javagil.de/llms.txt`) — die llms.txt-Konvention. **Diese
-SPEC bleibt normativ**: Bei Syntaxänderungen wird die Agenten-Fassung im
-selben Zug nachgezogen (CLAUDE.md). Siehe D43.
+(`https://werkbaum.javagil.de/llms.md`); der Footer verlinkt sie neben der
+Versionsnummer. Angelehnt an die llms.txt-Konvention, mit `.md` als der zum
+Inhalt ehrlichen Endung. **Diese SPEC bleibt normativ**: Bei Syntaxänderungen
+wird die Agenten-Fassung im selben Zug nachgezogen (CLAUDE.md). Siehe D43.

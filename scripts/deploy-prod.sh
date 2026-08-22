@@ -133,7 +133,7 @@ fi
 sed "${SED_ARGS[@]}" frontend/dist/index.html > "$STAGE/index.html"
 cp LICENSE "$STAGE/LICENSE"
 # Agenten-Fassung der Notation (D43) — liegt per Vite-public/ in dist/
-cp frontend/dist/llms.txt "$STAGE/llms.txt"
+cp frontend/dist/llms.md "$STAGE/llms.md"
 
 # ---- 3) Spiegeln (--delete: nichts Altes bleibt am Ziel) ----
 # --chmod=D755,F644 erzwingt web-taugliche Rechte am Ziel, unabhängig von den

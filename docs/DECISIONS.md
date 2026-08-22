@@ -2098,8 +2098,16 @@ URL, kein Bundle.
 
 **Drift ist das Hauptrisiko** — dieselbe Sorge wie bei einem zweiten Parser
 (D14). Gegenmittel: Die Datei erklärt selbst, dass die SPEC normativ ist, und
-die Hausregel in CLAUDE.md lautet jetzt „SPEC zuerst, dann Code, **dann
-llms.txt nachziehen**" (SPEC §13 verweist zurück). Inhaltlich beschreibt sie
-nur die **Notation samt Semantik** (Gates, Status, Ränge, Extraktions-
-reihenfolge, Schreibregeln, ein vollständiges Beispiel) — keine Editor-UI:
-Die braucht ein schreibender Agent nicht, und sie ändert sich öfter.
+die Hausregel in CLAUDE.md lautet jetzt „SPEC zuerst, dann Code, **dann die
+Agenten-Fassung nachziehen**" (SPEC §13 verweist zurück). Inhaltlich
+beschreibt sie nur die **Notation samt Semantik** (Gates, Status, Ränge,
+Extraktionsreihenfolge, Schreibregeln, ein vollständiges Beispiel) — keine
+Editor-UI: Die braucht ein schreibender Agent nicht, und sie ändert sich
+öfter.
+
+**Nachtrag — `llms.md` statt `llms.txt`, Link neben der Versionsnummer.**
+Entschieden vom Nutzer: Die Endung `.md` ist die zum Inhalt ehrliche (es IST
+Markdown; die Konvention nutzt `.txt` nur als kleinsten gemeinsamen Nenner),
+und der Footer-Link rückt zwischen Versionsnummer und Copyright — zur
+Werkzeug-Ecke des Footers statt ans Ende hinter die Rechtstexte. Der
+Dateiname bleibt als Linktext (übersetzungsfrei), die Wurzel-Lage bleibt.
