@@ -92,6 +92,9 @@ entscheiden, **bevor** Code entsteht.
 - [ ] Querverbindungen zeichnen (eigene SVG-Ebene, optisch sekundär);
       bei ausgewähltem Knoten ein-/ausgehende hervorheben.
 - [ ] Faltmarken `>` / `<` parsen; interaktives Auf-/Zuklappen im Diagramm.
+      → Schreibweise und Export-Verhalten entschieden (D34-Nachtrag): Marke
+      hinter dem Zerlegungszeichen (`- > [x] …`), Export/Druck folgen der
+      sichtbar eingeklappten Struktur mit Kennzeichnung am Knoten.
 - [x] XOR-Gruppe (`=`) parsen (nur mit folgendem Leerraum, Mischung →
       `mixedGate`), zwei realisierte Alternativen melden.
       → Zeichen entschieden: `=` statt `x` (D34-Nachtrag). Umgesetzt (D35):

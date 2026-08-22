@@ -161,7 +161,9 @@ Pfad, der die Wahrheit sagt.
 - **Ein- und ausklappbare Teilbäume** (`>` / `<`). Sobald Pläne quer verbunden
   sind, wächst das Diagramm über den Bildschirm hinaus; ohne Falten ist ein
   großer Plan nicht mehr zu lesen. Die Marken im Text bestimmen nur den
-  Anfangszustand — im Diagramm wird danach unabhängig gefaltet.
+  Anfangszustand — im Diagramm wird danach unabhängig gefaltet. Schreibweise
+  und Export-Verhalten sind entschieden (D34-Nachtrag): `- > [x] …`,
+  Export/Druck folgen der sichtbaren Faltung mit Kennzeichnung.
 
 Der gestaffelte „günstigste Pfad" aus *Kleinere Ideen* (Status-Bewusstsein,
 Ausbaustufen) baut hierauf auf: Er braucht denselben Umbau der Kostenrechnung

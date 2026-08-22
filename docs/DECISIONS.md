@@ -1625,6 +1625,37 @@ der Kandidaten nötig gewesen.
 - **`°`** — fehlt auf US-Layouts, und der kleine Kreis kollidierte semantisch
   mit dem hohlen Kreis, der im Diagramm bereits *optional* bedeutet (D29).
 
+**Nachtrag — die Faltmarken sind entschieden: hinter dem Gate, Export folgt
+der Faltung.** Die beiden in §11 offenen Fragen zu `>` / `<`:
+
+**Stellung: hinter dem Zerlegungszeichen, vor der Statusbox** —
+`- > [x] Backend`, nicht `> - [x] Backend`. Der Grund ist visuell, nicht
+technisch: Die **Spalte der Zerlegungszeichen** ist das, woran das Auge die
+Hierarchie abliest. Stünde `>` davor, rückte das `-` der gefalteten Zeile
+gegenüber seinen Geschwistern um zwei Zeichen ein — die Gate-Spalte zerfiele
+genau an den Stellen, die man gerade aufgeräumt hat. Hinter dem Gate
+verschiebt sich nur die Statusbox, und die trägt keine
+Ausrichtungs-Information. Dazu kommt: `>` am Zeilenanfang ist die
+Markdown-Blockquote-Konvention und würde falsch gelesen (dieselbe Sorte
+Kollision, wegen der D29 `*` verwarf — Markdown-Betonung). Wurzelknoten haben
+kein Gate — dort steht die Marke am Zeilenanfang; Wurzeln sind selten, und
+die Regel „hinter dem Zeichen“ bleibt trotzdem einheitlich formulierbar.
+
+**Export und Druck folgen der sichtbar eingeklappten Struktur — mit
+Kennzeichnung.** Der Präzedenzfall steht in §9: „Es wird genau die sichtbare
+Struktur exportiert (der ‚verworfene einblenden‘-Filter wirkt auch hier).“
+Dieselbe Regel für die Faltung ist konsistent und praktisch richtig: Wer für
+eine Präsentation die Detailebenen zuklappt, will genau dieses Bild teilen.
+Der geprüfte Einwand: Der interaktive Faltzustand ist *persönlicher*
+Ansichtszustand, und Persönliches (Cursor-Ring, gelber Kranz, Fokusmarke —
+D25/D28/D32) wird bewusst **nicht** exportiert. Der Unterschied: Jene Marken
+sagen „schau hin“ bzw. „für dich neu“ — eine Aussage über den Betrachter.
+Faltung sagt „diese Detailtiefe“ — eine Aussage über das Bild, das der
+Exportierende zeigen will. Damit das Bild dabei nicht lügt, wird ein
+eingeklappter Knoten sichtbar gekennzeichnet (etwa „▸“ oder die Anzahl der
+verborgenen Kinder); die genaue Form entscheidet sich beim Bauen, die
+SPEC-Aussage ist nur: sichtbare Struktur, Einklappung gekennzeichnet.
+
 ## D35 — XOR (`=`) umgesetzt: „realisiert“ definiert, „1“-Plakette, keine neue Linienart
 Das in D34 entschiedene XOR-Gate ist gebaut (SPEC §1/§3/§9); beim Bauen waren
 drei Dinge zu entscheiden, die die SPEC bis dahin offen ließ:

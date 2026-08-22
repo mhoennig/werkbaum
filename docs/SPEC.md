@@ -654,9 +654,17 @@ die Rechnung schwerer als heute — siehe D34.
   gezielt wieder hervor.
 - Im Diagramm wird danach **unabhängig vom Text** interaktiv auf- und
   zugeklappt; die Marken im Text bestimmen nur den Anfangszustand.
-- **Offen:** die Stellung im Zeilenformat (§1) — vor oder hinter dem
-  Zerlegungszeichen — und ob eingeklappte Teilbäume in Grafikexport und Druck
-  eingeklappt bleiben.
+- **Stellung im Zeilenformat (entschieden):** **hinter** dem Zerlegungszeichen,
+  vor der Statusbox — `- > [x] Backend`. Die Spalte der Zerlegungszeichen
+  bleibt so bündig (an ihr liest das Auge die Hierarchie ab), und ein `>` am
+  Zeilenanfang wäre die Markdown-Blockquote-Konvention. Wurzelknoten (ohne
+  Zeichen) tragen die Marke am Zeilenanfang. Begründung: D34-Nachtrag.
+- **Grafikexport und Druck (entschieden):** folgen der **sichtbar
+  eingeklappten** Struktur — dieselbe Regel wie beim „verworfene
+  einblenden“-Filter (§9: „Es wird genau die sichtbare Struktur exportiert“).
+  Damit das Bild nicht stillschweigend Vollständigkeit behauptet, wird ein
+  eingeklappter Knoten **gekennzeichnet** (z. B. „▸“ oder die Anzahl der
+  verborgenen Kinder; genaue Form wird beim Bauen festgelegt).
 
 ### Knotenbeschreibungen
 
