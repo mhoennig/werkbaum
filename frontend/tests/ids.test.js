@@ -21,9 +21,10 @@ describe('Parser — `#name` als Knoten-ID', () => {
     expect([wurzel.label, wurzel.id]).toEqual(['C# Kurs', null]);
   });
 
-  it('frisst das reservierte `:#a,#b` (Abhängigkeiten, §11) nicht', () => {
+  it('macht aus `:#a,#b` (Abhängigkeiten, D37) keine Knoten-ID', () => {
     const [wurzel] = roots(`[ ] Deploy :#auth,#api`);
-    expect([wurzel.label, wurzel.id]).toEqual(['Deploy :#auth,#api', null]);
+    expect([wurzel.label, wurzel.id, wurzel.deps])
+      .toEqual(['Deploy', null, ['auth', 'api']]);
   });
 
   it('nimmt nur das ERSTE Token — weitere `#` bleiben im Label (Tickets)', () => {

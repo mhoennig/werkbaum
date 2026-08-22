@@ -20,8 +20,9 @@ dieser Reihenfolge (wichtig für Kollisionsfreiheit):
 4. Größe: erstes `(XS|S|M|L|XL|XXL)`, Groß-/Kleinschreibung egal.
 5. Tags: alle `@name`-Vorkommen.
 6. Knoten-ID: das **erste** alleinstehend angesetzte `#name`-Token (siehe unten).
-7. Fokusmarke: `!!!` als **alleinstehendes** Token (siehe unten).
-8. Rest, whitespace-normalisiert = Label. Leeres Label ⇒ Zeile ignorieren.
+7. Abhängigkeiten: alle alleinstehend angesetzten `:#a,#b`-Token (siehe unten).
+8. Fokusmarke: `!!!` als **alleinstehendes** Token (siehe unten).
+9. Rest, whitespace-normalisiert = Label. Leeres Label ⇒ Zeile ignorieren.
 
 **Knoten-ID `#name`** — benennt einen Knoten im **ganzen Dokument** eindeutig;
 sie ist die Adresse für Abhängigkeiten und Beschreibungsblöcke (§11).
@@ -40,6 +41,27 @@ sie ist die Adresse für Abhängigkeiten und Beschreibungsblöcke (§11).
 - **Doppelte ID:** Warnung `duplicateId` mit beiden Zeilennummern; die spätere
   ID gilt trotzdem am Knoten (fehlertolerant wie §4 — die Zeile geht nicht
   verloren).
+
+**Abhängigkeiten `:#a,#b`** — der Knoten hängt von den Knoten mit diesen IDs
+ab, auch außerhalb seines eigenen Teilbaums.
+
+- Die Liste ist **ein zusammenhängendes Token**: Doppelpunkt, dann
+  kommagetrennt je ID mit `#`, **ohne Leerraum**. `:#a, #b` liest nur `#a` —
+  das ` #b` dahinter ist ein alleinstehendes Token und damit die Knoten-ID
+  (siehe oben). Mehrere Listen je Zeile werden zusammengeführt.
+- Erkannt nur **alleinstehend angesetzt** (`(^|\s):#…`, enger als die frühere
+  §11-Formulierung — Begründung: D37): Ein Doppelpunkt im Label bleibt Label,
+  und eine **eingeklammerte Erwähnung** wie `(:#auth,#api)` bleibt Label —
+  dieselbe Zitier-Konvention wie `(#auth)` bei der Knoten-ID.
+- Abhängigkeiten sagen **nichts über Reihenfolge oder Startzeitpunkt** — sie
+  sagen etwas über den **Status** (effektiver Status, §11). Das trennt
+  Werkbaum von einem Netzplan.
+- **Zyklen sind zulässig** und bedeuten: diese Knoten werden gemeinsam fertig.
+  Kein Fehler, keine Warnung — auch die Abhängigkeit auf sich selbst nicht.
+  Vorwärts-Referenzen (Ziel steht weiter unten) sind normal.
+- Eine ID ohne zugehörigen Knoten: Warnung `unknownDep` mit Zeilennummer.
+- Sichtbar im Tooltip (`→ #a, #b`) und im `aria-label`; die Querverbindungen
+  im Diagramm sind reserviert (§11).
 
 **Fokusmarke `!!!`** — „schau hier hin": Der Knoten wird im Diagramm
 hervorgehoben und ins Bild geholt (§9). Gedacht für das gemeinsame Arbeiten an
@@ -70,7 +92,13 @@ Für die Knoten-ID (Schritt 6, nur der erste Treffer):
 (^|\s)#([\p{L}\p{N}._-]+)
 ```
 
-Für die Fokusmarke (Schritt 7):
+Für die Abhängigkeiten (Schritt 7, alle Treffer):
+
+```
+(^|\s):#([\p{L}\p{N}._-]+(?:,#[\p{L}\p{N}._-]+)*)
+```
+
+Für die Fokusmarke (Schritt 8):
 
 ```
 (^|\s)!!!(?=\s|$)
@@ -582,19 +610,10 @@ unten; damit ist die frühere Dreifach-Rolle von `#` aufgelöst (D34).
 
 ### Abhängigkeiten zwischen Knoten (`:#auth,#api`)
 
-Ein Knoten kann von Knoten **außerhalb seines eigenen Teilbaums** abhängen;
-notiert als Doppelpunkt mit kommagetrennter ID-Liste.
-
-- Abhängigkeiten sagen **nichts über Reihenfolge oder Startzeitpunkt** — sie
-  sagen etwas über den **Status** (siehe unten). Das ist der Unterschied zu
-  einem Netzplan.
-- **Zyklen sind zulässig** und bedeuten: diese Knoten werden gemeinsam fertig.
-  Sie sind also kein Fehler und bekommen keine Warnung.
-- Eine ID ohne zugehörigen Knoten ist ein Fehler (Warnung mit Zeilennummer).
-- Kollisionsfrei zur bestehenden Zeilenextraktion (§1): Gelesen wird nur ein
-  Doppelpunkt mit **unmittelbar folgendem `#`** — ein Doppelpunkt im Label
-  bleibt damit Label. Die URL wird ohnehin schon in Schritt 3 herausgenommen,
-  vor Größe, Tags und Label.
+Die **Schreibweise ist umgesetzt** — Definition jetzt in §1 (Token-Vertrag,
+Alleinstehend-Regel, Zyklen zulässig, Warnung `unknownDep`). Offen sind die
+**Konsumenten**: der effektive Status, die Querverbindungen im Diagramm und
+die Closure-Rechnung des günstigsten Pfads (alle drei unten).
 
 ### Intrinsischer und effektiver Status
 

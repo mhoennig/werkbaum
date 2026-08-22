@@ -15,6 +15,9 @@
    - duplicateId   { line, id, firstLine } — Knoten-ID doppelt vergeben
                                       (SPEC §1/D36); gemeldet an der späteren
                                       Zeile, die erste wird genannt
+   - unknownDep    { line, id }     — Abhängigkeit auf eine ID ohne Knoten
+                                      (SPEC §1/D37); Zyklen sind dagegen
+                                      zulässig und warnen nie
    - sourceLoad    { url, error }   — ?sourceUrl= nicht ladbar (D23); ohne
                                       Zeilennummer, erscheint dadurch zuoberst
    - padRateLimit  { seconds }      — zu früh nachgeladen; Werkbaum hat gar nicht
@@ -39,6 +42,8 @@ export function formatWarning(w, t){
       return t('xorConflictWarn', {line: w.line, label: esc(w.label)});
     case 'duplicateId':
       return t('duplicateIdWarn', {line: w.line, id: esc(w.id), firstLine: w.firstLine});
+    case 'unknownDep':
+      return t('unknownDepWarn', {line: w.line, id: esc(w.id)});
     case 'sourceLoad':
       return t('sourceLoadWarn', {url: esc(w.url), error: esc(w.error)});
     case 'padRateLimit':

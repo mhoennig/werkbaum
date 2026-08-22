@@ -1103,12 +1103,13 @@ const I18N = {
     mixedWarn:"Zeile {line}: Unter „{label}“ sind - und | gemischt — dargestellt nach dem ersten Kind.",
     xorConflictWarn:"Zeile {line}: „{label}“ ist eine weitere realisierte Alternative — eine =-Gruppe erlaubt genau eine.",
     duplicateIdWarn:"Zeile {line}: Die ID #{id} ist schon vergeben (Zeile {firstLine}).",
+    unknownDepWarn:"Zeile {line}: Abhängigkeit #{id} — es gibt keinen Knoten mit dieser ID.",
     st_idee:"Idee", st_geplant:"geplant", st_arbeit:"in Arbeit", st_durchstich:"Durchstich",
     st_fertig:"fertig", st_prod:"in Produktion", st_highrisk:"High Risk", st_verworfen:"verworfen",
     unknownStatusWarn:"Zeile {line}: unbekanntes Statuszeichen „{code}“ — als neutral dargestellt.",
     sourceLoadWarn:"„{url}“ konnte nicht geladen werden ({error}). Die Datei muss per http(s) erreichbar sein und CORS erlauben (Access-Control-Allow-Origin).",
     sourceTimeoutWarn:"„{url}“ hat innerhalb von {seconds} s nicht geantwortet — der Abruf wurde abgebrochen. Etherpad begrenzt, wie oft der Export geholt werden darf (serienmäßig 10-mal pro 90 s); warte einen Moment und lade dann erneut.",
-    a11yStatus:"Status: {status}", a11ySize:"Aufwand: {size}", a11ySizeImplicit:"Aufwand: M (angenommen)", a11yTags:"Zuständig: {names}", a11yId:"ID: #{id}", a11yOptional:"optional", a11yFocusMark:"hierhin schauen", a11yLink:"verlinkt",
+    a11yStatus:"Status: {status}", a11ySize:"Aufwand: {size}", a11ySizeImplicit:"Aufwand: M (angenommen)", a11yTags:"Zuständig: {names}", a11yId:"ID: #{id}", a11yDeps:"hängt ab von: {ids}", a11yOptional:"optional", a11yFocusMark:"hierhin schauen", a11yLink:"verlinkt",
     hint_indent:"Einrückung (2 Leerzeichen oder Tab) definiert die Hierarchie.",
     hint_all:"Teilpaket, alle erforderlich", hint_any:"Alternative, eine wählen",
     hint_xor:"Alternative, genau eine",
@@ -1121,6 +1122,7 @@ const I18N = {
     hint_comment:"Kommentare mit %% — als ganze Zeile oder am Zeilenende.",
     hint_people:"Personen mit @name — erscheinen unten rechts am Knoten.",
     hint_id:"Knoten-ID mit #name — erscheint im Tooltip des Knotens.",
+    hint_deps:"Abhängigkeiten mit :#name,#name — erscheinen im Tooltip.",
     hint_jump:"Alt+Klick auf einen Knoten (mobil: langer Druck) springt zur zugehörigen Textzeile; Alt+Klick im Text holt den Knoten ins Bild."
   },
   en: {
@@ -1171,12 +1173,13 @@ const I18N = {
     mixedWarn:"Line {line}: under “{label}”, - and | are mixed — rendered by the first child.",
     xorConflictWarn:"Line {line}: “{label}” is another realized alternative — an = group allows exactly one.",
     duplicateIdWarn:"Line {line}: ID #{id} is already taken (line {firstLine}).",
+    unknownDepWarn:"Line {line}: dependency #{id} — no node has this ID.",
     st_idee:"idea", st_geplant:"planned", st_arbeit:"in progress", st_durchstich:"walking skeleton",
     st_fertig:"done", st_prod:"in production", st_highrisk:"high risk", st_verworfen:"discarded",
     unknownStatusWarn:"Line {line}: unknown status code “{code}” — shown as neutral.",
     sourceLoadWarn:"Could not load “{url}” ({error}). The file must be reachable via http(s) and allow CORS (Access-Control-Allow-Origin).",
     sourceTimeoutWarn:"“{url}” did not answer within {seconds} s — the request was aborted. Etherpad limits how often the export may be fetched (10 times per 90 s by default); wait a moment, then reload.",
-    a11yStatus:"Status: {status}", a11ySize:"Effort: {size}", a11ySizeImplicit:"Effort: M (assumed)", a11yTags:"Assigned: {names}", a11yId:"ID: #{id}", a11yOptional:"optional", a11yFocusMark:"look here", a11yLink:"has link",
+    a11yStatus:"Status: {status}", a11ySize:"Effort: {size}", a11ySizeImplicit:"Effort: M (assumed)", a11yTags:"Assigned: {names}", a11yId:"ID: #{id}", a11yDeps:"depends on: {ids}", a11yOptional:"optional", a11yFocusMark:"look here", a11yLink:"has link",
     hint_indent:"Indentation (2 spaces or a tab) defines the hierarchy.",
     hint_all:"sub-task, all required", hint_any:"alternative, choose one",
     hint_xor:"alternative, exactly one",
@@ -1189,6 +1192,7 @@ const I18N = {
     hint_comment:"Comments with %% — whole line or at the end of a line.",
     hint_people:"People with @name — shown at the bottom-right of the node.",
     hint_id:"Node ID with #name — shown in the node's tooltip.",
+    hint_deps:"Dependencies with :#name,#name — shown in the tooltip.",
     hint_jump:"Alt+click a node (long press on touch) jumps to its line in the text; Alt+click in the text brings the node into view."
   },
   es: {
@@ -1239,12 +1243,13 @@ const I18N = {
     mixedWarn:"Línea {line}: bajo «{label}» se mezclan - y | — se representa según el primer hijo.",
     xorConflictWarn:"Línea {line}: «{label}» es otra alternativa realizada — un grupo = permite exactamente una.",
     duplicateIdWarn:"Línea {line}: la ID #{id} ya está asignada (línea {firstLine}).",
+    unknownDepWarn:"Línea {line}: dependencia #{id} — ningún nodo tiene esta ID.",
     st_idee:"idea", st_geplant:"planificado", st_arbeit:"en curso", st_durchstich:"prototipo funcional",
     st_fertig:"terminado", st_prod:"en producción", st_highrisk:"alto riesgo", st_verworfen:"descartado",
     unknownStatusWarn:"Línea {line}: código de estado desconocido «{code}» — mostrado como neutral.",
     sourceLoadWarn:"No se pudo cargar «{url}» ({error}). El archivo debe ser accesible por http(s) y permitir CORS (Access-Control-Allow-Origin).",
     sourceTimeoutWarn:"«{url}» no respondió en {seconds} s — se canceló la petición. Etherpad limita la frecuencia de descarga del export (10 veces por 90 s de forma predeterminada); espera un momento y vuelve a cargar.",
-    a11yStatus:"Estado: {status}", a11ySize:"Esfuerzo: {size}", a11ySizeImplicit:"Esfuerzo: M (asumido)", a11yTags:"Responsable: {names}", a11yId:"ID: #{id}", a11yOptional:"opcional", a11yFocusMark:"mirar aquí", a11yLink:"con enlace",
+    a11yStatus:"Estado: {status}", a11ySize:"Esfuerzo: {size}", a11ySizeImplicit:"Esfuerzo: M (asumido)", a11yTags:"Responsable: {names}", a11yId:"ID: #{id}", a11yDeps:"depende de: {ids}", a11yOptional:"opcional", a11yFocusMark:"mirar aquí", a11yLink:"con enlace",
     hint_indent:"La sangría (2 espacios o un tabulador) define la jerarquía.",
     hint_all:"subtarea, todas obligatorias", hint_any:"alternativa, elige una",
     hint_xor:"alternativa, exactamente una",
@@ -1257,6 +1262,7 @@ const I18N = {
     hint_comment:"Comentarios con %% — línea completa o al final de la línea.",
     hint_people:"Personas con @nombre — aparecen abajo a la derecha del nodo.",
     hint_id:"ID de nodo con #nombre — visible en el tooltip del nodo.",
+    hint_deps:"Dependencias con :#nombre,#nombre — visibles en el tooltip.",
     hint_jump:"Alt+clic en un nodo (pulsación larga en táctil) salta a su línea en el texto; Alt+clic en el texto trae el nodo a la vista."
   },
   fr: {
@@ -1307,12 +1313,13 @@ const I18N = {
     mixedWarn:"Ligne {line} : sous « {label} », - et | sont mélangés — rendu selon le premier enfant.",
     xorConflictWarn:"Ligne {line} : « {label} » est une alternative réalisée de plus — un groupe = n’en autorise qu’une seule.",
     duplicateIdWarn:"Ligne {line} : l’ID #{id} est déjà attribué (ligne {firstLine}).",
+    unknownDepWarn:"Ligne {line} : dépendance #{id} — aucun nœud ne porte cet ID.",
     st_idee:"idée", st_geplant:"planifié", st_arbeit:"en cours", st_durchstich:"squelette fonctionnel",
     st_fertig:"terminé", st_prod:"en production", st_highrisk:"risque élevé", st_verworfen:"abandonné",
     unknownStatusWarn:"Ligne {line} : code de statut inconnu « {code} » — affiché comme neutre.",
     sourceLoadWarn:"Impossible de charger « {url} » ({error}). Le fichier doit être accessible en http(s) et autoriser CORS (Access-Control-Allow-Origin).",
     sourceTimeoutWarn:"« {url} » n’a pas répondu en {seconds} s — la requête a été interrompue. Etherpad limite la fréquence de récupération de l’export (10 fois par 90 s par défaut) ; attends un instant, puis recharge.",
-    a11yStatus:"Statut : {status}", a11ySize:"Effort : {size}", a11ySizeImplicit:"Effort : M (supposé)", a11yTags:"Responsable : {names}", a11yId:"ID : #{id}", a11yOptional:"facultatif", a11yFocusMark:"regarder ici", a11yLink:"avec lien",
+    a11yStatus:"Statut : {status}", a11ySize:"Effort : {size}", a11ySizeImplicit:"Effort : M (supposé)", a11yTags:"Responsable : {names}", a11yId:"ID : #{id}", a11yDeps:"dépend de : {ids}", a11yOptional:"facultatif", a11yFocusMark:"regarder ici", a11yLink:"avec lien",
     hint_indent:"L'indentation (2 espaces ou une tabulation) définit la hiérarchie.",
     hint_all:"sous-tâche, toutes requises", hint_any:"alternative, en choisir une",
     hint_xor:"alternative, exactement une",
@@ -1325,6 +1332,7 @@ const I18N = {
     hint_comment:"Commentaires avec %% — ligne entière ou en fin de ligne.",
     hint_people:"Personnes avec @nom — affichées en bas à droite du nœud.",
     hint_id:"ID de nœud avec #nom — visible dans l’infobulle du nœud.",
+    hint_deps:"Dépendances avec :#nom,#nom — visibles dans l’infobulle.",
     hint_jump:"Alt+clic sur un nœud (appui long sur tactile) saute à sa ligne dans le texte ; Alt+clic dans le texte amène le nœud à l’écran."
   },
   pl: {
@@ -1375,12 +1383,13 @@ const I18N = {
     mixedWarn:"Wiersz {line}: pod „{label}” mieszają się - i | — renderowane według pierwszego dziecka.",
     xorConflictWarn:"Wiersz {line}: „{label}” to kolejna zrealizowana alternatywa — grupa = dopuszcza dokładnie jedną.",
     duplicateIdWarn:"Wiersz {line}: ID #{id} jest już zajęte (wiersz {firstLine}).",
+    unknownDepWarn:"Wiersz {line}: zależność #{id} — żaden węzeł nie ma tego ID.",
     st_idee:"pomysł", st_geplant:"zaplanowane", st_arbeit:"w toku", st_durchstich:"działający szkielet",
     st_fertig:"gotowe", st_prod:"w produkcji", st_highrisk:"wysokie ryzyko", st_verworfen:"odrzucone",
     unknownStatusWarn:"Wiersz {line}: nieznany znak statusu „{code}” — pokazany jako neutralny.",
     sourceLoadWarn:"Nie udało się wczytać „{url}” ({error}). Plik musi być dostępny przez http(s) i zezwalać na CORS (Access-Control-Allow-Origin).",
     sourceTimeoutWarn:"„{url}” nie odpowiedział w ciągu {seconds} s — żądanie przerwano. Etherpad ogranicza częstość pobierania eksportu (domyślnie 10 razy na 90 s); odczekaj chwilę i wczytaj ponownie.",
-    a11yStatus:"Status: {status}", a11ySize:"Nakład: {size}", a11ySizeImplicit:"Nakład: M (założony)", a11yTags:"Przypisano: {names}", a11yId:"ID: #{id}", a11yOptional:"opcjonalny", a11yFocusMark:"spójrz tutaj", a11yLink:"z linkiem",
+    a11yStatus:"Status: {status}", a11ySize:"Nakład: {size}", a11ySizeImplicit:"Nakład: M (założony)", a11yTags:"Przypisano: {names}", a11yId:"ID: #{id}", a11yDeps:"zależy od: {ids}", a11yOptional:"opcjonalny", a11yFocusMark:"spójrz tutaj", a11yLink:"z linkiem",
     hint_indent:"Wcięcie (2 spacje lub tabulator) definiuje hierarchię.",
     hint_all:"podzadanie, wszystkie wymagane", hint_any:"alternatywa, wybierz jedną",
     hint_xor:"alternatywa, dokładnie jedna",
@@ -1393,6 +1402,7 @@ const I18N = {
     hint_comment:"Komentarze z %% — cały wiersz lub na końcu wiersza.",
     hint_people:"Osoby z @nazwa — pokazywane w prawym dolnym rogu węzła.",
     hint_id:"ID węzła przez #nazwa — widoczne w podpowiedzi węzła.",
+    hint_deps:"Zależności przez :#nazwa,#nazwa — widoczne w podpowiedzi.",
     hint_jump:"Alt+kliknięcie węzła (długie naciśnięcie na dotyku) przechodzi do jego wiersza w tekście; Alt+kliknięcie w tekście pokazuje węzeł na diagramie."
   },
   ru: {
@@ -1443,12 +1453,13 @@ const I18N = {
     mixedWarn:"Строка {line}: под «{label}» смешаны - и | — отображается по первому потомку.",
     xorConflictWarn:"Строка {line}: «{label}» — ещё одна реализованная альтернатива, а группа = допускает ровно одну.",
     duplicateIdWarn:"Строка {line}: ID #{id} уже занят (строка {firstLine}).",
+    unknownDepWarn:"Строка {line}: зависимость #{id} — узла с таким ID нет.",
     st_idee:"идея", st_geplant:"запланировано", st_arbeit:"в работе", st_durchstich:"сквозной прототип",
     st_fertig:"готово", st_prod:"в эксплуатации", st_highrisk:"высокий риск", st_verworfen:"отклонено",
     unknownStatusWarn:"Строка {line}: неизвестный код статуса «{code}» — показан как нейтральный.",
     sourceLoadWarn:"Не удалось загрузить «{url}» ({error}). Файл должен быть доступен по http(s) и разрешать CORS (Access-Control-Allow-Origin).",
     sourceTimeoutWarn:"«{url}» не ответил за {seconds} с — запрос прерван. Etherpad ограничивает частоту загрузки экспорта (по умолчанию 10 раз за 90 с); подождите немного и обновите снова.",
-    a11yStatus:"Статус: {status}", a11ySize:"Оценка: {size}", a11ySizeImplicit:"Оценка: M (предполагается)", a11yTags:"Ответственные: {names}", a11yId:"ID: #{id}", a11yOptional:"необязательно", a11yFocusMark:"смотрите здесь", a11yLink:"со ссылкой",
+    a11yStatus:"Статус: {status}", a11ySize:"Оценка: {size}", a11ySizeImplicit:"Оценка: M (предполагается)", a11yTags:"Ответственные: {names}", a11yId:"ID: #{id}", a11yDeps:"зависит от: {ids}", a11yOptional:"необязательно", a11yFocusMark:"смотрите здесь", a11yLink:"со ссылкой",
     hint_indent:"Отступ (2 пробела или табуляция) задаёт иерархию.",
     hint_all:"подзадача, все обязательны", hint_any:"альтернатива, выберите одну",
     hint_xor:"альтернатива, ровно одна",
@@ -1461,6 +1472,7 @@ const I18N = {
     hint_comment:"Комментарии через %% — вся строка или в конце строки.",
     hint_people:"Люди через @имя — показываются справа внизу узла.",
     hint_id:"ID узла через #имя — виден во всплывающей подсказке узла.",
+    hint_deps:"Зависимости через :#имя,#имя — видны в подсказке.",
     hint_jump:"Alt+клик по узлу (долгое нажатие на сенсоре) переходит к его строке в тексте; Alt+клик в тексте показывает узел на диаграмме."
   },
   hi: {
@@ -1511,12 +1523,13 @@ const I18N = {
     mixedWarn:"पंक्ति {line}: „{label}“ के अंतर्गत - और | मिश्रित हैं — पहले चाइल्ड के अनुसार दिखाया गया।",
     xorConflictWarn:"पंक्ति {line}: „{label}“ एक और साकार विकल्प है — = समूह में केवल एक की अनुमति है।",
     duplicateIdWarn:"पंक्ति {line}: आईडी #{id} पहले से प्रयुक्त है (पंक्ति {firstLine})।",
+    unknownDepWarn:"पंक्ति {line}: निर्भरता #{id} — इस आईडी वाला कोई नोड नहीं है।",
     st_idee:"विचार", st_geplant:"नियोजित", st_arbeit:"प्रगति पर", st_durchstich:"कार्यशील ढाँचा",
     st_fertig:"पूर्ण", st_prod:"उत्पादन में", st_highrisk:"उच्च जोखिम", st_verworfen:"अस्वीकृत",
     unknownStatusWarn:"पंक्ति {line}: अज्ञात स्थिति कोड „{code}“ — तटस्थ रूप में दिखाया गया।",
     sourceLoadWarn:"„{url}“ लोड नहीं हो सका ({error})। फ़ाइल http(s) से उपलब्ध होनी चाहिए और CORS की अनुमति देनी चाहिए (Access-Control-Allow-Origin)।",
     sourceTimeoutWarn:"„{url}“ ने {seconds} स॰ में उत्तर नहीं दिया — अनुरोध रद्द कर दिया गया। Etherpad सीमित करता है कि एक्सपोर्ट कितनी बार लिया जा सके (डिफ़ॉल्ट रूप से 90 स॰ में 10 बार); कुछ क्षण रुकें, फिर दोबारा लोड करें।",
-    a11yStatus:"स्थिति: {status}", a11ySize:"आकार: {size}", a11ySizeImplicit:"आकार: M (अनुमानित)", a11yTags:"जिम्मेदार: {names}", a11yId:"आईडी: #{id}", a11yOptional:"वैकल्पिक", a11yFocusMark:"यहाँ देखें", a11yLink:"लिंक सहित",
+    a11yStatus:"स्थिति: {status}", a11ySize:"आकार: {size}", a11ySizeImplicit:"आकार: M (अनुमानित)", a11yTags:"जिम्मेदार: {names}", a11yId:"आईडी: #{id}", a11yDeps:"निर्भर: {ids}", a11yOptional:"वैकल्पिक", a11yFocusMark:"यहाँ देखें", a11yLink:"लिंक सहित",
     hint_indent:"इंडेंट (2 स्पेस या टैब) पदानुक्रम तय करता है।",
     hint_all:"उप-कार्य, सभी आवश्यक", hint_any:"विकल्प, एक चुनें",
     hint_xor:"विकल्प, ठीक एक",
@@ -1529,6 +1542,7 @@ const I18N = {
     hint_comment:"%% से टिप्पणियाँ — पूरी पंक्ति या पंक्ति के अंत में।",
     hint_people:"@नाम से व्यक्ति — नोड के नीचे-दाएँ दिखते हैं।",
     hint_id:"#नाम से नोड आईडी — नोड के टूलटिप में दिखती है।",
+    hint_deps:":#नाम,#नाम से निर्भरताएँ — टूलटिप में दिखती हैं।",
     hint_jump:"किसी नोड पर Alt+क्लिक (टच पर लंबा दबाव) टेक्स्ट में उसकी पंक्ति पर ले जाता है; टेक्स्ट में Alt+क्लिक उस नोड को आरेख में दिखाता है।"
   },
   zh: {
@@ -1579,12 +1593,13 @@ const I18N = {
     mixedWarn:"第 {line} 行：在「{label}」下 - 与 | 混用——按第一个子项渲染。",
     xorConflictWarn:"第 {line} 行：「{label}」是又一个已实现的备选项——= 组只允许恰好一个。",
     duplicateIdWarn:"第 {line} 行：ID #{id} 已被占用（第 {firstLine} 行）。",
+    unknownDepWarn:"第 {line} 行：依赖 #{id}——没有节点使用此 ID。",
     st_idee:"想法", st_geplant:"已计划", st_arbeit:"进行中", st_durchstich:"可运行骨架",
     st_fertig:"已完成", st_prod:"已上线", st_highrisk:"高风险", st_verworfen:"已放弃",
     unknownStatusWarn:"第 {line} 行：未知状态代码“{code}”——显示为中性。",
     sourceLoadWarn:"无法加载“{url}”（{error}）。该文件必须可通过 http(s) 访问并允许 CORS（Access-Control-Allow-Origin）。",
     sourceTimeoutWarn:"“{url}” 在 {seconds} 秒内没有响应 — 请求已中止。Etherpad 会限制导出的获取频率（默认每 90 秒 10 次）；请稍候再重新加载。",
-    a11yStatus:"状态：{status}", a11ySize:"工作量：{size}", a11ySizeImplicit:"工作量：M（假定）", a11yTags:"负责人：{names}", a11yId:"ID：#{id}", a11yOptional:"可选", a11yFocusMark:"看这里", a11yLink:"含链接",
+    a11yStatus:"状态：{status}", a11ySize:"工作量：{size}", a11ySizeImplicit:"工作量：M（假定）", a11yTags:"负责人：{names}", a11yId:"ID：#{id}", a11yDeps:"依赖：{ids}", a11yOptional:"可选", a11yFocusMark:"看这里", a11yLink:"含链接",
     hint_indent:"缩进（2 个空格或制表符）定义层级。",
     hint_all:"子任务，全部必需", hint_any:"备选项，择其一",
     hint_xor:"备选项，恰好一个",
@@ -1597,6 +1612,7 @@ const I18N = {
     hint_comment:"用 %% 注释——整行或行尾。",
     hint_people:"用 @姓名 表示人员——显示在节点右下角。",
     hint_id:"用 #名称 指定节点 ID——显示在节点提示中。",
+    hint_deps:"用 :#名称,#名称 表示依赖——显示在提示中。",
     hint_jump:"Alt+点击节点（触摸屏为长按）可跳转到文本中对应的行；在文本中 Alt+点击则把该节点带入视野。"
   },
   ja: {
@@ -1647,12 +1663,13 @@ const I18N = {
     mixedWarn:"{line} 行目：「{label}」の下で - と | が混在 — 最初の子に従って表示。",
     xorConflictWarn:"{line} 行目：「{label}」も実現済みの選択肢です — = グループで実現できるのは 1 つだけです。",
     duplicateIdWarn:"{line} 行目：ID #{id} は既に使われています（{firstLine} 行目）。",
+    unknownDepWarn:"{line} 行目：依存 #{id} — この ID を持つノードはありません。",
     st_idee:"アイデア", st_geplant:"計画済み", st_arbeit:"作業中", st_durchstich:"ウォーキングスケルトン",
     st_fertig:"完了", st_prod:"本番稼働", st_highrisk:"高リスク", st_verworfen:"破棄",
     unknownStatusWarn:"{line} 行目: 不明なステータス記号「{code}」— 中立として表示。",
     sourceLoadWarn:"「{url}」を読み込めませんでした（{error}）。ファイルは http(s) でアクセス可能で、CORS（Access-Control-Allow-Origin）を許可する必要があります。",
     sourceTimeoutWarn:"「{url}」が {seconds} 秒以内に応答しませんでした — 要求を中止しました。Etherpad はエクスポートの取得回数を制限します（既定で 90 秒あたり 10 回）。少し待ってから再読み込みしてください。",
-    a11yStatus:"ステータス: {status}", a11ySize:"規模: {size}", a11ySizeImplicit:"規模: M（想定）", a11yTags:"担当: {names}", a11yId:"ID: #{id}", a11yOptional:"任意", a11yFocusMark:"ここを見る", a11yLink:"リンクあり",
+    a11yStatus:"ステータス: {status}", a11ySize:"規模: {size}", a11ySizeImplicit:"規模: M（想定）", a11yTags:"担当: {names}", a11yId:"ID: #{id}", a11yDeps:"依存先: {ids}", a11yOptional:"任意", a11yFocusMark:"ここを見る", a11yLink:"リンクあり",
     hint_indent:"インデント（スペース2つまたはタブ）で階層を定義します。",
     hint_all:"サブタスク、すべて必須", hint_any:"選択肢、1つを選ぶ",
     hint_xor:"選択肢、ちょうど1つ",
@@ -1665,6 +1682,7 @@ const I18N = {
     hint_comment:"%% でコメント — 行全体または行末。",
     hint_people:"@名前 で担当者 — ノードの右下に表示されます。",
     hint_id:"#名前 でノード ID — ノードのツールチップに表示されます。",
+    hint_deps:":#名前,#名前 で依存関係 — ツールチップに表示されます。",
     hint_jump:"ノードを Alt+クリック（タッチでは長押し）すると、テキストの該当行へ移動します。テキスト内で Alt+クリックすると、そのノードが図の中央に表示されます。"
   }
 };
@@ -1698,6 +1716,7 @@ function buildHint(){
     ${esc(t('hint_comment'))}
     ${esc(t('hint_people'))}
     ${esc(t('hint_id'))}
+    ${esc(t('hint_deps'))}
     <code>!!!</code>&nbsp; ${esc(t('hint_focus'))}
     <div class="hint-op">${esc(t('hint_jump'))}</div>`;
 }

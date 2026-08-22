@@ -26,15 +26,17 @@ const REALIZED = new Set(['arbeit', 'durchstich', 'fertig', 'prod']);
 
 /* Parst den Notationstext zu { roots, warnings }.
    Jeder Knoten: {label, type:'and'|'or'|'xor', optional, status, url, size,
-   tags, id, focus, children, line}.
+   tags, id, deps, focus, children, line}.
+   `deps` sind ID-Strings, keine Knoten-Referenzen — aufgelöst wird erst beim
+   Konsumenten (D37); der Parser prüft nur die Existenz (`unknownDep`).
    `type` ist das Gate der Geschwistergruppe, `optional` (Zeichen `+`, SPEC §3)
    eine Eigenschaft des einzelnen Knotens: er hängt an derselben Und-Zerlegung
    (`type:'and'`), ist darin aber entbehrlich. Dadurch bleibt die
    Gemischt-Warnung unverändert richtig — sie schlägt an, wenn `|` oder `=`
    mit `-`/`+` (oder untereinander) gemischt wird.
    Extraktionsreihenfolge (SPEC §1): Kommentar -> Zeichen/Status -> URL -> Größe
-   -> Tags -> Knoten-ID -> Fokusmarke -> Label. Hierarchie über Einrückungsbreite
-   (Tab = 2 Leerzeichen);
+   -> Tags -> Knoten-ID -> Abhängigkeiten -> Fokusmarke -> Label. Hierarchie
+   über Einrückungsbreite (Tab = 2 Leerzeichen);
    Elternknoten ist die nächste vorangehende Zeile mit kleinerer Breite. */
 export function parse(text){
   const virtualRoot = {label:'', type:'and', children:[]};
@@ -68,6 +70,13 @@ export function parse(text){
        `@name`; kein Lookbehind (Safari erst ab 16.4). */
     let id = null;
     rest = rest.replace(/(^|\s)#([\p{L}\p{N}._-]+)/u, (s, pre, g) => { id = g; return pre; });
+    /* Abhängigkeiten `:#a,#b` (SPEC §1, D37): EIN zusammenhängendes Token ohne
+       Leerraum, nur ALLEINSTEHEND ANGESETZT — eingeklammerte Erwähnungen wie
+       `(:#auth,#api)` bleiben damit Label (dieselbe Zitier-Konvention wie bei
+       der ID). Mehrere Token je Zeile werden zusammengeführt. */
+    const deps = [];
+    rest = rest.replace(/(^|\s):#([\p{L}\p{N}._-]+(?:,#[\p{L}\p{N}._-]+)*)/gu,
+      (s, pre, list) => { for(const p of list.split(',')) deps.push(p.replace(/^#/, '')); return pre; });
     /* Fokusmarke `!!!` (SPEC §1) — nur ALLEINSTEHEND, damit „Achtung!!!" ein
        gewöhnliches Label bleibt. Kein Lookbehind (Safari kennt es erst ab 16.4):
        der führende Leerraum wird mitgefangen und wieder eingesetzt. */
@@ -93,10 +102,22 @@ export function parse(text){
     while(stack.length > 1 && stack[stack.length-1].width >= width) stack.pop();
     const parent = stack[stack.length-1].node;
 
-    const node = {label, type, optional, status, url, size, tags, id, focus, children:[], line:i+1};
+    const node = {label, type, optional, status, url, size, tags, id, deps, focus, children:[], line:i+1};
     parent.children.push(node);
     stack.push({node, width});
   });
+
+  /* Unbekannte Abhängigkeits-IDs (SPEC §1): erst nach dem Einlesen prüfbar —
+     Vorwärts-Referenzen sind normal. Zyklen (auch auf sich selbst) werden
+     bewusst NICHT einmal erkannt: Sie sind zulässig und bedeuten „wird
+     gemeinsam fertig" (D34/D37) — eine Prüfung hätte keinen Abnehmer. */
+  (function checkDeps(nodes){
+    for(const n of nodes){
+      for(const d of n.deps)
+        if(!idLines.has(d)) warnings.push({type:'unknownDep', line:n.line, id:d});
+      checkDeps(n.children);
+    }
+  })(virtualRoot.children);
 
   /* XOR-Regel (SPEC §3): In einer `=`-Gruppe darf genau EINE Alternative
      realisiert sein. Jede weitere wird einzeln gemeldet — die Warnung zeigt so

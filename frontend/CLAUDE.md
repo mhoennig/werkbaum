@@ -47,8 +47,8 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Alternative-Rahmen grau (Basis-CSS `ul.or`). Kein Petrol im Diagramm mehr;
   `var(--or)` nur noch für UI-Akzente/Logo (SPEC §9, D15).
 - Extraktionsreihenfolge im Parser nicht umstellen: Kommentar → Zeichen/
-  Status → URL → Größe → Tags → Knoten-ID → Fokusmarke (sonst kollidieren
-  `@` und `#` in URLs).
+  Status → URL → Größe → Tags → Knoten-ID → Abhängigkeiten → Fokusmarke
+  (sonst kollidieren `@` und `#` in URLs).
 - Fehlertoleranz (SPEC §4): der Parser erfasst die Statusbox als *beliebiges*
   Einzelzeichen `\[([^\]])\]` und validiert gegen `STATUS_BY_CODE`; unbekannte
   Codes → `parse().warnings` als `{type:'unknownStatus', line, code}`, Knoten
@@ -273,6 +273,12 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   darf nicht gefressen werden. Zeichenmenge wie `@name`. Doppelte ID →
   `{type:'duplicateId', line, id, firstLine}`; die spätere gilt trotzdem.
   Keine eigene Darstellung — nur Tooltip (erste Position) und `a11yId`.
+- Abhängigkeiten `:#a,#b` (SPEC §1/D37): EIN zusammenhängendes Token ohne
+  Leerraum, nur **alleinstehend angesetzt** — `(:#a,#b)` bleibt Label
+  (Zitier-Konvention wie `(#auth)`). `node.deps` sind **ID-Strings**, keine
+  Knoten-Referenzen; der Parser prüft nur Existenz (`unknownDep`), Zyklen
+  werden bewusst nicht einmal erkannt (zulässig, „gemeinsam fertig"). Keine
+  Diagramm-Darstellung — nur Tooltip (`→ #a, #b`) und `a11yDeps`.
 - XOR-Gruppen `=` (SPEC §3/D35): Der Parser setzt `type:'xor'` (nur mit
   folgendem Leerraum — `=SUMME(…)` bleibt Label); der Renderer gibt
   `<ul class="or xor">` aus, damit die **gesamte** any-of-Geometrie (alle drei

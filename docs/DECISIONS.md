@@ -1702,3 +1702,41 @@ welcher Knoten bei Verweisen „gewinnt“, entscheidet erst die
 Abhängigkeits-Auflösung — dort ist die Warnung dann schon da. Eine Zeile, die
 **nur** aus einer ID besteht, wird wie jede leere Zeile ignoriert und belegt
 die ID nicht.
+
+## D37 — Abhängigkeiten (`:#a,#b`) geparst: ein Token, alleinstehend, IDs als Strings
+Der zweite Baustein der Phase-4-Kette. Gebaut ist die **Schreibweise** (SPEC
+§1); die Konsumenten — effektiver Status, Querverbindungen, Closure-Rechnung —
+bleiben eigene Schritte (§11). Vier Festlegungen:
+
+**Die Liste ist ein zusammenhängendes Token, ohne Leerraum.** `:#a,#b` — jede
+ID mit `#`, kommagetrennt, kein Leerzeichen. Das ist die wörtliche Lesart von
+§11 („Doppelpunkt mit unmittelbar folgendem `#`“) und macht das Zeilenformat
+robust: Wo das Token endet, beginnt wieder gewöhnlicher Text. Der bekannte
+Stolperstein steht in der SPEC: `:#a, #b` liest nur `#a`, und das ` #b`
+dahinter ist ein alleinstehendes Token — also die Knoten-ID. Ein Rest wie ein
+verwaistes `,b` bleibt sichtbar im Label stehen und verrät den Tippfehler,
+statt verschluckt zu werden.
+
+**Nur alleinstehend angesetzt** (`(^|\s):#…`) — **enger als §11**, das nur den
+folgenden `#` verlangte. Der Ausschlag: die **Zitier-Konvention**. Bei den IDs
+(D36) wurden Erwähnungen im mitgelieferten Plan eingeklammert (`(#auth)`), und
+genau das muss auch für Abhängigkeiten funktionieren — `(:#auth,#api)` als
+Erwähnung im Label wäre mit der reinen `:#`-Regel trotzdem geparst worden
+(die Klammer steht ja vor dem `:`, nicht vor dem `#`). Mit der
+Alleinstehend-Regel schützen Klammern einheitlich alles: `(#auth)`,
+`(:#a,#b)`, künftig `(&tag)`. Nebeneffekt: Konstrukte wie `1:#2` im Label
+bleiben Label.
+
+**`deps` sind ID-Strings, keine Knoten-Referenzen.** Der Parser prüft nur
+**Existenz** (`unknownDep` je fehlender ID, an der Zeile des abhängigen
+Knotens); aufgelöst wird erst beim Konsumenten. So bleibt der Parse-Baum
+serialisierbar und die Auflösungsfragen (doppelte IDs — die `duplicateId`-
+Warnung steht dann schon da) liegen dort, wo sie beantwortet werden können.
+**Zyklen werden bewusst nicht einmal erkannt**: Sie sind zulässig (§1/D34,
+„wird gemeinsam fertig“), eine Zyklenprüfung hätte also keinen Abnehmer —
+auch die Selbst-Abhängigkeit ist stumm.
+
+**Sichtbar als `→ #a, #b` im Tooltip und als `a11yDeps` im `aria-label`** —
+dieselbe Zurückhaltung wie bei den IDs (D36): keine eigene Diagramm-
+Darstellung, bis die Querverbindungen (§11) gebaut sind; der Pfeil im Tooltip
+sagt die Richtung („hängt ab von“), ohne ein neues Zeichen einzuführen.

@@ -77,7 +77,12 @@ entscheiden, **bevor** Code entsteht.
       unberührt); Warnung `duplicateId` nennt beide Zeilen; sichtbar im
       Tooltip + `aria-label`; SPEC-§11-Teil nach §1 überführt;
       `tests/ids.test.js`.
-- [ ] Abhängigkeiten `:#a,#b` parsen; unbekannte ID → Warnung, Zyklen erlaubt.
+- [x] Abhängigkeiten `:#a,#b` parsen; unbekannte ID → Warnung, Zyklen erlaubt.
+      → Umgesetzt (D37): ein zusammenhängendes Token ohne Leerraum, nur
+      alleinstehend angesetzt (eingeklammerte Erwähnungen bleiben Label);
+      `deps` als ID-Strings am Knoten, Warnung `unknownDep`, Zyklen bewusst
+      ungeprüft; sichtbar als `→ #a, #b` im Tooltip + `a11yDeps`;
+      SPEC-§11-Teil nach §1 überführt; `tests/deps.test.js`.
 - [ ] Effektiven Status rechnen (intrinsisch + Abhängigkeiten); Darstellung
       entscheiden — die Knotenfarbe zeigt heute den intrinsischen Status.
 - [ ] Günstigsten Pfad auf die Dependency Closure umstellen (gemeinsame
