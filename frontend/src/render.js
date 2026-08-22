@@ -51,6 +51,9 @@ function nodeAria(n, opts){
   if(n.size) parts.push(t('a11ySize', {size: n.size}));
   else if(cheapPath) parts.push(t('a11ySizeImplicit'));
   if(n.tags && n.tags.length) parts.push(t('a11yTags', {names: n.tags.join(', ')}));
+  /* Knoten-ID (SPEC §1, D36): keine eigene Darstellung im Diagramm — sichtbar
+     nur im Tooltip und hier. */
+  if(n.id) parts.push(t('a11yId', {id: n.id}));
   if(n.optional) parts.push(t('a11yOptional'));
   /* Die Fokusmarke ist rein als box-shadow sichtbar — ohne diese Ansage wüsste
      ein Screenreader nichts davon. Zugleich der einzige Ort, an dem sie sich von
@@ -69,7 +72,8 @@ function nodeHtml(n, extra, opts){
      für die Gegenrichtung (Cursor-Zeile -> Knoten hervorheben). Der Hinweis im
      Tooltip macht die sonst unsichtbare Alt-Klick-Geste auffindbar. */
   const lineAttr = n.line ? ` data-line="${n.line}"` : '';
-  const tip = [n.status ? t('st_' + n.status.key) : '',
+  const tip = [n.id ? '#' + n.id : '',
+               n.status ? t('st_' + n.status.key) : '',
                n.optional ? t('a11yOptional') : '', t('jumpHint')]
     .filter(Boolean).join(' · ');
   const title = ` title="${attr(tip)}"`;

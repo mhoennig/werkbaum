@@ -26,19 +26,21 @@ const REALIZED = new Set(['arbeit', 'durchstich', 'fertig', 'prod']);
 
 /* Parst den Notationstext zu { roots, warnings }.
    Jeder Knoten: {label, type:'and'|'or'|'xor', optional, status, url, size,
-   tags, focus, children, line}.
+   tags, id, focus, children, line}.
    `type` ist das Gate der Geschwistergruppe, `optional` (Zeichen `+`, SPEC §3)
    eine Eigenschaft des einzelnen Knotens: er hängt an derselben Und-Zerlegung
    (`type:'and'`), ist darin aber entbehrlich. Dadurch bleibt die
    Gemischt-Warnung unverändert richtig — sie schlägt an, wenn `|` oder `=`
    mit `-`/`+` (oder untereinander) gemischt wird.
    Extraktionsreihenfolge (SPEC §1): Kommentar -> Zeichen/Status -> URL -> Größe
-   -> Tags -> Fokusmarke -> Label. Hierarchie über Einrückungsbreite (Tab = 2 Leerzeichen);
+   -> Tags -> Knoten-ID -> Fokusmarke -> Label. Hierarchie über Einrückungsbreite
+   (Tab = 2 Leerzeichen);
    Elternknoten ist die nächste vorangehende Zeile mit kleinerer Breite. */
 export function parse(text){
   const virtualRoot = {label:'', type:'and', children:[]};
   const stack = [{node:virtualRoot, width:-1}];
   const warnings = [];
+  const idLines = new Map();   /* Knoten-ID -> Zeile der ersten Vergabe (D36) */
 
   text.split('\n').forEach((raw, i) => {
     raw = raw.replace(/%%.*$/, '');   /* %%-Kommentare entfernen (Mermaid-Konvention) */
@@ -59,6 +61,13 @@ export function parse(text){
     rest = rest.replace(/https?:\/\/\S+/i, s => { url = s; return ''; });
     rest = rest.replace(/\((XXL|XS|XL|S|M|L)\)/i, (s, g) => { size = g.toUpperCase(); return ''; });
     rest = rest.replace(/@([\p{L}\p{N}._-]+)/gu, (s, g) => { tags.push(g); return ''; });
+    /* Knoten-ID `#name` (SPEC §1, D36): nur ALLEINSTEHEND ANGESETZT — „C#"
+       bleibt Label, und das reservierte `:#a,#b` (§11) wird nicht gefressen.
+       Nur der ERSTE Treffer (kein /g): weitere `#`-Token bleiben im Label
+       stehen, dort wohnt die reservierte Ticket-Referenz. Zeichenmenge wie bei
+       `@name`; kein Lookbehind (Safari erst ab 16.4). */
+    let id = null;
+    rest = rest.replace(/(^|\s)#([\p{L}\p{N}._-]+)/u, (s, pre, g) => { id = g; return pre; });
     /* Fokusmarke `!!!` (SPEC §1) — nur ALLEINSTEHEND, damit „Achtung!!!" ein
        gewöhnliches Label bleibt. Kein Lookbehind (Safari kennt es erst ab 16.4):
        der führende Leerraum wird mitgefangen und wieder eingesetzt. */
@@ -73,10 +82,18 @@ export function parse(text){
       if(!status) warnings.push({type:'unknownStatus', line:i+1, code:boxChar});
     }
 
+    /* Doppelte ID (SPEC §1): Warnung an der späteren Zeile, mit Nennung der
+       ersten; die spätere ID gilt trotzdem am Knoten (fehlertolerant). Erst
+       hier — eine Zeile ohne Label ist schon zurückgekehrt und belegt nichts. */
+    if(id != null){
+      if(idLines.has(id)) warnings.push({type:'duplicateId', line:i+1, id, firstLine:idLines.get(id)});
+      else idLines.set(id, i+1);
+    }
+
     while(stack.length > 1 && stack[stack.length-1].width >= width) stack.pop();
     const parent = stack[stack.length-1].node;
 
-    const node = {label, type, optional, status, url, size, tags, focus, children:[], line:i+1};
+    const node = {label, type, optional, status, url, size, tags, id, focus, children:[], line:i+1};
     parent.children.push(node);
     stack.push({node, width});
   });

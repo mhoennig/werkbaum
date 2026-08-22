@@ -9,7 +9,7 @@
       - [^] People tags, bare URLs, %% comments (XS)
     - [^] And/or decomposition (S)
     - [^] Optional nodes — neither required nor an alternative (S)
-    - [?] Node IDs, #auth (S)  %% often just the ticket number, see SPEC §11
+    - [x] Node IDs (#auth) (S)  %% often just the ticket number, see SPEC §11
     + [?] Free tags, &tag (M)  %% only together with a consumer, see D34
       - [?] A lens: highlight every node tagged &x (S)
     - [?] Dependencies across the tree, :#auth,#api (M)
@@ -22,7 +22,7 @@
       - [?] A short text right at the node (S)  %% indentation already means hierarchy
       - [?] A long block at the end, addressed by its id (S)
     - [-] A separate storage format for the structure (L)  %% the text is the format
-    - [ ] Ticket references #123 (S)
+    - [ ] Ticket references (#123) (S)
     - [?] Benefit per node, not only cost (M)
       | [?] Another sigil next to the size (S)
       | [?] Story points behind the T-shirt sizes (M)
@@ -159,7 +159,7 @@
         | [?] Run the one JS parser inside the IDE (M)
   - [?] Tracker integration (XL)
     | [?] Taiga (L) https://taiga.io
-      - [ ] Resolve #123 over the REST API (M)
+      - [ ] Resolve "#123" over the REST API (M)
         - [ ] Read title, link and status (S)
         - [ ] Map the workflow onto the states (S)
       - [?] Write the status back (M)

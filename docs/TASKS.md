@@ -71,7 +71,12 @@ entscheiden, **bevor** Code entsteht.
       numerisch, oft zugleich die natürliche Knoten-ID; notfalls Präfix wie
       `#t123`); Schlagworte gehen auf `&tag` — niedrig priorisiert, gebaut
       erst mit dem ersten Konsumenten (D34-Nachtrag).
-- [ ] Knoten-IDs parsen; doppelte ID → Warnung mit Zeilennummer.
+- [x] Knoten-IDs parsen; doppelte ID → Warnung mit Zeilennummer.
+      → Umgesetzt (D36): Zeichenmenge wie `@name`, nur alleinstehend angesetzt
+      und nur das erste Token je Zeile (`:#a,#b` und Ticket-Erwähnungen bleiben
+      unberührt); Warnung `duplicateId` nennt beide Zeilen; sichtbar im
+      Tooltip + `aria-label`; SPEC-§11-Teil nach §1 überführt;
+      `tests/ids.test.js`.
 - [ ] Abhängigkeiten `:#a,#b` parsen; unbekannte ID → Warnung, Zyklen erlaubt.
 - [ ] Effektiven Status rechnen (intrinsisch + Abhängigkeiten); Darstellung
       entscheiden — die Knotenfarbe zeigt heute den intrinsischen Status.

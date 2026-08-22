@@ -19,8 +19,27 @@ dieser Reihenfolge (wichtig für Kollisionsfreiheit):
 3. URL: erstes Token, das auf `https?://\S+` passt (dadurch stören `@` in URLs nicht).
 4. Größe: erstes `(XS|S|M|L|XL|XXL)`, Groß-/Kleinschreibung egal.
 5. Tags: alle `@name`-Vorkommen.
-6. Fokusmarke: `!!!` als **alleinstehendes** Token (siehe unten).
-7. Rest, whitespace-normalisiert = Label. Leeres Label ⇒ Zeile ignorieren.
+6. Knoten-ID: das **erste** alleinstehend angesetzte `#name`-Token (siehe unten).
+7. Fokusmarke: `!!!` als **alleinstehendes** Token (siehe unten).
+8. Rest, whitespace-normalisiert = Label. Leeres Label ⇒ Zeile ignorieren.
+
+**Knoten-ID `#name`** — benennt einen Knoten im **ganzen Dokument** eindeutig;
+sie ist die Adresse für Abhängigkeiten und Beschreibungsblöcke (§11).
+
+- Zeichenmenge wie bei `@name` (§7): Unicode-Buchstaben, Ziffern, `.`, `_`, `-`.
+  (Enger als das frühere „whitespace-frei“ aus §11 — Begründung: D36.)
+- Erkannt nur **alleinstehend angesetzt** (`(^|\s)#…`): „C#“ bleibt damit ein
+  Label, und der für Abhängigkeiten reservierte Doppelpunkt `:#a,#b` (§11)
+  kollidiert nicht.
+- Das **erste** solche Token der Zeile ist die ID; weitere `#`-Token bleiben im
+  Label stehen (dort liegt die reservierte Ticket-Referenz `#123`, §11). Eine
+  rein numerische ID ist zugleich die künftige Ticket-Referenz — oft ist die
+  Ticket-Nummer die natürliche Knoten-ID (D34).
+- Die ID gehört **nicht** zum Label. Eine eigene Darstellung im Diagramm hat
+  sie (noch) nicht; sichtbar ist sie im Knoten-Tooltip und im `aria-label`.
+- **Doppelte ID:** Warnung `duplicateId` mit beiden Zeilennummern; die spätere
+  ID gilt trotzdem am Knoten (fehlertolerant wie §4 — die Zeile geht nicht
+  verloren).
 
 **Fokusmarke `!!!`** — „schau hier hin": Der Knoten wird im Diagramm
 hervorgehoben und ins Bild geholt (§9). Gedacht für das gemeinsame Arbeiten an
@@ -45,7 +64,13 @@ Referenz-Regex der Implementierung:
 ^([ \t]*)([-|+]|=(?=[ \t]))?\s*(?:\[([ ?~xX^/-])\]\s*)?(.*)$
 ```
 
-Für die Fokusmarke (Schritt 6):
+Für die Knoten-ID (Schritt 6, nur der erste Treffer):
+
+```
+(^|\s)#([\p{L}\p{N}._-]+)
+```
+
+Für die Fokusmarke (Schritt 7):
 
 ```
 (^|\s)!!!(?=\s|$)
@@ -532,10 +557,9 @@ das auch. Begründung und Zusammenhang: D34.
 - `#123` — Referenz auf externe Tickets (geplant für Taiga-Integration).
   Ticket-Referenzen werden **so** notiert, weil es die etablierte
   Kurzschreibweise ist; sie haben unter den `#`-Verwendungen Vorrang.
-- `#auth` — **Knoten-ID**: ein whitespace-freier Bezeichner, der einen Knoten im
-  ganzen Dokument eindeutig benennt. Ziel für Abhängigkeiten und
-  Beschreibungsblöcke (siehe unten). Zwei Knoten mit derselben ID sind ein
-  Fehler und bekommen eine Warnung mit Zeilennummer (§4).
+- `#auth` — **Knoten-ID**: **umgesetzt**, Definition jetzt in §1 (Zeichenmenge,
+  Alleinstehend-Regel, Warnung `duplicateId`). Ziel für Abhängigkeiten und
+  Beschreibungsblöcke (siehe unten).
 
 Beide Rollen vertragen sich: Oft **ist** die Ticket-Nummer die natürliche
 Knoten-ID. Als Ticket-Link behandelt wird heuristisch das rein **numerische**

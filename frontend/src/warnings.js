@@ -12,6 +12,9 @@
    - xorConflict   { line, label }  — weitere realisierte Alternative in einer
                                       `=`-Gruppe (SPEC §3/D35); je Zeile eine
                                       Warnung, damit sie dorthin zeigt
+   - duplicateId   { line, id, firstLine } — Knoten-ID doppelt vergeben
+                                      (SPEC §1/D36); gemeldet an der späteren
+                                      Zeile, die erste wird genannt
    - sourceLoad    { url, error }   — ?sourceUrl= nicht ladbar (D23); ohne
                                       Zeilennummer, erscheint dadurch zuoberst
    - padRateLimit  { seconds }      — zu früh nachgeladen; Werkbaum hat gar nicht
@@ -34,6 +37,8 @@ export function formatWarning(w, t){
       return t('unknownStatusWarn', {line: w.line, code: esc(w.code)});
     case 'xorConflict':
       return t('xorConflictWarn', {line: w.line, label: esc(w.label)});
+    case 'duplicateId':
+      return t('duplicateIdWarn', {line: w.line, id: esc(w.id), firstLine: w.firstLine});
     case 'sourceLoad':
       return t('sourceLoadWarn', {url: esc(w.url), error: esc(w.error)});
     case 'padRateLimit':

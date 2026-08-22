@@ -1660,3 +1660,45 @@ kopierten Regeln — hätte jede künftige Layoutänderung doppelt pflegen lasse
 Im Modell ist `'xor'` ein eigener Gate-Wert (`gateOf`), damit die
 `mixedGate`-Warnung Mischungen mit `|` von selbst meldet; alle
 Disjunktiv-Abfragen prüfen `!== 'and'`.
+
+## D36 — Knoten-IDs (`#auth`) umgesetzt: eng gefasst, sichtbar nur im Tooltip
+Der erste Baustein der Phase-4-Kette (ohne IDs keine Abhängigkeiten, ohne die
+kein effektiver Status). Vier Festlegungen, die §11 offen ließ:
+
+**Zeichenmenge wie `@name`, nicht „whitespace-frei“.** §11 sagte „ein
+whitespace-freier Bezeichner“; umgesetzt ist die engere Menge aus §7
+(Unicode-Buchstaben, Ziffern, `.`, `_`, `-`). Drei Gründe: Konsistenz mit den
+beiden Nachbarn (`@name` heute, `&tag` reserviert mit derselben Menge, D34);
+ein `#a/b` oder `#a:b` liefe sonst in dieselben Kollisionen, vor denen §11 bei
+`:` und Pfaden gerade ausweicht; und enger → weiter ist später kompatibel
+möglich, umgekehrt nicht.
+
+**Nur alleinstehend angesetzt** (`(^|\s)#…`, wie beim reservierten `&tag`):
+„C#“ bleibt ein Label, und — entscheidend für den nächsten Schritt — die
+Abhängigkeits-Schreibweise `:#a,#b` wird **nicht** als ID gefressen, weil dort
+`:` bzw. `,` vor dem `#` steht. Die ID-Extraktion muss beim Bau der
+Abhängigkeiten also nicht angefasst werden.
+
+**Das erste Token ist die ID, weitere bleiben im Label.** Die ID benennt genau
+einen Knoten — mehr als eine pro Zeile ergibt keinen Sinn. Alles nach dem
+ersten Treffer bleibt unangetastet stehen, denn dort wohnt die reservierte
+Ticket-Referenz (`… #123 …`, §11): Sie soll sichtbar im Label bleiben, bis das
+Taiga-Feature sie auflöst. Deshalb wurden auch die drei `#`-Vorkommen im
+mitgelieferten Plan eingeklammert (`(#auth)`, `(#123)`) — als Erwähnungen sind
+sie keine IDs, und `#123` wäre sonst doppelt vergeben gewesen (Zeile 25/162).
+
+**Sichtbar im Tooltip und `aria-label`, sonst nirgends.** Die ID gehört nicht
+zum Label (sonst änderte das spätere Entfernen die Knoten-Identität der
+„Was ist neu?“-Anzeige, D28). Ganz unsichtbar wäre aber nutzerfeindlich —
+getippter Text verschwände spurlos. Der Tooltip zeigt `#id` als erste Zeile,
+der Screenreader bekommt `a11yId`; ein eigenes Badge bekommt sie erst, wenn
+etwas darauf zeigt (Querverbindungen, §11) — die Knoten-Ecken sind belegt
+(D18).
+
+**Doppelte ID: Warnung an der späteren Zeile, mit Nennung der ersten.** Die
+Meldung zeigt dorthin, wo man eingreifen muss, und `{firstLine}` erspart das
+Suchen. Die spätere ID gilt trotzdem am Knoten (fehlertolerant wie §4);
+welcher Knoten bei Verweisen „gewinnt“, entscheidet erst die
+Abhängigkeits-Auflösung — dort ist die Warnung dann schon da. Eine Zeile, die
+**nur** aus einer ID besteht, wird wie jede leere Zeile ignoriert und belegt
+die ID nicht.
