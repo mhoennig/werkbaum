@@ -105,7 +105,10 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `text === INITIAL` (nie echte Nutzerinhalte). Eine neue INITIAL-Fassung wird
   wie beim Werkbaum-Dokument per Fingerabdruck nachgezogen
   (`werkbaum-seeded-example`, D27-Nachtrag) — nur bei unverändertem Text; der
-  Reset setzt beide Merker. `resetToDefaults()` setzt **nur**
+  Reset setzt beide Merker. Bearbeitete mitgelieferte Dokumente holt der
+  Nutzer über „Original wiederherstellen" im Dokumenten-Menü zurück
+  (`restoreDoc()`, D22-Nachtrag) — sichtbar nur bei Abweichung vom
+  Auslieferungsstand, stellt Text UND Name wieder her. `resetToDefaults()` setzt **nur**
   das Beispiel-Dokument (id `example`) auf `INITIAL`/„Example" zurück und verwirft
   `werkbaum-ui`/`werkbaum-lang`/Update-Flags — **andere Dokumente bleiben stehen**
   (nicht mehr pauschal alle `werkbaum-*` löschen!). Das letzte gelöschte Dokument

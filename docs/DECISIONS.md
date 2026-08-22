@@ -387,6 +387,21 @@ Die GUI-Ansichts-Einstellungen (Modus, Zoom, Aufteilung; `werkbaum-ui`) bleiben
 bewusst **global** über alle Dokumente — pro-Dokument-Ansichtszustand wäre eine
 spätere Erweiterung.
 
+**Nachtrag — „Original wiederherstellen“ ist jetzt ein Produkt-Feature im
+Dokumenten-Menü.** Auslöser: Auf der Prod-Instanz gab es **keinen** Weg, ein
+bearbeitetes mitgeliefertes Dokument wieder auf den Auslieferungsstand zu
+bringen — der Reset ist ein Debug-Knopf außerhalb des Prod-Builds, und das
+Fingerabdruck-Nachziehen (D27) fasst bearbeitete Texte grundsätzlich nicht an.
+Wer im Beispiel herumprobiert hatte, sah neue Beispiel-Fassungen also nie.
+Erwogen und **verworfen**: die Alternative, dass eine neue Fassung lokale
+Änderungen still überschreibt — das wäre überraschender Datenverlust und
+bräche die D22/D27-Linie („bearbeitete Inhalte nie anfassen“). Stattdessen ein
+Menü-Eintrag, sichtbar nur für die **mitgelieferten** Dokumente und nur, wenn
+Text oder Name vom Auslieferungsstand abweichen; mit Rückfrage, die den
+Verlust benennt. Wiederhergestellt werden Text **und** Name (der Eintrag sagt
+„Original“); Falt-Eingriffe werden mit verworfen. Der Debug-Reset bleibt
+daneben bestehen — er setzt zusätzlich Einstellungen und Merker zurück.
+
 ## D23 — Notationstext per `?sourceUrl=` von einer URL laden
 Der Editor kann den Notationstext aus einer **externen Textdatei** beziehen:
 `…/index.html?sourceUrl=https://example.org/plan.txt`. Damit lässt sich ein

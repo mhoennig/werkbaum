@@ -1273,6 +1273,8 @@ const I18N = {
     docNew:"Neues Dokument", docRename:"Umbenennen", docDelete:"Löschen",
     docNewName:"Unbenannt",
     docDeleteConfirm:"Dokument „{name}“ löschen?",
+    docRestore:"Original wiederherstellen",
+    docRestoreConfirm:"„{name}“ auf den mitgelieferten Stand zurücksetzen? Eigene Änderungen gehen verloren.",
     copy:"kopieren", copyDone:"kopiert ✓", copyTooltip:"Text in die Zwischenablage kopieren",
     copyDiagramTooltip:"Diagramm als PNG-Bild in die Zwischenablage kopieren",
     downloadDiagramTooltip:"Diagramm als SVG-Datei herunterladen (z. B. für LibreOffice: Einfügen → Bild)",
@@ -1349,6 +1351,8 @@ const I18N = {
     docNew:"New document", docRename:"Rename", docDelete:"Delete",
     docNewName:"Untitled",
     docDeleteConfirm:"Delete document “{name}”?",
+    docRestore:"Restore original",
+    docRestoreConfirm:"Reset “{name}” to the shipped version? Your changes will be lost.",
     copy:"copy", copyDone:"copied ✓", copyTooltip:"Copy text to clipboard",
     copyDiagramTooltip:"Copy diagram as a PNG image to the clipboard",
     downloadDiagramTooltip:"Download diagram as an SVG file (e.g. for LibreOffice: Insert → Image)",
@@ -1425,6 +1429,8 @@ const I18N = {
     docNew:"Nuevo documento", docRename:"Renombrar", docDelete:"Eliminar",
     docNewName:"Sin título",
     docDeleteConfirm:"¿Eliminar el documento «{name}»?",
+    docRestore:"Restaurar original",
+    docRestoreConfirm:"¿Restablecer «{name}» a la versión incluida? Tus cambios se perderán.",
     copy:"copiar", copyDone:"copiado ✓", copyTooltip:"Copiar el texto al portapapeles",
     copyDiagramTooltip:"Copiar el diagrama como imagen PNG al portapapeles",
     downloadDiagramTooltip:"Descargar el diagrama como archivo SVG (p. ej. para LibreOffice: Insertar → Imagen)",
@@ -1501,6 +1507,8 @@ const I18N = {
     docNew:"Nouveau document", docRename:"Renommer", docDelete:"Supprimer",
     docNewName:"Sans titre",
     docDeleteConfirm:"Supprimer le document « {name} » ?",
+    docRestore:"Restaurer l’original",
+    docRestoreConfirm:"Réinitialiser « {name} » à la version livrée ? Vos modifications seront perdues.",
     copy:"copier", copyDone:"copié ✓", copyTooltip:"Copier le texte dans le presse-papiers",
     copyDiagramTooltip:"Copier le diagramme comme image PNG dans le presse-papiers",
     downloadDiagramTooltip:"Télécharger le diagramme en fichier SVG (p. ex. pour LibreOffice : Insertion → Image)",
@@ -1577,6 +1585,8 @@ const I18N = {
     docNew:"Nowy dokument", docRename:"Zmień nazwę", docDelete:"Usuń",
     docNewName:"Bez nazwy",
     docDeleteConfirm:"Usunąć dokument „{name}”?",
+    docRestore:"Przywróć oryginał",
+    docRestoreConfirm:"Przywrócić „{name}” do dostarczonej wersji? Twoje zmiany zostaną utracone.",
     copy:"kopiuj", copyDone:"skopiowano ✓", copyTooltip:"Kopiuj tekst do schowka",
     copyDiagramTooltip:"Kopiuj diagram jako obraz PNG do schowka",
     downloadDiagramTooltip:"Pobierz diagram jako plik SVG (np. dla LibreOffice: Wstaw → Obraz)",
@@ -1653,6 +1663,8 @@ const I18N = {
     docNew:"Новый документ", docRename:"Переименовать", docDelete:"Удалить",
     docNewName:"Без названия",
     docDeleteConfirm:"Удалить документ «{name}»?",
+    docRestore:"Восстановить оригинал",
+    docRestoreConfirm:"Вернуть «{name}» к поставляемой версии? Ваши изменения будут потеряны.",
     copy:"копировать", copyDone:"скопировано ✓", copyTooltip:"Скопировать текст в буфер обмена",
     copyDiagramTooltip:"Скопировать диаграмму как изображение PNG в буфер обмена",
     downloadDiagramTooltip:"Скачать диаграмму как файл SVG (напр. для LibreOffice: Вставка → Изображение)",
@@ -1729,6 +1741,8 @@ const I18N = {
     docNew:"नया दस्तावेज़", docRename:"नाम बदलें", docDelete:"हटाएँ",
     docNewName:"बिना शीर्षक",
     docDeleteConfirm:"दस्तावेज़ „{name}“ हटाएँ?",
+    docRestore:"मूल पुनर्स्थापित करें",
+    docRestoreConfirm:"„{name}“ को मूल संस्करण पर लौटाएँ? आपके परिवर्तन खो जाएँगे।",
     copy:"कॉपी करें", copyDone:"कॉपी हो गया ✓", copyTooltip:"टेक्स्ट को क्लिपबोर्ड पर कॉपी करें",
     copyDiagramTooltip:"आरेख को PNG छवि के रूप में क्लिपबोर्ड पर कॉपी करें",
     downloadDiagramTooltip:"आरेख को SVG फ़ाइल के रूप में डाउनलोड करें (जैसे LibreOffice: सम्मिलित करें → छवि)",
@@ -1805,6 +1819,8 @@ const I18N = {
     docNew:"新建文档", docRename:"重命名", docDelete:"删除",
     docNewName:"未命名",
     docDeleteConfirm:"删除文档“{name}”？",
+    docRestore:"恢复原始版本",
+    docRestoreConfirm:"将“{name}”重置为随附版本？您的更改将丢失。",
     copy:"复制", copyDone:"已复制 ✓", copyTooltip:"将文本复制到剪贴板",
     copyDiagramTooltip:"将图表作为 PNG 图片复制到剪贴板",
     downloadDiagramTooltip:"将图表下载为 SVG 文件（例如用于 LibreOffice：插入 → 图像）",
@@ -1881,6 +1897,8 @@ const I18N = {
     docNew:"新規ドキュメント", docRename:"名前を変更", docDelete:"削除",
     docNewName:"無題",
     docDeleteConfirm:"ドキュメント「{name}」を削除しますか？",
+    docRestore:"オリジナルを復元",
+    docRestoreConfirm:"「{name}」を同梱版に戻しますか？変更内容は失われます。",
     copy:"コピー", copyDone:"コピーしました ✓", copyTooltip:"テキストをクリップボードにコピー",
     copyDiagramTooltip:"ダイアグラムを PNG 画像としてクリップボードにコピー",
     downloadDiagramTooltip:"ダイアグラムを SVG ファイルとしてダウンロード（例：LibreOffice の 挿入 → 画像）",
@@ -2275,7 +2293,35 @@ function renderDocMenu(){
     }
   }
 }
-function openDocMenu(){ renderDocMenu(); docMenu.hidden = false; docTrigger.setAttribute('aria-expanded', 'true'); }
+/* „Original wiederherstellen" (D22-Nachtrag): nur für die mitgelieferten
+   Dokumente, und nur wenn sie vom Auslieferungsstand abweichen — der einzige
+   Weg auf der Prod-Instanz (ohne Debug-Reset), ein bearbeitetes Beispiel
+   wieder frisch zu bekommen. Bewusste Handlung mit Rückfrage statt stillem
+   Überschreiben beim Laden (D22/D27: bearbeitete Inhalte nie anfassen). */
+function shippedStateOf(id){
+  if(id === EXAMPLE_ID) return {name: EXAMPLE_NAME, text: INITIAL};
+  if(id === WERKBAUM_ID) return {name: WERKBAUM_NAME, text: WERKBAUM_DOC};
+  return null;
+}
+function updateRestoreBtn(){
+  const d = activeDoc();
+  const shipped = d && shippedStateOf(d.id);
+  document.getElementById('docRestore').hidden =
+    !shipped || (d.text === shipped.text && d.name === shipped.name);
+}
+function restoreDoc(){
+  const d = activeDoc();
+  const shipped = d && shippedStateOf(d.id);
+  if(!shipped) return;
+  if(!window.confirm(t('docRestoreConfirm', {name: d.name}))) return;
+  d.text = shipped.text;
+  d.name = shipped.name;
+  foldOverrides.clear();
+  loadActiveIntoEditor();
+  persistDocs();
+  closeDocMenu();
+}
+function openDocMenu(){ renderDocMenu(); updateRestoreBtn(); docMenu.hidden = false; docTrigger.setAttribute('aria-expanded', 'true'); }
 function closeDocMenu(){ renamingId = null; docMenu.hidden = true; docTrigger.setAttribute('aria-expanded', 'false'); }
 function toggleDocMenu(){ docMenu.hidden ? openDocMenu() : closeDocMenu(); }
 /* Beim Wechseln/Anlegen/Löschen zuerst den aktuellen Editortext ins aktive
@@ -2706,6 +2752,7 @@ docList.addEventListener('click', e => {
 document.getElementById('docNew').addEventListener('click', e => { e.stopPropagation(); newDoc(); renderDocMenu(); });
 document.getElementById('docRename').addEventListener('click', e => { e.stopPropagation(); renameDoc(); });
 document.getElementById('docDelete').addEventListener('click', e => { e.stopPropagation(); deleteDoc(); });
+document.getElementById('docRestore').addEventListener('click', e => { e.stopPropagation(); restoreDoc(); });
 /* Klick außerhalb schließt das Menü. */
 document.addEventListener('click', e => {
   if(!docMenu.hidden && !docMenu.contains(e.target) && !docTrigger.contains(e.target)) closeDocMenu();

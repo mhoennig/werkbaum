@@ -58,6 +58,7 @@
     - [^] Several documents in one editor (M)
       - [^] Switcher in the editor title bar (S)
       - [^] Load a document from ?sourceUrl= (S)
+      - [x] Restore a shipped document from the menu (XS)
     - [^] Jump between diagram and text (S)
     - [^] Line numbers in the text editor (XS)  %% the warnings name them
     - [^] Collapsible subtrees (M)
