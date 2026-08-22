@@ -9,18 +9,18 @@
       - [^] People tags, bare URLs, %% comments (XS)
     - [^] And/or decomposition (S)
     - [^] Optional nodes — neither required nor an alternative (S)
-    - [x] Node IDs (#auth) (S)  %% often just the ticket number, see SPEC §11
+    - [^] Node IDs (#auth) (S)  %% often just the ticket number, see SPEC §11
     + [?] Free tags, &tag (M)  %% only together with a consumer, see D34
       - [?] A lens: highlight every node tagged &x (S)
-    - [x] Dependencies across the tree, (:#auth,#api) (M)
-      - [x] They constrain the status, not when work may start (S)
-      - [x] Effective status: intrinsic, plus what it depends on (S)
-      - [x] Cycles are legal — they mean "finished together" (XS)
-      - [x] An id with no node behind it is a warning (XS)
-    - [x] XOR, = — exactly one alternative, not at least one (S)
-    - [x] Node descriptions, shown as a tooltip (M)
-      - [x] A short text right at the node (S)  %% a " line below the node
-      - [x] A long block at the end, addressed by its id (S)  %% behind a --- separator
+    - [^] Dependencies across the tree, (:#auth,#api) (M)
+      - [^] They constrain the status, not when work may start (S)
+      - [^] Effective status: intrinsic, plus what it depends on (S)
+      - [^] Cycles are legal — they mean "finished together" (XS)
+      - [^] An id with no node behind it is a warning (XS)
+    - [^] XOR, = — exactly one alternative, not at least one (S)
+    - [^] Node descriptions, shown as a tooltip (M)
+      - [^] A short text right at the node (S)  %% a " line below the node
+      - [^] A long block at the end, addressed by its id (S)  %% behind a --- separator
     - [-] A separate storage format for the structure (L)  %% the text is the format
     - [ ] Ticket references (#123) (S)
     - [?] Benefit per node, not only cost (M)
@@ -33,19 +33,19 @@
         - [^] Horizontal fan (S)
         - [^] Vertical, transposed (S)
         - [^] Compact (S)
-      - [x] Cross links for dependencies (M)
-        - [x] Visually secondary — the tree carries the message (S)
-        - [x] Highlight what a selected node needs and feeds (S)
+      - [^] Cross links for dependencies (M)
+        - [^] Visually secondary — the tree carries the message (S)
+        - [^] Highlight what a selected node needs and feeds (S)
     - [^] Cheapest path (M)
       - [^] Cost model, missing size counts as M (S)
       - [^] Metro-map line through the leaves (S)
-      - [x] Count the whole dependency closure #closure (M)
-        - [x] Shared dependencies counted only once (S)
-        - [x] The cheapest alternative is no longer the local one (M)  %% see D34, D42
-          | [x] Search exactly, the trees are small enough (M)
-            - [x] Enumerate the coupled any-of choices (S)
-            - [x] Cost is the size of the union (S)
-          | [x] Stay greedy, but say so (XS)  %% built as the named fallback
+      - [^] Count the whole dependency closure #closure (M)
+        - [^] Shared dependencies counted only once (S)
+        - [^] The cheapest alternative is no longer the local one (M)  %% see D34, D42
+          | [^] Search exactly, the trees are small enough (M)
+            - [^] Enumerate the coupled any-of choices (S)
+            - [^] Cost is the size of the union (S)
+          | [^] Stay greedy, but say so (XS)  %% built as the named fallback
     - [^] Export (M)
       - [^] SVG and PNG download (S)
       - [^] PNG to the clipboard (S)
@@ -59,10 +59,10 @@
       - [^] Switcher in the editor title bar (S)
       - [^] Load a document from ?sourceUrl= (S)
     - [^] Jump between diagram and text (S)
-    - [x] Line numbers in the text editor (XS)  %% the warnings name them
-    - [x] Collapsible subtrees (M)
-      - [x] Initial state from the text: > collapses, < re-opens (S)
-      - [x] Fold and unfold in the diagram, independently of the text (S)
+    - [^] Line numbers in the text editor (XS)  %% the warnings name them
+    - [^] Collapsible subtrees (M)
+      - [^] Initial state from the text: > collapses, < re-opens (S)
+      - [^] Fold and unfold in the diagram, independently of the text (S)
     - [ ] Open and save .werkbaum files (S)
     + [^] Show what is new since your last visit (S)
     + [?] A pastel colour per person (S)
