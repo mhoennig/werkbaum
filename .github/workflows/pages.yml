@@ -84,6 +84,8 @@ jobs:
               -e "s#\(<a class=\"ver\"[^>]*>\)[0-9.]\+</a>#\1${BUILD_VERSION}</a>#" \
               frontend/dist/index.html > site/index.html
           cp LICENSE site/LICENSE
+          # Agenten-Fassung der Notation (D43) — liegt per Vite-public/ in dist/
+          cp frontend/dist/llms.txt site/llms.txt
 
       - name: Pages-Konfiguration
         uses: actions/configure-pages@v6

@@ -2069,3 +2069,37 @@ als Hülle für Tests und Kompatibilität; `render()` liest `exact` für die
 Warnung. `markCheapest` entfällt — die Menge entsteht jetzt in einem
 Worklist-Durchlauf je Belegung (Zyklen enden über die Mengen-Prüfung von
 selbst; erste ID-Vergabe gewinnt, D36/D39).
+
+## D43 — `llms.txt`: die Notation für KI-Agenten, unter der Site-Wurzel
+KI-Agenten sollen Werkbaum-Texte lesen **und schreiben** können, ohne die
+deutsche SPEC durchzuarbeiten. Dafür liefert jede Instanz eine englische
+Markdown-Kurzfassung der Notation unter `/llms.txt` aus
+(`https://werkbaum.javagil.de/llms.txt`). Die Entscheidungen:
+
+**Der Name folgt der llms.txt-Konvention** (llmstxt.org): eine Markdown-Datei
+an der Site-Wurzel, die die Site für Sprachmodelle beschreibt — genau der
+Zweck, und zunehmend der Ort, an dem Agenten und Werkzeuge von sich aus
+nachsehen. Ein hübscherer Name (`notation.md`) wäre nicht auffindbar. Im
+Footer steht der **Dateiname selbst als Link** — dadurch braucht er keine
+Übersetzung in neun Sprachen; der Tooltip ist knapp zweisprachig (DE · EN),
+wie beim Build-Hinweis (D16: Metainformation, kein Produkt-Feature-Text).
+
+**Englisch, obwohl die Doku deutsch ist.** „Doku auf Deutsch" (CLAUDE.md)
+gilt der Projekt­dokumentation; die Agenten-Fassung ist ein **ausgeliefertes
+Produkt-Artefakt** mit weltweitem Publikum — dieselbe Logik, nach der das
+Beispiel-Dokument englisch ist (D22).
+
+**Quelle in `frontend/public/`** — damit erledigt Vite die halbe Arbeit: Der
+Dev-Server liefert `/llms.txt` direkt aus, `vite build` kopiert es nach
+`dist/`, und beide Deploy-Wege (Pages-Workflow und `deploy-prod.sh`, die die
+Site je von Hand zusammenstellen, D16) kopieren es mit einer Zeile weiter.
+Bewusst **nicht** in die eine `index.html` eingebettet: Agenten holen eine
+URL, kein Bundle.
+
+**Drift ist das Hauptrisiko** — dieselbe Sorge wie bei einem zweiten Parser
+(D14). Gegenmittel: Die Datei erklärt selbst, dass die SPEC normativ ist, und
+die Hausregel in CLAUDE.md lautet jetzt „SPEC zuerst, dann Code, **dann
+llms.txt nachziehen**" (SPEC §13 verweist zurück). Inhaltlich beschreibt sie
+nur die **Notation samt Semantik** (Gates, Status, Ränge, Extraktions-
+reihenfolge, Schreibregeln, ein vollständiges Beispiel) — keine Editor-UI:
+Die braucht ein schreibender Agent nicht, und sie ändert sich öfter.

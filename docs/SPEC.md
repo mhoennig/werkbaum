@@ -797,3 +797,12 @@ Entscheidung und verworfene Alternativen: D34-Nachtrag, D40.
 - Es gibt keinen registrierten MIME-Typ; wer selbst ausliefert, nimmt
   `text/plain; charset=utf-8` (dann zeigt der Browser die Datei an, statt sie
   herunterzuladen). Siehe D24.
+
+## 13. Agenten-Fassung (`llms.txt`)
+
+Eine **englische Kurzfassung dieser Spezifikation für KI-Agenten** (lesen
+**und** schreiben) liegt als Markdown in `frontend/public/llms.txt` und wird
+von jeder Instanz unter der Site-Wurzel ausgeliefert
+(`https://werkbaum.javagil.de/llms.txt`) — die llms.txt-Konvention. **Diese
+SPEC bleibt normativ**: Bei Syntaxänderungen wird die Agenten-Fassung im
+selben Zug nachgezogen (CLAUDE.md). Siehe D43.

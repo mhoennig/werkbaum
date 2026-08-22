@@ -12,7 +12,9 @@ Integrations-Backend.
 
 ## Verbindliche Referenzen
 - Sprachdefinition: @docs/SPEC.md — die Notation ist der gemeinsame Vertrag
-  von Frontend und Backend. Syntaxänderungen: SPEC **zuerst**, dann Code.
+  von Frontend und Backend. Syntaxänderungen: SPEC **zuerst**, dann Code,
+  dann die Agenten-Fassung `frontend/public/llms.txt` nachziehen
+  (SPEC §13, D43).
 - Entscheidungen: @docs/DECISIONS.md — respektieren; Abweichungen als neuen
   Eintrag begründen, alte Einträge nie löschen. Besonders D13 (Backend-Stack)
   und D14 (Parser-Hoheit) beachten.
