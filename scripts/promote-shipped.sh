@@ -54,12 +54,13 @@ done
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-PLAN="docs/examples/example-werkbaum.werkbaum"
+PLAN="docs/examples/werkbaum.werkbaum"
 [ -f "$PLAN" ] || { echo "Plan nicht gefunden: $PLAN" >&2; exit 1; }
 
-# Nur Statusboxen am Zeilenanfang (nach optionalem Zeichen -/+/|), damit ein
-# „[x]" mitten im Label unangetastet bleibt. `x` auch als `X` (SPEC §4).
-MATCH='^([[:space:]]*([-+|][[:space:]]*)?)\[[xX]\]'
+# Nur Statusboxen am Zeilenanfang — nach optionalem Zeichen -/+/|/= und
+# optionaler Faltmarke >/< (SPEC §1) —, damit ein „[x]" mitten im Label
+# unangetastet bleibt. `x` auch als `X` (SPEC §4).
+MATCH='^([[:space:]]*([-+|=][[:space:]]*)?([<>][[:space:]]+)?)\[[xX]\]'
 
 mapfile -t HITS < <(grep -nE "$MATCH" "$PLAN" || true)
 
@@ -88,7 +89,7 @@ fi
 
 # Labels für den Commit-Text sammeln (ohne Zeichen, Statusbox und Größe).
 mapfile -t LABELS < <(printf '%s\n' "${HITS[@]}" \
-  | sed -E 's/^[0-9]+:[[:space:]]*([-+|][[:space:]]*)?\[[xX]\][[:space:]]*//' \
+  | sed -E 's/^[0-9]+:[[:space:]]*([-+|=][[:space:]]*)?([<>][[:space:]]+)?\[[xX]\][[:space:]]*//' \
   | sed -E 's/[[:space:]]*\((XS|S|M|L|XL|XXL)\)[[:space:]]*$//')
 
 IS_GIT=0

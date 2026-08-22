@@ -111,7 +111,7 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   (nicht mehr pauschal alle `werkbaum-*` löschen!). Das letzte gelöschte Dokument
   wird als Beispiel neu gesät.
 - Mitgeliefertes Dokument „Werkbaum" (D27): `app.js` importiert
-  `../../docs/examples/example-werkbaum.werkbaum?raw` — die Beispieldatei ist
+  `../../docs/examples/werkbaum.werkbaum?raw` — die Beispieldatei ist
   damit **Build-Eingabe**, Umbenennen/Verschieben bricht den Build (Zugriff
   außerhalb des Roots erlaubt `server.fs.allow:['..']`). `seedShippedDocs()` legt
   es **einmalig** an (auch für Bestandsnutzer); ohne den Merker `werkbaum-seeded`
