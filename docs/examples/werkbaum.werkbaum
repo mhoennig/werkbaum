@@ -39,6 +39,7 @@
         - [^] Highlight what a selected node needs and feeds (S)
     - [^] Cheapest path (M)
       - [^] Cost model, missing size counts as M (S)
+      - [x] Only the open front: what is done costs nothing (S)  %% see D46
       - [^] Metro-map line through the leaves (S)
       - [^] #closure: Count the whole dependency closure (M)
         - [^] Shared dependencies counted only once (S)
@@ -64,7 +65,9 @@
     - [^] Line numbers in the text editor (XS)  %% the warnings name them
     - [^] Collapsible subtrees (M)
       - [^] Initial state from the text: > collapses, < re-opens (S)
-      - [^] Fold and unfold in the diagram, independently of the text (S)
+      - [^] Fold and unfold in the diagram (S)
+      - [^] Folding writes the mark back into the text (S)  %% one undo step
+      - [^] One switch folds everything from size M downward (S)  %% see D44
     - [ ] Open and save .werkbaum files (S)
     + [^] Show what is new since your last visit (S)
     + [?] A pastel colour per person (S)
@@ -75,6 +78,7 @@
     - [^] One self-contained file, bundled by Vite (S)
     - [^] Unit tests (S)
     - [^] Published on every push (S)
+    - [^] Says when a new build is out (S)  %% compares against the running one, see D45
     - [-] Deploy through a gh-pages branch (S)  %% GitHub Actions instead
     - [-] Fonts from Google (XS)  %% self-hosted, no third-party request
   - [ ] Backend (XL)
