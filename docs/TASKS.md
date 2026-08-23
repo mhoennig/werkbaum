@@ -136,6 +136,13 @@ entscheiden, **bevor** Code entsteht.
       M-Badge. Angefangenes (`[~]`/`[/]`) zählt weiter voll, maßgeblich ist der
       intrinsische Status. Kein neuer Umschalter — der vorhandene ändert seine
       Bedeutung. `tests/frontier.test.js`.
+- [x] Von Station zu Station springen (Knopf im Diagramm-Kopf).
+      → Umgesetzt (D47): `jumpToLeanStation()` holt die nächste offene Station
+      in die Mitte (Behandlung wie Alt+Klick, D25), nach der letzten wieder die
+      erste; ohne eigenen Zustand — fortgesetzt wird am hervorgehobenen Knoten.
+      Verborgen, solange es keine Station gibt; i18n `leanNextTooltip` in neun
+      Sprachen. Die Mobil-Kopfzeile musste dafür enger und darf unter 360 px
+      schieben.
 - [ ] Nutzen je Knoten (Gegenstück zur Kosten-Größe) — Schreibweise offen,
       SPEC-first (siehe ROADMAP „Kleinere Ideen").
 - [ ] Aufwands-Rollup (Größen der Kinder aggregieren) — braucht erst eine

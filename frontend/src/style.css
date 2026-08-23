@@ -1108,8 +1108,22 @@
      Ein-Bereich-Modus überhaupt gibt. Die Knöpfe passen längst — es waren die
      Abstände: 14 px Lücke mal sieben plus 2×16 px Innenabstand sind mehr als
      ein Drittel von 375 px. Deshalb hier enger und `nowrap` als Riegel; die
-     Knöpfe selbst bleiben unangetastet (Fingergröße). */
-  body.mobile .panel-head{gap:8px;flex-wrap:nowrap;padding-inline:10px}
+     Knöpfe selbst bleiben unangetastet (Fingergröße).
+     Mit dem neunten Bedienelement (Stationssprung, D47) noch einmal enger:
+     6 px Lücke und 8 px Innenabstand. Dazu `flex:0 0 auto` — ohne das schrumpft
+     ausgerechnet der Modus-Wähler (das einzige Element ohne feste Größe) bei
+     Platzmangel auf einen 2-px-Strich zusammen, während sein Icon darüber
+     hinausragt. Ein zerdrücktes Bedienelement ist der schlechtere Fehler als
+     ein sichtbarer Überlauf (D17-Nachtrag 5). */
+  body.mobile .panel-head{gap:6px;flex-wrap:nowrap;padding-inline:8px}
+  body.mobile .panel-head>*{flex:0 0 auto}
+  /* Unterhalb von rund 360 px ist es reine Arithmetik: neun Bedienelemente à
+     29 px plus Lücken brauchen mehr, als dort überhaupt da ist (bei 320 px
+     fehlen 41 px). Kleiner als 29 px darf ein Fingerziel nicht werden
+     (D17-Nachtrag 5), also schiebt die Zeile. Bei 375 px bleiben 14 px Luft —
+     dort ändert die Regel nichts, weil nichts überläuft. */
+  body.mobile .panel-head{overflow-x:auto;scrollbar-width:none}
+  body.mobile .panel-head::-webkit-scrollbar{display:none}
   /* Inhalte rund 25 % kleiner, damit mehr Plan auf die Fläche passt
      (D17-Nachtrag 2). Das Diagramm macht das über den CSS-`zoom` (Faktor auf
      den Nutzer-Zoom, siehe MOBILE_ZOOM in app.js); der Text über die

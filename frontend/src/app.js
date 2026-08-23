@@ -166,6 +166,7 @@ function render(){
   highlightCurrentNode(false);
   revealFocusMark();  /* `!!!` ins Bild holen, wenn die Marke neu ist (SPEC §1) */
   updateFreshBtn();   /* Zähler folgt der gerade gerenderten Menge (D28) */
+  updateLeanBtn();    /* Stationen des Pfads haben sich geändert (D47) */
 }
 
 /* Fokusmarke `!!!` (SPEC §1): Der erste markierte Knoten wird ins Bild geholt —
@@ -1432,6 +1433,47 @@ cheapBtn.addEventListener('click', () => {
   saveUI();
 });
 
+/* ---------- Von Station zu Station (SPEC §9, D47) ----------
+   Kein Umschalter, sondern eine Bewegung: Jeder Druck holt die nächste noch
+   offene Station des günstigsten Pfads in die Mitte — beim ersten Druck die
+   erste, danach der Reihe nach weiter, nach der letzten wieder von vorn.
+   Gegangen wird die DOM-Reihenfolge, also dieselbe, in der die Pfadlinie durch
+   die Stationen fädelt (D18/D46).
+
+   Ohne eigenen Zustand: Fortgesetzt wird an dem Knoten, der GERADE
+   hervorgehoben ist (`currentNodeEl`, D25). Steht der auf einer Station, geht
+   es bei der nächsten weiter; steht er woanders — etwa weil zwischendurch im
+   Text getippt wurde —, beginnt der Gang wieder vorn, also bei dem, was als
+   Nächstes dran ist. Ein gemerkter Index wäre schlechter: Beim Tippen wird der
+   Baum neu gebaut und die Liste ändert sich unter ihm. */
+function jumpToLeanStation(){
+  const st = [...out.querySelectorAll('.node.cheap-leaf')];
+  if(!st.length) return;
+  const el = st[(st.indexOf(currentNodeEl) + 1) % st.length];   /* -1 ⇒ die erste */
+  /* Auf Mobil ist das Diagramm womöglich gar nicht vorn — erst holen, sonst
+     misst sich der Zielknoten zu null (D17-Nachtrag 1). */
+  if(isMobile()) setMobilePane('diagram', true);
+  /* Genau die Behandlung des ausdrücklichen Alt+Klicks (D25): Fokus ohne
+     eigenes Scrollen, dann hervorheben, pulsen, zentrieren — und die
+     Abhängigkeits-Kanten des Knotens nehmen es mit (D41). */
+  el.focus({preventScroll: true});
+  caretLine = +el.dataset.line || null;
+  highlightCurrentNode(true, 'center');
+}
+const leanNextBtn = document.getElementById('leanNextBtn');
+leanNextBtn.addEventListener('click', jumpToLeanStation);
+/* Verborgen, solange es nichts anzuspringen gibt — bei ausgeschaltetem Pfad
+   ebenso wie bei einem durchweg erledigten Plan (D46). Dieselbe Zurückhaltung
+   wie beim „Was ist neu?"-Knopf: ein Knopf, der nichts tut, ist Rauschen. */
+function updateLeanBtn(){
+  const n = out.querySelectorAll('.node.cheap-leaf').length;
+  leanNextBtn.hidden = !n;
+  if(!n) return;
+  const tip = t('leanNextTooltip', {n});
+  leanNextBtn.title = tip;
+  leanNextBtn.setAttribute('aria-label', tip);
+}
+
 /* ---------- In die Zwischenablage kopieren ---------- */
 async function writeClipboard(text){
   try{ await navigator.clipboard.writeText(text); return; }catch(_){}
@@ -1516,6 +1558,7 @@ const I18N = {
     riskTooltip:"High Risk – Aufwand noch unklar.",
     discardedTooltip:"Verworfene Knoten samt Teilbaum ein-/ausblenden",
     cheapTooltip:"Günstigsten Pfad hervorheben – nicht benötigte Alternativen treten zurück",
+    leanNextTooltip:"Zur nächsten Station des günstigsten Pfads springen – was als Nächstes dran ist ({n} offen)",
     foldSmallTooltip:"Knoten der Größe M und kleiner zuklappen – erneut drücken klappt alle wieder auf",
     implicitSizeTooltip:"Keine Größe angegeben – für die Kostenschätzung als M angenommen",
     fullscreenTooltip:"Vollbild – Panels nutzen die ganze Fensterbreite",
@@ -1597,6 +1640,7 @@ const I18N = {
     riskTooltip:"High risk – effort still unclear.",
     discardedTooltip:"Show/hide discarded nodes and their subtree",
     cheapTooltip:"Highlight the cheapest path – unneeded alternatives recede",
+    leanNextTooltip:"Jump to the next station on the cheapest path – what to tackle next ({n} open)",
     foldSmallTooltip:"Collapse nodes of size M and smaller – press again to expand them all",
     implicitSizeTooltip:"No size given – assumed as M for the cost estimate",
     fullscreenTooltip:"Full screen – panels use the full window width",
@@ -1678,6 +1722,7 @@ const I18N = {
     riskTooltip:"Alto riesgo – esfuerzo aún incierto.",
     discardedTooltip:"Mostrar u ocultar los nodos descartados y su subárbol",
     cheapTooltip:"Resaltar la ruta más económica: las alternativas no necesarias se atenúan",
+    leanNextTooltip:"Ir a la siguiente estación de la ruta más económica: lo próximo que toca ({n} pendientes)",
     foldSmallTooltip:"Plegar los nodos de talla M o menor: pulsa de nuevo para desplegarlos todos",
     implicitSizeTooltip:"Sin tamaño indicado: se asume M para el cálculo de costes",
     fullscreenTooltip:"Pantalla completa – los paneles usan todo el ancho de la ventana",
@@ -1759,6 +1804,7 @@ const I18N = {
     riskTooltip:"Risque élevé – effort encore incertain.",
     discardedTooltip:"Afficher/masquer les nœuds abandonnés et leur sous-arbre",
     cheapTooltip:"Mettre en évidence le chemin le moins coûteux – les alternatives inutiles s'estompent",
+    leanNextTooltip:"Aller à la station suivante du chemin le moins coûteux – la prochaine chose à faire ({n} en attente)",
     foldSmallTooltip:"Replier les nœuds de taille M et moins – appuyez à nouveau pour tout déplier",
     implicitSizeTooltip:"Aucune taille indiquée – considérée comme M pour l'estimation des coûts",
     fullscreenTooltip:"Plein écran – les panneaux occupent toute la largeur de la fenêtre",
@@ -1840,6 +1886,7 @@ const I18N = {
     riskTooltip:"Wysokie ryzyko – nakład jeszcze niejasny.",
     discardedTooltip:"Pokaż/ukryj odrzucone węzły wraz z poddrzewem",
     cheapTooltip:"Wyróżnij najtańszą ścieżkę – niepotrzebne alternatywy są przygaszone",
+    leanNextTooltip:"Przejdź do następnej stacji najtańszej ścieżki – co dalej ({n} otwartych)",
     foldSmallTooltip:"Zwiń węzły o rozmiarze M i mniejsze – naciśnij ponownie, aby rozwinąć wszystkie",
     implicitSizeTooltip:"Nie podano rozmiaru – przyjęto M do szacowania kosztów",
     fullscreenTooltip:"Pełny ekran – panele wykorzystują całą szerokość okna",
@@ -1921,6 +1968,7 @@ const I18N = {
     riskTooltip:"Высокий риск – оценка ещё не ясна.",
     discardedTooltip:"Показать/скрыть отклонённые узлы вместе с поддеревом",
     cheapTooltip:"Выделить самый дешёвый путь — ненужные альтернативы приглушаются",
+    leanNextTooltip:"Перейти к следующей станции самого дешёвого пути — что делать дальше ({n} открыто)",
     foldSmallTooltip:"Свернуть узлы размера M и меньше — нажмите ещё раз, чтобы развернуть все",
     implicitSizeTooltip:"Размер не указан — для оценки затрат принят как M",
     fullscreenTooltip:"Полный экран – панели занимают всю ширину окна",
@@ -2002,6 +2050,7 @@ const I18N = {
     riskTooltip:"उच्च जोखिम – प्रयास अभी अस्पष्ट।",
     discardedTooltip:"अस्वीकृत नोड्स और उनके उप-वृक्ष दिखाएँ/छिपाएँ",
     cheapTooltip:"सबसे किफ़ायती पथ को उजागर करें – अनावश्यक विकल्प मंद हो जाते हैं",
+    leanNextTooltip:"सबसे किफ़ायती पथ के अगले पड़ाव पर जाएँ – अगला काम ({n} शेष)",
     foldSmallTooltip:"आकार M और उससे छोटे नोड समेटें – सभी को खोलने के लिए फिर दबाएँ",
     implicitSizeTooltip:"कोई आकार नहीं दिया गया – लागत अनुमान के लिए M माना गया",
     fullscreenTooltip:"पूर्ण स्क्रीन – पैनल पूरी विंडो चौड़ाई का उपयोग करते हैं",
@@ -2072,6 +2121,7 @@ const I18N = {
     fullscreenTooltip:"全屏——面板占据整个窗口宽度",
     discardedTooltip:"显示/隐藏已放弃的节点及其子树",
     cheapTooltip:"突出显示成本最低的路径——不需要的备选项将淡化",
+    leanNextTooltip:"跳到成本最低路径的下一站——接下来该做的事（还有 {n} 项）",
     foldSmallTooltip:"折叠尺寸 M 及更小的节点——再次点击可全部展开",
     implicitSizeTooltip:"未指定尺寸——成本估算时按 M 计",
     ghostTooltip:"从 M 号起，元素应进一步细分。",
@@ -2153,6 +2203,7 @@ const I18N = {
     fullscreenTooltip:"全画面 — パネルがウィンドウ幅いっぱいを使用",
     discardedTooltip:"破棄したノードとその下位ツリーを表示/非表示",
     cheapTooltip:"最も低コストの経路を強調 – 不要な選択肢は控えめに表示",
+    leanNextTooltip:"最も低コストの経路の次の駅へ移動 – 次にやること（残り {n} 件）",
     foldSmallTooltip:"サイズ M 以下のノードを折りたたむ – もう一度押すとすべて展開",
     implicitSizeTooltip:"サイズ未指定 – コスト見積もりのため M として扱う",
     ghostTooltip:"サイズ M 以上の要素はさらに分解すべきです。",

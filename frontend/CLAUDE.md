@@ -504,3 +504,13 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Hash-Rückfall, der Marker-Pfad ist nur zu prüfen, wenn man einen echten
   `commit/<sha>` in `index.html` einspritzt (danach zurücknehmen!) und
   `window.fetch` überschreibt.
+- **Diagramm-Kopfzeile auf Mobil (D17-Nachtrag 5, D47):** Die Zeile ist voll —
+  bei 375 px bleiben mit neun Bedienelementen noch 14 px Luft, bei 320 px passt
+  es arithmetisch nicht mehr und die Zeile **schiebt** (`overflow-x:auto`).
+  Wer ein zehntes Element hinzufügt, misst nach (`scrollWidth - clientWidth`
+  am `.panel-head`) und rechnet damit, dass auf 375 px etwas weichen muss.
+  Nicht anfassen: die 29 px Knopfgröße (Fingerziel) und `flex:0 0 auto` an den
+  Kindern — ohne das schrumpft bei Platzmangel ausgerechnet der Modus-Wähler
+  (das einzige Element ohne feste Größe) auf einen 2-px-Strich, während sein
+  Icon darüber hinausragt. Das sieht aus wie ein Trennstrich und ist
+  unbenutzbar.

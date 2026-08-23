@@ -41,6 +41,7 @@
       - [^] Cost model, missing size counts as M (S)
       - [x] Only the open front: what is done costs nothing (S)  %% see D46
       - [^] Metro-map line through the leaves (S)
+      - [x] Step from station to station, one button (S)  %% see D47
       - [^] #closure: Count the whole dependency closure (M)
         - [^] Shared dependencies counted only once (S)
         - [^] The cheapest alternative is no longer the local one (M)  %% see D34, D42

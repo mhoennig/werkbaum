@@ -529,6 +529,19 @@ Restarbeit ist dann seine); ist ein ganzer Zweig erledigt, hat er keine. Linie,
 abgetönte Kopie und Punkte erscheinen bei aktivem Umschalter auch im
 Grafikexport. Siehe D18, D46.
 
+**Von Station zu Station.** Neben dem Umschalter steht ein **Knopf**, der die
+Stationen der Reihe nach anspringt: Der erste Druck holt die **erste** — das,
+was als Nächstes dran ist —, jeder weitere die nächste, nach der letzten wieder
+die erste. Gegangen wird die Dokument-Reihenfolge, also dieselbe, in der die
+Linie durch die Stationen fädelt. Der Knoten wird **zentriert, hervorgehoben
+und bekommt den Tastaturfokus** — dieselbe Behandlung wie beim ausdrücklichen
+Alt+Klick (§9, Sprung zwischen Diagramm und Text); von dort führt **Alt+Enter**
+in die zugehörige Textzeile. Fortgesetzt wird am gerade hervorgehobenen Knoten:
+Steht der auf einer Station, geht es bei der nächsten weiter, sonst wieder
+vorn. Der Knopf ist **verborgen**, solange es keine Station gibt — bei
+ausgeschaltetem Pfad ebenso wie bei einem durchweg erledigten Plan; sein
+Tooltip nennt die Zahl der offenen Stationen. Siehe D47.
+
 ### Diagramm aus einer URL laden (`?sourceUrl=`)
 Der Editor kann den Notationstext aus einer externen Textdatei beziehen:
 `…?sourceUrl=https://example.org/plan.txt` (relative Angaben werden gegen die

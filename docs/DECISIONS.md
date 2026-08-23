@@ -2997,3 +2997,77 @@ um genau zwei Knoten (`[x] Zielgruppenanalyse`, `[x] Sitemap` verlieren
 Status-Hälfte ist damit gebaut. Offen bleibt die **Nutzen-Achse** (Ausbaustufen:
 ist eine Gruppe komplett realisiert, zur nächsten per Nutzen gewählten Stufe
 weiterspringen) — die braucht erst ein Nutzen-Attribut und den Aufwands-Rollup.
+
+## D47 — Von Station zu Station: ein Knopf, der geht, statt zu schalten
+Mit dem status-bewussten Pfad (D46) zeigt das Diagramm die offene Front — im
+mitgelieferten Plan 24 Stationen, verteilt über einen Baum von über 20 000 px
+Breite. Sie **zu sehen** ist damit gelöst, sie **abzugehen** nicht: Man müsste
+jede von Hand suchen. Der Knopf im Diagramm-Kopf holt sie der Reihe nach in die
+Mitte.
+
+**Der einzige Knopf im Diagramm-Kopf, der kein Umschalter ist.** „Verworfene
+einblenden" (D4), „günstigster Pfad" (D18) und die Falt-Voreinstellung (D44)
+beschreiben je einen Zustand; dieser löst eine **Bewegung** aus. Deshalb kein
+`aria-pressed` und keine gedrückte Optik — er sieht aus wie „kopieren" und
+„herunterladen", die ebenfalls etwas *tun*.
+
+**Der Sprung fasst nur das Diagramm an** (Nutzer): zentrieren, hervorheben,
+Tastaturfokus — buchstäblich die Behandlung des ausdrücklichen Alt+Klicks
+(D25-Nachtrag 1), inklusive Puls und der Hervorhebung der
+Abhängigkeits-Kanten (D41). Erwogen war, zusätzlich die Schreibmarke auf die
+Zeile zu setzen; das kostete aber den Fokus im Baum (der nächste Druck müsste
+ihn zurückholen) und wäre auf dem Telefon bei jedem Sprung ein Bereichswechsel
+weg vom Diagramm. Der Weg in den Text steht direkt daneben offen: **Alt+Enter**
+am fokussierten Knoten, dieselbe Geste wie überall.
+
+**Nach der letzten wieder die erste** (Nutzer). Ein Knopf, der am Ende
+aufhört, wirkt kaputt und bräuchte eine eigene Rückstell-Geste; dass man wieder
+oben ist, sieht man am Baum.
+
+**Kein Zähler am Knopf** (Nutzer). Der „Was ist neu?"-Knopf trägt einen, hier
+wäre er ein zehntes Element in einer Zeile, die schon knapp ist — die Zahl der
+offenen Stationen steht stattdessen im **Tooltip** („… (24 offen)"), wo sie
+nichts kostet.
+
+**Kein eigener Zustand: fortgesetzt wird am hervorgehobenen Knoten.** Ein
+gemerkter Index wäre die naheliegende Lösung und die schlechtere: Der Baum wird
+bei **jedem Tastendruck** neu gebaut, die Stationsliste ändert sich unter dem
+Index, und er zeigte danach auf etwas anderes. `currentNodeEl` (D25) überlebt
+den Neubau dagegen von selbst, weil es aus der Cursor-Zeile neu abgeleitet
+wird. Liegt der hervorgehobene Knoten nicht auf einer Station — etwa weil
+jemand zwischendurch im Text getippt hat —, beginnt der Gang wieder vorn. Das
+ist kein Notbehelf, sondern die richtige Antwort auf „zeig mir, was als
+Nächstes dran ist".
+
+**Verborgen, solange es nichts anzuspringen gibt** — bei ausgeschaltetem Pfad
+(dann gibt es keine Stationen) ebenso wie bei einem durchweg erledigten Plan.
+Dieselbe Zurückhaltung wie beim „Was ist neu?"-Knopf (D28).
+
+**Die Kopfzeile hat das nicht mehr getragen — und das war kein Fehler des
+Knopfes.** D17-Nachtrag 5 hatte die Zeile gerade erst auf acht Elemente
+zurechtgemessen und dabei `flex-wrap:nowrap` als Riegel gesetzt, damit aus
+einem stillen Umbruch ein sichtbarer Überlauf wird. Der neunte Knopf hat den
+Riegel prompt ausgelöst — nachgemessen aber anders als erwartet:
+
+- Bei **375 px** passte es weiterhin, nachdem die Lücke von 8 auf 6 px und der
+  Innenabstand von 10 auf 8 px ging: 345 px Inhalt, 359 px Platz, **14 px
+  Luft**, eine Reihe.
+- Bei **320 px** ist es Arithmetik: 345 px Inhalt gegen 304 px Platz. Neun
+  fingergroße Ziele passen dort nicht, und unter 29 px zu gehen hat
+  D17-Nachtrag 5 ausdrücklich abgelehnt.
+
+**Dabei ein älterer, stiller Fehler gefunden:** Bei Platzmangel schrumpfte
+nicht etwa irgendetwas gleichmäßig — der **Modus-Wähler** ist das einzige
+Element ohne feste Größe und wurde auf einen **2-px-Strich** zusammengedrückt,
+während sein Icon 38 px breit darüber hinausragte. Das Bedienelement war
+unbenutzbar und sah aus wie ein Trennstrich. `flex:0 0 auto` an allen Kindern
+der Zeile stellt das ab: Niemand wird mehr zerdrückt.
+
+**Darum schiebt die Zeile jetzt, statt zu zerdrücken oder abzuschneiden:**
+`overflow-x:auto` auf dem Kopf (Scrollbalken ausgeblendet — auf Touch-Geräten
+sind sie ohnehin Overlay). Bei 375 px ändert die Regel nichts, weil nichts
+überläuft; bei 320 px bleiben alle neun Elemente in voller Größe erreichbar
+(nachgemessen: 41 px Schiebeweg, Kopfhöhe unverändert 49 px, Modus-Wähler
+wieder 40 px breit). Das ist die ehrliche Fortschreibung der D17-Regel: Der
+Riegel sollte einen unbemerkten Layout-Wechsel verhindern, nicht ein
+Bedienelement opfern.
