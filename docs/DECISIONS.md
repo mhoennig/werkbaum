@@ -710,6 +710,28 @@ Nebenbefund beim Aufräumen: Der Kommentar über der Regel behauptete noch, die
 Fokusmarke `!!!` trage „bewusst DIESELBE Hervorhebung" — überholt, seit der
 D32-Nachtrag ihr den eigenen Petrol-Kranz gegeben hat. Ersetzt.
 
+**Nachtrag 2 — Alt+Klick im Textfeld pulst jetzt auch.** Die erste Fassung des
+Pulses hing an derselben Bedingung wie das Scrollen, und `focusNodeOfCaret()`
+gab dort bewusst `false` weiter, um ein doppeltes Scrollen zu vermeiden
+(erst `nearest`, dann `center`). Folge: Ausgerechnet die **ausdrückliche**
+Geste — „ich will diesen Knoten jetzt sehen" — kam stiller an als das
+beiläufige Tippen. Das ist verkehrt herum.
+
+Getrennt sind die beiden Dinge jetzt sauber: `highlightCurrentNode(moved,
+scroll)` nimmt zusätzlich, **wie** ins Bild geholt wird — `'nearest'` beim
+gewöhnlichen Zeilenwechsel, `'center'` beim Alt+Klick, `false` beim Neubau.
+Die Hervorhebung ist in allen Fällen dieselbe, Puls eingeschlossen; der
+Unterschied liegt allein im Scroll-Modus. Der Fokus wandert weiter mit
+(D25-Nachtrag 1, `focus({preventScroll:true})` **vor** dem Scrollen) — er
+verändert das Bild nicht, weil `:focus-visible` nach einem Mausklick nicht
+greift (nachgemessen: `false`).
+
+Der Fall, den man beim Bauen leicht übersieht: Alt+Klick trifft oft den Knoten,
+der **schon** die Cursor-Zeile ist. Dann ist es dasselbe DOM-Element, und der
+Puls muss trotzdem neu anlaufen — genau dafür steht das Lesen von
+`offsetWidth` zwischen Entfernen und Setzen der Klasse. Nachgemessen: vor dem
+Klick keine laufende Animation, 80 ms danach beide bei `currentTime ≈ 67 ms`.
+
 ## D26 — Legende scrollbar: eigener Container statt `<details>`, plus Splitter
 Die Legende („Agenda") im Editor-Panel war zu hoch für ihren Platz und wurde
 **abgeschnitten** statt scrollbar zu sein — obwohl `.hint` seit jeher
@@ -1883,6 +1905,50 @@ welcher Knoten bei Verweisen „gewinnt“, entscheidet erst die
 Abhängigkeits-Auflösung — dort ist die Warnung dann schon da. Eine Zeile, die
 **nur** aus einer ID besteht, wird wie jede leere Zeile ignoriert und belegt
 die ID nicht.
+
+**Nachtrag — die übliche Stellung ist vor dem Titel, mit trennendem
+Doppelpunkt: `#auth: Backend`.** Die Stellung war frei und blieb es auch; was
+fehlte, war eine **Konvention**. In den Beispielen stand die ID mal hinten
+(`Documents on the server #docs (L)`), mal irgendwo dazwischen — lesbar, aber
+ohne feste Stelle, an der das Auge sie sucht. Vorn ist sie dort, wo sie
+hingehört: Sie **benennt** den Knoten, und der Titel ist die Erläuterung dazu.
+Damit liest sich eine Zeile wie ein Wörterbucheintrag, und Zeilen mit ID
+richten sich untereinander aus.
+
+**Der Doppelpunkt ist optional und reines Trennzeichen.** Ohne ihn stünden
+zwei Bezeichner unmittelbar nebeneinander (`#auth Backend`) — das liest sich
+wie ein zweiteiliger Name, nicht wie Adresse plus Titel. Er gehört weder zur
+ID noch zum Label und wird nie gerendert; im Diagramm steht genau wie bisher
+nur der Titel. Ein Werkzeug, das ihn als Teil der ID führte, machte aus
+`#auth` und `#auth:` zwei verschiedene Adressen — deshalb fällt er beim Parsen
+weg, nicht erst beim Anzeigen.
+
+**Geschluckt wird er nur mit folgendem Leerraum oder Zeilenende** — dieselbe
+Leerraum-Regel wie bei `=`, `>`/`<` und `"` (D34), hier aber mit einem
+konkreten Grund: `#auth:#db` bliebe sonst nicht als ID plus Abhängigkeit
+erhalten. Mit der Regel liest der Parser dort `#auth` als ID, lässt den
+Doppelpunkt stehen, und die Abhängigkeits-Extraktion (§1, Schritt 7) findet
+`:#db` — genau wie ohne die Neuerung. Ein Doppelpunkt **im Titel** bleibt
+ebenfalls unangetastet: `#auth: Regel: nur mit Token` ergibt das Label
+„Regel: nur mit Token“, weil nur der **unmittelbar** an die ID anschließende
+Doppelpunkt gemeint ist.
+
+**Die ID-Erkennung selbst ist unverändert geblieben** — die Doppelpunkt-Gruppe
+im Regex ist optional und verlangt nichts. Ein zusätzlich verlangtes
+`(?=\s|$)` **hinter der ID** wäre der naheliegende, aber falsche Weg gewesen:
+Es hätte bestehende Zeilen umgedeutet, weil der Ausdruck bei einem Fehlschlag
+weiterwandert und dann ein *späteres* `#`-Token zur ID erklärt hätte.
+
+Im **Beschreibungsteil** (`---`, §1) ist ein angehängter Doppelpunkt ebenfalls
+zugelassen (`#auth:` als Block-Kopf). Dort folgt kein Titel, die Konvention
+greift also nicht — aber wer sie gewohnt ist, soll nicht über eine
+`descStray`-Warnung stolpern. Die mitgelieferten Beispiele schreiben
+Block-Köpfe weiterhin ohne Doppelpunkt.
+
+Umgestellt sind alle mitgelieferten Beispiele (`docs/examples/`, das
+`INITIAL`-Dokument und das Beispiel in `llms.md`); SPEC §10 hat keine IDs und
+bleibt unberührt. Die Legenden-Zeile `hint_id` nennt die neue Form in allen
+neun Sprachen.
 
 ## D37 — Abhängigkeiten (`:#a,#b`) geparst: ein Token, alleinstehend, IDs als Strings
 Der zweite Baustein der Phase-4-Kette. Gebaut ist die **Schreibweise** (SPEC

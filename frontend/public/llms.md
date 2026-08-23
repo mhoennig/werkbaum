@@ -91,6 +91,13 @@ One node per line. Everything except the label is optional.
    whole document; a duplicate ID warns, and references resolve to the first
    occurrence. Later `#tokens` stay label text; `C#` stays a label. Same
    character set as `@name`.
+   **Write it before the title, separated by a colon — `#auth: Backend`.** That
+   is the customary form. The colon is optional and is a separator in the text
+   only: it belongs neither to the ID nor to the label and is never rendered.
+   It is consumed only when it directly follows the ID *and* is followed by
+   whitespace or end of line — so a colon inside the label survives
+   (`#auth: Rule: token required`), and `#auth:#db` still reads as ID plus
+   dependency. Placement stays free: `Backend #auth` means the same thing.
 6. `:#a,#b` — **dependencies**: one contiguous free-standing token — colon,
    then comma-separated IDs, each with `#`, **no spaces** (`:#a, #b` reads
    only `#a`, and the free-standing ` #b` would become the node ID!).
@@ -129,7 +136,8 @@ One node per line. Everything except the label is optional.
   lines without a gate character.
 - **Long form:** a separator line of three or more dashes (`---`) ends the
   tree part. After it, an **unindented** line holding exactly one `#id`
-  opens a block; the **indented** lines below it are its text (blank lines =
+  (a trailing colon is tolerated) opens a block; the **indented** lines below
+  it are its text (blank lines =
   paragraph breaks). There is no closing fence — the description section
   runs to end of file. Stray lines there produce warnings, never silent loss.
 - Inside descriptions no token extraction happens — `(M)`, `@name`, `#id`
@@ -141,6 +149,7 @@ One node per line. Everything except the label is optional.
 - Let indentation carry the hierarchy; keep sibling gates aligned.
 - Never mix `|` or `=` with other gates in one sibling group.
 - Decompose everything `(M)` or larger.
+- Put a node ID in front of the title, separated by a colon: `#auth: Backend`.
 - Give a node its own status only; express "blocked by" with `:#…`
   dependencies instead of understating the status.
 - Mark nice-to-haves with `+` — otherwise they inflate the cheapest path.
@@ -165,7 +174,7 @@ One node per line. Everything except the label is optional.
             - [ ] Android (M)
             - [ ] iOS (M)
         - [!] Backend (L) @ben @carla
-        - [ ] CMS integration #cms (M)
+        - [ ] #cms: CMS integration (M)
           | [ ] WordPress
           | [?] Headless CMS
           | [-] Custom build  %% too much effort

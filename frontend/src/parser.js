@@ -80,7 +80,10 @@ export function parse(text){
         if(descTarget !== SKIP) addDesc(descTarget, raw.trim());
         return;
       }
-      const idm = raw.match(/^#([\p{L}\p{N}._-]+)\s*$/u);
+      /* Der trennende Doppelpunkt (siehe Knoten-ID unten) ist auch hier
+         zugelassen — ein Block-Kopf hat zwar keinen Titel dahinter, aber wer
+         die Schreibweise `#auth:` gewohnt ist, soll nicht darüber stolpern. */
+      const idm = raw.match(/^#([\p{L}\p{N}._-]+):?\s*$/u);
       if(!idm){
         /* Uneingerückt, keine ID-Zeile — bei einem versehentlichen Trenner
            mitten im Plan melden sich die verschluckten Knotenzeilen so
@@ -129,9 +132,15 @@ export function parse(text){
        bleibt Label, und das reservierte `:#a,#b` (§11) wird nicht gefressen.
        Nur der ERSTE Treffer (kein /g): weitere `#`-Token bleiben im Label
        stehen, dort wohnt die reservierte Ticket-Referenz. Zeichenmenge wie bei
-       `@name`; kein Lookbehind (Safari erst ab 16.4). */
+       `@name`; kein Lookbehind (Safari erst ab 16.4).
+       Übliche Schreibweise ist die ID **vor** dem Titel, abgetrennt durch einen
+       Doppelpunkt: `#auth: Backend`. Der Doppelpunkt ist optional, gehört weder
+       zur ID noch zum Label und verschwindet hier. Er wird nur geschluckt, wenn
+       **Leerraum oder Zeilenende** folgt — sonst bliebe von `#auth:#db` nicht
+       die Abhängigkeit `:#db` übrig. Die ID-Erkennung selbst bleibt unberührt
+       (die Doppelpunkt-Gruppe ist optional, verlangt also nichts). */
     let id = null;
-    rest = rest.replace(/(^|\s)#([\p{L}\p{N}._-]+)/u, (s, pre, g) => { id = g; return pre; });
+    rest = rest.replace(/(^|\s)#([\p{L}\p{N}._-]+)(?::(?=\s|$))?/u, (s, pre, g) => { id = g; return pre; });
     /* Abhängigkeiten `:#a,#b` (SPEC §1, D37): EIN zusammenhängendes Token ohne
        Leerraum, nur ALLEINSTEHEND ANGESETZT — eingeklammerte Erwähnungen wie
        `(:#auth,#api)` bleiben damit Label (dieselbe Zitier-Konvention wie bei

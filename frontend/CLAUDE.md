@@ -232,9 +232,12 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `jumpHint` im Knoten-Tooltip und `hint_jump` als letzte Zeile der Legende.
 - Alt+Klick **im Textfeld** (D25, Nachtrag): `focusNodeOfCaret()` zentriert den
   Knoten der Cursor-Zeile und gibt ihm den Fokus (`focus({preventScroll:true})`
-  **vor** `scrollIntoView({block:'center'})` — sonst scrollt der Browser zweimal).
-  Das ist nicht dasselbe wie das Mitlaufen der Cursor-Zeile: `syncCaret()` scrollt
-  absichtlich nur `nearest` und nur beim Zeilenwechsel. Beim Tastaturweg
+  **vor** dem Scrollen — sonst scrollt der Browser zweimal). Die Hervorhebung ist
+  **dieselbe wie beim Zeilenwechsel**, Puls eingeschlossen; den Unterschied trägt
+  allein der zweite Parameter `highlightCurrentNode(moved, scroll)`:
+  `'nearest'` beim gewöhnlichen Zeilenwechsel (`syncCaret()`), `'center'` hier,
+  `false` beim Neubau aus `render()`. Nicht wieder `false` für den Puls
+  mitgeben — dann kommt die ausdrückliche Geste stiller an als das Tippen. Beim Tastaturweg
   (Alt+Enter) ist `preventDefault()` Pflicht, sonst bekommt der Text einen
   Umbruch. Die Legenden-Zeile `hint_jump` nennt **beide** Richtungen — kein
   eigener i18n-Schlüssel.
@@ -307,6 +310,14 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   darf nicht gefressen werden. Zeichenmenge wie `@name`. Doppelte ID →
   `{type:'duplicateId', line, id, firstLine}`; die spätere gilt trotzdem.
   Keine eigene Darstellung — nur Tooltip (erste Position) und `a11yId`.
+  **Übliche Schreibweise ist `#id: Titel`** (D36-Nachtrag): Der trennende
+  Doppelpunkt ist optional, gehört weder zur ID noch zum Label und fällt beim
+  Parsen weg — sonst wären `#auth` und `#auth:` zwei Adressen. Geschluckt nur
+  mit folgendem **Leerraum oder Zeilenende**, sonst bliebe von `#auth:#db` die
+  Abhängigkeit nicht übrig. Die ID-Erkennung selbst NICHT verschärfen: ein
+  verlangtes `(?=\s|$)` hinter der ID deutet bestehende Zeilen um (der Ausdruck
+  wandert bei Fehlschlag weiter und erklärt ein späteres `#`-Token zur ID).
+  Der Block-Kopf im Beschreibungsteil nimmt den Doppelpunkt ebenfalls an.
 - Abhängigkeiten `:#a,#b` (SPEC §1/D37): EIN zusammenhängendes Token ohne
   Leerraum, nur **alleinstehend angesetzt** — `(:#a,#b)` bleibt Label
   (Zitier-Konvention wie `(#auth)`). `node.deps` sind **ID-Strings**, keine

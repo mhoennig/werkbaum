@@ -9,7 +9,7 @@
       - [^] People tags, bare URLs, %% comments (XS)
     - [^] And/or decomposition (S)
     - [^] Optional nodes — neither required nor an alternative (S)
-    - [^] Node IDs (#auth) (S)  %% often just the ticket number, see SPEC §11
+    - [^] Node IDs, (#auth:) before the title (S)  %% often the ticket number, see SPEC §11
     + [?] Free tags, &tag (M)  %% only together with a consumer, see D34
       - [?] A lens: highlight every node tagged &x (S)
     - [^] Dependencies across the tree, (:#auth,#api) (M)
@@ -40,7 +40,7 @@
     - [^] Cheapest path (M)
       - [^] Cost model, missing size counts as M (S)
       - [^] Metro-map line through the leaves (S)
-      - [^] Count the whole dependency closure #closure (M)
+      - [^] #closure: Count the whole dependency closure (M)
         - [^] Shared dependencies counted only once (S)
         - [^] The cheapest alternative is no longer the local one (M)  %% see D34, D42
           | [^] Search exactly, the trees are small enough (M)
@@ -78,10 +78,10 @@
     - [-] Deploy through a gh-pages branch (S)  %% GitHub Actions instead
     - [-] Fonts from Google (XS)  %% self-hosted, no third-party request
   - [ ] Backend (XL)
-    - [ ] Kotlin and Spring Boot scaffold #scaffold (M)
+    - [ ] #scaffold: Kotlin and Spring Boot scaffold (M)
       - [ ] Gradle Kotlin DSL, JDK 21 (S)
       - [ ] Health endpoint and CI (S)
-    - [ ] Documents on the server #docs (L) :#scaffold
+    - [ ] #docs: Documents on the server (L) :#scaffold
       - [ ] Text plus metadata, no structure format (M)
         - [ ] REST endpoints (S)
         - [ ] Persistence (S)
@@ -162,7 +162,7 @@
         | [?] Run the one JS parser inside the IDE (M)
   - [?] Tracker integration (XL)  %% exactly one of these, hence =
     = [?] Taiga (L) https://taiga.io
-      - [ ] Resolve "#123" over the REST API #resolve (M)
+      - [ ] #resolve: Resolve "#123" over the REST API (M)
         - [ ] Read title, link and status (S)
         - [ ] Map the workflow onto the states (S)
       - [?] Write the status back (M) :#resolve

@@ -24,7 +24,7 @@ const INITIAL = `%% Project structure – Sprint 14
         - [ ] Android (M)
         - [ ] iOS (M)
     - [!] Backend (L) @ben @carla
-    - [ ] CMS integration #cms (M)
+    - [ ] #cms: CMS integration (M)
       | [ ] WordPress
       | [?] Headless CMS
       | [-] Custom build  %% too much effort
@@ -933,7 +933,11 @@ out.addEventListener('touchcancel', disarmPress);
 out.addEventListener('contextmenu', e => { if(pressTimer || armedEl) e.preventDefault(); });
 
 /* Text -> Diagramm: Knoten der Cursor-Zeile hervorheben (`caretLine` steht oben). */
-function highlightCurrentNode(moved){
+/* `scroll` sagt, WIE ins Bild geholt wird: 'nearest' beim gewöhnlichen
+   Zeilenwechsel (nur so weit wie nötig — sonst ruckelte das Diagramm),
+   'center' beim ausdrücklichen Alt+Klick, `false` gar nicht (Neubau). Die
+   Hervorhebung selbst ist in allen Fällen dieselbe, Puls eingeschlossen. */
+function highlightCurrentNode(moved, scroll = 'nearest'){
   markCurrentLineNo();   /* die eine Stelle, an der die Cursor-Zeile neu gesetzt wird */
   if(currentNodeEl) currentNodeEl.classList.remove('current', 'pulse');
   currentNodeEl = caretLine == null
@@ -954,7 +958,7 @@ function highlightCurrentNode(moved){
   currentNodeEl.classList.remove('pulse');
   void currentNodeEl.offsetWidth;
   currentNodeEl.classList.add('pulse');
-  currentNodeEl.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
+  if(scroll) currentNodeEl.scrollIntoView({block:scroll, inline:scroll, behavior:'smooth'});
 }
 function caretLineOf(){
   return src.value.slice(0, src.selectionStart).split('\n').length;
@@ -979,10 +983,14 @@ function focusNodeOfCaret(){
   const el = out.querySelector('.node[data-line="' + line + '"]');
   if(!el) return;              /* Kommentar, Leerzeile, ausgeblendet Verworfenes */
   caretLine = line;
-  highlightCurrentNode(false);
-  /* Erst den Fokus (ohne eigenes Scrollen), dann bewusst zentrieren. */
+  /* Erst den Fokus (ohne eigenes Scrollen), dann hervorheben und zentrieren.
+     Die Hervorhebung ist **dieselbe wie beim Zeilenwechsel** — Puls
+     eingeschlossen; der Unterschied ist allein, dass hier bewusst zentriert
+     wird statt nur so weit zu scrollen wie nötig. Deshalb `true` statt `false`:
+     die erste Fassung unterdrückte den Puls, und der Knoten kam ausgerechnet
+     bei der ausdrücklichen Geste stiller an als beim beiläufigen Tippen. */
   el.focus({preventScroll: true});
-  el.scrollIntoView({block:'center', inline:'center', behavior:'smooth'});
+  highlightCurrentNode(true, 'center');
 }
 src.addEventListener('click', e => { if(e.altKey) focusNodeOfCaret(); });
 src.addEventListener('keydown', e => {
@@ -1332,7 +1340,7 @@ const I18N = {
     hint_break:"Ab (M) gilt: weiter untergliedern — fehlt die Untergliederung, erscheint ein Platzhalter im Diagramm.",
     hint_comment:"Kommentare mit %% — als ganze Zeile oder am Zeilenende.",
     hint_people:"Personen mit @name — erscheinen unten rechts am Knoten.",
-    hint_id:"Knoten-ID mit #name — erscheint im Tooltip des Knotens.",
+    hint_id:"Knoten-ID mit #name: vor dem Titel — erscheint im Tooltip des Knotens.",
     hint_deps:"Abhängigkeiten mit :#name,#name — erscheinen im Tooltip.",
     hint_eff:"Die Knotenfarbe zeigt den effektiven Status (mit Abhängigkeiten); ist der eigene weiter, steht er als Marke unten links.",
     hint_desc:"Beschreibungen: \" Zeile unter dem Knoten; Langtext hinter --- als eingerückter #id-Block — beides im Tooltip (”).",
@@ -1410,7 +1418,7 @@ const I18N = {
     hint_break:"From (M) on: break it down further — if the breakdown is missing, a placeholder appears in the diagram.",
     hint_comment:"Comments with %% — whole line or at the end of a line.",
     hint_people:"People with @name — shown at the bottom-right of the node.",
-    hint_id:"Node ID with #name — shown in the node's tooltip.",
+    hint_id:"Node ID with #name: before the title — shown in the node's tooltip.",
     hint_deps:"Dependencies with :#name,#name — shown in the tooltip.",
     hint_eff:"Node colour shows the effective status (with dependencies); if its own is further along, it appears as a mark at the bottom left.",
     hint_desc:"Descriptions: a \" line below the node; long text behind --- as an indented #id block — both in the tooltip (”).",
@@ -1488,7 +1496,7 @@ const I18N = {
     hint_break:"A partir de (M): sigue desglosando — si falta el desglose, aparece un marcador de posición en el diagrama.",
     hint_comment:"Comentarios con %% — línea completa o al final de la línea.",
     hint_people:"Personas con @nombre — aparecen abajo a la derecha del nodo.",
-    hint_id:"ID de nodo con #nombre — visible en el tooltip del nodo.",
+    hint_id:"ID de nodo con #nombre: delante del título — visible en el tooltip del nodo.",
     hint_deps:"Dependencias con :#nombre,#nombre — visibles en el tooltip.",
     hint_eff:"El color del nodo muestra el estado efectivo (con dependencias); si el propio va más adelante, aparece como marca abajo a la izquierda.",
     hint_desc:"Descripciones: línea \" bajo el nodo; texto largo tras --- como bloque #id sangrado — ambos en el tooltip (”).",
@@ -1566,7 +1574,7 @@ const I18N = {
     hint_break:"À partir de (M) : décomposer davantage — si la décomposition manque, un espace réservé apparaît dans le diagramme.",
     hint_comment:"Commentaires avec %% — ligne entière ou en fin de ligne.",
     hint_people:"Personnes avec @nom — affichées en bas à droite du nœud.",
-    hint_id:"ID de nœud avec #nom — visible dans l’infobulle du nœud.",
+    hint_id:"ID de nœud avec #nom : devant le titre — visible dans l’infobulle du nœud.",
     hint_deps:"Dépendances avec :#nom,#nom — visibles dans l’infobulle.",
     hint_eff:"La couleur du nœud montre le statut effectif (avec dépendances) ; si le sien est plus avancé, il apparaît en marque en bas à gauche.",
     hint_desc:"Descriptions : ligne \" sous le nœud ; texte long après --- en bloc #id indenté — les deux dans l’infobulle (”).",
@@ -1644,7 +1652,7 @@ const I18N = {
     hint_break:"Od (M): dziel dalej — gdy brakuje podziału, w diagramie pojawia się symbol zastępczy.",
     hint_comment:"Komentarze z %% — cały wiersz lub na końcu wiersza.",
     hint_people:"Osoby z @nazwa — pokazywane w prawym dolnym rogu węzła.",
-    hint_id:"ID węzła przez #nazwa — widoczne w podpowiedzi węzła.",
+    hint_id:"ID węzła przez #nazwa: przed tytułem — widoczne w podpowiedzi węzła.",
     hint_deps:"Zależności przez :#nazwa,#nazwa — widoczne w podpowiedzi.",
     hint_eff:"Kolor węzła pokazuje status efektywny (z zależnościami); jeśli własny jest dalej, widnieje jako znacznik u dołu po lewej.",
     hint_desc:"Opisy: wiersz \" pod węzłem; dłuższy tekst za --- jako wcięty blok #id — oba w podpowiedzi (”).",
@@ -1722,7 +1730,7 @@ const I18N = {
     hint_break:"С (M): дробите дальше — если декомпозиции нет, в диаграмме появляется заполнитель.",
     hint_comment:"Комментарии через %% — вся строка или в конце строки.",
     hint_people:"Люди через @имя — показываются справа внизу узла.",
-    hint_id:"ID узла через #имя — виден во всплывающей подсказке узла.",
+    hint_id:"ID узла через #имя: перед заголовком — виден во всплывающей подсказке узла.",
     hint_deps:"Зависимости через :#имя,#имя — видны в подсказке.",
     hint_eff:"Цвет узла показывает фактический статус (с учётом зависимостей); если собственный дальше, он показан меткой слева внизу.",
     hint_desc:"Описания: строка \" под узлом; длинный текст после --- как блок #id с отступом — оба в подсказке (”).",
@@ -1800,7 +1808,7 @@ const I18N = {
     hint_break:"(M) से आगे: और विभाजित करें — विभाजन न होने पर आरेख में प्लेसहोल्डर दिखता है।",
     hint_comment:"%% से टिप्पणियाँ — पूरी पंक्ति या पंक्ति के अंत में।",
     hint_people:"@नाम से व्यक्ति — नोड के नीचे-दाएँ दिखते हैं।",
-    hint_id:"#नाम से नोड आईडी — नोड के टूलटिप में दिखती है।",
+    hint_id:"शीर्षक से पहले #नाम: के रूप में नोड आईडी — नोड के टूलटिप में दिखती है।",
     hint_deps:":#नाम,#नाम से निर्भरताएँ — टूलटिप में दिखती हैं।",
     hint_eff:"नोड का रंग प्रभावी स्थिति दिखाता है (निर्भरताओं सहित); यदि अपनी स्थिति आगे है, तो वह नीचे-बाएँ चिह्न के रूप में दिखती है।",
     hint_desc:"विवरण: नोड के नीचे \" पंक्ति; --- के बाद #id ब्लॉक में लंबा पाठ — दोनों टूलटिप में (”)।",
@@ -1878,7 +1886,7 @@ const I18N = {
     hint_break:"从 (M) 起：继续细分——若缺少细分，图表中会出现占位符。",
     hint_comment:"用 %% 注释——整行或行尾。",
     hint_people:"用 @姓名 表示人员——显示在节点右下角。",
-    hint_id:"用 #名称 指定节点 ID——显示在节点提示中。",
+    hint_id:"用 #名称: 写在标题前指定节点 ID——显示在节点提示中。",
     hint_deps:"用 :#名称,#名称 表示依赖——显示在提示中。",
     hint_eff:"节点颜色显示实际状态（含依赖）；若自身状态更靠前，会以左下角标记显示。",
     hint_desc:"描述：节点下方的 \" 行；--- 之后的缩进 #id 块为长文本——均显示在提示中（”）。",
@@ -1956,7 +1964,7 @@ const I18N = {
     hint_break:"(M) 以上：さらに分解 — 分解がないと図にプレースホルダーが表示されます。",
     hint_comment:"%% でコメント — 行全体または行末。",
     hint_people:"@名前 で担当者 — ノードの右下に表示されます。",
-    hint_id:"#名前 でノード ID — ノードのツールチップに表示されます。",
+    hint_id:"タイトルの前に #名前: でノード ID — ノードのツールチップに表示されます。",
     hint_deps:":#名前,#名前 で依存関係 — ツールチップに表示されます。",
     hint_eff:"ノードの色は実効ステータス（依存関係込み）を示します。自身が先行している場合は左下のマークで表示されます。",
     hint_desc:"説明：ノード直下の \" 行。--- 以降は #id ブロック（字下げ）で長文 — どちらもツールチップに表示（”）。",

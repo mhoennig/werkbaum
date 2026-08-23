@@ -49,6 +49,52 @@ describe('Parser — `#name` als Knoten-ID', () => {
   });
 });
 
+/* Übliche Schreibweise: ID vor dem Titel, abgetrennt durch einen Doppelpunkt.
+   Der Doppelpunkt ist optional, gehört weder zur ID noch zum Label. */
+describe('ID vor dem Titel, `#id: Titel`', () => {
+  it('schluckt den trennenden Doppelpunkt', () => {
+    const [n] = roots(`[ ] #auth: Auth-Modul (M)`);
+    expect([n.id, n.label, n.size]).toEqual(['auth', 'Auth-Modul', 'M']);
+  });
+
+  it('kommt ohne Doppelpunkt zum selben Ergebnis', () => {
+    const mit = roots(`[ ] #auth: Auth-Modul (M)`)[0];
+    const ohne = roots(`[ ] #auth Auth-Modul (M)`)[0];
+    expect([mit.id, mit.label]).toEqual([ohne.id, ohne.label]);
+  });
+
+  it('lässt den Doppelpunkt auch am Zeilenende weg', () => {
+    const [n] = roots(`[ ] Titel danach #auth:`);
+    expect([n.id, n.label]).toEqual(['auth', 'Titel danach']);
+  });
+
+  it('vertägt sich mit Abhängigkeiten in derselben Zeile', () => {
+    const {roots: r, warnings} = parse(`[ ] #api: API\n[ ] #ui: Oberfläche :#api`);
+    expect(r.map(n => [n.id, n.label, n.deps])).toEqual([
+      ['api', 'API', []], ['ui', 'Oberfläche', ['api']],
+    ]);
+    expect(warnings).toEqual([]);
+  });
+
+  it('lässt einen Doppelpunkt IM Label unberührt', () => {
+    const [n] = roots(`[ ] #auth: Regel: nur mit Token`);
+    expect([n.id, n.label]).toEqual(['auth', 'Regel: nur mit Token']);
+  });
+
+  it('schluckt nur einen Doppelpunkt mit folgendem Leerraum — `#auth:#db` bleibt Abhängigkeit', () => {
+    const {roots: r} = parse(`[ ] #db: Datenbank\n[ ] #auth:#db Login`);
+    expect(r[1].id).toBe('auth');
+    expect(r[1].deps).toEqual(['db']);
+    expect(r[1].label).toBe('Login');
+  });
+
+  it('nimmt den Doppelpunkt auch im Beschreibungsteil an', () => {
+    const {roots: r, warnings} = parse(`[ ] #auth: Auth\n---\n#auth:\n  Erklärung.`);
+    expect(r[0].desc).toBe('Erklärung.');
+    expect(warnings).toEqual([]);
+  });
+});
+
 describe('Doppelte IDs — Warnung an der späteren Zeile', () => {
   it('meldet die spätere Zeile und nennt die erste', () => {
     const {warnings} = parse(`[ ] A #auth\n[ ] B\n[ ] C #auth`);

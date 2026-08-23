@@ -51,6 +51,13 @@ sie ist die Adresse für Abhängigkeiten und Beschreibungsblöcke (§11).
   dem Muster des angebundenen Trackers entspricht (`#123`, `#US-123`), ist
   zugleich die künftige Ticket-Referenz — oft ist die Ticket-Kennung die
   natürliche Knoten-ID (D34).
+- **Übliche Schreibweise ist die ID vor dem Titel, mit Doppelpunkt:**
+  `#auth: Backend`. Der Doppelpunkt ist **optional** und reines Trennzeichen im
+  Text — er gehört weder zur ID noch zum Label und erscheint nicht im Diagramm.
+  Geschluckt wird er nur, wenn er **unmittelbar** auf die ID folgt und ihm
+  **Leerraum oder Zeilenende** folgt; ein Doppelpunkt im Label (`#auth: Regel:
+  nur mit Token`) bleibt also stehen, und `#auth:#db` bleibt ID plus
+  Abhängigkeit. Die Stellung ist frei — `Backend #auth` bedeutet dasselbe.
 - Die ID gehört **nicht** zum Label. Eine eigene Darstellung im Diagramm hat
   sie (noch) nicht; sichtbar ist sie im Knoten-Tooltip und im `aria-label`.
 - **Doppelte ID:** Warnung `duplicateId` mit beiden Zeilennummern; die spätere
@@ -110,7 +117,8 @@ Text zu einem Knoten (Anzeige: §9):
   umgebender Leerraum erlaubt) trennt den Baumteil vom **Beschreibungsteil**;
   alles danach gehört zu ihm (YAML-/Frontmatter-Konvention). Es gibt keinen
   Schlusszaun — er kann also nicht vergessen werden. Dort eröffnet eine
-  **uneingerückte Zeile mit genau einer Knoten-ID** (`#auth`, allein) einen
+  **uneingerückte Zeile mit genau einer Knoten-ID** (`#auth`, allein — ein
+  angehängter Doppelpunkt ist auch hier zugelassen) einen
   Block; die **eingerückten** Zeilen darunter sind sein Text (um den Einzug
   gekürzt, Leerzeilen bleiben als Absatztrenner). Die Wurzelknoten-Regel (§2)
   gilt hinter dem Trenner nicht mehr. Weitere `---`-Zeilen dort sind ohne
@@ -132,10 +140,11 @@ Referenz-Regex der Implementierung:
 ^([ \t]*)([-|+]|=(?=[ \t]))?\s*(?:([><])(?=[ \t])\s*)?(?:\[([ ?~xX^/-])\]\s*)?(.*)$
 ```
 
-Für die Knoten-ID (Schritt 6, nur der erste Treffer):
+Für die Knoten-ID (Schritt 6, nur der erste Treffer; die letzte Gruppe ist der
+optionale Trenn-Doppelpunkt, der mit entfällt):
 
 ```
-(^|\s)#([\p{L}\p{N}._-]+)
+(^|\s)#([\p{L}\p{N}._-]+)(?::(?=\s|$))?
 ```
 
 Für die Abhängigkeiten (Schritt 7, alle Treffer):
