@@ -1102,8 +1102,18 @@ function setMobilePane(pane, save){
 }
 document.getElementById('paneToText')
   .addEventListener('click', () => setMobilePane('text', true));
-document.getElementById('paneToDiagram')
-  .addEventListener('click', () => setMobilePane('diagram', true));
+/* Der Wechsel **ins Diagramm** ist zugleich die Navigation zum Knoten, an dem
+   man gerade geschrieben hat. Für diese Richtung gibt es sonst nur Alt+Klick
+   (D25) — und Alt gibt es auf dem Telefon nicht; die Gegenrichtung hat dort
+   ihren langen Druck, diese hatte nichts. Ein eigener langer Druck im Textfeld
+   verbietet sich: Dort gehört er dem Betriebssystem (Wort markieren,
+   Auswahlgriffe) — das ist die Bedien-Grundlage zum Bearbeiten, die man einem
+   Textfeld nicht wegnehmen darf. Der Umschalter trägt die Geste stattdessen
+   umsonst: Er wird ohnehin gedrückt, wenn man nachsehen will. */
+document.getElementById('paneToDiagram').addEventListener('click', () => {
+  if(caretLine != null && nodeOfLine(caretLine)) focusNodeOfCaret();
+  else setMobilePane('diagram', true);
+});
 document.querySelectorAll('.winbtn').forEach(b => {
   b.addEventListener('click', e => {
     /* Fenster-Buttons sind maßgeblich: nicht zum Titelzeilen-Restore durchreichen */

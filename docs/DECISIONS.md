@@ -279,6 +279,42 @@ läuft synchron, es wird nichts davon gezeichnet. Nachgemessen: Knoten auf dem
 Schirm 143 px, im SVG 189,7 px — also die unskalierte Größe, passend zur festen
 Schrift.
 
+**Nachtrag 3 — der Umschalter trägt die Navigation zum Knoten; ein langer
+Druck im Textfeld verbietet sich.** Gemeldet als Fehler: „Wenn man in der
+Smartphone-Ansicht den Cursor in den Text setzt, klappt das Text-Edit-Fenster
+zusammen." Nachgestellt auf der **deployten** Instanz (1.1.39, noch das alte
+Splitter-Modell von D17): Ein Tipp auf die **Titelzeile des Diagramms** —
+ein 49 px hoher Streifen unmittelbar über dem Text — schrumpfte den Editor von
+594 px auf 44 px. Beim Zielen auf die oberen Textzeilen ist der leicht zu
+treffen. Das Ein-Bereich-Modell aus Nachtrag 1 nimmt dem Fehler die Grundlage:
+Es gibt keinen Splitter und kein Titelzeilen-Tippen mehr, den Bereich wechselt
+**allein** der Umschalter. Im aktuellen Stand ließ sich der Fehler nicht mehr
+auslösen (Maus-Klick, emulierter Touch und synthetische Touch-Folge, jeweils
+ohne Bereichswechsel).
+
+Der zweite Teil der Meldung deckte aber eine echte Lücke auf: Für die Richtung
+**Text → Diagramm** gibt es nur Alt+Klick bzw. Alt+Enter (D25) — und Alt gibt
+es auf dem Telefon nicht. Die Gegenrichtung hat dort ihren langen Druck, diese
+hatte nichts.
+
+**Vorgeschlagen war ein langer Druck im Textfeld — verworfen.** Dort gehört er
+dem Betriebssystem: Wort markieren, Auswahlgriffe, Einfügen-Leiste. D25 konnte
+sich diese Geste im Diagramm nehmen (`user-select:none`), weil es da nichts zu
+markieren gibt; in einem **editierbaren** Feld ist sie die Bedien-Grundlage
+zum Bearbeiten. Sie zu überschreiben löste ein Navigationsproblem auf Kosten
+des Bearbeitens — in einer Meldung, deren Kern gerade lautet, dass Bearbeiten
+nicht bestraft werden darf. Dazu kommt, dass sich das Zusammenspiel mit der
+nativen Auswahl nach der D25-Lehre nur auf echter Hardware beurteilen ließe.
+
+**Gewählt: der Umschalter tut es nebenbei.** Wer aus dem Text ins Diagramm
+wechselt, will nachsehen — und zwar bei dem, woran er gerade geschrieben hat.
+Der Knopf wird in genau diesem Moment ohnehin gedrückt; er zentriert deshalb
+den Knoten der Cursor-Zeile und hebt ihn hervor (`focusNodeOfCaret()`, also
+identisch zum Alt+Klick am Schreibtisch). Kostet kein Bedienelement, keine
+Geste und kann nicht versehentlich auslösen. Steht der Cursor auf einer Zeile
+ohne Knoten (Kommentar, Leerzeile), wird nur umgeschaltet — dieselbe stille
+Regel wie überall sonst bei dieser Geste.
+
 **Das Debug-Panel minimiert sich jetzt, statt sich zu schließen.** Ein Klick
 entfernte es bisher ganz — was nichts half, weil der 15-Sekunden-Takt es sofort
 wieder aufbaute; auf dem Telefon verdeckte es damit dauerhaft die untere rechte

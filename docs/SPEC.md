@@ -406,7 +406,12 @@ damit genau dann zu sehen, wenn der Text vorn ist. Die übrigen
 **Aktions-Knöpfe** bleiben rechts in der Titelzeile und werden mit
 umgeschaltet — jeder Bereich zeigt seine eigenen, in der unten beschriebenen
 komprimierten Form. Der sichtbare Bereich wird gemerkt; ein Sprung zwischen
-Diagramm und Text (§9) holt den nötigen Bereich selbst nach vorn.
+Diagramm und Text (§9) holt den nötigen Bereich selbst nach vorn. **Nur dieser
+Umschalter wechselt den Bereich** — insbesondere kostet kein Tippen im Text
+den Editor. Umgekehrt trägt der Umschalter zugleich die Navigation zum Knoten:
+Wer aus dem Text ins Diagramm wechselt, landet auf dem Knoten der Cursor-Zeile
+(zentriert und hervorgehoben) — der Alt+Klick dieser Richtung (§9) steht auf
+dem Telefon nicht zur Verfügung.
 Voreinstellung ist das Diagramm. Beide Inhalte werden hier zudem rund **25 %
 kleiner** dargestellt, damit mehr Plan auf die Fläche passt; das ist ein Faktor
 **auf** den Zoom, der Zoom-Regler arbeitet unverändert relativ dazu und zeigt

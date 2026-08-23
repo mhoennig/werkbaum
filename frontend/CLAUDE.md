@@ -391,6 +391,13 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   einen** Bereich — `body.pane-diagram` bzw. `body.pane-text`, umgeschaltet über
   je einen festen Knopf pro Titelzeile (`#paneToText`/`#paneToDiagram`,
   `setMobilePane()`); kein Splitter, keine Fenster-Buttons (D17-Nachtrag).
+  **Nur der Umschalter darf den Bereich wechseln** — im alten Splitter-Modell
+  kostete ein Tipp auf die Diagramm-Titelzeile (49-px-Streifen über dem Text)
+  den Editor; genau das war der gemeldete Fehler (D17-Nachtrag 3). `#paneToDiagram`
+  ruft `focusNodeOfCaret()`, wenn die Cursor-Zeile einen Knoten hat: Das ist die
+  **einzige** Touch-Navigation Text → Diagramm (Alt gibt es dort nicht). Keinen
+  langen Druck ins Textfeld legen — der gehört dem OS (Wortauswahl,
+  Auswahlgriffe), anders als im Diagramm, wo D25 ihn sich nehmen konnte.
   **Der verborgene Bereich ist `display:none` und misst sich damit zu null** —
   `setMobilePane()` MUSS neu zeichnen: zum Diagramm hin dieselben vier Schritte
   wie `applyLayout` (`applyOptStairs`/`alignStems`/`drawCheapPath`/
