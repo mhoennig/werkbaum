@@ -2862,17 +2862,43 @@ function isMobile(){ return mqMobile.matches; }
    zeichnen: 100dvh meldet dann weiterhin die volle Höhe, und Footer/Editor-
    Titelzeile verschwinden dahinter. visualViewport.height liefert die wirklich
    sichtbare Fläche. Fällt es weg, greift die CSS-Kaskade (dvh/vh). */
-function setAppHeight(){
+/* ABER: Die **Bildschirmtastatur** verkleinert genau diesen Wert — dafür ist
+   `visualViewport` gemacht. Ungefiltert übernommen quetscht sie den Editor
+   zusammen, sobald man den Cursor ins Textfeld setzt: Die Textfeldhöhe ist
+   `--app-height` minus rund 206 px feste Aufbauten (Kopfzeile, Titelzeile,
+   Fußzeile), aus 812 px werden also mit offener Tastatur schnell 260 px und
+   damit ein Textfeld von 54 px. Genau das war die Fehlermeldung — und sie
+   zeigt sich **nur auf echten Geräten**, weil es in der Emulation keine
+   Tastatur gibt.
+   Unterschieden wird am **Fokus**: Die Tastatur steht nur, wenn ein
+   editierbares Feld den Fokus hat. Solange das so ist, bleibt die zuletzt
+   tastaturfreie Höhe stehen — die Seite behält ihre Größe und der Browser
+   schiebt den sichtbaren Ausschnitt zur Schreibmarke, wie in jeder anderen
+   App. Die Brave-Leiste (der eigentliche Anlass) wird davon nicht berührt,
+   sie erscheint ohne Fokus im Textfeld. */
+function editingNow(){
+  const el = document.activeElement;
+  if(!el) return false;
+  return el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' || el.isContentEditable;
+}
+function setAppHeight(force){
+  if(!force && editingNow()) return;
   const vv = window.visualViewport;
   const h = vv ? vv.height : window.innerHeight;
   document.documentElement.style.setProperty('--app-height', Math.round(h) + 'px');
 }
-setAppHeight();
-window.addEventListener('resize', setAppHeight);
-window.addEventListener('orientationchange', setAppHeight);
+setAppHeight(true);
+window.addEventListener('resize', () => setAppHeight());
+/* Drehen MUSS auch beim Tippen greifen — sonst behielte die Seite die Höhe des
+   alten Hochformats. */
+window.addEventListener('orientationchange', () => setAppHeight(true));
 if(window.visualViewport){
-  window.visualViewport.addEventListener('resize', setAppHeight);
+  window.visualViewport.addEventListener('resize', () => setAppHeight());
 }
+/* Nach dem Verlassen des Textfelds nachziehen: Die meisten Browser melden das
+   Schließen der Tastatur ohnehin als `resize`, aber dann steht der Fokus schon
+   woanders — und falls die Meldung ausbleibt, holt es dieser Weg nach. */
+window.addEventListener('focusout', () => setTimeout(() => setAppHeight(), 250));
 /* ---------- Legende: auf/zu + Splitter zum Editor (D26) ----------
    Die Legende ist ein gewöhnlicher Container (kein <details> mehr, siehe
    style.css/D26); der Auf-/Zu-Zustand hängt an der Klasse `open`. */

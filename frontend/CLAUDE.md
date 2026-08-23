@@ -398,6 +398,18 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   **einzige** Touch-Navigation Text → Diagramm (Alt gibt es dort nicht). Keinen
   langen Druck ins Textfeld legen — der gehört dem OS (Wortauswahl,
   Auswahlgriffe), anders als im Diagramm, wo D25 ihn sich nehmen konnte.
+- `--app-height` (`setAppHeight()`, D17-Nachtrag 4): `body{height:var(--app-height)}`
+  kommt aus `visualViewport.height` — nötig gegen überlagernde Browserleisten
+  (Brave). **Die Bildschirmtastatur verkleinert denselben Wert** und quetschte
+  damit den Editor zusammen, sobald der Cursor ins Textfeld kam (Textfeldhöhe =
+  `--app-height` − ~206 px feste Aufbauten; bei 260 px Viewport bleiben 54 px).
+  Deshalb die Fokus-Sperre `editingNow()`: Solange ein editierbares Feld den
+  Fokus hat, bleibt die letzte tastaturfreie Höhe stehen. Tastatur und
+  Browserleiste sind an den **Zahlen** nicht zu unterscheiden (beide: `vv.height`
+  fällt, `innerHeight` bleibt) — nur am Fokus. `orientationchange` ruft
+  `setAppHeight(true)` und durchbricht die Sperre; der `focusout`-Timer muss
+  `() => setAppHeight()` sein, sonst reicht er ein wahres `force` durch.
+  **Nur auf echten Geräten sichtbar** — in der Emulation gibt es keine Tastatur.
   **Der verborgene Bereich ist `display:none` und misst sich damit zu null** —
   `setMobilePane()` MUSS neu zeichnen: zum Diagramm hin dieselben vier Schritte
   wie `applyLayout` (`applyOptStairs`/`alignStems`/`drawCheapPath`/

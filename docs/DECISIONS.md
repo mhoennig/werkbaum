@@ -292,6 +292,12 @@ Es gibt keinen Splitter und kein Titelzeilen-Tippen mehr, den Bereich wechselt
 auslösen (Maus-Klick, emulierter Touch und synthetische Touch-Folge, jeweils
 ohne Bereichswechsel).
 
+**Das war aber nur die halbe Wahrheit — siehe Nachtrag 4.** Der Nutzer meldete
+denselben Fehler auf dem Pages-Build, der das Ein-Bereich-Modell bereits
+enthielt. Die obige Diagnose war für die alte Fassung richtig und trotzdem
+nicht die Ursache seiner Beobachtung; die eigentliche stand woanders und war
+mit Emulation grundsätzlich nicht zu finden.
+
 Der zweite Teil der Meldung deckte aber eine echte Lücke auf: Für die Richtung
 **Text → Diagramm** gibt es nur Alt+Klick bzw. Alt+Enter (D25) — und Alt gibt
 es auf dem Telefon nicht. Die Gegenrichtung hat dort ihren langen Druck, diese
@@ -314,6 +320,50 @@ identisch zum Alt+Klick am Schreibtisch). Kostet kein Bedienelement, keine
 Geste und kann nicht versehentlich auslösen. Steht der Cursor auf einer Zeile
 ohne Knoten (Kommentar, Leerzeile), wird nur umgeschaltet — dieselbe stille
 Regel wie überall sonst bei dieser Geste.
+
+**Nachtrag 4 — die eigentliche Ursache: `--app-height` folgte der
+Bildschirmtastatur.** Nach Nachtrag 3 blieb der Fehler auf dem Pages-Build
+bestehen („dort klappt der Text komplett zusammen, sobald ich irgendwo den
+Cursor reinsetze"). Gefunden über die einzige Frage, die nach zwei
+fehlgeschlagenen Emulations-Versuchen noch trägt: **Was ist auf einem echten
+Telefon anders?** Antwort: die Tastatur.
+
+`setAppHeight()` schreibt `window.visualViewport.height` nach `--app-height`,
+und `body{height:var(--app-height)}` macht daraus die Höhe der ganzen Seite.
+Genau diesen Wert verkleinert die Bildschirmtastatur — dafür ist
+`visualViewport` gemacht. Nachgemessen ist der Zusammenhang linear:
+Textfeldhöhe = `--app-height` − rund 206 px feste Aufbauten (Kopfzeile 57,
+Titelzeile 44, Fußzeile 36, Innenabstände). Bei 812 px bleiben 606 px Text,
+bei 440 px noch 234, bei 260 px — realistisch für ein kleines Gerät mit
+Tastatur und Browserleiste — nur **54 px**, also drei Zeilen. Das ist das
+gemeldete „komplett zusammengeklappt", und es tritt **ausschließlich auf
+echten Geräten** auf: In der Emulation gibt es keine Tastatur, deshalb liefen
+alle drei Reproduktionsversuche aus Nachtrag 3 ins Leere.
+
+**Unterschieden wird am Fokus, nicht an der Größe.** Die Tastatur und eine
+überlagernde Browserleiste (Brave — der ursprüngliche Anlass des Mechanismus)
+erzeugen dieselbe Signatur: `visualViewport.height` fällt, `innerHeight`
+bleibt. An den Zahlen sind sie nicht zu trennen. Am Zustand schon: Die
+Tastatur steht nur, wenn ein **editierbares** Feld den Fokus hat. Solange das
+so ist, bleibt die zuletzt tastaturfreie Höhe stehen. Die Seite behält damit
+ihre Größe, und der Browser schiebt den sichtbaren Ausschnitt zur
+Schreibmarke — das Verhalten jeder anderen App. Nachgemessen mit
+nachgebildetem `visualViewport`: mit Fokus im Textfeld 812/606 px (unverändert),
+ohne Fokus 440/234 px (die Brave-Leiste wirkt also weiter).
+
+**Drehen muss die Sperre durchbrechen** (`setAppHeight(true)` bei
+`orientationchange`) — sonst behielte die Seite beim Drehen während des
+Tippens die Höhe des alten Hochformats. Dazu ein `focusout`-Nachzug für
+Browser, die das Schließen der Tastatur nicht als `resize` melden. Und der
+Timer dort ruft `() => setAppHeight()`, nicht `setAppHeight` direkt: Ein
+durchgereichtes Argument wäre wahr und hebelte die Fokus-Sperre aus.
+
+**Lehre, schon zweimal bezahlt:** D25 hielt fest, dass synthetische
+`TouchEvent`s nur die eigene Ereignis-Logik beweisen. Dieselbe Grenze gilt für
+alles, was die **Geräteumgebung** stellt — Bildschirmtastatur, Browserleisten,
+Nutzergesten-Regeln. Ein „lässt sich nicht reproduzieren" aus dem Emulator ist
+bei solchen Meldungen kein Befund, sondern nur die Feststellung, dass das
+Werkzeug die Ursache nicht enthält.
 
 **Das Debug-Panel minimiert sich jetzt, statt sich zu schließen.** Ein Klick
 entfernte es bisher ganz — was nichts half, weil der 15-Sekunden-Takt es sofort
