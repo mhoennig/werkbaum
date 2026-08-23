@@ -2232,6 +2232,65 @@ per CSS zu verstecken). Die Kennzeichnung „▸ n“ ist Teil des Knotentexts u
 wandert von selbst in den SVG-Export; das ▾ offener Knoten wird dort und im
 Druck entfernt — es ist Bedienelement, keine Aussage über den Plan.
 
+**Nachtrag 2 — Umklappen im Diagramm schreibt jetzt in den Text.** Damit wird
+die oben getroffene Festlegung („der Eingriff gilt für die Sitzung; er wird
+nicht gespeichert — die dauerhafte Aussage steht im Text") **umgekehrt**, und
+mit ihr die D34-Formulierung, die Marken bestimmten nur den Anfangszustand.
+Anlass ist der Wunsch nach bidirektionaler Interaktion zwischen Diagramm und
+Text; der Faltzustand ist dafür der richtige erste Fall: verlustfrei umkehrbar,
+ohne inhaltliche Aussage, und die Notation dafür gibt es schon.
+
+Die Entscheidungen im Einzelnen, alle vom Nutzer getroffen:
+
+- **Bei jedem Umschalten**, nicht auf Ansage. Der direkteste Zusammenhang
+  zwischen Bild und Text; der Preis (unten) wurde bewusst in Kauf genommen.
+- **`<` bleibt erhalten, wo es noch stimmt.** Nicht auf reine `>`
+  normalisieren: Handgeschriebene Marken sollen stehen bleiben.
+- **Geschrieben wird, wo der Text beschreibbar ist** — auch bei `?sourceUrl=`,
+  wo es wie jede lokale Änderung bis zum nächsten Laden hält (D23). Nur beim
+  Pad bleibt es sitzungsweise, weil das Textfeld dort schreibgeschützt ist
+  (D31).
+- **Falten gilt als Änderung.** Ein mitgeliefertes Dokument wird dadurch als
+  bearbeitet geführt, bekommt also keine neuen Fassungen mehr und zeigt
+  „Original wiederherstellen" (D27). Bewusst keine Sonderregel: Wer faltet,
+  ändert den Text, und der Text ist der Vertrag (D14).
+- **Undo-fähig geschrieben.** Nachgemessen: `value =` **und** `setRangeText`
+  machen Strg+Z wirkungslos — wer tippt und dann faltet, käme an sein
+  Getipptes nicht mehr heran. Nur `document.execCommand('insertText')` erhält
+  die Historie; die API gilt als veraltet, funktioniert aber überall. Falten
+  ist damit ein eigener Undo-Schritt (geprüft: Strg+Z nimmt die Faltung
+  zurück, ein zweites das Getippte).
+
+**Das Verfahren: minimal patchen, dann nachrechnen.** Die Ableitung Text →
+Zustand ist **nicht umkehrbar** — mehrere Markensätze ergeben denselben
+Zustand, und `<` erzeugt Faltungen an Knoten, die gar keine Marke tragen
+(oben). Statt sie zu invertieren, wird der Kandidat schlicht **befragt**:
+`>` an der einen Zeile setzen oder entfernen, `initialCollapsed()` darauf
+laufen lassen, mit dem Sollzustand vergleichen. Stimmt es, bleibt alles andere
+unangetastet — das ist der `<`-Erhalt. Stimmt es nicht, werden alle Marken neu
+gesetzt und erneut geprüft. Stimmt auch das nicht — etwa weil ein `!!!` seinen
+Knoten immer wieder hervorholt und „eingeklappt" dort gar nicht ausdrückbar
+ist —, wird **nicht geschrieben** und die Sitzungs-Überlagerung bleibt stehen.
+So kann nie ein Text entstehen, der etwas anderes sagt als das Bild.
+`initialCollapsed()` bleibt dadurch die einzige Stelle, die die Bedeutung der
+Marken kennt.
+
+**Zwei Fallen, beide gemessen statt vermutet.** Erstens: Auf kleinem
+Bildschirm ist der Editor `display:none`, wenn das Diagramm vorn ist — und
+`execCommand` tut dann **nichts**, es liefert `false`, obwohl `activeElement`
+das Textfeld meldet. Für die Dauer des synchronen Schreibens wird der Editor
+deshalb absolut positioniert aus dem Bild geschoben sichtbar geschaltet
+(Klasse `writing-fold`, derselbe Griff wie `exporting` im Grafikexport);
+gezeichnet wird davon nichts. Zweitens: `execCommand` braucht den Fokus im
+Textfeld, und der zöge auf dem Telefon die Bildschirmtastatur hoch — dagegen
+`inputmode="none"` wie beim Sprung (D25), das der erste echte Tipp ins Feld
+wieder aufhebt. Anschließend geht der Fokus an den Knoten zurück.
+
+Schreibmarke und Scrollstand werden gesichert und zurückgesetzt; verschoben
+wird nur, was **hinter** der Änderung lag. Gelingt das Schreiben, werden die
+Sitzungs-Überlagerungen geleert — sonst könnten sie den Text maskieren, der
+jetzt die Wahrheit ist.
+
 **Nachtrag — der eingeklappte Knoten vertritt seinen Teilbaum auch auf dem
 günstigsten Pfad.** Oben steht, ein eingeklappter Zweig dürfe Pfadknoten
 verbergen, „die Inversion an den sichtbaren Knoten bleibt richtig". Das war zu

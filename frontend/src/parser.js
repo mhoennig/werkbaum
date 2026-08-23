@@ -20,6 +20,18 @@ export const STATUS_BY_CODE = {
   '!': {code:'!', key:'highrisk',   name:'High Risk – Aufwand unklar'}
 };
 
+/* Setzt (`'>'`) oder entfernt (`null`) die Faltmarke einer Zeile — die Umkehrung
+   der Extraktion aus §1, gebraucht fürs Zurückschreiben aus dem Diagramm
+   (D38-Nachtrag). Angefasst wird NUR die Marke samt ihrem Leerraum: Einrückung,
+   Zerlegungszeichen, Statusbox und Label bleiben zeichengenau stehen, auch bei
+   ungewöhnlicher Spaltung wie `-   [x] X`. Wurzelzeilen (ohne Zeichen) bekommen
+   die Marke am Zeilenanfang, wie SPEC §1 es verlangt. */
+export function setFoldMark(line, mark){
+  const m = line.match(/^([ \t]*(?:[-|+]|=(?=[ \t]))?[ \t]*)((?:[><](?=[ \t])[ \t]*)?)/);
+  const head = m[1], alt = m[2];
+  return head + (mark ? mark + ' ' : '') + line.slice(head.length + alt.length);
+}
+
 /* Status, die als „realisiert" zählen (XOR-Regel, SPEC §3/D35): Kosten sind
    investiert oder mehr. Absicht (`[?]`, `[ ]`, `[!]`), Ablehnung (`[-]`) und
    neutrale Knoten zählen nicht. */

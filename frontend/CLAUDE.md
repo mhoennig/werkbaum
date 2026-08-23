@@ -311,7 +311,23 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Pfad-Mitgliedschaft (ein per `:#…` gezogenes Ziel unter einem `+`-Knoten):
   Dann ist er der einzige sichtbare Griff darauf und zählt als `cheap`.
   `extraCls()` muss dieselbe Eingeklappt-Bedingung bilden wie `itemHtml`
-  (nur mit sichtbaren Kindern). Umklappen: Klick aufs
+  (nur mit sichtbaren Kindern).
+  **Umklappen schreibt in den TEXT zurück** (`writeFoldToText`, D38-Nachtrag 2):
+  Die Ableitung Text → Zustand ist nicht umkehrbar (mehrere Markensätze ergeben
+  denselben Zustand; `<` faltet Knoten ohne eigene Marke), deshalb **minimal
+  patchen und nachrechnen** — `setFoldMark()` auf die eine Zeile, dann
+  `initialCollapsed()` auf dem Kandidaten gegen den Soll vergleichen; erst bei
+  Abweichung alle Marken neu setzen; passt auch das nicht (z. B. `!!!` holt den
+  Knoten immer hervor), gar nicht schreiben. Nie eine eigene Umkehrfunktion
+  bauen — `initialCollapsed()` bleibt die einzige Stelle, die die Marken
+  versteht. Geschrieben wird mit `execCommand('insertText')`: `value =` und
+  `setRangeText` zerstören die Undo-Historie (gemessen). Zwei Fallen: Ein
+  Textfeld mit `display:none`-Vorfahr nimmt **kein** `execCommand` an (Klasse
+  `writing-fold` schaltet es kurz sichtbar), und der nötige Fokus zieht auf
+  Mobil die Tastatur hoch (`keyboardOnJump(true)`). Bei `src.readOnly` (Pad,
+  D31) wird nicht geschrieben, dort trägt weiter `foldOverrides` — die
+  Überlagerungen werden nach erfolgreichem Schreiben geleert, sonst maskieren
+  sie den Text. Umklappen: Klick aufs
   `.fold`-Zeichen (preventDefault — es sitzt bei Link-Knoten im `<a>`) oder
   ←/→ am fokussierten Knoten; nach `render()` den Fokus per `data-line`
   wiederherstellen. Export/Druck: „▸ n" bleibt, das ▾ offener Knoten fällt weg

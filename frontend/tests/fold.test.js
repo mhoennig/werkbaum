@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parse } from '../src/parser.js';
+import { parse, setFoldMark } from '../src/parser.js';
 import { initialCollapsed, computeCheapSet } from '../src/model.js';
 import { renderTreeHtml } from '../src/render.js';
 
@@ -40,6 +40,44 @@ describe('Parser — Faltmarke zwischen Zeichen und Statusbox', () => {
   it('lässt ein `>` mitten im Label unberührt', () => {
     const [wurzel] = roots(`[ ] a > b`);
     expect([wurzel.label, wurzel.fold]).toEqual(['a > b', null]);
+  });
+});
+
+/* Umkehrung der Marken-Extraktion fürs Zurückschreiben aus dem Diagramm
+   (SPEC §1, D38-Nachtrag 2): Angefasst wird nur die Marke samt Leerraum. */
+describe('setFoldMark — Faltmarke setzen und entfernen', () => {
+  it('setzt `>` hinter das Zerlegungszeichen', () => {
+    expect(setFoldMark('  - [x] Concept (M)', '>')).toBe('  - > [x] Concept (M)');
+  });
+
+  it('entfernt eine vorhandene Marke', () => {
+    expect(setFoldMark('  - > [x] Concept (M)', null)).toBe('  - [x] Concept (M)');
+  });
+
+  it('ersetzt `<` durch `>`', () => {
+    expect(setFoldMark('    - < [ ] B1', '>')).toBe('    - > [ ] B1');
+  });
+
+  it('setzt die Marke bei Wurzelzeilen an den Zeilenanfang', () => {
+    expect(setFoldMark('[~] Wurzel', '>')).toBe('> [~] Wurzel');
+    expect(setFoldMark('> [~] Wurzel', null)).toBe('[~] Wurzel');
+  });
+
+  it('lässt ungewöhnliche Spaltung stehen', () => {
+    expect(setFoldMark('  -   [x] X', '>')).toBe('  -   > [x] X');
+    expect(setFoldMark('\t= [ ] Cloud', '>')).toBe('\t= > [ ] Cloud');
+  });
+
+  it('fasst ein `>` im Label nicht an (Leerraum-Regel)', () => {
+    /* `- >Achtung` ist ein Label, keine Marke — die neue Marke kommt davor. */
+    expect(setFoldMark('  - >Achtung', '>')).toBe('  - > >Achtung');
+    expect(setFoldMark('  - >Achtung', null)).toBe('  - >Achtung');
+  });
+
+  it('ist verlustfrei umkehrbar', () => {
+    for(const l of ['[ ] W', '  - [x] A (M) @anna', '  | [?] B', '    + [-] C']){
+      expect(setFoldMark(setFoldMark(l, '>'), null)).toBe(l);
+    }
   });
 });
 

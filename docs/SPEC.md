@@ -34,9 +34,10 @@ dieser Reihenfolge (wichtig für Kollisionsfreiheit):
 - `>` heißt: der Teilbaum dieses Knotens ist beim Öffnen **eingeklappt**.
 - `<` innerhalb eines eingeklappten Bereichs holt den **eigenen Teilbaum**
   gezielt wieder hervor (Mechanik: §9).
-- Die Marken bestimmen nur den **Anfangszustand** — im Diagramm wird danach
-  unabhängig vom Text gefaltet (§9). Sie sagen nichts über Fortschritt (§4)
-  oder Notwendigkeit (§3) und ändern weder Kosten noch Warnungen.
+- Die Marken beschreiben den **Faltzustand des Dokuments**: Beim Öffnen stellen
+  sie ihn her, und Umklappen im Diagramm schreibt sie zurück (§9) — Text und
+  Bild sagen dasselbe. Sie sagen nichts über Fortschritt (§4) oder
+  Notwendigkeit (§3) und ändern weder Kosten noch Warnungen.
 
 **Knoten-ID `#name`** — benennt einen Knoten im **ganzen Dokument** eindeutig;
 sie ist die Adresse für Abhängigkeiten und Beschreibungsblöcke (§11).
@@ -665,9 +666,22 @@ fokussierten Knoten (WAI-ARIA-Baum-Idiom).
   hervorgeholten Teilbaums bleibt respektiert.
 - Auch ein **`!!!`-markierter Knoten** (§1) holt sich auf diese Weise hervor —
   ein Zeigefinger auf etwas Unsichtbares zeigte ins Leere.
-- Der interaktive Eingriff gilt **je Knoten** (Identität = Label-Pfad, wie bei
-  „Was ist neu?“) und **für die Sitzung**; er wird nicht gespeichert — die
-  dauerhafte Aussage steht im Text (D34). Ein Dokumentwechsel setzt zurück.
+- **Umklappen im Diagramm schreibt die Marke in den Text zurück.** Damit ist
+  der Text auch für die Faltung die eine Quelle der Wahrheit: Was du siehst,
+  steht geschrieben, und ein Neuladen stellt es wieder her. Die Änderung ist
+  eine gewöhnliche Textänderung — sie lässt sich mit **Rückgängig** zurücknehmen
+  und macht ein mitgeliefertes Dokument zu einem bearbeiteten (§9, D27).
+  Geschrieben wird **minimal**: Nur die Zeile des umgeklappten Knotens wird
+  angefasst, solange die übrigen Marken den Zustand noch richtig beschreiben —
+  ein von Hand gesetztes `<` bleibt also stehen. Trifft es nicht mehr zu, werden
+  alle Marken neu gesetzt und das `<` dabei aufgelöst.
+- Wo der Text **nicht beschreibbar** ist — bei einem Pad-Dokument (§9) —, gilt
+  der Eingriff **je Knoten** (Identität = Label-Pfad, wie bei „Was ist neu?“)
+  und **nur für die Sitzung**; ein Dokumentwechsel setzt ihn zurück. Dasselbe
+  gilt für einen Zustand, der sich in Marken gar nicht ausdrücken lässt (etwa
+  weil eine Fokusmarke `!!!` ihren Knoten immer wieder hervorholt): Dann wird
+  lieber nichts geschrieben, als einen Text zu hinterlassen, der etwas anderes
+  sagt als das Bild.
 - Faltung ist **reine Ansicht**: Warnungen aus eingeklappten Teilbäumen werden
   weiter gemeldet (sie gelten dem Text), und der günstigste Pfad rechnet
   unverändert über den ganzen Baum.

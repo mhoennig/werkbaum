@@ -399,6 +399,18 @@
   .dltrigger{display:none}
   .legendbtn{display:none}                             /* nur auf kleinem Bildschirm sichtbar */
   .panetoggle{display:none}                            /* ebenso: dort gibt es nur einen Bereich */
+  /* Zurückschreiben der Faltung (D38-Nachtrag 2): Für die Dauer des SYNCHRONEN
+     Schreibens braucht das Textfeld einen Kasten — ohne ihn tut `execCommand`
+     nichts (gemessen: liefert `false`, obwohl `activeElement` das Feld meldet).
+     Auf kleinem Bildschirm ist der Editor `display:none`, wenn das Diagramm
+     vorn ist. Absolut aus dem Fluss genommen und aus dem Bild geschoben, damit
+     der sichtbare Bereich seine Größe behält; gezeichnet wird davon nichts —
+     derselbe Griff wie `exporting` im Grafikexport. */
+  body.writing-fold .panel.editor{
+    display:flex!important;
+    position:absolute!important;left:-10000px!important;top:0!important;
+    width:360px!important;height:400px!important;
+  }
   /* Dokument-Wähler: der Name des aktiven Dokuments in der Editor-Titelzeile ist
      zugleich der Auslöser eines Dropdowns zum Wechseln/Anlegen/Umbenennen/Löschen
      (localStorage-Dokumente, noch kein Backend). */

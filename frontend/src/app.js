@@ -1,5 +1,5 @@
 import './style.css';
-import { parse } from './parser.js';
+import { parse, setFoldMark } from './parser.js';
 import { computeCheapPlan, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus } from './model.js';
 import { esc, renderTreeHtml } from './render.js';
 import { formatWarning } from './warnings.js';
@@ -856,15 +856,136 @@ function nodeFromEvent(e){
   return el && out.contains(el) ? el : null;
 }
 
-/* Faltung umklappen (SPEC §9, D38). Der Eingriff überlagert den Anfangszustand
-   aus dem Text; nach dem Neubau bekommt derselbe Knoten den Fokus zurück,
+/* ---------- Faltung zurück in den Text (D38-Nachtrag 2) ----------
+   Umklappen im Diagramm ändert den Notationstext. Der Text ist damit auch für
+   die Faltung die eine Quelle der Wahrheit (D14) — die Sitzungs-Überlagerung
+   `foldOverrides` bleibt nur für Dokumente, in die nicht geschrieben werden
+   kann (Pad, schreibgeschützt nach D31). */
+
+/* Der Sollzustand als Menge von Label-Pfad-Schlüsseln: heutiger Anfangszustand
+   aus dem Text, überlagert von den Eingriffen — dieselbe Rechnung wie in
+   render(), damit beide nie auseinanderlaufen. */
+function desiredFoldKeys(roots){
+  const initFold = initialCollapsed(roots, true);
+  const keys = nodeKeys(roots);
+  const want = new Set();
+  keys.forEach((key, n) => {
+    const ov = foldOverrides.get(key);
+    if((ov !== undefined ? ov : initFold.has(n)) && n.children.length > 0) want.add(key);
+  });
+  return want;
+}
+
+/* Erzeugt ein Text ZWEIMAL denselben Faltzustand? Statt die Ableitung
+   Text -> Zustand umzukehren (sie ist nicht eindeutig: mehrere Markensätze
+   ergeben denselben Zustand), wird der Kandidat schlicht nachgerechnet.
+   `initialCollapsed()` bleibt so die einzige Wahrheit über die Bedeutung der
+   Marken — die Umkehrung muss sie nicht kennen, nur befragen. */
+function foldStateMatches(txt, want){
+  const r = parse(txt).roots;
+  const keys = nodeKeys(r);
+  const got = new Set();
+  initialCollapsed(r, true).forEach(n => { if(n.children.length > 0) got.add(keys.get(n)); });
+  if(got.size !== want.size) return false;
+  for(const k of want) if(!got.has(k)) return false;
+  return true;
+}
+
+/* Schreibt den Text undo-fähig. `execCommand` ist die EINZIGE Art, ein Textfeld
+   programmatisch zu ändern, ohne dessen Rückgängig-Historie zu zerstören
+   (nachgemessen: `value =` und `setRangeText` machen Strg+Z wirkungslos). Sie
+   ersetzt die Auswahl — geändert wird deshalb nur das wirklich abweichende
+   Stück zwischen gemeinsamem Anfang und Ende. */
+function replaceTextUndoable(neu){
+  const alt = src.value;
+  if(alt === neu) return true;
+  let s = 0;
+  while(s < alt.length && s < neu.length && alt[s] === neu[s]) s++;
+  let e = 0;
+  while(e < alt.length - s && e < neu.length - s &&
+        alt[alt.length-1-e] === neu[neu.length-1-e]) e++;
+  const von = s, bis = alt.length - e, ein = neu.slice(s, neu.length - e);
+  const cs = src.selectionStart, ce = src.selectionEnd, top = src.scrollTop;
+  /* Der Fokus muss ins Textfeld — sonst greift execCommand nicht. Auf dem
+     Telefon zöge das die Bildschirmtastatur hoch; `inputmode="none"` hält sie
+     unten (derselbe Griff wie beim Sprung, D25), und der erste echte Tipp ins
+     Feld hebt die Sperre wieder auf. */
+  keyboardOnJump(true);
+  src.focus({preventScroll: true});
+  src.setSelectionRange(von, bis);
+  let ok = false;
+  try{ ok = document.execCommand('insertText', false, ein); }catch(_){}
+  if(!ok){
+    /* Rückfall: Der richtige Zustand geht vor der Undo-Historie (D14). */
+    src.value = neu;
+    src.dispatchEvent(new Event('input', {bubbles: true}));
+  }
+  /* Schreibmarke und Scrollstand zurück — sonst risse das Falten den Nutzer
+     aus seiner Textstelle. Nur was HINTER der Änderung lag, verschiebt sich. */
+  const d = ein.length - (bis - von);
+  const fix = p => p >= bis ? p + d : Math.min(p, von + ein.length);
+  src.setSelectionRange(fix(cs), fix(ce));
+  src.scrollTop = top;
+  return true;
+}
+
+/* Auf kleinem Bildschirm ist der Editor `display:none`, wenn das Diagramm vorn
+   ist — und dann tut `execCommand` NICHTS (gemessen: liefert `false`, obwohl
+   `activeElement` das Feld meldet). Für die Dauer des synchronen Schreibens
+   wird er deshalb aus dem Fluss heraus sichtbar geschaltet; gezeichnet wird
+   davon nichts, wie bei `exporting` im Grafikexport. */
+function withEditorWritable(fn){
+  const versteckt = editorPanel.offsetParent === null;
+  if(versteckt) document.body.classList.add('writing-fold');
+  try{ return fn(); }
+  finally{ if(versteckt) document.body.classList.remove('writing-fold'); }
+}
+
+/* Schreibt den Faltzustand in den Text. Liefert false, wenn nicht geschrieben
+   werden konnte — dann bleibt die Sitzungs-Überlagerung stehen. */
+function writeFoldToText(line, collapsed){
+  if(src.readOnly) return false;             /* Pad-Dokument (D31) */
+  const roots = parse(src.value).roots;
+  if(!roots.length) return false;
+  const want = desiredFoldKeys(roots);
+  const zeilen = src.value.split('\n');
+
+  /* 1) Minimal: nur die umgeklappte Zeile anfassen. So bleiben von Hand
+        gesetzte `<` stehen, solange sie den Zustand noch richtig beschreiben. */
+  const klein = zeilen.slice();
+  klein[line-1] = setFoldMark(klein[line-1], collapsed ? '>' : null);
+  let neu = klein.join('\n');
+
+  if(!foldStateMatches(neu, want)){
+    /* 2) Vollständig: alle Marken neu setzen. Nötig, wenn ein `<` den Zustand
+          nicht mehr trifft — dann wird es hier aufgelöst. */
+    const keys = nodeKeys(roots);
+    const ganz = zeilen.slice();
+    keys.forEach((key, n) => {
+      ganz[n.line-1] = setFoldMark(ganz[n.line-1], want.has(key) ? '>' : null);
+    });
+    neu = ganz.join('\n');
+    /* 3) Nicht ausdrückbar — etwa weil ein `!!!` im Zweig seinen Knoten immer
+          wieder hervorholt (SPEC §9). Dann NICHT schreiben: ein Text, der
+          etwas anderes sagt als das Bild, wäre schlimmer als keine Marke. */
+    if(!foldStateMatches(neu, want)) return false;
+  }
+  return withEditorWritable(() => replaceTextUndoable(neu));
+}
+
+/* Faltung umklappen (SPEC §9, D38). Gelingt das Zurückschreiben, ist der Text
+   der Zustand — die Überlagerungen werden dann geleert, damit sie ihn nicht
+   maskieren können. Nach dem Neubau bekommt derselbe Knoten den Fokus zurück,
    sonst risse die Tastaturbedienung ab (das alte Element ist weg). */
 function toggleFold(el){
-  const st = foldByLine.get(+el.dataset.line);
+  const line = +el.dataset.line;
+  const st = foldByLine.get(line);
   if(!st || !st.canFold) return;
   foldOverrides.set(st.key, !st.collapsed);
-  render();
-  const again = out.querySelector('.node[data-line="' + el.dataset.line + '"]');
+  /* Das Schreiben löst per `input`-Ereignis schon ein render() aus. */
+  if(writeFoldToText(line, !st.collapsed)) foldOverrides.clear();
+  else render();
+  const again = out.querySelector('.node[data-line="' + line + '"]');
   if(again) again.focus({preventScroll: true});
 }
 
