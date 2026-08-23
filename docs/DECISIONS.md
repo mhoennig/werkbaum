@@ -852,6 +852,10 @@ verschiebt sich für diesen einen Knoten um ~4 px; das ist flüchtig und fällt
 nicht auf. Ein Spalt zur Anschlusslinie entsteht nicht — der Knoten wächst
 darüber, statt sich zurückzuziehen.
 
+*(Die Prüfung übersah eine Wirkung des `z-index`, die nicht die Geometrie
+betrifft: Er hebt den Knoten auch über die vorderen Zeichenebenen. Korrigiert
+in Nachtrag 3.)*
+
 **Dazu ein einmaliger Puls beim Zeilenwechsel:** Man verliert den Knoten beim
 **Bewegen**, nicht im Stillstand — also meldet er sich genau dann einmal, mit
 einem kurzen Hüpfer und einem auslaufenden Ring. Kein WCAG-Problem: 2.2.2 zielt
@@ -911,6 +915,34 @@ der **schon** die Cursor-Zeile ist. Dann ist es dasselbe DOM-Element, und der
 Puls muss trotzdem neu anlaufen — genau dafür steht das Lesen von
 `offsetWidth` zwischen Entfernen und Setzen der Klasse. Nachgemessen: vor dem
 Klick keine laufende Animation, 80 ms danach beide bei `currentTime ≈ 67 ms`.
+
+**Nachtrag 3 — „vorn" heißt vorn: die vorderen Zeichenebenen brauchen einen
+eigenen `z-index`.** Gemeldet als „wenn der Knoten der aktive ist, fehlt der
+blasse Kreis für den Lean Path". Die Ursache ist der `z-index:3`, den Nachtrag 1
+dem Knoten gegeben hat — richtig begründet (ohne ihn beschneiden später gemalte
+Geschwister den Schlagschatten), aber mit einer zweiten Wirkung, die dort nicht
+mitgedacht wurde: Er hebt den Knoten nicht nur über seine Geschwister, sondern
+über **jede** Ebene ohne eigene Stapelposition — und genau das waren die
+Overlay-SVGs. `svg.cheap-front` trug nur `position:absolute`; die
+Zeichenreihenfolge kam allein aus der DOM-Position. Damit lag ausgerechnet der
+hervorgehobene Knoten über seinem eigenen Stationspunkt.
+
+Der Fehler ist **nicht** auf die Cursor-Zeile beschränkt: Die Strahlenkränze
+haben aus demselben Grund `z-index:2` (D28/D32), verdeckten den Punkt also
+ebenso. Und `svg.dep-front` (D41) hing daran mit — die hervorgehobenen
+Abhängigkeits-Kanten gehören per Definition zum ausgewählten Knoten und endeten
+deshalb unter ihm, also genau dort, wo man hinsieht.
+
+Behoben an der Ebene, nicht am Knoten: `.dep-front{z-index:4}` und
+`.cheap-front{z-index:5}` — beide über der höchsten Knoten-Stufe. Die
+**hinteren** Ebenen bleiben ohne `z-index`; sie sollen hinter den Knoten
+liegen, und dort funktioniert die DOM-Reihenfolge. Den `z-index` am Knoten zu
+senken wäre der falsche Griff gewesen: Er hat seinen Grund, und die
+Overlay-Ebenen heißen nicht ohne Absicht „front".
+
+Export und Druck waren nie betroffen — dort zeichnet `diagramToSvg()` die
+Punkte nach den Knoten (Reihenfolge statt Stapelung), und die Cursor-Zeile
+erscheint ohnehin nicht (D25 oben).
 
 ## D26 — Legende scrollbar: eigener Container statt `<details>`, plus Splitter
 Die Legende („Agenda") im Editor-Panel war zu hoch für ihren Platz und wurde

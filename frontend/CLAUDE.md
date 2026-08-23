@@ -320,6 +320,11 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   (D38-Nachtrag 3): `drawCheapPath()` steigt nur bei **null** Stationen aus,
   die Zwei-Punkte-Schranke gilt allein der Linie (`catmullRom`) — im Export
   ebenso. Sonst verschwindet der Pfad beim eingeklappten Wurzelknoten ganz.
+  **Die vorderen Overlay-Ebenen brauchen einen `z-index`** (D25-Nachtrag 3):
+  `.cheap-front{z-index:5}`, `.dep-front{z-index:4}` — sonst deckt jeder
+  Knoten mit eigener Stapelposition (`current` 3, `fresh`/`focusmark` 2) den
+  Stationspunkt und die hervorgehobenen Dep-Kanten zu. Die **hinteren** Ebenen
+  bleiben ohne, dort trägt die DOM-Reihenfolge.
   **Umklappen schreibt in den TEXT zurück** (`writeFoldToText`, D38-Nachtrag 2):
   Die Ableitung Text → Zustand ist nicht umkehrbar (mehrere Markensätze ergeben
   denselben Zustand; `<` faltet Knoten ohne eigene Marke), deshalb **minimal
