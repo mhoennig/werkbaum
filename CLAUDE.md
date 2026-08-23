@@ -29,6 +29,11 @@ Integrations-Backend.
 - Keine neuen Laufzeit-Abhängigkeiten ohne Rückfrage (gilt in beiden Teilen).
 - Der Notationstext ist das führende Datenformat; kein Teil erfindet ein
   eigenes Speicherformat für die Struktur.
+- Im mitgelieferten Plan `docs/examples/werkbaum.werkbaum` bekommt **jeder**
+  Knoten eine ID nach dem Muster `#bereich.task` (dritte Stufe nur, wo es
+  sonst kryptisch würde) und einen Beschreibungsblock hinter dem
+  `---`-Trenner, englisch, ein bis zwei Sätze — siehe D48. Neue Knoten also
+  immer zu zweit anlegen: Zeile im Baum **und** Block unten.
 - Im mitgelieferten Plan `docs/examples/werkbaum.werkbaum` bekommt eine
   fertige Funktion beim Mergen **`[x]`**, nicht `[^]`. Auf „in Produktion"
   befördert erst der Deploy der stabilen Instanz

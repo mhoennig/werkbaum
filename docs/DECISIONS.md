@@ -3071,3 +3071,49 @@ sind sie ohnehin Overlay). Bei 375 px ändert die Regel nichts, weil nichts
 wieder 40 px breit). Das ist die ehrliche Fortschreibung der D17-Regel: Der
 Riegel sollte einen unbemerkten Layout-Wechsel verhindern, nicht ein
 Bedienelement opfern.
+
+## D48 — Der Werkbaum-Plan erklärt sich selbst: ID und Beschreibung an jedem Knoten
+Der mitgelieferte Plan (D27) ist zugleich Vorzeigedokument und Projektübersicht
+— und war für Fremde weitgehend stumm. Ein Knoten wie „Stay greedy, but say so"
+oder „Cycles are legal" sagt jemandem, der die DECISIONS nicht gelesen hat,
+nichts. Jetzt trägt **jeder** der 172 Knoten eine **ID** und einen
+**Beschreibungsblock** hinter dem `---`-Trenner.
+
+**Warum die Langform und nicht `"`-Zeilen:** Bei 172 Knoten verdreifachte die
+Kurzform die Höhe des Baumteils und machte ihn unlesbar — gerade das, was der
+Plan zeigen soll. Hinter dem Trenner bleibt der Baum so kompakt wie vorher;
+die Erklärung findet man über die ID. Genau der Fall, für den die Langform
+gebaut wurde (D40). Die eine vorhandene `"`-Zeile an „Collaborating" bleibt
+stehen: Sie führt die Kurzform weiterhin vor, und beide Formen zum selben
+Knoten hängen sich planmäßig aneinander (§1).
+
+**ID-Schema `#bereich.task`, dritte Stufe nur wo nötig** (Nutzer). Acht
+Bereiche mit kurzen Kürzeln — `not` Notation, `ed` Editor, `bld` Build,
+`be` Backend, `col` Zusammenarbeit, `mmd` Mermaid, `idea` IDEA-Plugin,
+`trk` Tracker; die Wurzel ist `#wb`. Wo ein Teilbaum sonst Kunstwörter
+bräuchte, kommt eine dritte Stufe dazu (`#ed.closure.union`,
+`#mmd.place.horiz`) — vier gibt es nirgends. Vier bereits vergebene IDs sind
+ins Schema gewandert (`#closure` → `#ed.closure`, `#scaffold` →
+`#be.scaffold`, `#docs` → `#be.docs`, `#resolve` → `#trk.resolve`), die fünf
+`:#…`-Verweise darauf mit.
+
+**Englisch wie der Plan** (Nutzer). „Doku auf Deutsch" (CLAUDE.md) gilt der
+Projektdokumentation; der Plan ist ein ausgeliefertes Artefakt mit weltweitem
+Publikum, und deutsche Blöcke unter einem englischen Baum läsen sich gebrochen
+— dieselbe Logik wie beim Beispiel-Dokument (D22) und bei `llms.md` (D43).
+
+**Ein bis zwei Sätze je Knoten** (Nutzer): was es ist und warum es im Plan
+steht. Ein Satz ohne das Warum verlöre bei den interessanten Knoten gerade die
+Hälfte, die man nicht erraten kann; ein Absatz je Knoten machte den Plan zu
+einer zweiten, veraltenden Fassung von DECISIONS.
+
+**Der Preis, gemessen:** Die Datei wächst von 189 auf 902 Zeilen, das Bundle
+von 443 auf 506 kB (gzip 247 → 270 kB). Dafür beantwortet das Diagramm jetzt
+im Tooltip, was ein Knoten bedeutet — und der Screenreader liest es mit
+(`aria-label`).
+
+**Nachgemessen:** 172 Knoten, 172 eindeutige IDs, kein Knoten ohne
+Beschreibung, **0 Warnungen**, Pfad weiterhin exakt gerechnet mit 24
+Stationen. Der Cursor in einem Beschreibungsblock wählt den beschriebenen
+Knoten aus (D40-Nachtrag 2) — auf Kopf- wie Textzeile geprüft; der
+`---`-Trenner selbst wählt nichts.

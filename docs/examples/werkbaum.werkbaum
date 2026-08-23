@@ -1,188 +1,902 @@
 %% Werkbaum, planned with Werkbaum — what exists today and where it could go.
 %% Distilled from docs/ROADMAP.md, docs/TASKS.md and docs/DECISIONS.md.
+%% Every node carries an id; the block behind --- explains it. Hover a node.
 
-[~] Werkbaum (XXL) https://github.com/mhoennig/werkbaum
-  - [^] Notation (L)
-    - [^] Line format (M)
-      - [^] Status box, eight states (S)
-      - [^] T-shirt size and the "decompose from M" rule (S)
-      - [^] People tags, bare URLs, %% comments (XS)
-    - [^] And/or decomposition (S)
-    - [^] Optional nodes — neither required nor an alternative (S)
-    - [^] Node IDs, (#auth:) before the title (S)  %% often the ticket number, see SPEC §11
-    + [?] Free tags, &tag (M)  %% only together with a consumer, see D34
-      - [?] A lens: highlight every node tagged &x (S)
-    - [^] Dependencies across the tree, (:#auth,#api) (M)
-      - [^] They constrain the status, not when work may start (S)
-      - [^] Effective status: intrinsic, plus what it depends on (S)
-      - [^] Cycles are legal — they mean "finished together" (XS)
-      - [^] An id with no node behind it is a warning (XS)
-    - [^] XOR, = — exactly one alternative, not at least one (S)
-    - [^] Node descriptions, shown as a tooltip (M)
-      - [^] A short text right at the node (S)  %% a " line below the node
-      - [^] A long block at the end, addressed by its id (S)  %% behind a --- separator
-    - [-] A separate storage format for the structure (L)  %% the text is the format
-    - [ ] Ticket references (#123,#US-123) (S)  %% Taiga writes #US-123 for a user story
-    - [^] llms.md, the notation explained to AI agents (S)
-    - [?] Benefit per node, not only cost (M)
-      | [?] Another sigil next to the size (S)
-      | [?] Story points behind the T-shirt sizes (M)
-  - [~] Editor (XL) https://werkbaum.javagil.de
-    - [^] Live diagram from text (M)
-      - [^] Parser (S)
-      - [^] Renderer, three layout modes (M)
-        - [^] Horizontal fan (S)
-        - [^] Vertical, transposed (S)
-        - [^] Compact (S)
-      - [^] Cross links for dependencies (M)
-        - [^] Visually secondary — the tree carries the message (S)
-        - [^] Highlight what a selected node needs and feeds (S)
-    - [^] Cheapest path (M)
-      - [^] Cost model, missing size counts as M (S)
-      - [x] Only the open front: what is done costs nothing (S)  %% see D46
-      - [^] Metro-map line through the leaves (S)
-      - [x] Step from station to station, one button (S)  %% see D47
-      - [^] #closure: Count the whole dependency closure (M)
-        - [^] Shared dependencies counted only once (S)
-        - [^] The cheapest alternative is no longer the local one (M)  %% see D34, D42
-          | [^] Search exactly, the trees are small enough (M)
-            - [^] Enumerate the coupled any-of choices (S)
-            - [^] Cost is the size of the union (S)
-          | [^] Stay greedy, but say so (XS)  %% built as the named fallback
-    - [^] Export (M)
-      - [^] SVG and PNG download (S)
-      - [^] PNG to the clipboard (S)
-      + [^] Print stylesheet (XS)
-    - [^] Nine interface languages (M)
-      - [^] Translations (S)
-      - [^] Default taken from the browser (XS)
-    - [^] Accessibility: aria labels, focus order (S)
-    - [^] Works on a phone (S)
-    - [^] Several documents in one editor (M)
-      - [^] Switcher in the editor title bar (S)
-      - [^] Load a document from ?sourceUrl= (S)
-      - [^] Restore a shipped document from the menu (XS)
-    - [^] Jump between diagram and text (S)
-    - [^] Line numbers in the text editor (XS)  %% the warnings name them
-    - [^] Collapsible subtrees (M)
-      - [^] Initial state from the text: > collapses, < re-opens (S)
-      - [^] Fold and unfold in the diagram (S)
-      - [^] Folding writes the mark back into the text (S)  %% one undo step
-      - [^] One switch folds everything from size M downward (S)  %% see D44
-    - [ ] Open and save .werkbaum files (S)
-    + [^] Show what is new since your last visit (S)
-    + [?] A pastel colour per person (S)
-    - [?] Dates and milestones (M)
-      | [?] An attribute in the line (S)
-      | [?] A separate timeline view (L)
-  - [^] Build and delivery (M)
-    - [^] One self-contained file, bundled by Vite (S)
-    - [^] Unit tests (S)
-    - [^] Published on every push (S)
-    - [^] Says when a new build is out (S)  %% compares against the running one, see D45
-    - [-] Deploy through a gh-pages branch (S)  %% GitHub Actions instead
-    - [-] Fonts from Google (XS)  %% self-hosted, no third-party request
-  - [ ] Backend (XL)
-    - [ ] #scaffold: Kotlin and Spring Boot scaffold (M)
-      - [ ] Gradle Kotlin DSL, JDK 21 (S)
-      - [ ] Health endpoint and CI (S)
-    - [ ] #docs: Documents on the server (L) :#scaffold
-      - [ ] Text plus metadata, no structure format (M)
-        - [ ] REST endpoints (S)
-        - [ ] Persistence (S)
-      - [ ] Share by link (S)
-    - [?] Accounts and permissions (L) :#docs
-      | [?] Single user, one token (S)
-      | [?] Log in with OIDC (L)
-  - [~] Collaborating on a Diagram (XL)
+[~] #wb: Werkbaum (XXL) https://github.com/mhoennig/werkbaum
+  - [^] #not: Notation (L)
+    - [^] #not.line: Line format (M)
+      - [^] #not.status: Status box, eight states (S)
+      - [^] #not.size: T-shirt size and the "decompose from M" rule (S)
+      - [^] #not.people: People tags, bare URLs, %% comments (XS)
+    - [^] #not.gates: And/or decomposition (S)
+    - [^] #not.opt: Optional nodes — neither required nor an alternative (S)
+    - [^] #not.id: Node IDs, (#auth:) before the title (S)  %% often the ticket number, see SPEC §11
+    + [?] #not.tag: Free tags, &tag (M)  %% only together with a consumer, see D34
+      - [?] #not.tag.lens: A lens: highlight every node tagged &x (S)
+    - [^] #not.dep: Dependencies across the tree, (:#auth,#api) (M)
+      - [^] #not.dep.status: They constrain the status, not when work may start (S)
+      - [^] #not.dep.eff: Effective status: intrinsic, plus what it depends on (S)
+      - [^] #not.dep.cycle: Cycles are legal — they mean "finished together" (XS)
+      - [^] #not.dep.warn: An id with no node behind it is a warning (XS)
+    - [^] #not.xor: XOR, = — exactly one alternative, not at least one (S)
+    - [^] #not.desc: Node descriptions, shown as a tooltip (M)
+      - [^] #not.desc.short: A short text right at the node (S)  %% a " line below the node
+      - [^] #not.desc.long: A long block at the end, addressed by its id (S)  %% behind a --- separator
+    - [-] #not.store: A separate storage format for the structure (L)  %% the text is the format
+    - [ ] #not.ticket: Ticket references (#123,#US-123) (S)  %% Taiga writes #US-123 for a user story
+    - [^] #not.llms: llms.md, the notation explained to AI agents (S)
+    - [?] #not.benefit: Benefit per node, not only cost (M)
+      | [?] #not.benefit.sigil: Another sigil next to the size (S)
+      | [?] #not.benefit.points: Story points behind the T-shirt sizes (M)
+  - [~] #ed: Editor (XL) https://werkbaum.javagil.de
+    - [^] #ed.live: Live diagram from text (M)
+      - [^] #ed.parser: Parser (S)
+      - [^] #ed.render: Renderer, three layout modes (M)
+        - [^] #ed.render.horiz: Horizontal fan (S)
+        - [^] #ed.render.vert: Vertical, transposed (S)
+        - [^] #ed.render.comp: Compact (S)
+      - [^] #ed.deplink: Cross links for dependencies (M)
+        - [^] #ed.deplink.calm: Visually secondary — the tree carries the message (S)
+        - [^] #ed.deplink.focus: Highlight what a selected node needs and feeds (S)
+    - [^] #ed.path: Cheapest path (M)
+      - [^] #ed.path.cost: Cost model, missing size counts as M (S)
+      - [x] #ed.path.front: Only the open front: what is done costs nothing (S)  %% see D46
+      - [^] #ed.path.line: Metro-map line through the leaves (S)
+      - [x] #ed.path.step: Step from station to station, one button (S)  %% see D47
+      - [^] #ed.closure: Count the whole dependency closure (M)
+        - [^] #ed.closure.once: Shared dependencies counted only once (S)
+        - [^] #ed.closure.nonlocal: The cheapest alternative is no longer the local one (M)  %% see D34, D42
+          | [^] #ed.closure.exact: Search exactly, the trees are small enough (M)
+            - [^] #ed.closure.enum: Enumerate the coupled any-of choices (S)
+            - [^] #ed.closure.union: Cost is the size of the union (S)
+          | [^] #ed.closure.greedy: Stay greedy, but say so (XS)  %% built as the named fallback
+    - [^] #ed.export: Export (M)
+      - [^] #ed.export.file: SVG and PNG download (S)
+      - [^] #ed.export.clip: PNG to the clipboard (S)
+      + [^] #ed.export.print: Print stylesheet (XS)
+    - [^] #ed.i18n: Nine interface languages (M)
+      - [^] #ed.i18n.texts: Translations (S)
+      - [^] #ed.i18n.auto: Default taken from the browser (XS)
+    - [^] #ed.a11y: Accessibility: aria labels, focus order (S)
+    - [^] #ed.mobile: Works on a phone (S)
+    - [^] #ed.docs: Several documents in one editor (M)
+      - [^] #ed.docs.picker: Switcher in the editor title bar (S)
+      - [^] #ed.docs.url: Load a document from ?sourceUrl= (S)
+      - [^] #ed.docs.restore: Restore a shipped document from the menu (XS)
+    - [^] #ed.jump: Jump between diagram and text (S)
+    - [^] #ed.lineno: Line numbers in the text editor (XS)  %% the warnings name them
+    - [^] #ed.fold: Collapsible subtrees (M)
+      - [^] #ed.fold.marks: Initial state from the text: > collapses, < re-opens (S)
+      - [^] #ed.fold.click: Fold and unfold in the diagram (S)
+      - [^] #ed.fold.write: Folding writes the mark back into the text (S)  %% one undo step
+      - [^] #ed.fold.preset: One switch folds everything from size M downward (S)  %% see D44
+    - [ ] #ed.files: Open and save .werkbaum files (S)
+    + [^] #ed.fresh: Show what is new since your last visit (S)
+    + [?] #ed.percolor: A pastel colour per person (S)
+    - [?] #ed.dates: Dates and milestones (M)
+      | [?] #ed.dates.attr: An attribute in the line (S)
+      | [?] #ed.dates.view: A separate timeline view (L)
+  - [^] #bld: Build and delivery (M)
+    - [^] #bld.bundle: One self-contained file, bundled by Vite (S)
+    - [^] #bld.tests: Unit tests (S)
+    - [^] #bld.pages: Published on every push (S)
+    - [^] #bld.update: Says when a new build is out (S)  %% compares against the running one, see D45
+    - [-] #bld.ghpages: Deploy through a gh-pages branch (S)  %% GitHub Actions instead
+    - [-] #bld.gfonts: Fonts from Google (XS)  %% self-hosted, no third-party request
+  - [ ] #be: Backend (XL)
+    - [ ] #be.scaffold: Kotlin and Spring Boot scaffold (M)
+      - [ ] #be.scaffold.gradle: Gradle Kotlin DSL, JDK 21 (S)
+      - [ ] #be.scaffold.ci: Health endpoint and CI (S)
+    - [ ] #be.docs: Documents on the server (L) :#be.scaffold
+      - [ ] #be.docs.model: Text plus metadata, no structure format (M)
+        - [ ] #be.docs.rest: REST endpoints (S)
+        - [ ] #be.docs.db: Persistence (S)
+      - [ ] #be.docs.share: Share by link (S)
+    - [?] #be.auth: Accounts and permissions (L) :#be.docs
+      | [?] #be.auth.token: Single user, one token (S)
+      | [?] #be.auth.oidc: Log in with OIDC (L)
+  - [~] #col: Collaborating on a Diagram (XL)
     " The pad merges concurrent edits, Werkbaum renders the plan.
-    - [^] Watch a shared Etherpad — it merges, we render (S)
-      - [^] Load the pad's plain-text export (XS)
-      - [^] Reload on demand (XS)  %% a timer only trips Etherpad's rate limit
-      - [^] Embed the pad, keep the text mirror beside it (M)
-        - [^] Three views: pad and text, pad only, text only (S)
-        - [^] Splitter between pad and mirror (XS)
-        - [?] Editing in the frame stops after a while (S)  %% SameSite=Lax, see D31
-          | [?] Ask the admin for cookie.sameSite = None (XS)
-          | [ ] Live with it: edit in the pad's own tab (XS)
-      - [^] A shared pointer: !!! focuses a node for everyone (XS)
-      - [?] > Update by itself, within about 2 s (M)
-        | [?] Our own Etherpad beside Werkbaum (M)  %% then every setting below is ours
-          - [ ] Node and a real database in userland (S)  %% the flatfile store is not for production
-          - [ ] Book the RAM quota for an own daemon (XS)
-          - [ ] Reverse proxy in .htaccess, websockets included (S)  %% Mattermost does it, wiki shows how
-          - [ ] systemd user unit so it survives a reboot (XS)
-          - [!] Keeping a public service patched (S)  %% indefinitely, that is the real cost
-        | [?] Admin raises the export rate limit (XS)  %% default is 10 per 90 s
-        | [?] Admin installs a plugin that pushes the text (S)  %% postMessage to the page
-        | [?] Our own backend holds one socket and fans out (XXL) :#scaffold
-        | [ ] Poll inside the budget, at best every 9 s (S)  %% legal, but not 2 s
-        | [-] Our own socket straight to the pad (L)  %% measured: upgrade refused
-        | [-] Read the pad's HTML instead of the export (M)  %% measured: no CORS header
-    - [ ] Git as the shared store (L)
-      | [ ] A file in a repository, changed by pull request (S)  %% works today, no code
-      | [?] The backend commits every change (L) :#scaffold
-        - [?] History and restore (M)
-          - [?] Diff between two versions (S)
-          - [?] Who changed this line (S)
-        - [?] A branch per scenario (S)
-    - [?] Live editing, several people at once (XL)
-      - [ ] Transport over a websocket (S) :#scaffold  %% the easy half
-      - [!] Merging simultaneous edits (L)  %% the actual work
-        | [?] Text CRDT — the plan is plain text, so it fits (L)
-        | [?] Operational transformation (XL)
-      - [?] Cursors and who else is here (S)
-      - [-] A merge algorithm of our own (XL)  %% solved problem, do not reinvent
-  - [?] Mermaid plugin (XL)
-    - [!] A layout engine of its own (XL)  %% measure, place, route — the real work
-      - [ ] Measure node sizes (M)
-        - [ ] Text metrics without a browser (S)
-        - [ ] Badges and tags inside the box (S)
-      - [ ] Place nodes and route connectors (L)
-        - [ ] All-of fan (M)
-          - [ ] Horizontal (S)
-          - [ ] Transposed (S)
-        - [ ] Any-of rail (S)
-    - [?] Registration with Mermaid (M)
-      | [?] External diagram, self-hosted pages only (M)
-      | [?] Pull request into Mermaid itself (L)
-  - [?] > IntelliJ IDEA plugin (XL)
-    - [?] Show the diagram in the IDE (L)
-      | [?] Through Mermaid, once Werkbaum is part of Mermaid itself (M)
-        - [?] Fenced werkbaum blocks render in Markdown (S)
-        - [-] A self-hosted Mermaid diagram type (S)  %% the IDE brings its own Mermaid
-      | [?] Our own preview: the bundled single file in a JCEF window (M)
-        - [?] Hand the editor text in (S)
-        - [?] Get the clicked line back to the caret (S)
-    + [?] A real editor, not just a preview (XL)
-      - [?] Language support for .werkbaum (L)
-        - [?] Lexer and parser to a PSI tree (M)
-          - [?] Syntax highlighting (S)
-          - [?] Warnings as inspections (S)  %% mixed gate, unknown status
-        - [?] Completion for status, size and tags (S)
-        - [?] Structure view and folding (S)
-      - [?] Kotlin with the Gradle IntelliJ plugin (S)
-      - [!] < A second parser that must not drift from the SPEC (M)  %% exactly what D14 warns about
-        | [?] Both parsers test against the same fixtures (S)
-        | [?] Run the one JS parser inside the IDE (M)
-  - [?] Tracker integration (XL)  %% exactly one of these, hence =
-    = [?] Taiga (L) https://taiga.io
-      - [ ] #resolve: Resolve "#123" over the REST API (M)
-        - [ ] Read title, link and status (S)
-        - [ ] Map the workflow onto the states (S)
-      - [?] Write the status back (M) :#resolve
-      - [-] A plugin inside Taiga itself (L)  %% legacy frontend, self-hosted only
-    = [?] Tenzu, the successor (XXL) https://tenzu.net
-    = [ ] No tracker, plain text is enough (XS)
+    - [^] #col.pad: Watch a shared Etherpad — it merges, we render (S)
+      - [^] #col.pad.export: Load the pad's plain-text export (XS)
+      - [^] #col.pad.reload: Reload on demand (XS)  %% a timer only trips Etherpad's rate limit
+      - [^] #col.pad.embed: Embed the pad, keep the text mirror beside it (M)
+        - [^] #col.pad.views: Three views: pad and text, pad only, text only (S)
+        - [^] #col.pad.split: Splitter between pad and mirror (XS)
+        - [?] #col.pad.cookie: Editing in the frame stops after a while (S)  %% SameSite=Lax, see D31
+          | [?] #col.pad.samesite: Ask the admin for cookie.sameSite = None (XS)
+          | [ ] #col.pad.owntab: Live with it: edit in the pad's own tab (XS)
+      - [^] #col.pad.point: A shared pointer: !!! focuses a node for everyone (XS)
+      - [?] > #col.auto: Update by itself, within about 2 s (M)
+        | [?] #col.own: Our own Etherpad beside Werkbaum (M)  %% then every setting below is ours
+          - [ ] #col.own.db: Node and a real database in userland (S)  %% the flatfile store is not for production
+          - [ ] #col.own.ram: Book the RAM quota for an own daemon (XS)
+          - [ ] #col.own.proxy: Reverse proxy in .htaccess, websockets included (S)  %% Mattermost does it, wiki shows how
+          - [ ] #col.own.unit: systemd user unit so it survives a reboot (XS)
+          - [!] #col.own.patch: Keeping a public service patched (S)  %% indefinitely, that is the real cost
+        | [?] #col.auto.limit: Admin raises the export rate limit (XS)  %% default is 10 per 90 s
+        | [?] #col.auto.plugin: Admin installs a plugin that pushes the text (S)  %% postMessage to the page
+        | [?] #col.auto.relay: Our own backend holds one socket and fans out (XXL) :#be.scaffold
+        | [ ] #col.auto.poll: Poll inside the budget, at best every 9 s (S)  %% legal, but not 2 s
+        | [-] #col.auto.socket: Our own socket straight to the pad (L)  %% measured: upgrade refused
+        | [-] #col.auto.html: Read the pad's HTML instead of the export (M)  %% measured: no CORS header
+    - [ ] #col.git: Git as the shared store (L)
+      | [ ] #col.git.pr: A file in a repository, changed by pull request (S)  %% works today, no code
+      | [?] #col.git.auto: The backend commits every change (L) :#be.scaffold
+        - [?] #col.git.hist: History and restore (M)
+          - [?] #col.git.diff: Diff between two versions (S)
+          - [?] #col.git.blame: Who changed this line (S)
+        - [?] #col.git.branch: A branch per scenario (S)
+    - [?] #col.live: Live editing, several people at once (XL)
+      - [ ] #col.live.ws: Transport over a websocket (S) :#be.scaffold  %% the easy half
+      - [!] #col.live.merge: Merging simultaneous edits (L)  %% the actual work
+        | [?] #col.live.crdt: Text CRDT — the plan is plain text, so it fits (L)
+        | [?] #col.live.ot: Operational transformation (XL)
+      - [?] #col.live.cursors: Cursors and who else is here (S)
+      - [-] #col.live.own: A merge algorithm of our own (XL)  %% solved problem, do not reinvent
+  - [?] #mmd: Mermaid plugin (XL)
+    - [!] #mmd.layout: A layout engine of its own (XL)  %% measure, place, route — the real work
+      - [ ] #mmd.measure: Measure node sizes (M)
+        - [ ] #mmd.measure.text: Text metrics without a browser (S)
+        - [ ] #mmd.measure.badge: Badges and tags inside the box (S)
+      - [ ] #mmd.place: Place nodes and route connectors (L)
+        - [ ] #mmd.place.and: All-of fan (M)
+          - [ ] #mmd.place.horiz: Horizontal (S)
+          - [ ] #mmd.place.vert: Transposed (S)
+        - [ ] #mmd.place.or: Any-of rail (S)
+    - [?] #mmd.reg: Registration with Mermaid (M)
+      | [?] #mmd.reg.ext: External diagram, self-hosted pages only (M)
+      | [?] #mmd.reg.pr: Pull request into Mermaid itself (L)
+  - [?] > #idea: IntelliJ IDEA plugin (XL)
+    - [?] #idea.view: Show the diagram in the IDE (L)
+      | [?] #idea.view.mmd: Through Mermaid, once Werkbaum is part of Mermaid itself (M)
+        - [?] #idea.view.fence: Fenced werkbaum blocks render in Markdown (S)
+        - [-] #idea.view.selfmmd: A self-hosted Mermaid diagram type (S)  %% the IDE brings its own Mermaid
+      | [?] #idea.view.jcef: Our own preview: the bundled single file in a JCEF window (M)
+        - [?] #idea.view.push: Hand the editor text in (S)
+        - [?] #idea.view.back: Get the clicked line back to the caret (S)
+    + [?] #idea.edit: A real editor, not just a preview (XL)
+      - [?] #idea.lang: Language support for .werkbaum (L)
+        - [?] #idea.lang.psi: Lexer and parser to a PSI tree (M)
+          - [?] #idea.lang.color: Syntax highlighting (S)
+          - [?] #idea.lang.inspect: Warnings as inspections (S)  %% mixed gate, unknown status
+        - [?] #idea.lang.complete: Completion for status, size and tags (S)
+        - [?] #idea.lang.struct: Structure view and folding (S)
+      - [?] #idea.build: Kotlin with the Gradle IntelliJ plugin (S)
+      - [!] < #idea.drift: A second parser that must not drift from the SPEC (M)  %% exactly what D14 warns about
+        | [?] #idea.drift.fixtures: Both parsers test against the same fixtures (S)
+        | [?] #idea.drift.js: Run the one JS parser inside the IDE (M)
+  - [?] #trk: Tracker integration (XL)  %% exactly one of these, hence =
+    = [?] #trk.taiga: Taiga (L) https://taiga.io
+      - [ ] #trk.resolve: Resolve "#123" over the REST API (M)
+        - [ ] #trk.resolve.read: Read title, link and status (S)
+        - [ ] #trk.resolve.map: Map the workflow onto the states (S)
+      - [?] #trk.write: Write the status back (M) :#trk.resolve
+      - [-] #trk.plugin: A plugin inside Taiga itself (L)  %% legacy frontend, self-hosted only
+    = [?] #trk.tenzu: Tenzu, the successor (XXL) https://tenzu.net
+    = [ ] #trk.none: No tracker, plain text is enough (XS)
 
 ---
-#closure
-  The cheapest path pulls every dependency of a needed node into the
-  needed set, and shared targets count only once. That is why an
-  alternative can win although it looks more expensive locally: its
-  dependencies are already paid for elsewhere (see D34 and D42).
+#wb
+  The whole tool, planned with itself: a textual notation for work breakdown
+  structures, a browser editor that draws it, and the integrations that could
+  grow around both. What you are reading is that plan, written in its own
+  notation.
 
-#scaffold
-  Spring Initializr project with Gradle Kotlin DSL on JDK 21.
-  Everything server-side hangs off this one node — that is what the
-  :#scaffold dependencies across the tree point at.
+#not
+  The notation is the contract between every part of Werkbaum, and it is
+  plain text — so a plan can be reviewed, diffed and blamed like code.
+  docs/SPEC.md is normative: changes are written there before any code moves.
+
+#not.line
+  One line is one node: indentation, gate character, status box, fold mark,
+  label, size, URL, tags, comment. The order in which those are extracted is
+  fixed, which is what keeps them from colliding with each other.
+
+#not.status
+  Eight states from vague idea to live in production, written as an extended
+  Markdown task box. The colours follow risk rather than progress: money spent
+  with the outcome still open is the loud one.
+
+#not.size
+  T-shirt sizes in parentheses, plus the rule that anything M or larger ought
+  to be broken down further. A node that breaks the rule grows a dashed
+  placeholder child — shown, not just reported.
+
+#not.people
+  Three conveniences that need no syntax of their own: @name for who is on it,
+  a bare https URL that makes the whole node clickable, and %% for a comment.
+
+#not.gates
+  The heart of the notation: a dash means every sibling is required, a pipe
+  means at least one alternative gets chosen. That single distinction is what
+  turns a breakdown into something a cheapest path can be searched through.
+
+#not.opt
+  A plus node hangs off the same and-group but is dispensable. Without it,
+  every nice-to-have is priced into the cheapest path and the estimate comes
+  out systematically too high.
+
+#not.id
+  An id names a node across the whole document — the address that dependencies
+  and description blocks point at. It goes before the title with a colon,
+  which is also where a ticket number naturally sits.
+
+#not.tag
+  A tag names a set of nodes across the tree, whereas the tree itself is
+  exactly one decomposition. Reserved but deliberately unbuilt: with nothing
+  to evaluate them, tags are only comments with extra syntax.
+
+#not.tag.lens
+  The consumer that would justify tags: pick one and let everything else
+  recede. The mechanics already exist — the cheapest path dims unneeded nodes
+  in exactly that way.
+
+#not.dep
+  A node may need nodes outside its own subtree. That is the one thing a pure
+  tree cannot express, and everything below this node follows from it.
+
+#not.dep.status
+  A dependency says nothing about order or start dates; it says the node
+  cannot be further along than what it needs. That is what separates Werkbaum
+  from a PERT chart.
+
+#not.dep.eff
+  What stands in the box is the node's own progress; effectively it is the
+  minimum over everything it depends on. Computed, never written — the text
+  stays the single source of truth.
+
+#not.dep.cycle
+  Two nodes that need each other are not an error but a statement: these
+  finish together. A tool that forbids cycles forces you to lie about them.
+
+#not.dep.warn
+  A dependency pointing at nothing gets a warning naming its line, and the
+  plan still renders. Fault tolerance throughout: one bad line never swallows
+  the rest of the document.
+
+#not.xor
+  Where a pipe means at least one, an equals sign means exactly one. Nothing
+  changes for the cost calculation, but a second realized alternative becomes
+  a rule that can be broken — and is then reported.
+
+#not.desc
+  Explaining text for a node, shown in its tooltip. The work was never the
+  display: indentation already means hierarchy, so a description needed a
+  notation of its own.
+
+#not.desc.short
+  A line beginning with a quote mark belongs to the node above it. Convenient
+  for one remark, tedious for a paragraph.
+
+#not.desc.long
+  Behind a --- separator an id opens a block, and the indented lines under it
+  are its text. There is no closing fence, so there is none to forget — this
+  section is its own example.
+
+#not.store
+  Rejected on purpose: the text is the format. A second representation of the
+  structure would need syncing, and the first disagreement between the two
+  would have no arbiter.
+
+#not.ticket
+  A reference into a tracker. Which token counts as a ticket comes from the
+  connected tracker's own pattern rather than from guessing at its shape,
+  which is why this waits for the tracker work.
+
+#not.llms
+  An English short form of the specification, served at the site root, so an
+  AI agent can read and write Werkbaum without working through the German
+  SPEC. It is not normative: the SPEC changes first and this follows.
+
+#not.benefit
+  Sizes say what something costs; nothing yet says what it is worth. With both
+  you could sort by value for money instead of only minimizing cost.
+
+#not.benefit.sigil
+  A separate character next to the size, in the spirit of everything else in
+  the line. Needs a collision-free sigil, and parentheses, @, # and %% are
+  taken.
+
+#not.benefit.points
+  Put numbers behind the T-shirt sizes and both benefit and effort become
+  addable. That buys the effort rollup as well, at the price of a mapping
+  convention the ordinal sizes deliberately avoid today.
+
+#ed
+  The browser editor: text on one side, a live diagram on the other, no server
+  involved. One self-contained HTML file that runs from a web server and from
+  a file:// URL alike.
+
+#ed.live
+  Every keystroke re-parses the text and redraws the tree. That immediacy is
+  the point — a notation is only pleasant to write if you can see what it
+  means while writing it.
+
+#ed.parser
+  Around a hundred lines, no DOM, tested against the canonical example in the
+  SPEC. Headless on purpose: an export or a plugin has to be able to use it
+  without a browser around it.
+
+#ed.render
+  Three arrangements of the same tree. The mode changes the layout only, never
+  what is drawn — the gates stay coded by line style in all of them.
+
+#ed.render.horiz
+  The classic organigram fan: children side by side, alternatives stacked
+  below a dashed rail. Reads best on a wide screen.
+
+#ed.render.vert
+  The same fan turned by ninety degrees, children to the right. Fits beside
+  the editor instead of above it.
+
+#ed.render.comp
+  Everything runs downward, so the tree stays narrow. Here the line style
+  alone carries the gate: solid for and, dashed for or.
+
+#ed.deplink
+  Dependencies drawn as curved dotted edges on their own layer behind the
+  nodes — the first line type that does not follow the decomposition.
+
+#ed.deplink.calm
+  Thin, pale, dotted and curved: four ways of differing from the tree lines at
+  once. The tree keeps the main statement; these are footnotes to it.
+
+#ed.deplink.focus
+  The selected node — keyboard focus in the diagram, otherwise the node of the
+  caret line — pulls its incoming and outgoing edges forward in ink.
+
+#ed.path
+  Highlight the cheapest way through the tree: with and, everything; with or,
+  the cheapest alternative. This is the feature the whole notation exists for.
+
+#ed.path.cost
+  Cost is the T-shirt size, summed along and-groups and minimized along
+  or-groups. A missing size counts as M — the smallest size that already
+  demands a breakdown, so the guess errs upward.
+
+#ed.path.front
+  Done costs nothing any more, so the path prices what is left rather than
+  what the plan would have cost from scratch. An alternative already built
+  therefore wins its group even against a cheaper untouched one.
+
+#ed.path.line
+  A dashed curve threads through the open leaves of the path, with a pale
+  station dot at each. Borrowed from metro maps: the dot is large and faint so
+  the label underneath stays readable.
+
+#ed.path.step
+  One button walks the stations in order, starting with the one to tackle
+  next. Seeing the front was solved; walking it across a very wide tree was
+  not.
+
+#ed.closure
+  The cheapest path pulls every dependency of a needed node into the needed
+  set, and shared targets count only once. That is why an alternative can win
+  although it looks more expensive locally: its dependencies are already paid
+  for elsewhere.
+
+#ed.closure.once
+  Two alternatives that need the same thing pay for it together, not twice.
+  That is the whole reason the calculation works on a set rather than on a
+  subtree.
+
+#ed.closure.nonlocal
+  Once dependencies count, the cheapest alternative in a group depends on what
+  the rest of the plan buys anyway. The choice stops being decidable locally —
+  the only place in Werkbaum with real algorithmics in it.
+
+#ed.closure.exact
+  Enumerate the choices instead of guessing: a plan has dozens of nodes, not
+  millions. Only the groups that actually couple take part, so a plan without
+  dependencies costs exactly what it did before.
+
+#ed.closure.enum
+  Coupled means: dependencies inside the subtree, or something elsewhere
+  pointing at it. Every other group keeps choosing locally.
+
+#ed.closure.union
+  Cost is the size of the union of everything needed, so shared targets are
+  counted once by construction rather than by a special rule.
+
+#ed.closure.greedy
+  Above a search limit the calculation falls back on the local choice and says
+  so, in a warning. Being approximately right is fine; pretending to be exact
+  is not.
+
+#ed.export
+  The diagram redrawn from the live geometry into a standalone SVG, shapes and
+  text only. Nothing external is referenced, so the file works anywhere.
+
+#ed.export.file
+  SVG for scaling, PNG for the programs that cannot read SVG. The file route
+  is the reliable one wherever the image clipboard is not.
+
+#ed.export.clip
+  PNG straight into the clipboard, for pasting into a chat or a slide. Falls
+  back to the SVG source where the image clipboard is missing entirely.
+
+#ed.export.print
+  Printing reduces the page to the diagram. Status colours are printed on
+  purpose, and nodes do not break across the page edge.
+
+#ed.i18n
+  The interface speaks nine languages. German is the source language: a new
+  text is written there first and then translated into the rest.
+
+#ed.i18n.texts
+  All interface strings in one object in the source — no loading, no
+  framework. The plan text itself is never translated; it is user data.
+
+#ed.i18n.auto
+  Without a stored choice the first matching browser language wins, with
+  German as the fallback. A deliberate choice overrides it for good.
+
+#ed.a11y
+  Everything the diagram codes visually is spelled out per node in an
+  aria-label, while the decorative badges are hidden from screen readers so
+  nothing is read out twice. Focus order follows reading order.
+
+#ed.mobile
+  Below 640 px exactly one area is visible, diagram or text, and a button
+  switches between them. Any split would leave both halves too small to use.
+
+#ed.docs
+  Several notation texts side by side, kept in the browser. Each is only text
+  plus a name — no invented structure format, so this maps onto a server later
+  without changing anything.
+
+#ed.docs.picker
+  The name of the active document replaces the panel title and opens the menu
+  for switching, creating, renaming and deleting.
+
+#ed.docs.url
+  A link can carry the address of a text file, which is then fetched on every
+  load. Good for a plan maintained elsewhere, in a wiki or a repository.
+
+#ed.docs.restore
+  Brings a shipped document back to the state it was delivered in. Without it
+  an edited example would never see a newer version again.
+
+#ed.jump
+  Alt+click on a node selects its line in the text; Alt+click in the text
+  centres the node. One gesture, both directions — and descriptions count as
+  part of the node they describe.
+
+#ed.lineno
+  A narrow strip beside the text field showing the logical line numbers, the
+  same ones the warnings name. Measured rather than calculated: a wrapped line
+  keeps exactly one number.
+
+#ed.fold
+  A large plan is unreadable unless parts of it can be put away. Folding is
+  view only — warnings from folded subtrees are still reported, because they
+  are about the text.
+
+#ed.fold.marks
+  A > in a line means this subtree opens collapsed, a < brings one back into
+  view. The author says how the document opens; the reader stays free to fold
+  differently afterwards.
+
+#ed.fold.click
+  A small triangle before the label folds and unfolds; the arrow keys do the
+  same from the keyboard. A collapsed node says how many nodes it is hiding.
+
+#ed.fold.write
+  Folding in the diagram writes the mark back into the text, as a single undo
+  step. The text stays the one truth for the fold state too, so reloading
+  restores exactly what you were looking at.
+
+#ed.fold.preset
+  One switch puts the whole tree at working height: everything of size M and
+  smaller closed, L and above open. Size rather than depth — depth only says
+  how finely somebody happened to write it down.
+
+#ed.files
+  Open a .werkbaum file and save one. Today the leading data format is the one
+  thing that cannot leave the browser as a file, while the diagram can.
+
+#ed.fresh
+  For documents that come from outside, nodes that went to production since
+  your last visit get a yellow halo. New means live, not "line added" — a line
+  diff would be mostly noise.
+
+#ed.percolor
+  Give every @name a colour derived from the name itself, so the same person
+  is recognizable across the tree without looking anything up.
+
+#ed.dates
+  The one dimension the notation has nothing for. Deliberately open: dates are
+  the point where a plan turns into a schedule, and that is a different tool.
+
+#ed.dates.attr
+  A date as another token in the line, like size and tags. Cheap to build, and
+  the plan stays plain text.
+
+#ed.dates.view
+  A second view beside the tree, on a time axis. Considerably more work, and
+  it would need the tree to say something about order — which dependencies
+  deliberately do not.
+
+#bld
+  From source to a running page: one bundle, tests, and two deploy routes. The
+  result stays a single file without runtime dependencies.
+
+#bld.bundle
+  Vite inlines every module, the stylesheet, the fonts and the favicon into
+  one HTML file. It runs from a web server and from a local file alike.
+
+#bld.tests
+  The headless modules — parser, model, renderer — are tested against the
+  canonical example in the SPEC and against every edge case decided along the
+  way.
+
+#bld.pages
+  Every push to the main branch builds and publishes the preview instance. The
+  stable installation is deployed deliberately, by hand.
+
+#bld.update
+  The running page compares its own build with the one the server delivers and
+  offers a reload. It compares against itself, not against a remembered
+  fetch — a remembered one survives the very reload that resolves it.
+
+#bld.ghpages
+  Rejected: the official Actions route needs no extra branch and no deploy
+  key.
+
+#bld.gfonts
+  Rejected: loading fonts from a third party sends every visitor's address
+  there. The two families are self-hosted and inlined into the bundle instead.
+
+#be
+  Everything server-side. None of it exists yet, which makes it the largest
+  untouched branch of this plan — and the one most of the rest waits for.
+
+#be.scaffold
+  A Spring Initializr project with Gradle Kotlin DSL on JDK 21. Everything
+  server-side hangs off this one node, which is what the dependencies across
+  the tree point at.
+
+#be.scaffold.gradle
+  The build itself: Kotlin DSL, one module, the current long-term-support
+  Java.
+
+#be.scaffold.ci
+  Enough to see that it lives: a health endpoint, and a pipeline that builds
+  and tests it on every push.
+
+#be.docs
+  Documents on a server instead of in one browser. Text plus metadata —
+  exactly the model the editor already uses locally.
+
+#be.docs.model
+  The server stores the notation text as a whole, with explicit metadata
+  beside it. It does not parse the notation: one grammar, in one place.
+
+#be.docs.rest
+  Reading and writing documents over plain HTTP. Nothing more exotic is
+  needed.
+
+#be.docs.db
+  Somewhere to keep them. Whether that also keeps their history is decided in
+  the git branch of this plan, not here.
+
+#be.docs.share
+  A link that shows a plan to someone who has no account. The read-only half
+  of collaboration, and by far the cheaper one.
+
+#be.auth
+  As soon as documents live on a server, the question is who may do what. Open
+  rather than decided.
+
+#be.auth.token
+  The small answer: one user, one token, done in an afternoon. Enough for a
+  private installation.
+
+#be.auth.oidc
+  The grown-up answer: log in with an existing identity provider. More work,
+  and it presumes there are several people to tell apart.
+
+#col
+  Three steps that build on each other, and only the last needs real
+  machinery. Reading together is solved, changing together mostly is, and
+  typing together at the same instant is the expensive one.
+
+#col.pad
+  Let an Etherpad do the hard part: it merges concurrent edits, and Werkbaum
+  only renders the result. Borrowed rather than rebuilt.
+
+#col.pad.export
+  Every pad offers its content as plain text, with the header that lets a
+  foreign page read it. That one endpoint is the entire integration.
+
+#col.pad.reload
+  Fetching happens on a button press, not on a timer. The export is rate
+  limited, and a timer does nothing but trip it.
+
+#col.pad.embed
+  The pad in a frame inside the editor, with our own text mirror beside it.
+  The mirror keeps the jumps between diagram and text working, because a
+  foreign frame gives up no access to its content.
+
+#col.pad.views
+  Pad and text, pad only, text only. Text only is the view that tells the pad
+  nothing about you — a loaded pad announces you in its list of people.
+
+#col.pad.split
+  A splitter of its own between frame and mirror, remembered separately for
+  side by side and stacked.
+
+#col.pad.cookie
+  In a foreign frame the pad's author cookie is not sent, so a session can
+  turn read-only after a while. Not fixable from this side.
+
+#col.pad.samesite
+  One server setting resolves it. Presumes somebody who can change that
+  setting.
+
+#col.pad.owntab
+  Or live with it: read along in the frame, and write in the pad's own tab
+  where the cookie works.
+
+#col.pad.point
+  Nobody sees anybody else's cursor across two applications, so a mark in the
+  text is the only way to point at something. It has one thing a cursor
+  hasn't: everyone sees the same spot.
+
+#col.auto
+  The view should follow the pad by itself, within a couple of seconds. Every
+  route below was measured rather than guessed at.
+
+#col.own
+  Running the pad ourselves makes every setting below it ours. It also makes
+  every one of them our job.
+
+#col.own.db
+  The default file store is not meant for production, so a real database and a
+  runtime to host it are the price of admission.
+
+#col.own.ram
+  A daemon of one's own needs memory booked for it.
+
+#col.own.proxy
+  Reaching it needs a reverse proxy that passes websockets through as well.
+
+#col.own.unit
+  And something that starts it again after a reboot.
+
+#col.own.patch
+  The real cost is not the setup but keeping a public service patched,
+  indefinitely.
+
+#col.auto.limit
+  The cheapest effective change: raise the export limit on the pad server. Ten
+  fetches per ninety seconds is the default, and the reason a timer fails.
+
+#col.auto.plugin
+  A pad plugin can push the text to the embedding page. Live, no polling, no
+  limit touched — and nothing to install on our side.
+
+#col.auto.relay
+  Our own backend holds one connection to the pad and fans out to every
+  viewer. Solves it for everybody at once, and costs a backend.
+
+#col.auto.poll
+  Staying inside the budget means one fetch every nine seconds at best, shared
+  by everyone behind the same address. Legal, but not two seconds.
+
+#col.auto.socket
+  Measured and rejected: the pad server refuses the websocket upgrade when it
+  comes from another origin.
+
+#col.auto.html
+  Measured and rejected: the pad page carries the full text, but sends no
+  header that would let a foreign page read it.
+
+#col.git
+  Keep the plan in a repository. Because it is text, diff, blame, review and
+  history come for free.
+
+#col.git.pr
+  Works today without a line of code: the file lives in a repository, changes
+  go through a pull request, a link renders it. For a plan that changes weekly
+  rather than per second this is often the better answer.
+
+#col.git.auto
+  The server turns every change into a commit. History, restore and branches
+  follow from that, with commit granularity as the open question.
+
+#col.git.hist
+  Being able to look back at what the plan said, and to go back to it.
+
+#col.git.diff
+  What changed between two versions of the plan.
+
+#col.git.blame
+  Who moved that node to high risk, and when.
+
+#col.git.branch
+  A branch per scenario: plan two futures side by side and compare their
+  cheapest paths.
+
+#col.live
+  Everybody typing at once, cursors and all. The largest single piece of work
+  in this plan, and the least necessary one.
+
+#col.live.ws
+  The transport is the easy half: a socket, and a backend to terminate it.
+
+#col.live.merge
+  What happens when two people change the same line. The actual work — and a
+  solved problem, which is exactly why it should not be solved again here.
+
+#col.live.crdt
+  Because the plan is plain text, a text CRDT fits it without any merge logic
+  of our own, and cursors come along as a by-product. The price would be the
+  first runtime dependency this project has ever had.
+
+#col.live.ot
+  The other established answer, and the one Google Docs uses. More machinery
+  for the same result.
+
+#col.live.cursors
+  Seeing where the others are. A by-product of the merge layer rather than a
+  feature in its own right.
+
+#col.live.own
+  Rejected: writing a merge algorithm is a research project with a known
+  answer.
+
+#mmd
+  Werkbaum diagrams inside Mermaid, so a fenced block renders wherever Mermaid
+  already runs.
+
+#mmd.layout
+  Mermaid brings no layout for this shape: measuring nodes, placing them and
+  routing the connectors all have to be written. Today the browser does all
+  three for free, which is why the editor never needed any of it.
+
+#mmd.measure
+  How wide is a node, given its label, its badges and its tags. Without a
+  browser, nothing answers that for you.
+
+#mmd.measure.text
+  Text metrics without a DOM — the part that decides how good the result
+  looks.
+
+#mmd.measure.badge
+  Size badge, tags and marks have to be placed inside the box before the box
+  has a size.
+
+#mmd.place
+  Positions for the nodes and paths for the connectors, for every arrangement
+  the editor offers.
+
+#mmd.place.and
+  The fan for and-groups, in both orientations.
+
+#mmd.place.horiz
+  Children side by side, the classic organigram.
+
+#mmd.place.vert
+  The same, turned by ninety degrees.
+
+#mmd.place.or
+  The rail for alternatives, dashed, with its branches.
+
+#mmd.reg
+  Making Mermaid aware of a new diagram type at all.
+
+#mmd.reg.ext
+  Registering from outside works only where Mermaid is initialized by the page
+  itself — not on GitHub, GitLab or Notion.
+
+#mmd.reg.pr
+  Getting it into Mermaid proper makes it available everywhere, at the price
+  of a review by somebody else's project.
+
+#idea
+  Werkbaum inside the IDE, where the plan file already sits next to the code
+  it describes.
+
+#idea.view
+  The smaller half: show the diagram for the file currently in the editor.
+
+#idea.view.mmd
+  If Werkbaum were part of Mermaid, the IDE would render it already — it
+  brings its own Mermaid along.
+
+#idea.view.fence
+  Fenced blocks in Markdown would then render on the spot, with no plugin at
+  all.
+
+#idea.view.selfmmd
+  Rejected: the IDE uses its own Mermaid build, so a self-hosted diagram type
+  never reaches it.
+
+#idea.view.jcef
+  Or embed the bundled single file in a browser window inside the IDE. It is
+  already self-contained, which is most of the work done.
+
+#idea.view.push
+  Hand the editor's text into the embedded page on every change.
+
+#idea.view.back
+  And get the clicked node back out, to move the caret to its line.
+
+#idea.edit
+  The larger half: editing the notation with everything an IDE brings, rather
+  than only looking at it.
+
+#idea.lang
+  Registering .werkbaum as a language. Without that there is no highlighting,
+  no completion and no structure view.
+
+#idea.lang.psi
+  A lexer and parser producing the IDE's own syntax tree. Everything below
+  hangs off it.
+
+#idea.lang.color
+  Gate characters, status boxes, sizes and tags in colours of their own.
+
+#idea.lang.inspect
+  The warnings the editor shows, as inspections in the margin.
+
+#idea.lang.complete
+  Offering the status codes, the sizes and the known tags while typing.
+
+#idea.lang.struct
+  The tree as a structure view, with folding that follows it.
+
+#idea.build
+  Kotlin and the Gradle IntelliJ plugin — the same stack the backend uses.
+
+#idea.drift
+  A second parser is exactly what the specification warns about: two grammars
+  that drift apart, and a plan that renders differently depending on where you
+  open it.
+
+#idea.drift.fixtures
+  Keep them honest by testing both against the same examples, the canonical
+  one included.
+
+#idea.drift.js
+  Or avoid the second parser altogether by running the one JavaScript parser
+  inside the IDE. No drift is possible, at the cost of a runtime inside the
+  plugin.
+
+#trk
+  Connecting nodes to a ticket tracker, so a status need not be maintained
+  twice. Exactly one of these gets built, which is why the group is a XOR.
+
+#trk.taiga
+  The tracker actually in use here. Self-hosted, with a REST API that is
+  enough for this.
+
+#trk.resolve
+  Turn a reference in a line into a real ticket: title, link and current
+  state. Read-only, and already useful on its own.
+
+#trk.resolve.read
+  Fetching the ticket and showing what it says.
+
+#trk.resolve.map
+  Translating the tracker's workflow onto the eight states of the notation.
+  Configurable, because no two projects use the same column names.
+
+#trk.write
+  The other direction: change a status in the plan and the ticket follows.
+  Only worth doing once reading it is trustworthy.
+
+#trk.plugin
+  Rejected: a plugin inside Taiga means its legacy frontend and works only in
+  self-hosted installations. A companion application beside it is the better
+  cut.
+
+#trk.tenzu
+  Taiga's successor, still young. Worth watching rather than building against;
+  a later move should cost only the API adapter.
+
+#trk.none
+  The honest alternative: a plan in a text file may simply be enough. It is
+  the cheapest node in this group, and the cheapest path duly picks it.
