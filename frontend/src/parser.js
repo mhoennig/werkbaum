@@ -31,6 +31,8 @@ const REALIZED = new Set(['arbeit', 'durchstich', 'fertig', 'prod']);
    `desc` (SPEC §11/D40) ist der Beschreibungstext: `"`-Zeilen unter dem
    Knoten (Kurzform) und ID-Blöcke aus dem `---`-Beschreibungsteil (Langform),
    in Dokumentreihenfolge mit Zeilenumbrüchen zusammengefügt; null ohne.
+   `descLines` sind die ZEILENNUMMERN dieser Beschreibung (SPEC §9): Steht der
+   Cursor dort, gilt dieser Knoten als ausgewählt.
    `fold` ('>'|'<'|null, SPEC §1/D38) ist nur der ANFANGSZUSTAND der Faltung —
    den wirksamen Zustand rechnet `initialCollapsed()` in model.js.
    `deps` sind ID-Strings, keine Knoten-Referenzen — aufgelöst wird erst beim
@@ -55,8 +57,20 @@ export function parse(text){
      Knoten"), `descTarget` den offenen Block des Beschreibungsteils; SKIP
      schluckt Blocktext unter einer unbekannten ID, ohne je Zeile zu warnen. */
   const descLines = new Map();
+  /* Welche ZEILEN zu welchem Knoten gehören (SPEC §9): Steht der Cursor in
+     einer Beschreibung, gilt ihr Knoten als ausgewählt — die Zeile trägt
+     keinen eigenen Knoten, gehört aber zu einem. Getrennt von `descLines`
+     gehalten, weil dort Absatztrenner zusammenfallen und Blocktext unter
+     unbekannter ID gar nicht erst ankommt. */
+  const descOwner = new Map();
   const SKIP = {};
   let lastNode = null, inDesc = false, descTarget = null;
+  const ownLine = (node, i) => {
+    if(!node || node === SKIP) return;
+    let arr = descOwner.get(node);
+    if(!arr) descOwner.set(node, arr = []);
+    arr.push(i + 1);
+  };
   const addDesc = (node, text) => {
     let arr = descLines.get(node);
     if(!arr) descLines.set(node, arr = []);
@@ -72,12 +86,15 @@ export function parse(text){
     if(/^[ \t]*-{3,}[ \t]*$/.test(raw)){ inDesc = true; return; }
     if(inDesc){
       if(!raw.trim()){
-        if(descTarget && descTarget !== SKIP) addDesc(descTarget, '');   /* Absatztrenner */
+        if(descTarget && descTarget !== SKIP){
+          addDesc(descTarget, '');   /* Absatztrenner */
+          ownLine(descTarget, i);    /* die Leerzeile gehört noch zum Block */
+        }
         return;
       }
       if(/^[ \t]/.test(raw)){                       /* eingerückt: Blocktext */
         if(descTarget == null){ warnings.push({type:'descStray', line:i+1}); return; }
-        if(descTarget !== SKIP) addDesc(descTarget, raw.trim());
+        if(descTarget !== SKIP){ addDesc(descTarget, raw.trim()); ownLine(descTarget, i); }
         return;
       }
       /* Der trennende Doppelpunkt (siehe Knoten-ID unten) ist auch hier
@@ -94,7 +111,7 @@ export function parse(text){
       }
       const target = idNodes.get(idm[1]);
       if(!target){ warnings.push({type:'unknownDesc', line:i+1, id:idm[1]}); descTarget = SKIP; }
-      else descTarget = target;
+      else { descTarget = target; ownLine(target, i); }   /* der Block-Kopf nennt den Knoten */
       return;
     }
     if(!raw.trim()) return;
@@ -104,7 +121,7 @@ export function parse(text){
        Die Einrückung der Zeile hat keine Bedeutung. */
     const ts = raw.replace(/^[ \t]*/, '');
     if(ts[0] === '"' && /[ \t]/.test(ts[1] || '')){
-      if(lastNode) addDesc(lastNode, ts.slice(2).trim());
+      if(lastNode){ addDesc(lastNode, ts.slice(2).trim()); ownLine(lastNode, i); }
       else warnings.push({type:'descStray', line:i+1});
       return;
     }
@@ -173,7 +190,7 @@ export function parse(text){
     while(stack.length > 1 && stack[stack.length-1].width >= width) stack.pop();
     const parent = stack[stack.length-1].node;
 
-    const node = {label, type, optional, fold, status, url, size, tags, id, deps, desc:null, focus, children:[], line:i+1};
+    const node = {label, type, optional, fold, status, url, size, tags, id, deps, desc:null, descLines:null, focus, children:[], line:i+1};
     parent.children.push(node);
     stack.push({node, width});
     lastNode = node;
@@ -187,6 +204,9 @@ export function parse(text){
     while(lines.length && lines[0] === '') lines.shift();
     if(lines.length) node.desc = lines.join('\n');
   });
+  /* Zeilenzuordnung der Beschreibungen (SPEC §9): unabhängig vom Text — auch
+     ein Block, dessen Zeilen sich zu nichts zusammenfügen, gehört dem Knoten. */
+  descOwner.forEach((lines, node) => { node.descLines = lines; });
 
   /* Unbekannte Abhängigkeits-IDs (SPEC §1): erst nach dem Einlesen prüfbar —
      Vorwärts-Referenzen sind normal. Zyklen (auch auf sich selbst) werden

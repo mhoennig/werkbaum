@@ -577,8 +577,15 @@ verknüpft (siehe D25):
   „hinschauen": Er holt **keine Bildschirmtastatur** herauf — die erscheint erst,
   wenn das Textfeld selbst angetippt wird.
 - **Text → Diagramm:** Der Knoten der **Cursor-Zeile** wird im Diagramm
-  hervorgehoben und beim Zeilenwechsel ins Bild gescrollt. Zeilen ohne Knoten
-  (Kommentar, Leerzeile, ausgeblendetes verworfenes Element) heben nichts
+  hervorgehoben und beim Zeilenwechsel ins Bild gescrollt. **Beschreibungszeilen
+  zählen zu ihrem Knoten**: Steht der Cursor in einer `"`-Zeile (§1) oder in
+  einem ID-Block des `---`-Beschreibungsteils (Kopfzeile eingeschlossen), gilt
+  der beschriebene Knoten als ausgewählt — solche Zeilen tragen keinen eigenen
+  Knoten, gehören aber zu einem, und wer darin schreibt, arbeitet an genau
+  diesem Knoten. Das gilt für beide Richtungen der Geste (also auch für den
+  ausdrücklichen Alt+Klick unten) und für die Hervorhebung der
+  Abhängigkeits-Kanten (§9). Zeilen ohne Knoten (Kommentar, Leerzeile, der
+  `---`-Trenner selbst, ausgeblendetes verworfenes Element) heben nichts
   hervor. Die Hervorhebung arbeitet auf einer **eigenen Achse — Tiefe**: weißer
   Halo + Ring in Tinte, dazu ein Schlagschatten und eine leichte Vergrößerung,
   sodass der Knoten sich aus der Ebene hebt. Das ist der einzige Kanal, den

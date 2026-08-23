@@ -123,6 +123,38 @@ describe('Darstellung — Tooltip, ”-Marke, aria', () => {
     const {html} = render(`[ ] Ohne #auth`);
     expect(html.match(/title="([^"]*)"/)[1]).not.toContain('─');
   });
+});
+
+/* Der Cursor in einer Beschreibung wählt ihren Knoten aus (SPEC §9): Die Zeile
+   trägt keinen eigenen Knoten, gehört aber zu einem. Grundlage ist
+   `node.descLines`; app.js findet den Knoten darüber per `data-desc-lines~=`. */
+describe('Zeilenzuordnung der Beschreibung (`descLines`)', () => {
+  it('ordnet `"`-Zeilen dem vorangehenden Knoten zu', () => {
+    const [a, b] = roots(`[ ] Erster\n  " Eine Zeile.\n  " Noch eine.\n[ ] Zweiter`);
+    expect(a.descLines).toEqual([2, 3]);
+    expect(b.descLines).toBe(null);
+  });
+
+  it('ordnet den `---`-Block samt Kopfzeile und Leerzeilen zu', () => {
+    const [n] = roots(`[ ] Auth #auth\n---\n#auth\n  Erster Absatz.\n\n  Zweiter Absatz.`);
+    expect(n.descLines).toEqual([3, 4, 5, 6]);
+  });
+
+  it('führt Kurz- und Langform am selben Knoten zusammen', () => {
+    const [n] = roots(`[ ] Auth #auth\n  " Kurz.\n---\n#auth\n  Lang.`);
+    expect(n.descLines).toEqual([2, 4, 5]);
+  });
+
+  it('ordnet nichts zu, wo es keinen Knoten gibt', () => {
+    const {roots: r, warnings} = parse(`---\n#fehlt\n  Text.`);
+    expect(r).toEqual([]);
+    expect(warnings.map(w => w.type)).toEqual(['unknownDesc']);
+  });
+
+  it('gibt die Zeilen als `data-desc-lines` aus', () => {
+    const {html} = render(`[ ] Auth\n  " Kapselt Login.`);
+    expect(html).toContain('data-desc-lines="2"');
+  });
 
   it('ändert Knoten ohne Beschreibung nicht', () => {
     const {html} = render(`[ ] Ohne`);

@@ -208,6 +208,10 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Zeilenhöhe × n scheitert an weichen Umbrüchen. Ausgelöst per Alt+Klick,
   Alt+Enter und langem Druck; der Klick-Handler **muss `preventDefault()`** rufen,
   sonst lädt Alt+Klick auf einen Link-Knoten das Ziel herunter. Gegenrichtung:
+  Welcher Knoten zu einer Zeile gehört, entscheidet **eine** Stelle:
+  `nodeOfLine()` — erst `data-line`, sonst `data-desc-lines~=` (Cursor in einer
+  Beschreibung wählt ihren Knoten, D40-Nachtrag 2). Beide Richtungen gehen
+  darüber; wer eine neue Zeilensuche schreibt, nimmt sie ebenfalls.
   `syncCaret()` setzt die Klasse `current` auf den Knoten der Cursor-Zeile;
   `render()` stellt sie nach jedem Neubau wieder her (ohne zu scrollen). Die
   CSS-Regel braucht den `#out`-Präfix (`ul.or .node{box-shadow:none}` ist

@@ -99,6 +99,11 @@ function nodeHtml(n, extra, opts, fold){
      Querverbindungs-Ebene und den Export — beide arbeiten auf dem DOM. */
   const idAttr = n.id ? ` data-id="${attr(n.id)}"` : '';
   const depsAttr = n.deps && n.deps.length ? ` data-deps="${attr(n.deps.join(' '))}"` : '';
+  /* Zeilen der Beschreibung (SPEC §9): Steht der Cursor dort, gilt dieser
+     Knoten als ausgewählt — die Zeile hat keinen eigenen. Als Liste, damit
+     der Attribut-Selektor `~=` sie einzeln trifft. */
+  const descLinesAttr = n.descLines && n.descLines.length
+    ? ` data-desc-lines="${attr(n.descLines.join(' '))}"` : '';
   /* Tooltip: erst die Beschreibung (mehrzeilig, D40), dann die Kurz-Fakten.
      Die Fakten hängen NICHT mit ` · ` an den Fließtext an — sie sind eine
      andere Art von Aussage, und in der einen Zeile ging der Übergang unter
@@ -156,8 +161,8 @@ function nodeHtml(n, extra, opts, fold){
                 ownChip;
   const aria = ` aria-label="${attr(nodeAria(n, opts, fold))}"`;
   const html = n.url
-    ? `<a class="${cls}" href="${attr(n.url)}" target="_blank" rel="noopener"${lineAttr}${idAttr}${depsAttr}${aria}${expanded}${title}>${inner}</a>`
-    : `<div class="${cls}" tabindex="0"${lineAttr}${idAttr}${depsAttr}${aria}${expanded}${title}>${inner}</div>`;
+    ? `<a class="${cls}" href="${attr(n.url)}" target="_blank" rel="noopener"${lineAttr}${idAttr}${depsAttr}${descLinesAttr}${aria}${expanded}${title}>${inner}</a>`
+    : `<div class="${cls}" tabindex="0"${lineAttr}${idAttr}${depsAttr}${descLinesAttr}${aria}${expanded}${title}>${inner}</div>`;
   const ghostTip = attr(t('ghostTooltip'));
   const ghost = `<div class="ghost-node" aria-label="${ghostTip}" title="${ghostTip}">${esc(t('ghost'))}</div>`;
   return html + (need ? ghost : '');

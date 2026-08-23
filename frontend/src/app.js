@@ -947,6 +947,18 @@ out.addEventListener('touchend', e => {
 out.addEventListener('touchcancel', disarmPress);
 out.addEventListener('contextmenu', e => { if(pressTimer || armedEl) e.preventDefault(); });
 
+/* Welcher Knoten gehört zu einer Textzeile? Zuerst der Knoten, DER auf dieser
+   Zeile steht; sonst der Knoten, dessen **Beschreibung** hier steht (SPEC §9):
+   Eine `"`-Zeile und die Zeilen eines `---`-Blocks tragen keinen eigenen
+   Knoten, gehören aber zu einem — und wer darin schreibt, arbeitet an genau
+   diesem Knoten. `~=` trifft die Zeilennummer als Glied der Liste in
+   `data-desc-lines` (vom Renderer, gefüllt aus `node.descLines`). */
+function nodeOfLine(line){
+  if(line == null) return null;
+  return out.querySelector('.node[data-line="' + line + '"]')
+      || out.querySelector('.node[data-desc-lines~="' + line + '"]');
+}
+
 /* Text -> Diagramm: Knoten der Cursor-Zeile hervorheben (`caretLine` steht oben). */
 /* `scroll` sagt, WIE ins Bild geholt wird: 'nearest' beim gewöhnlichen
    Zeilenwechsel (nur so weit wie nötig — sonst ruckelte das Diagramm),
@@ -955,9 +967,7 @@ out.addEventListener('contextmenu', e => { if(pressTimer || armedEl) e.preventDe
 function highlightCurrentNode(moved, scroll = 'nearest'){
   markCurrentLineNo();   /* die eine Stelle, an der die Cursor-Zeile neu gesetzt wird */
   if(currentNodeEl) currentNodeEl.classList.remove('current', 'pulse');
-  currentNodeEl = caretLine == null
-    ? null
-    : out.querySelector('.node[data-line="' + caretLine + '"]');
+  currentNodeEl = nodeOfLine(caretLine);
   if(!currentNodeEl){ drawDepLinks(); return; }
   currentNodeEl.classList.add('current');
   /* Die Cursor-Zeile ist die zweite Lesart von „ausgewählt" — ihre
@@ -995,7 +1005,7 @@ for(const ev of ['click','keyup','input','focus']) src.addEventListener(ev, sync
    eine Geste, zwei Richtungen. */
 function focusNodeOfCaret(){
   const line = caretLineOf();
-  const el = out.querySelector('.node[data-line="' + line + '"]');
+  const el = nodeOfLine(line);
   if(!el) return;              /* Kommentar, Leerzeile, ausgeblendet Verworfenes */
   caretLine = line;
   /* Die Gegenrichtung zu revealEditor(): Auf Mobil steht der Text vorn, das

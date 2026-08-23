@@ -2245,6 +2245,37 @@ whitespace-normalisierter Beschreibung: Ein Screenreader läse vierundzwanzig
 Striche einzeln vor, und die Trennung, die ein Auge braucht, braucht ein Ohr
 nicht — die Aufzählung ist dort ohnehin schon gegliedert.
 
+**Nachtrag 2 — der Cursor in einer Beschreibung wählt ihren Knoten aus.**
+Bisher fiel die Hervorhebung (D25) weg, sobald der Cursor eine Zeile
+weiterrückte: Die `"`-Zeile trägt keinen Knoten, also fand die Zeilensuche
+nichts. Das ist die falsche Auskunft — die Zeile trägt keinen **eigenen**
+Knoten, gehört aber zu einem, und wer in ihr schreibt, arbeitet an genau
+diesem Knoten.
+
+**Beide Formen, nicht nur die Kurzform.** Gefragt war nach der `"`-Zeile; die
+Zuordnung entsteht aber an derselben Stelle im Parser, an der auch die
+`---`-Blöcke landen, und dieselbe Begründung trägt dort sogar weiter: Der
+Langtext steht am **Dateiende**, weit weg von seinem Knoten — die
+Hervorhebung ist die einzige Anzeige, an welchem man gerade schreibt.
+Zugeordnet werden die eingerückten Textzeilen, die **Kopfzeile** `#auth`
+(sie nennt den Knoten) und Leerzeilen **innerhalb** eines Blocks; nicht der
+`---`-Trenner selbst und nichts unter einer unbekannten ID (dort gibt es
+keinen Knoten, und `unknownDesc` steht schon).
+
+**Die Zeilennummern liegen am Knoten, nicht in einer Nebenrechnung.**
+`node.descLines` entsteht im Parser (`ownLine()`), der Renderer gibt sie als
+`data-desc-lines="3 4 5"` aus, app.js findet den Knoten per
+`[data-desc-lines~="N"]` — der Attribut-Selektor trifft die Nummer als Glied
+der Liste, es braucht keine eigene Datenstruktur im UI. Bewusst **getrennt**
+von `descLines` (dem Text): Dort fallen aufeinanderfolgende Leerzeilen zu
+einem Absatztrenner zusammen und Blocktext unter unbekannter ID kommt gar
+nicht erst an — für die Zeilenzuordnung wäre beides falsch.
+
+Beide Richtungen gehen jetzt über **eine** Auflösung (`nodeOfLine()`): das
+Mitlaufen der Cursor-Zeile und der ausdrückliche Alt+Klick (D25-Nachtrag 1).
+Sonst wäre die Geste aus einer Beschreibung heraus stumm geblieben — und das
+ist genau der Ort, an dem man sie braucht.
+
 ## D41 — Querverbindungen: Krümmung statt Farbe, Pfeil auf das Gebrauchte
 Die Abhängigkeits-Kanten (SPEC §9) sind die erste Linienart, die nicht der
 Zerlegung folgt — §11 verlangte dafür eine eigene Zeichenebene. Gebaut wie der
