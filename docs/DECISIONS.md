@@ -634,6 +634,82 @@ weiter, Alt+Enter zurück in die Zeile.
 Umbruch. Auf einer Zeile ohne Knoten (Kommentar, Leerzeile, ausgeblendetes
 Verworfenes) geschieht nichts — dieselbe stille Regel wie bei der Cursor-Zeile.
 
+**Nachtrag — die Cursor-Zeile hebt sich jetzt aus der Ebene, und die fehlende
+Ausnahme gegen die Pfad-Inversion.** Gemeldet als „müsste etwas deutlicher
+sein". Beim Nachsehen kam zuerst etwas anderes heraus, das keine
+Gestaltungsfrage ist:
+
+**Auf einem guten Drittel der Knoten war der Ring gar nicht zu sehen.** Die
+Pfad-Inversion (D18) setzt `.cheap-on .node:not(.cheap){opacity:.32;
+filter:saturate(.4)}` — und das trifft den `box-shadow` mit. Genau diese Falle
+haben D28 (gelber Kranz) und D32 (Fokusmarke) je für sich gefunden und mit
+einer Ausnahmeregel behoben; `.current` hat seine nie bekommen. Gemessen im
+mitgelieferten Beispiel mit dem Cursor auf `+ [?] Dark mode`: Deckkraft 0,32.
+Der Fall ist zudem der häufigste der drei — der Pfad-Umschalter ist
+voreingestellt an, und jeder optionale Knoten und jede nicht gewählte
+Alternative fällt darunter (im Beispiel 7 von 18 Knoten). Anders als beim
+optionalen Knoten (D29), wo das Zurücktreten die **Aussage** ist, wird hier
+überhaupt keine Aussage über den Plan gemacht: Es ist eine Editierhilfe, und wo
+der Cursor steht, muss sichtbar bleiben, egal wie der Pfad entschieden hat.
+
+**Warum der Ring auch ungedimmt leise wirkt:** Er benutzt denselben Kanal, den
+schon jeder Knoten belegt — **jeder Status hat einen Rahmen** (SPEC §4). Ein
+weiterer Ring in einem Feld aus lauter gerahmten Kästchen ist ein Unterschied
+im Grad, nicht in der Art. Die beiden Strahlenkränze entkommen dem, weil sie
+einen Kanal benutzen, den sonst nichts hat (Leuchten nach außen); die
+Cursor-Zeile war auf dem Rahmen-Kanal sitzen geblieben.
+
+**Gewählt: Tiefe** — Ring behalten, dazu Schlagschatten und `scale(1.04)`. Der
+Knoten hebt sich aus der Ebene. Das ist der einzige Kanal, den im Diagramm noch
+gar nichts belegt (nichts anderes wirft Schatten oder bewegt sich), kollidiert
+also mit **keiner** Farbcodierung und wirkt über allen acht Statusfarben
+gleich. Zwei angenehme Eigenschaften, beide nachgemessen: `transform` ändert
+kein Layout (die Linien bleiben stehen), und weil um die **Mitte** skaliert
+wird, bleibt die Knotenmitte punktgenau erhalten (dx = dy = 0) — `alignStems()`
+(D29) und die Stationspunkte des günstigsten Pfads (D18) messen genau die und
+bleiben unberührt. Nur `drawDepLinks()` (D41) setzt auf Knoten**kanten** auf und
+verschiebt sich für diesen einen Knoten um ~4 px; das ist flüchtig und fällt
+nicht auf. Ein Spalt zur Anschlusslinie entsteht nicht — der Knoten wächst
+darüber, statt sich zurückzuziehen.
+
+**Dazu ein einmaliger Puls beim Zeilenwechsel:** Man verliert den Knoten beim
+**Bewegen**, nicht im Stillstand — also meldet er sich genau dann einmal, mit
+einem kurzen Hüpfer und einem auslaufenden Ring. Kein WCAG-Problem: 2.2.2 zielt
+auf Blinkendes, 2.3.1 auf Flackern über 3 Hz, ein einzelner Durchlauf ist
+keines von beidem (dieselbe Prüfung wie in D28); `prefers-reduced-motion`
+schaltet ihn ab. Ausgelöst wird er an derselben Bedingung, an der schon das
+Scrollen hängt (`caretLine` hat sich geändert) — sonst pulste er bei jedem
+Tastendruck. Bewusst **nicht** über `box-shadow` animiert: Die Kombinationen
+mit `.fresh` und `.focusmark` haben je eigene Schatten-Listen, eine Animation
+darauf ließe den gelben bzw. petrolfarbenen Kranz für die Dauer des Pulses
+verschwinden. Stattdessen `transform` plus das freie `.node::after`
+(`::before` gehört dem Optional-Kreis, D29).
+
+**Der Export brauchte eine eigene Behandlung** — und das ist die Stelle, an der
+die Erhebung anders liegt als der Ring. D25 konnte sich darauf verlassen, dass
+`diagramToSvg()` nie `box-shadow` ausliest; die Vergrößerung schlägt aber über
+`getBoundingClientRect()` durch, mit dem der Export die Live-Geometrie nachzieht
+— genau ein Knoten stünde 4 % zu groß im Bild. Während des Messens trägt `#out`
+deshalb die Klasse `exporting`, die Erhebung und Puls neutralisiert.
+Nachgemessen: 155,6 statt 161,9 px, also die unskalierte Breite. Per Klasse
+statt durch Abnehmen von `.current`/`.pulse`, damit der Export keine laufende
+Animation abreißt und hinterher neu startet. Im Druck fällt beides ebenso weg.
+
+**Verworfene Alternativen:** ein **dritter Strahlenkranz** (ein dunkles
+Tinte-Leuchten liest sich auf hellem Grund als Schatten — die Lehre steht schon
+im D32-Nachtrag —, und ein heller Schein bräuchte eine dritte Signalfarbe neben
+Gelb und Teal); **Invertieren** des Knotens auf Tinte-Füllung mit weißer Schrift
+(das stärkste Signal, kostet aber für die Cursor-Zeile die Statusfarbe — genau
+die Regel, wegen der D28 und D32 ihre Kränze nach außen gelegt haben, und für
+eine Editierhilfe wäre sie schlecht gebrochen); ein **Zeiger-Dreieck** links am
+Knoten (`::after` wäre frei, bräuchte aber wie der Optional-Kreis eigene
+Geometrie für alle drei Darstellungsmodi); und **die Umgebung zurücktreten
+lassen** (flackerte bei jedem Pfeiltastendruck durch den ganzen Baum).
+
+Nebenbefund beim Aufräumen: Der Kommentar über der Regel behauptete noch, die
+Fokusmarke `!!!` trage „bewusst DIESELBE Hervorhebung" — überholt, seit der
+D32-Nachtrag ihr den eigenen Petrol-Kranz gegeben hat. Ersetzt.
+
 ## D26 — Legende scrollbar: eigener Container statt `<details>`, plus Splitter
 Die Legende („Agenda") im Editor-Panel war zu hoch für ihren Platz und wurde
 **abgeschnitten** statt scrollbar zu sein — obwohl `.hint` seit jeher

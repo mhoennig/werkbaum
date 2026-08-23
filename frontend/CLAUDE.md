@@ -211,7 +211,22 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `syncCaret()` setzt die Klasse `current` auf den Knoten der Cursor-Zeile;
   `render()` stellt sie nach jedem Neubau wieder her (ohne zu scrollen). Die
   CSS-Regel braucht den `#out`-Präfix (`ul.or .node{box-shadow:none}` ist
-  spezifischer). Auffindbarkeit: `setAltMode()` setzt bei gedrückter Alt-Taste
+  spezifischer) **und** — wie `.fresh`/`.focusmark` — die Ausnahme
+  `.cheap-on .node:not(.cheap).current{opacity:1;filter:none}`; sie fehlte lange
+  als einzige, obwohl der Fall der häufigste ist (Pfad-Umschalter default an,
+  jeder `+`-Knoten und jede nicht gewählte Alternative betroffen).
+  Zum Ring kommen **Schlagschatten + `scale(1.04)`** (D25-Nachtrag): Tiefe ist der
+  einzige noch freie Kanal. Um die **Mitte** skalieren ist Bedingung — `alignStems()`
+  und die Stationspunkte messen die Knotenmitte, die dadurch unverändert bleibt.
+  **`diagramToSvg()` muss die Erhebung abschalten** (Klasse `exporting` an `#out`,
+  am Ende wieder ab): Der Export zieht die Live-Geometrie per
+  `getBoundingClientRect()` nach, anders als beim `box-shadow` schlägt die
+  Vergrößerung dort durch. Der **Puls** (`pulse`, Hüpfer + Ring auf dem freien
+  `.node::after`) wird nur bei geändertem `caretLine` gesetzt — sonst pulst es bei
+  jedem Tastendruck — und braucht das Lesen von `offsetWidth` als Neustart-Trick,
+  weil dieselbe Aufgabe die Klasse vorher entfernt. Nicht über `box-shadow`
+  animieren: Das löschte für die Dauer des Pulses den gelben bzw. Petrol-Kranz der
+  Kombinationen. Auffindbarkeit: `setAltMode()` setzt bei gedrückter Alt-Taste
   die Klasse `alt` an `#out` (Cursor + Ring am Knoten unter dem Zeiger) — der
   `blur`-Handler ist Pflicht, sonst bleibt der Modus nach Alt+Tab hängen; dazu
   `jumpHint` im Knoten-Tooltip und `hint_jump` als letzte Zeile der Legende.

@@ -556,9 +556,17 @@ verknüpft (siehe D25):
   „hinschauen": Er holt **keine Bildschirmtastatur** herauf — die erscheint erst,
   wenn das Textfeld selbst angetippt wird.
 - **Text → Diagramm:** Der Knoten der **Cursor-Zeile** wird im Diagramm
-  hervorgehoben (weißer Halo + Ring in Tinte) und beim Zeilenwechsel ins Bild
-  gescrollt. Zeilen ohne Knoten (Kommentar, Leerzeile, ausgeblendetes
-  verworfenes Element) heben nichts hervor.
+  hervorgehoben und beim Zeilenwechsel ins Bild gescrollt. Zeilen ohne Knoten
+  (Kommentar, Leerzeile, ausgeblendetes verworfenes Element) heben nichts
+  hervor. Die Hervorhebung arbeitet auf einer **eigenen Achse — Tiefe**: weißer
+  Halo + Ring in Tinte, dazu ein Schlagschatten und eine leichte Vergrößerung,
+  sodass der Knoten sich aus der Ebene hebt. Das ist der einzige Kanal, den
+  sonst nichts im Diagramm belegt, kollidiert also mit keiner Farbcodierung
+  (Status §4, gelber Kranz und Petrol-Kranz oben). **Beim Zeilenwechsel** meldet
+  sie sich zusätzlich mit einem **einmaligen Puls** — einem kurzen Hüpfer und
+  einem auslaufenden Ring; kein Blinken, und bei `prefers-reduced-motion`
+  entfällt er. Der Pfad-Filter (§9, günstigster Pfad) blasst sie nie aus: Wo der
+  Cursor steht, bleibt sichtbar. Siehe D25.
 - **Text → Diagramm, ausdrücklich:** **Alt+Klick** im Textfeld (Tastatur:
   **Alt+Enter**) holt den Knoten der Cursor-Zeile in die **Mitte** des Diagramms
   und gibt ihm den Tastaturfokus — dieselbe Geste in beide Richtungen. Sie

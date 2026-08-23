@@ -394,6 +394,13 @@ out.addEventListener('focusout', () => setTimeout(drawDepLinks, 0));
    (und = durchgezogen Tinte, oder = gestrichelt Grau) neu gezogen und treffen
    so garantiert die Knoten — unabhängig vom Darstellungsmodus. */
 function diagramToSvg(){
+  /* Der Export misst die **Live-Geometrie**. Den Ring der Cursor-Zeile liest er
+     nie aus (`box-shadow` steht nicht in der Liste), ihre Erhebung
+     (D25-Nachtrag) schlüge aber über `getBoundingClientRect()` durch und
+     exportierte genau einen Knoten 4 % zu groß. Neutralisiert wird sie per
+     Klasse statt durch Abnehmen von `.current`/`.pulse` — so reißt der Export
+     keine laufende Puls-Animation ab und startet sie hinterher nicht neu. */
+  out.classList.add('exporting');
   const treeRect = out.getBoundingClientRect();
   const PAD = 24;
   const W = Math.ceil(treeRect.width) + PAD*2;
@@ -570,6 +577,7 @@ function diagramToSvg(){
   });
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="'IBM Plex Sans',system-ui,sans-serif">${parts.join('')}</svg>`;
+  out.classList.remove('exporting');
   return {svg, W, H};
 }
 function svgToPng(svg, W, H, scale){
@@ -925,9 +933,9 @@ out.addEventListener('touchcancel', disarmPress);
 out.addEventListener('contextmenu', e => { if(pressTimer || armedEl) e.preventDefault(); });
 
 /* Text -> Diagramm: Knoten der Cursor-Zeile hervorheben (`caretLine` steht oben). */
-function highlightCurrentNode(scroll){
+function highlightCurrentNode(moved){
   markCurrentLineNo();   /* die eine Stelle, an der die Cursor-Zeile neu gesetzt wird */
-  if(currentNodeEl) currentNodeEl.classList.remove('current');
+  if(currentNodeEl) currentNodeEl.classList.remove('current', 'pulse');
   currentNodeEl = caretLine == null
     ? null
     : out.querySelector('.node[data-line="' + caretLine + '"]');
@@ -936,8 +944,17 @@ function highlightCurrentNode(scroll){
   /* Die Cursor-Zeile ist die zweite Lesart von „ausgewählt" — ihre
      Abhängigkeits-Kanten hervorheben (D41). */
   drawDepLinks();
-  /* Nur beim Zeilenwechsel scrollen, sonst ruckelte das Diagramm beim Tippen. */
-  if(scroll) currentNodeEl.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
+  /* Beides nur beim **Zeilenwechsel**: Scrollen ruckelte sonst bei jedem
+     Tastendruck, und der Puls (D25-Nachtrag) flackerte beim Tippen. */
+  if(!moved) return;
+  /* Neustart der Animation erzwingen: Steht der Cursor wieder auf demselben
+     Knoten (Zeile mit Knoten -> Zeile ohne -> zurück), wurde `pulse` oben in
+     DERSELBEN Aufgabe entfernt — der Browser sieht dann keinen Klassenwechsel
+     und startet nichts. Das Lesen von `offsetWidth` erzwingt den Zwischenstand. */
+  currentNodeEl.classList.remove('pulse');
+  void currentNodeEl.offsetWidth;
+  currentNodeEl.classList.add('pulse');
+  currentNodeEl.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
 }
 function caretLineOf(){
   return src.value.slice(0, src.selectionStart).split('\n').length;

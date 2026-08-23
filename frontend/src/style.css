@@ -578,11 +578,21 @@
      im Druck. Der `#out`-Präfix ist nötig: `ul.or .node{box-shadow:none}`
      (weiter unten) ist spezifischer als `.node.current` und schluckte den Ring
      sonst überall unterhalb einer any-of-Gruppe. */
-  /* Die Fokusmarke `!!!` (SPEC §1) trägt bewusst DIESELBE Hervorhebung: Es gibt
-     nur einen Begriff „hier schauen", und ein dritter Ring neben Fokusring,
-     Strahlenkranz und Cursor-Ring wäre ein Zeichen zu viel. Der Unterschied
-     steht im `aria-label`. */
-  #out .node.current{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink)}
+  /* Der Ring allein war zu leise (D25-Nachtrag): Er benutzt denselben Kanal, den
+     schon jeder Knoten belegt — **jeder Status hat einen Rahmen** (SPEC §4). Ein
+     weiterer Ring in einem Feld aus lauter gerahmten Kästchen ist ein Unterschied
+     im Grad, nicht in der Art. Deshalb kommt **Tiefe** dazu: Schlagschatten plus
+     leichte Vergrößerung. Das ist der einzige Kanal, den im Diagramm noch nichts
+     belegt (nichts anderes wirft Schatten oder hebt sich), kollidiert also mit
+     keiner Farbcodierung und wirkt über allen acht Statusfarben gleich.
+     `transform` ändert **kein Layout** — die Linien bleiben stehen; und weil um
+     die **Mitte** skaliert wird, bleibt auch die Knotenmitte unverändert, auf die
+     `alignStems()` und `drawCheapPath()` messen. `z-index`, weil Schatten und
+     vergrößerter Knoten AUSSERHALB der Box liegen (dasselbe wie bei `.fresh`). */
+  #out .node.current{
+    box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink),0 10px 20px -6px rgba(36,52,71,.5);
+    transform:scale(1.04);z-index:3;
+  }
   /* Fokusmarke `!!!` (SPEC §1, D32): **Strahlenkranz in Petrol**, nach dem Muster
      der Neuheiten-Markierung (D28), nur in der Akzentfarbe der App statt in Gelb.
      Der geteilte Ring mit der Cursor-Zeile war zu leise — „das erkennt man zu
@@ -598,8 +608,10 @@
      obwohl die Geometrie dieselbe war. Der Ring bleibt dunkles Petrol und ordnet
      die Marke der Akzentfarbe zu; das Leuchten macht die Reichweite. */
   #out .node.focusmark{box-shadow:0 0 0 3px var(--or),0 0 20px 7px rgba(20,184,166,.85);z-index:2}
-  /* Beides zugleich: Cursor-Zeile innen (Tinte), fremde Marke außen (Petrol). */
-  #out .node.focusmark.current{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink),0 0 20px 7px rgba(20,184,166,.85)}
+  /* Beides zugleich: Cursor-Zeile innen (Tinte), fremde Marke außen (Petrol).
+     Die Erhebung der Cursor-Zeile gilt in jeder Kombination — der Schlagschatten
+     wird deshalb hier mit angehängt (das `transform` erbt die Regel oben). */
+  #out .node.focusmark.current{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink),0 0 20px 7px rgba(20,184,166,.85),0 10px 20px -6px rgba(36,52,71,.5);z-index:3}
   /* Neu in Produktion seit dem letzten Besuch (D28): gelber Strahlenkranz um den
      Knoten. Bewusst ein Schein nach AUSSEN statt Farbe im Knoten — die Füllung
      gehört dem Status (SPEC §4) und bleibt lesbar. Kein Blinken: WCAG 2.2.2/2.3.1
@@ -610,13 +622,44 @@
      Kante stehen — sieht aus wie ein halber Hintergrund statt eines Rahmens). */
   #out .node.fresh{box-shadow:0 0 0 2px #FACC15,0 0 16px 5px rgba(234,179,8,.65);z-index:2}
   /* Beides zugleich: Cursor-Zeile innen (Tinte), Neuheit außen (gelb). */
-  #out .node.fresh.current{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink),0 0 18px 6px rgba(234,179,8,.65)}
+  #out .node.fresh.current{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink),0 0 18px 6px rgba(234,179,8,.65),0 10px 20px -6px rgba(36,52,71,.5);z-index:3}
   /* Neu in Produktion UND jemand zeigt darauf: Ring in Petrol (der bewusste
      Zuruf, innen), Kranz in Gelb (die stehende Nachricht, außen). Zwei Scheine
      nach außen gingen nicht — einer muss der Ring sein. Steht bewusst **nach**
      `.node.focusmark.current`: gleiche Spezifität (drei Klassen), und wenn alles
      drei zutrifft, soll Zuruf + Neuheit gewinnen, nicht die eigene Cursor-Zeile. */
   #out .node.fresh.focusmark{box-shadow:0 0 0 3px var(--or),0 0 20px 7px rgba(234,179,8,.65);z-index:2}
+  /* Puls beim Zeilenwechsel (D25-Nachtrag): Man verliert den Knoten beim
+     **Bewegen**, nicht im Stillstand — also meldet er sich genau dann einmal.
+     Einmalig, kein Blinken: WCAG 2.2.2 zielt auf Blinkendes, 2.3.1 auf Flackern
+     über 3 Hz; ein einzelner Durchlauf ist keins von beidem (vgl. D28).
+     Ausgelöst wird er in `highlightCurrentNode()` **nur** bei geändertem
+     `caretLine` — sonst pulste er bei jedem Tastendruck.
+     Bewusst NICHT über `box-shadow` animiert: die Kombinationen mit `.fresh` und
+     `.focusmark` haben je eigene Schatten-Listen, eine Animation darauf ließe den
+     gelben bzw. petrolfarbenen Kranz für die Dauer des Pulses verschwinden.
+     Stattdessen zwei Kanäle, die niemand sonst benutzt: ein kurzer Hüpfer im
+     `transform` und ein auslaufender Ring auf dem freien `::after`
+     (`::before` gehört dem Optional-Kreis, D29). */
+  @keyframes nodeLift{0%{transform:scale(1.04)}40%{transform:scale(1.11)}100%{transform:scale(1.04)}}
+  @keyframes nodeRipple{from{transform:scale(1);opacity:.5}to{transform:scale(1.4);opacity:0}}
+  #out .node.current.pulse{animation:nodeLift .36s ease-out 1}
+  /* `both` ist Pflicht: ohne Fill-Mode schnappt der Ring am Ende auf die
+     Anfangsdeckkraft zurück und bliebe stehen. */
+  #out .node.current.pulse::after{
+    content:'';position:absolute;inset:-3px;border-radius:calc(var(--r) + 3px);
+    border:2px solid var(--ink);pointer-events:none;
+    animation:nodeRipple .45s ease-out 1 both;
+  }
+  @media (prefers-reduced-motion: reduce){
+    #out .node.current.pulse{animation:none}
+    #out .node.current.pulse::after{display:none}
+  }
+  /* Während `diagramToSvg()` misst: Erhebung und Puls abschalten — der Export
+     zeichnet aus der Live-Geometrie nach, und die Vergrößerung ist eine
+     Editierhilfe, keine Aussage über den Plan (D25). */
+  #out.exporting .node.current{transform:none;animation:none}
+  #out.exporting .node.current::after{display:none}
   /* Alt gedrückt = Sprung-Geste scharf: Cursor an allen Knoten, Petrol-Ring am
      Knoten unter dem Zeiger. Auf verlinkten Knoten ist das die einzige
      Rückmeldung, weil dort der einfache Klick dem Link gehört (D25). */
@@ -696,6 +739,16 @@
      der wahrscheinlichsten Gründe, überhaupt zu zeigen. Anders als beim
      optionalen Knoten (D29), wo das Zurücktreten die Aussage IST. */
   .cheap-on .node:not(.cheap).focusmark{opacity:1;filter:none}
+  /* Und dasselbe für die Cursor-Zeile (D25-Nachtrag) — die Ausnahme fehlte hier
+     als einzige, obwohl der Fall der häufigste ist: Der Umschalter ist
+     voreingestellt an, und jeder optionale Knoten und jede nicht gewählte
+     Alternative ist „nicht auf dem Pfad" (im mitgelieferten Beispiel 7 von 18
+     Knoten). Gemessen auf `+ [?] Dark mode`: Deckkraft 0,32 — der Ring war dort
+     praktisch unsichtbar. Wo der Cursor steht, muss sichtbar bleiben, egal wie
+     der Pfad entschieden hat; anders als beim optionalen Knoten (D29), wo das
+     Zurücktreten die Aussage IST, ist hier gar keine Aussage über den Plan
+     gemeint — es ist eine Editierhilfe. */
+  .cheap-on .node:not(.cheap).current{opacity:1;filter:none}
   /* implizit als M angenommene Größe: invertiertes Badge (weiß statt petrol) */
   .size.implicit{background:var(--card);color:var(--or);border-color:var(--or)}
   /* Günstigster-Pfad-Linie: gestrichelt, geschwungen, petrol — fädelt durch
@@ -1078,8 +1131,12 @@
     *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
     /* Knoten nicht über den Seitenrand zerschneiden */
     #out li{break-inside:avoid}
-    /* Editierhilfe bzw. Zuruf, nicht drucken (D25, Fokusmarke SPEC §1) */
+    /* Editierhilfe bzw. Zuruf, nicht drucken (D25, Fokusmarke SPEC §1).
+       Bei der Cursor-Zeile gehören Erhebung und Puls mit dazu — sonst stünde ein
+       Knoten im Druck grundlos vergrößert und schief zu seiner Anschlusslinie. */
     .node.current,.node.focusmark{box-shadow:none!important}
+    .node.current{transform:none!important;animation:none!important}
+    .node.current::after{display:none!important}
     .node.fresh{box-shadow:none!important}     /* „neu seit dem letzten Besuch" ist persönlich (D28) */
     /* Faltung (D38): das ▾ offener Knoten ist Bedienelement — nicht drucken;
        das „▸ n" eingeklappter Knoten ist Kennzeichnung und bleibt. */
