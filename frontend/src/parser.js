@@ -27,9 +27,13 @@ export const STATUS_BY_CODE = {
    ungewöhnlicher Spaltung wie `-   [x] X`. Wurzelzeilen (ohne Zeichen) bekommen
    die Marke am Zeilenanfang, wie SPEC §1 es verlangt. */
 export function setFoldMark(line, mark){
-  const m = line.match(/^([ \t]*(?:[-|+]|=(?=[ \t]))?[ \t]*)((?:[><](?=[ \t])[ \t]*)?)/);
-  const head = m[1], alt = m[2];
-  return head + (mark ? mark + ' ' : '') + line.slice(head.length + alt.length);
+  /* Geschrieben wird IMMER die kanonische Stellung: unmittelbar vor dem Label,
+     also hinter der Statusbox (SPEC §1, D34-Nachtrag 2). Eine Marke in der
+     alten Stellung (zwischen Zeichen und Box) wird dabei aufgelöst — sie wird
+     weiterhin gelesen, aber nicht mehr erzeugt. */
+  const m = line.match(
+    /^([ \t]*(?:[-|+]|=(?=[ \t]))?[ \t]*)(?:[><](?=[ \t])[ \t]*)?((?:\[[^\]]\][ \t]*)?)(?:[><](?=[ \t])[ \t]*)?/);
+  return m[1] + m[2] + (mark ? mark + ' ' : '') + line.slice(m[0].length);
 }
 
 /* Status, die als „realisiert" zählen (XOR-Regel, SPEC §3/D35): Kosten sind
@@ -142,17 +146,19 @@ export function parse(text){
        (fehlertolerant: die Zeile geht nicht verloren). */
     /* `=` (XOR, SPEC §3) nur mit folgendem Leerraum — die Leerraum-Regel hält
        Labels wie `=SUMME(A1:B2)` heraus; `-`/`+`/`|` bleiben wie bisher.
-       Die Faltmarke `>`/`<` (SPEC §1, D38) steht zwischen Zeichen und
-       Statusbox (bei Wurzeln am Zeilenanfang), ebenfalls nur mit folgendem
-       Leerraum — `- >Achtung` bleibt ein Label. */
-    const m = raw.match(/^([ \t]*)([-|+]|=(?=[ \t]))?\s*(?:([><])(?=[ \t])\s*)?(?:\[([^\]])\]\s*)?(.*)$/);
+       Die Faltmarke `>`/`<` (SPEC §1, D38) steht unmittelbar vor dem Label,
+       also hinter der Statusbox — ebenfalls nur mit folgendem Leerraum,
+       `- [x] >Achtung` bleibt ein Label. Die frühere Stellung ZWISCHEN Zeichen
+       und Box wird weiter gelesen (D34-Nachtrag 2), aber nicht mehr
+       geschrieben; deshalb zwei Marken-Gruppen, die erste gewinnt. */
+    const m = raw.match(/^([ \t]*)([-|+]|=(?=[ \t]))?\s*(?:([><])(?=[ \t])\s*)?(?:\[([^\]])\]\s*)?(?:([><])(?=[ \t])\s*)?(.*)$/);
     const width = m[1].replace(/\t/g,'  ').length;
     const type  = m[2] === '|' ? 'or' : m[2] === '=' ? 'xor' : 'and';
     const optional = m[2] === '+';
-    const fold = m[3] || null;
+    const fold = m[3] || m[5] || null;
     const boxChar = m[4];   // undefined, wenn keine Statusbox
 
-    let rest = m[5], url = null, size = null;
+    let rest = m[6], url = null, size = null;
     const tags = [];
     rest = rest.replace(/https?:\/\/\S+/i, s => { url = s; return ''; });
     rest = rest.replace(/\((XXL|XS|XL|S|M|L)\)/i, (s, g) => { size = g.toUpperCase(); return ''; });

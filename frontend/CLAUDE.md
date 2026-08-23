@@ -296,7 +296,12 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `freshPrevRoots` (Basis, einmal geparst). Basis je Dokument in `werkbaum-seen`,
   fortgeschrieben **erst beim Bestätigen** über `#freshBtn`.
 - Faltmarken `>`/`<` (SPEC §1/§9, D38): Parser setzt nur `fold` ('>'|'<'|null,
-  Leerraum-Regel); den wirksamen Anfangszustand rechnet `initialCollapsed()`
+  Leerraum-Regel). **Stellung ist unmittelbar vor dem Label**, also hinter der
+  Statusbox (`- [x] > …`, D34-Nachtrag 2); die alte Stellung **davor**
+  (`- > [x] …`) wird weiter gelesen — daher zwei Marken-Gruppen im Zeilen-Regex,
+  die erste gewinnt —, aber `setFoldMark()` schreibt immer die neue und löst
+  eine alte dabei auf. Wer die Gruppen anfasst: Der Rest der Zeile ist `m[6]`,
+  nicht `m[5]`. Den wirksamen Anfangszustand rechnet `initialCollapsed()`
   in model.js — `<` (und die Fokusmarke) wandert die Faltung die Pfad-Ebenen
   **hinunter** statt Vorfahren bloß zu öffnen. `render()` überlagert ihn mit
   `foldOverrides` (Schlüssel = Label-Pfad via `nodeKeys()`, Sitzung, beim

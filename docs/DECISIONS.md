@@ -1958,6 +1958,10 @@ Kollision, wegen der D29 `*` verwarf — Markdown-Betonung). Wurzelknoten haben
 kein Gate — dort steht die Marke am Zeilenanfang; Wurzeln sind selten, und
 die Regel „hinter dem Zeichen“ bleibt trotzdem einheitlich formulierbar.
 
+*(Der Satz „die Statusbox trägt keine Ausrichtungs-Information“ ist falsch —
+sie trägt sie sehr wohl. Korrigiert in Nachtrag 2 am Ende dieses Eintrags;
+die Stellung ist jetzt hinter der Statusbox.)*
+
 **Export und Druck folgen der sichtbar eingeklappten Struktur — mit
 Kennzeichnung.** Der Präzedenzfall steht in §9: „Es wird genau die sichtbare
 Struktur exportiert (der ‚verworfene einblenden‘-Filter wirkt auch hier).“
@@ -2007,6 +2011,65 @@ verschwinden (dieselbe Haltung wie bei `unknownStatus`, §4).
 Zwei bewusste Verhaltensänderungen, beide dokumentiert (§11): `---` ergab
 bisher einen Knoten mit Label `--`, und eine zeichenlose Zeile, die mit
 `" ` beginnt, war bisher ein Wurzelknoten mit `"`-Label.
+
+**Nachtrag 2 — die Faltmarke rückt hinter die Statusbox: `- [x] > Backend`.**
+Der erste Nachtrag oben stellte sie zwischen Zeichen und Box und begründete
+das damit, dass sich dabei „nur die Statusbox verschiebt, und die trägt keine
+Ausrichtungs-Information“. **Dieser Satz ist falsch**, und der Fehler war im
+Text nicht zu sehen, sondern erst im gefalteten Plan: Die Marke ist zwei
+Zeichen breit — genau eine Einrückungsstufe. Die Box einer gefalteten Zeile
+rückt dadurch exakt in die Spalte der Boxen ihrer **eigenen Kinder**:
+
+```
+  - > [ ] erster Schritt        %% Box bei Spalte 6
+    - [ ] Schritt 1a            %% Box bei Spalte 6  ← dieselbe Spalte
+```
+
+Die Box-Spalte ist damit sehr wohl Ausrichtungs-Information: Sie ist die
+zweite Spalte, an der das Auge die Ebene abliest, und der Fehler tritt
+ausgerechnet dort auf, wo man ohnehin schon weniger sieht — an einem
+eingeklappten Knoten, dessen Kinder gerade verborgen sind. Hinter der Box
+steht die Marke dagegen vor dem **Label**, und Labels sind ohnehin ausgefranst
+(unterschiedlich lange IDs, Größen, Tags) — dort kostet eine Verschiebung
+nichts:
+
+```
+  - [ ] > erster Schritt
+    - [ ] Schritt 1a
+```
+
+**Die Begründung des ersten Nachtrags bleibt im Übrigen gültig:** Die
+Gate-Spalte ist der wichtigste Anker, `>` davor (`> - [x] …`) bliebe falsch,
+und die Markdown-Blockquote-Kollision am Zeilenanfang ebenfalls. Die neue
+Stellung greift keines der beiden an — sie verschiebt die Marke nur um eine
+Position weiter nach rechts.
+
+**Nebengewinn: Die Regel wird einfacher, nicht komplizierter.** Bisher hieß
+sie „zwischen Zeichen und Statusbox, bei Wurzelknoten am Zeilenanfang“ — mit
+einer Ausnahme für Wurzeln. Jetzt heißt sie **„unmittelbar vor dem Label“**,
+und das gilt ohne Ausnahme: Fehlt die Statusbox, rückt die Marke von selbst an
+deren Stelle; fehlen Box und Zeichen (Wurzelknoten), steht sie am
+Zeilenanfang. Für Zeilen **ohne** Statusbox ändert sich dadurch gar nichts.
+
+**Die alte Stellung wird weiter gelesen, aber nie mehr geschrieben.** Ein
+harter Schnitt wäre vertretbar gewesen — die Faltmarken sind wenige Wochen alt
+—, aber er träfe genau die Dokumente, die wir **nicht** migrieren können:
+Pads (D31) und `?sourceUrl=`-Quellen (D23) liegen auf fremden Servern. Der
+Parser hat deshalb zwei Marken-Gruppen (die erste gewinnt), `setFoldMark()`
+schreibt immer die neue und löst eine alte dabei auf. Die Toleranz kostet eine
+optionale Gruppe im Regex und eine Zeile in der SPEC; die Zeile *muss* dort
+stehen, sonst ist die alte Schreibweise stillschweigend geduldete Magie statt
+dokumentiertes Verhalten.
+
+**Der Preis, benannt:** Die Marke steht jetzt direkt vor dem Label, also dort,
+wo ein Label anfangen kann. Ein Label wie `> 100 Nutzer` wird zur Marke plus
+`100 Nutzer`. Neu ist das nicht — für Zeilen ohne Statusbox galt es schon
+immer —, aber es ist jetzt der Regelfall statt der Ausnahme. Der Ausweg ist
+derselbe wie bei `=SUMME(A1:B2)` (D34): kein Leerzeichen, also `>100 Nutzer`.
+
+Migriert sind die drei Marken in `docs/examples/werkbaum.werkbaum`, die eine
+im `INITIAL`-Beispiel und das Beispiel in `llms.md`; die Legenden-Zeile
+`hint_fold` nennt die neue Form in allen neun Sprachen.
 
 ## D35 — XOR (`=`) umgesetzt: „realisiert“ definiert, „1“-Plakette, keine neue Linienart
 Das in D34 entschiedene XOR-Gate ist gebaut (SPEC §1/§3/§9); beim Bauen waren
@@ -2169,7 +2232,7 @@ Darstellung, bis die Querverbindungen (§11) gebaut sind; der Pfeil im Tooltip
 sagt die Richtung („hängt ab von“), ohne ein neues Zeichen einzuführen.
 
 ## D38 — Faltmarken gebaut: `<` wandert die Faltung hinunter, Eingriffe sind flüchtig
-Die in D34 entschiedene Schreibweise (`- > [x] …`, Export folgt der Faltung)
+Die in D34 entschiedene Schreibweise (`- [x] > …`, Export folgt der Faltung)
 ist umgesetzt (SPEC §1/§9). Die Bau-Entscheidungen:
 
 **`<` holt seinen Teilbaum hervor, indem die Faltung die Pfad-Ebenen

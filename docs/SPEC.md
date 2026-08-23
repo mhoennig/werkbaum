@@ -7,15 +7,15 @@ Syntaxänderungen werden zuerst hier dokumentiert, dann implementiert.
 ## 1. Zeilenformat
 
 ```
-[Einrückung][Zeichen] [Faltmarke] [Statusbox] Label (Größe) URL @tag … !!! %% Kommentar
+[Einrückung][Zeichen] [Statusbox] [Faltmarke] Label (Größe) URL @tag … !!! %% Kommentar
 ```
 
 Alle Bestandteile außer dem Label sind optional. Die Extraktion erfolgt in
 dieser Reihenfolge (wichtig für Kollisionsfreiheit):
 
 1. Kommentar entfernen: alles ab `%%` bis Zeilenende.
-2. Einrückung, Zeichen (`-` / `+` / `|` / `=`), Faltmarke (`>` / `<`) und
-   Statusbox `[…]` per Zeilen-Regex; `=` nur mit folgendem Leerraum (§3),
+2. Einrückung, Zeichen (`-` / `+` / `|` / `=`), Statusbox `[…]` und Faltmarke
+   (`>` / `<`) per Zeilen-Regex; `=` nur mit folgendem Leerraum (§3),
    die Faltmarke ebenso (siehe unten).
 3. URL: erstes Token, das auf `https?://\S+` passt (dadurch stören `@` in URLs nicht).
 4. Größe: erstes `(XS|S|M|L|XL|XXL)`, Groß-/Kleinschreibung egal.
@@ -27,13 +27,22 @@ dieser Reihenfolge (wichtig für Kollisionsfreiheit):
 
 **Faltmarke `>` / `<`** — bestimmt, wie das Dokument **eröffnet** wird:
 
-- Steht **zwischen** Zerlegungszeichen und Statusbox (`- > [x] Backend`); bei
-  Wurzelknoten (ohne Zeichen) am Zeilenanfang. Erkannt nur mit **folgendem
-  Leerraum** — `- >Achtung` bleibt damit ein Label. Begründung der Stellung:
-  D34-Nachtrag.
+- Steht **unmittelbar vor dem Label**, also hinter der Statusbox
+  (`- [x] > Backend`); ohne Statusbox rückt sie an deren Stelle
+  (`- > Backend`, bei Wurzelknoten an den Zeilenanfang). Erkannt nur mit
+  **folgendem Leerraum** — `- [x] >Achtung` bleibt damit ein Label. Die
+  Stellung hält die Spalte der Statusboxen über die Ebenen hinweg bündig;
+  Begründung: D34-Nachtrag 2.
+- Die frühere Stellung **zwischen Zeichen und Statusbox** (`- > [x] Backend`)
+  wird weiterhin **gelesen**, aber nie mehr geschrieben: Beim Zurückschreiben
+  (§9) wird sie in die neue aufgelöst. Stehen beide, gilt die erste.
 - `>` heißt: der Teilbaum dieses Knotens ist beim Öffnen **eingeklappt**.
 - `<` innerhalb eines eingeklappten Bereichs holt den **eigenen Teilbaum**
-  gezielt wieder hervor (Mechanik: §9).
+  gezielt wieder hervor (Mechanik: §9). Es ist eine **Schreibhilfe für
+  Autoren**: gelesen wird es unverändert, erzeugt wird es nie — das
+  Zurückschreiben (§9) setzt ausschließlich `>`. Ein von Hand gesetztes `<`
+  bleibt stehen, solange es den Zustand noch richtig beschreibt, und wird
+  aufgelöst, sobald alle Marken neu gesetzt werden.
 - Die Marken beschreiben den **Faltzustand des Dokuments**: Beim Öffnen stellen
   sie ihn her, und Umklappen im Diagramm schreibt sie zurück (§9) — Text und
   Bild sagen dasselbe. Sie sagen nichts über Fortschritt (§4) oder
@@ -138,7 +147,15 @@ Text zu einem Knoten (Anzeige: §9):
 Referenz-Regex der Implementierung:
 
 ```
-^([ \t]*)([-|+]|=(?=[ \t]))?\s*(?:([><])(?=[ \t])\s*)?(?:\[([ ?~xX^/-])\]\s*)?(.*)$
+^([ \t]*)([-|+]|=(?=[ \t]))?\s*(?:([><])(?=[ \t])\s*)?(?:\[([ ?~xX^/-])\]\s*)?(?:([><])(?=[ \t])\s*)?(.*)$
+```
+
+Die **zweite** Faltmarken-Gruppe ist die gültige Stellung, die erste die
+weiterhin gelesene alte (siehe oben). Umkehrung fürs Zurückschreiben (§9) —
+sie setzt die Marke immer in die zweite Stellung und löst die erste dabei auf:
+
+```
+^([ \t]*(?:[-|+]|=(?=[ \t]))?[ \t]*)(?:[><](?=[ \t])[ \t]*)?((?:\[[^\]]\][ \t]*)?)(?:[><](?=[ \t])[ \t]*)?
 ```
 
 Für die Knoten-ID (Schritt 6, nur der erste Treffer; die letzte Gruppe ist der

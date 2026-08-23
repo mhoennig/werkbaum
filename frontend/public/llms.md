@@ -14,7 +14,7 @@ https://werkbaum.javagil.de renders the notation as a diagram;
 
 ## Line format
 
-    [indent][gate] [fold] [status] Label (SIZE) URL @person #id :#id,#id !!! %% comment
+    [indent][gate] [status] [fold] Label (SIZE) URL @person #id :#id,#id !!! %% comment
 
 One node per line. Everything except the label is optional.
 
@@ -46,12 +46,17 @@ One node per line. Everything except the label is optional.
 - Optionality (`+`) is orthogonal to status: an optional node can be long
   `[^]`. Optional nodes never count toward the cheapest path.
 
-### Fold mark (between gate and status box; on root lines at line start)
+### Fold mark (immediately before the label, i.e. after the status box)
 
 - `>` — this subtree starts **collapsed** when the document opens.
 - `<` — inside a collapsed region, bring this subtree back into view.
-- Recognized only with following whitespace (`- >Careful` stays a label).
-  Presentation only: no effect on meaning, costs or warnings.
+- Recognized only with following whitespace (`- [x] >Careful` stays a label).
+- **Write it after the status box** (`- [x] > Concept`). The older position
+  between gate and box (`- > [x] Concept`) is still read, but never written:
+  it shifts the box by one indent step, so a folded parent's box lines up with
+  its children's boxes.
+- Describes the document's fold state: opening restores it, and folding in the
+  diagram writes the mark back. No effect on meaning, costs or warnings.
 
 ### Status box
 
@@ -163,7 +168,7 @@ One node per line. Everything except the label is optional.
     %% Project structure – Sprint 14
     [~] Website relaunch (XL) https://wiki.example.com/relaunch
       " Folded chapters are done.
-      - > [x] Concept (M)
+      - [x] > Concept (M)
         - [x] Audience analysis (S)
         - [x] Sitemap (XS)
       - [~] Implementation (XL)

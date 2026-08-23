@@ -101,7 +101,7 @@
           | [?] Ask the admin for cookie.sameSite = None (XS)
           | [ ] Live with it: edit in the pad's own tab (XS)
       - [^] A shared pointer: !!! focuses a node for everyone (XS)
-      - > [?] Update by itself, within about 2 s (M)
+      - [?] > Update by itself, within about 2 s (M)
         | [?] Our own Etherpad beside Werkbaum (M)  %% then every setting below is ours
           - [ ] Node and a real database in userland (S)  %% the flatfile store is not for production
           - [ ] Book the RAM quota for an own daemon (XS)
@@ -141,7 +141,7 @@
     - [?] Registration with Mermaid (M)
       | [?] External diagram, self-hosted pages only (M)
       | [?] Pull request into Mermaid itself (L)
-  - > [?] IntelliJ IDEA plugin (XL)
+  - [?] > IntelliJ IDEA plugin (XL)
     - [?] Show the diagram in the IDE (L)
       | [?] Through Mermaid, once Werkbaum is part of Mermaid itself (M)
         - [?] Fenced werkbaum blocks render in Markdown (S)
@@ -157,7 +157,7 @@
         - [?] Completion for status, size and tags (S)
         - [?] Structure view and folding (S)
       - [?] Kotlin with the Gradle IntelliJ plugin (S)
-      - < [!] A second parser that must not drift from the SPEC (M)  %% exactly what D14 warns about
+      - [!] < A second parser that must not drift from the SPEC (M)  %% exactly what D14 warns about
         | [?] Both parsers test against the same fixtures (S)
         | [?] Run the one JS parser inside the IDE (M)
   - [?] Tracker integration (XL)  %% exactly one of these, hence =

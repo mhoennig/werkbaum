@@ -13,7 +13,7 @@ import WERKBAUM_DOC from '../../docs/examples/werkbaum.werkbaum?raw';
 const INITIAL = `%% Project structure – Sprint 14
 [~] Website relaunch (XL) https://wiki.example.com/relaunch
   " Folded chapters are done — click the ▸ to peek inside.
-  - > [x] Concept (M)
+  - [x] > Concept (M)
     - [x] Audience analysis (S)
     - [x] Sitemap (XS)
   - [~] Implementation (XL)
@@ -1511,7 +1511,7 @@ const I18N = {
     hint_deps:"Abhängigkeiten mit :#name,#name — erscheinen im Tooltip.",
     hint_eff:"Die Knotenfarbe zeigt den effektiven Status (mit Abhängigkeiten); ist der eigene weiter, steht er als Marke unten links.",
     hint_desc:"Beschreibungen: \" Zeile unter dem Knoten; Langtext hinter --- als eingerückter #id-Block — beides im Tooltip (”).",
-    hint_fold:"Falten: - > [x] … startet eingeklappt, < holt hervor; ▾/▸ am Knoten klappt um (Tastatur: ←/→).",
+    hint_fold:"Falten: - [x] > … startet eingeklappt, < holt hervor; ▾/▸ am Knoten klappt um (Tastatur: ←/→).",
     hint_jump:"Alt+Klick auf einen Knoten (mobil: langer Druck) springt zur zugehörigen Textzeile; Alt+Klick im Text holt den Knoten ins Bild."
   },
   en: {
@@ -1591,7 +1591,7 @@ const I18N = {
     hint_deps:"Dependencies with :#name,#name — shown in the tooltip.",
     hint_eff:"Node colour shows the effective status (with dependencies); if its own is further along, it appears as a mark at the bottom left.",
     hint_desc:"Descriptions: a \" line below the node; long text behind --- as an indented #id block — both in the tooltip (”).",
-    hint_fold:"Folding: - > [x] … starts collapsed, < brings it back; ▾/▸ on a node toggles (keyboard: ←/→).",
+    hint_fold:"Folding: - [x] > … starts collapsed, < brings it back; ▾/▸ on a node toggles (keyboard: ←/→).",
     hint_jump:"Alt+click a node (long press on touch) jumps to its line in the text; Alt+click in the text brings the node into view."
   },
   es: {
@@ -1671,7 +1671,7 @@ const I18N = {
     hint_deps:"Dependencias con :#nombre,#nombre — visibles en el tooltip.",
     hint_eff:"El color del nodo muestra el estado efectivo (con dependencias); si el propio va más adelante, aparece como marca abajo a la izquierda.",
     hint_desc:"Descripciones: línea \" bajo el nodo; texto largo tras --- como bloque #id sangrado — ambos en el tooltip (”).",
-    hint_fold:"Plegado: - > [x] … empieza plegado, < lo recupera; ▾/▸ en el nodo alterna (teclado: ←/→).",
+    hint_fold:"Plegado: - [x] > … empieza plegado, < lo recupera; ▾/▸ en el nodo alterna (teclado: ←/→).",
     hint_jump:"Alt+clic en un nodo (pulsación larga en táctil) salta a su línea en el texto; Alt+clic en el texto trae el nodo a la vista."
   },
   fr: {
@@ -1751,7 +1751,7 @@ const I18N = {
     hint_deps:"Dépendances avec :#nom,#nom — visibles dans l’infobulle.",
     hint_eff:"La couleur du nœud montre le statut effectif (avec dépendances) ; si le sien est plus avancé, il apparaît en marque en bas à gauche.",
     hint_desc:"Descriptions : ligne \" sous le nœud ; texte long après --- en bloc #id indenté — les deux dans l’infobulle (”).",
-    hint_fold:"Pliage : - > [x] … démarre replié, < le fait ressortir ; ▾/▸ sur le nœud bascule (clavier : ←/→).",
+    hint_fold:"Pliage : - [x] > … démarre replié, < le fait ressortir ; ▾/▸ sur le nœud bascule (clavier : ←/→).",
     hint_jump:"Alt+clic sur un nœud (appui long sur tactile) saute à sa ligne dans le texte ; Alt+clic dans le texte amène le nœud à l’écran."
   },
   pl: {
@@ -1831,7 +1831,7 @@ const I18N = {
     hint_deps:"Zależności przez :#nazwa,#nazwa — widoczne w podpowiedzi.",
     hint_eff:"Kolor węzła pokazuje status efektywny (z zależnościami); jeśli własny jest dalej, widnieje jako znacznik u dołu po lewej.",
     hint_desc:"Opisy: wiersz \" pod węzłem; dłuższy tekst za --- jako wcięty blok #id — oba w podpowiedzi (”).",
-    hint_fold:"Zwijanie: - > [x] … zaczyna zwinięte, < przywraca; ▾/▸ na węźle przełącza (klawiatura: ←/→).",
+    hint_fold:"Zwijanie: - [x] > … zaczyna zwinięte, < przywraca; ▾/▸ na węźle przełącza (klawiatura: ←/→).",
     hint_jump:"Alt+kliknięcie węzła (długie naciśnięcie na dotyku) przechodzi do jego wiersza w tekście; Alt+kliknięcie w tekście pokazuje węzeł na diagramie."
   },
   ru: {
@@ -1911,7 +1911,7 @@ const I18N = {
     hint_deps:"Зависимости через :#имя,#имя — видны в подсказке.",
     hint_eff:"Цвет узла показывает фактический статус (с учётом зависимостей); если собственный дальше, он показан меткой слева внизу.",
     hint_desc:"Описания: строка \" под узлом; длинный текст после --- как блок #id с отступом — оба в подсказке (”).",
-    hint_fold:"Сворачивание: - > [x] … открывается свёрнутым, < возвращает; ▾/▸ на узле переключает (клавиши: ←/→).",
+    hint_fold:"Сворачивание: - [x] > … открывается свёрнутым, < возвращает; ▾/▸ на узле переключает (клавиши: ←/→).",
     hint_jump:"Alt+клик по узлу (долгое нажатие на сенсоре) переходит к его строке в тексте; Alt+клик в тексте показывает узел на диаграмме."
   },
   hi: {
@@ -1991,7 +1991,7 @@ const I18N = {
     hint_deps:":#नाम,#नाम से निर्भरताएँ — टूलटिप में दिखती हैं।",
     hint_eff:"नोड का रंग प्रभावी स्थिति दिखाता है (निर्भरताओं सहित); यदि अपनी स्थिति आगे है, तो वह नीचे-बाएँ चिह्न के रूप में दिखती है।",
     hint_desc:"विवरण: नोड के नीचे \" पंक्ति; --- के बाद #id ब्लॉक में लंबा पाठ — दोनों टूलटिप में (”)।",
-    hint_fold:"फ़ोल्डिंग: - > [x] … समेटा हुआ खुलता है, < वापस लाता है; नोड पर ▾/▸ टॉगल करता है (कीबोर्ड: ←/→)।",
+    hint_fold:"फ़ोल्डिंग: - [x] > … समेटा हुआ खुलता है, < वापस लाता है; नोड पर ▾/▸ टॉगल करता है (कीबोर्ड: ←/→)।",
     hint_jump:"किसी नोड पर Alt+क्लिक (टच पर लंबा दबाव) टेक्स्ट में उसकी पंक्ति पर ले जाता है; टेक्स्ट में Alt+क्लिक उस नोड को आरेख में दिखाता है।"
   },
   zh: {
@@ -2071,7 +2071,7 @@ const I18N = {
     hint_deps:"用 :#名称,#名称 表示依赖——显示在提示中。",
     hint_eff:"节点颜色显示实际状态（含依赖）；若自身状态更靠前，会以左下角标记显示。",
     hint_desc:"描述：节点下方的 \" 行；--- 之后的缩进 #id 块为长文本——均显示在提示中（”）。",
-    hint_fold:"折叠：- > [x] … 打开时即折叠，< 将其展开；节点上的 ▾/▸ 切换（键盘：←/→）。",
+    hint_fold:"折叠：- [x] > … 打开时即折叠，< 将其展开；节点上的 ▾/▸ 切换（键盘：←/→）。",
     hint_jump:"Alt+点击节点（触摸屏为长按）可跳转到文本中对应的行；在文本中 Alt+点击则把该节点带入视野。"
   },
   ja: {
@@ -2151,7 +2151,7 @@ const I18N = {
     hint_deps:":#名前,#名前 で依存関係 — ツールチップに表示されます。",
     hint_eff:"ノードの色は実効ステータス（依存関係込み）を示します。自身が先行している場合は左下のマークで表示されます。",
     hint_desc:"説明：ノード直下の \" 行。--- 以降は #id ブロック（字下げ）で長文 — どちらもツールチップに表示（”）。",
-    hint_fold:"折りたたみ：- > [x] … は折りたたんだ状態で開き、< は呼び戻します。ノードの ▾/▸ で切替（キー：←/→）。",
+    hint_fold:"折りたたみ：- [x] > … は折りたたんだ状態で開き、< は呼び戻します。ノードの ▾/▸ で切替（キー：←/→）。",
     hint_jump:"ノードを Alt+クリック（タッチでは長押し）すると、テキストの該当行へ移動します。テキスト内で Alt+クリックすると、そのノードが図の中央に表示されます。"
   }
 };

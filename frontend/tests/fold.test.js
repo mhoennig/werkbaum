@@ -18,23 +18,31 @@ const collapsedLabels = (txt, rescueFocus = true) =>
   [...initialCollapsed(roots(txt), rescueFocus)].map(n => n.label).sort();
 
 /* Faltmarken `>`/`<` (SPEC §1/§9, D38): Anfangszustand der Faltung im Text. */
-describe('Parser — Faltmarke zwischen Zeichen und Statusbox', () => {
-  it('erkennt `>` und `<` und nimmt sie aus dem Label', () => {
-    const [wurzel] = roots(`[ ] Wurzel\n  - > [x] Zu (M)\n  - < [ ] Auf`);
+describe('Parser — Faltmarke unmittelbar vor dem Label', () => {
+  it('erkennt `>` und `<` hinter der Statusbox und nimmt sie aus dem Label', () => {
+    const [wurzel] = roots(`[ ] Wurzel\n  - [x] > Zu (M)\n  - [ ] < Auf`);
     expect(wurzel.children.map(k => [k.label, k.fold, k.status?.key]))
       .toEqual([['Zu', '>', 'fertig'], ['Auf', '<', 'geplant']]);
     expect(wurzel.fold).toBe(null);
   });
 
-  it('erkennt die Marke am Wurzelknoten (ohne Zeichen) am Zeilenanfang', () => {
-    const [wurzel] = roots(`> [~] Kapitel\n  - [ ] Kind`);
-    expect([wurzel.fold, wurzel.label]).toEqual(['>', 'Kapitel']);
+  it('liest die alte Stellung (vor der Box) weiter — D34-Nachtrag 2', () => {
+    const [wurzel] = roots(`[ ] Wurzel\n  - > [x] Zu (M)\n  - < [ ] Auf`);
+    expect(wurzel.children.map(k => [k.label, k.fold, k.status?.key]))
+      .toEqual([['Zu', '>', 'fertig'], ['Auf', '<', 'geplant']]);
   });
 
-  it('verlangt folgenden Leerraum — `- >Achtung` bleibt ein Label', () => {
-    const [wurzel] = roots(`[ ] Wurzel\n  - >Achtung`);
+  it('erkennt die Marke ohne Statusbox direkt hinter dem Zeichen', () => {
+    const [wurzel] = roots(`> [~] Kapitel\n  - > Kind ohne Box`);
+    expect([wurzel.fold, wurzel.label]).toEqual(['>', 'Kapitel']);
     expect(wurzel.children.map(k => [k.label, k.fold]))
-      .toEqual([['>Achtung', null]]);
+      .toEqual([['Kind ohne Box', '>']]);
+  });
+
+  it('verlangt folgenden Leerraum — `[x] >Achtung` bleibt ein Label', () => {
+    const [wurzel] = roots(`[ ] Wurzel\n  - >Achtung\n  - [x] >Achtung`);
+    expect(wurzel.children.map(k => [k.label, k.fold]))
+      .toEqual([['>Achtung', null], ['>Achtung', null]]);
   });
 
   it('lässt ein `>` mitten im Label unberührt', () => {
@@ -46,32 +54,51 @@ describe('Parser — Faltmarke zwischen Zeichen und Statusbox', () => {
 /* Umkehrung der Marken-Extraktion fürs Zurückschreiben aus dem Diagramm
    (SPEC §1, D38-Nachtrag 2): Angefasst wird nur die Marke samt Leerraum. */
 describe('setFoldMark — Faltmarke setzen und entfernen', () => {
-  it('setzt `>` hinter das Zerlegungszeichen', () => {
-    expect(setFoldMark('  - [x] Concept (M)', '>')).toBe('  - > [x] Concept (M)');
+  it('setzt `>` hinter die Statusbox, unmittelbar vor das Label', () => {
+    expect(setFoldMark('  - [x] Concept (M)', '>')).toBe('  - [x] > Concept (M)');
   });
 
   it('entfernt eine vorhandene Marke', () => {
-    expect(setFoldMark('  - > [x] Concept (M)', null)).toBe('  - [x] Concept (M)');
+    expect(setFoldMark('  - [x] > Concept (M)', null)).toBe('  - [x] Concept (M)');
   });
 
   it('ersetzt `<` durch `>`', () => {
-    expect(setFoldMark('    - < [ ] B1', '>')).toBe('    - > [ ] B1');
+    expect(setFoldMark('    - [ ] < B1', '>')).toBe('    - [ ] > B1');
   });
 
-  it('setzt die Marke bei Wurzelzeilen an den Zeilenanfang', () => {
-    expect(setFoldMark('[~] Wurzel', '>')).toBe('> [~] Wurzel');
-    expect(setFoldMark('> [~] Wurzel', null)).toBe('[~] Wurzel');
+  it('löst die alte Stellung (vor der Box) in die neue auf', () => {
+    /* Gelesen wird sie weiter (D34-Nachtrag 2), geschrieben nie. */
+    expect(setFoldMark('  - > [x] Concept (M)', '>')).toBe('  - [x] > Concept (M)');
+    expect(setFoldMark('  - < [x] Concept (M)', '>')).toBe('  - [x] > Concept (M)');
+    expect(setFoldMark('  - > [x] Concept (M)', null)).toBe('  - [x] Concept (M)');
+  });
+
+  it('setzt die Marke ohne Statusbox direkt hinter das Zeichen', () => {
+    expect(setFoldMark('  - Konzeption', '>')).toBe('  - > Konzeption');
+    expect(setFoldMark('[~] Wurzel', '>')).toBe('[~] > Wurzel');
+    expect(setFoldMark('[~] > Wurzel', null)).toBe('[~] Wurzel');
+    expect(setFoldMark('Wurzel ohne Box', '>')).toBe('> Wurzel ohne Box');
   });
 
   it('lässt ungewöhnliche Spaltung stehen', () => {
-    expect(setFoldMark('  -   [x] X', '>')).toBe('  -   > [x] X');
-    expect(setFoldMark('\t= [ ] Cloud', '>')).toBe('\t= > [ ] Cloud');
+    expect(setFoldMark('  -   [x] X', '>')).toBe('  -   [x] > X');
+    expect(setFoldMark('\t= [ ] Cloud', '>')).toBe('\t= [ ] > Cloud');
   });
 
   it('fasst ein `>` im Label nicht an (Leerraum-Regel)', () => {
-    /* `- >Achtung` ist ein Label, keine Marke — die neue Marke kommt davor. */
-    expect(setFoldMark('  - >Achtung', '>')).toBe('  - > >Achtung');
-    expect(setFoldMark('  - >Achtung', null)).toBe('  - >Achtung');
+    /* `[x] >Achtung` ist ein Label, keine Marke — die neue Marke kommt davor. */
+    expect(setFoldMark('  - [x] >Achtung', '>')).toBe('  - [x] > >Achtung');
+    expect(setFoldMark('  - [x] >Achtung', null)).toBe('  - [x] >Achtung');
+  });
+
+  it('hält die Statusbox-Spalte über die Ebenen hinweg bündig', () => {
+    /* Der Grund für die Stellung (D34-Nachtrag 2): Vor der Box geschrieben,
+       rückte die Box der gefalteten Zeile um genau eine Einrückungsstufe ein
+       und stand dann in der Spalte der Boxen ihrer eigenen Kinder. */
+    const eltern = setFoldMark('  - [ ] erster Schritt', '>');
+    const kind   = '    - [ ] Schritt 1a';
+    expect(eltern.indexOf('[')).toBe(4);
+    expect(kind.indexOf('[')).toBe(6);
   });
 
   it('ist verlustfrei umkehrbar', () => {
