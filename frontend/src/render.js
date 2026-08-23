@@ -42,6 +42,10 @@ export function esc(s){
 }
 /* Escaping für Attributwerte (zusätzlich " -> &quot;). */
 function attr(s){ return esc(String(s)).replace(/"/g,'&quot;'); }
+/* Trennstrich im Knoten-Tooltip zwischen Beschreibung und Kurz-Fakten (D40).
+   Box-Drawing-Zeichen statt Bindestrichen: `─` stößt gapless aneinander und
+   liest sich als Linie, `---` als Text. */
+const TIP_RULE = '─'.repeat(24);
 
 /* Barrierefreier Name eines Knotens: Label + Status + Aufwand + Zuständige +
    Link. Die visuellen Badges (Größe, Tags, ↗) sind aria-hidden — ihre
@@ -95,15 +99,24 @@ function nodeHtml(n, extra, opts, fold){
      Querverbindungs-Ebene und den Export — beide arbeiten auf dem DOM. */
   const idAttr = n.id ? ` data-id="${attr(n.id)}"` : '';
   const depsAttr = n.deps && n.deps.length ? ` data-deps="${attr(n.deps.join(' '))}"` : '';
-  /* Beschreibung zuerst im Tooltip (mehrzeilig, D40), dann die Kurz-Fakten. */
-  const tip = [n.desc || '',
-               n.id ? '#' + n.id : '',
-               n.deps && n.deps.length ? '→ ' + n.deps.map(d => '#' + d).join(', ') : '',
-               effKey
-                 ? t('heldTooltip', {eff: t('st_' + effKey), own: t('st_' + n.status.key)})
-                 : (n.status ? t('st_' + n.status.key) : ''),
-               n.optional ? t('a11yOptional') : '', t('jumpHint')]
+  /* Tooltip: erst die Beschreibung (mehrzeilig, D40), dann die Kurz-Fakten.
+     Die Fakten hängen NICHT mit ` · ` an den Fließtext an — sie sind eine
+     andere Art von Aussage, und in der einen Zeile ging der Übergang unter
+     („hinten drangeklatscht"). Deshalb Leerzeile plus Trennstrich dazwischen.
+     Ein `title` kann nur Text, keine Linie — der Strich ist deshalb aus
+     `─` gebaut. Er steht nur, wenn es wirklich etwas zu trennen gibt, und
+     bleibt schmaler als die Fakten-Zeile (die den Sprung-Hinweis enthält),
+     verbreitert den Tooltip also nicht. Der `aria-label` bekommt ihn NICHT:
+     ein Screenreader läse die Striche einzeln vor (nodeAria oben). */
+  const facts = [n.id ? '#' + n.id : '',
+                 n.deps && n.deps.length ? '→ ' + n.deps.map(d => '#' + d).join(', ') : '',
+                 effKey
+                   ? t('heldTooltip', {eff: t('st_' + effKey), own: t('st_' + n.status.key)})
+                   : (n.status ? t('st_' + n.status.key) : ''),
+                 n.optional ? t('a11yOptional') : '', t('jumpHint')]
     .filter(Boolean).join(' · ');
+  const tip = n.desc && facts ? n.desc + '\n\n' + TIP_RULE + '\n' + facts
+            : (n.desc || facts);
   const title = ` title="${attr(tip)}"`;
   const tagsHtml = n.tags && n.tags.length
     ? `<span class="tags" aria-hidden="true">${n.tags.map(tag => `<span class="tag">${esc(tag)}</span>`).join('')}</span>`

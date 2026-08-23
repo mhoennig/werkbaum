@@ -2223,6 +2223,28 @@ Einzige Ausnahme ist `%%`: Der Kommentar fällt im ganzen Dokument als
 Erstes weg (einheitliche Regel, §1) — so lassen sich auch Beschreibungen
 kommentieren.
 
+**Nachtrag — Beschreibung und Kurz-Fakten werden im Tooltip getrennt.** Die
+erste Fassung hängte alles an dieselbe ` · `-Aufzählung: Auf die letzte Zeile
+des Fließtexts folgte unmittelbar `· #cms · geplant · Alt+Klick: …`. Gemeldet
+als „einfach hinten drangeklatscht“, und das trifft es — der Übergang war
+nicht zu sehen, obwohl dort die Art der Aussage wechselt: vorn ein Satz, den
+jemand geschrieben hat, hinten Metadaten, die das Werkzeug kennt. Jetzt trennt
+eine **Leerzeile plus Trennstrich**.
+
+Der Strich ist aus `─` (U+2500) gebaut, nicht aus Bindestrichen: Das
+Box-Drawing-Zeichen stößt gapless aneinander und liest sich als Linie, `---`
+liest sich als Text. Ein `title` kann nichts anderes — es gibt darin kein
+Markup, und ein eigenes Pop-up wollten wir gerade nicht (siehe oben). Zwei
+Randbedingungen sind bewusst gesetzt: Der Strich steht **nur**, wenn beide
+Teile vorhanden sind (ohne Beschreibung bleibt der Tooltip wie er war), und er
+ist mit 24 Zeichen schmaler als die Fakten-Zeile, die den Sprung-Hinweis
+enthält — er verbreitert den Tooltip also nie.
+
+**Nicht in den `aria-label`.** Dort bleibt es bei der Kommaliste mit
+whitespace-normalisierter Beschreibung: Ein Screenreader läse vierundzwanzig
+Striche einzeln vor, und die Trennung, die ein Auge braucht, braucht ein Ohr
+nicht — die Aufzählung ist dort ohnehin schon gegliedert.
+
 ## D41 — Querverbindungen: Krümmung statt Farbe, Pfeil auf das Gebrauchte
 Die Abhängigkeits-Kanten (SPEC §9) sind die erste Linienart, die nicht der
 Zerlegung folgt — §11 verlangte dafür eine eigene Zeichenebene. Gebaut wie der

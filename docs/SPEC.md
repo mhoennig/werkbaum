@@ -302,7 +302,11 @@ im Grafikexport. Siehe D35.
 
 **Knotenbeschreibungen (§1)** erscheinen im **Tooltip** des Knotens (zuerst
 der Text, dann die Kurz-Fakten wie ID und Abhängigkeiten) und im
-`aria-label`. Ein Knoten mit Beschreibung trägt eine kleine **”-Marke** hinter
+`aria-label`. Beschreibung und Kurz-Fakten sind im Tooltip **deutlich
+getrennt**: Leerzeile und Trennstrich dazwischen, nicht bloß ein weiteres
+Glied derselben Aufzählung — es sind zwei Arten von Aussage. Der Strich steht
+nur, wenn es wirklich etwas zu trennen gibt, und nicht im `aria-label` (ein
+Screenreader läse die Striche einzeln vor). Ein Knoten mit Beschreibung trägt eine kleine **”-Marke** hinter
 dem Label — sie macht die sonst unsichtbare Beschreibung auffindbar und
 spiegelt das `"`-Zeichen der Notation. Die Marke erscheint **nicht** im
 Grafikexport: Der Text selbst kann dort nicht angezeigt werden, eine Marke
