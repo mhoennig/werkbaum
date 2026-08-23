@@ -2909,3 +2909,91 @@ auf dem Dev-Server ist das gleichgültig, weil dort HMR arbeitet.
 | Server liefert anderen Commit | — | „✅ Neuer Build 2222222“, Banner + Footer-Symbol |
 | Danach wieder derselbe Commit | Banner blieb stehen | Banner und Symbol verschwinden |
 | „Später“, dann F5 | Banner sofort wieder da | weg und bleibt weg |
+
+## D46 — Der günstigste Pfad zeigt die offene Front: `[x]` kostet nichts mehr
+Der Pfad (D18/D42) rechnete rein aus T-Shirt-Größen — `ownCost()` war
+`SIZE_RANK[size] + 1`, der **Status kam in der Kostenrechnung überhaupt nicht
+vor** (nur `[-]` flog heraus). Zwei Folgen, beide falsch für die Frage, für die
+man auf den Pfad schaut:
+
+- Längst Erledigtes wurde voll eingepreist und lag weiter hell auf dem Pfad. Im
+  mitgelieferten Werkbaum-Plan zeichnete die Linie damit überwiegend **fertige
+  Arbeit** nach: 69 Stationen, fast alle auf `[^]`-Knoten.
+- In einer Alternativgruppe hatte eine **bereits realisierte** Alternative
+  keinerlei Kostenvorteil. Steht in einer `=`-Gruppe eine auf `[x]` und daneben
+  eine billigere auf `[?]`, empfahl der Pfad die billigere — obwohl die Wahl
+  faktisch getroffen und bezahlt ist. Die `xorConflict`-Warnung (D35) meldete
+  den Widerspruch bereits, die Pfadrechnung ignorierte ihn.
+
+**Entschieden: Erledigtes kostet 0.** Der Pfad beantwortet damit „was ist als
+Nächstes am günstigsten?" statt „was hätte der Plan von vorn gekostet?".
+
+**Die Schwelle liegt bei `[x]` fertig** (Nutzer). Begründung: Die Beförderung
+auf `[^]` ist keine Kostenfrage — sie sagt etwas über das Deployment, und das
+tut per D30 ohnehin ein eigener Commit. Wer fertig ist, hat bezahlt.
+
+**Angefangenes (`[~]`, `[/]`) zählt weiterhin voll.** Erwogen und verworfen
+waren anteilige Restkosten (etwa 2/3 bzw. 1/3): Die Bruchteile wären erfunden —
+die Größen sind **ordinal, nicht additiv** (ROADMAP, Aufwands-Rollup: `S+S ≠ M`),
+eine Skala für „ein Drittel von L" gibt es nicht. Ebenfalls verworfen: alles ab
+`[~]` als bezahlt zu werten („versunkene Kosten sind versunken"). Das zöge den
+Pfad in jeden angefangenen Zweig, auch wenn dort noch fast alles offen ist —
+und `[~]` heißt laut §4 gerade „Kosten investiert, **Risiko hoch**".
+
+**Maßgeblich ist der intrinsische Status, nicht der effektive.** Ein `[x]`, das
+von einer Abhängigkeit zurückgehalten wird, ist effektiv weiter unten (D39) —
+die **Arbeit daran** ist trotzdem getan. Dieselbe Linie, die schon die XOR-Regel
+(D35: „investiert ist investiert") und „Was ist neu?" (D28: `[^]` im Text ist
+die Deploy-Aussage) ziehen. Nebenbei verhindert es doppeltes Zählen: Die
+Abhängigkeit steht mit ihren eigenen Kosten ohnehin selbst auf dem Pfad.
+
+**Abgezogen werden nur die eigenen Kosten, nicht der Teilbaum.** Ein `[x]`-Knoten
+mit offenen Kindern bleibt also teuer — was stimmt, und was eine unstimmige
+Stelle im Plan sichtbar lässt, statt sie zuzudecken.
+
+**Darstellung: Farbe bleibt, nur Linie und Punkte lassen Erledigtes aus**
+(Nutzer). Erledigte Knoten bleiben `cheap` und behalten ihre volle Statusfarbe —
+grün bzw. blau sagt bereits „hier ist nichts mehr zu tun". Verworfen war,
+sie wie nicht benötigte Knoten auszublassen: Das ist der Kanal für „gehört nicht
+zum Plan" (D18), und ein fertiger Knoten sähe damit aus wie eine verworfene
+Alternative. Ebenfalls verworfen: eine **zweite, schwächere** Abblendstufe — sie
+müsste sich von der Pfad-Inversion unterscheiden lassen, und der Unterschied
+zwischen 32 % und, sagen wir, 65 % Deckkraft ist kein Unterschied in der Art.
+Drei Zustände sind so ohne neuen Farbkanal unterscheidbar: nicht nötig (blass),
+nötig und erledigt (voll, ohne Punkt), nötig und offen (voll, mit Punkt und
+Linie).
+
+**Station ist der tiefste noch OFFENE Knoten eines Zweigs.** Die alte Regel
+(„kein Kind liegt auf dem Pfad") reicht dafür nicht: Sind alle Kinder erledigt
+und der Elternknoten nicht, hätte der Zweig gar keine Station, obwohl dort noch
+Arbeit liegt — nämlich seine. `hidesOpenCheap()` fragt deshalb den **Teilbaum**
+statt nur die direkten Kinder. Der eingeklappte Knoten (D38-Nachtrag) erbt
+dieselbe Verschärfung: Er vertritt seinen Teilbaum nur noch, solange darin etwas
+offen ist; ein fertig zusammengefalteter Zweig bekommt keinen Punkt mehr.
+
+**Das implizite M-Badge entfällt an erledigten Knoten.** Es macht eine
+**Kostenannahme** sichtbar (D18) — wo keine getroffen wird, gibt es nichts zu
+zeigen. Gilt für Badge und `aria-label` gemeinsam.
+
+**Kein neuer Umschalter** (Nutzer). Der vorhandene „günstigster Pfad" ändert
+seine Bedeutung; erwogen war ein zweiter Knopf „offene Front ⇄ Gesamtplan", der
+auch „was kostet der Plan insgesamt?" beantwortet hätte. Verworfen: ein neunter
+Knopf im Diagramm-Kopf plus i18n in neun Sprachen für eine Frage, die man beim
+Planen selten stellt — und die Kopfzeile wurde gerade erst entlastet
+(D17-Nachtrag 5).
+
+**Nachgemessen am mitgelieferten Werkbaum-Plan:** 110 Knoten auf dem Pfad
+(unverändert), Stationen **69 → 24**. Die verbleibenden sind exakt die offene
+Front — Ticket-Referenzen, Öffnen/Speichern, Backend-Gerüst samt REST und
+Persistenz, Websocket-Transport, Text-CRDT, die Mermaid-Layout-Teile, das
+IDEA-Plugin. Die Linie wird weiterhin gezogen (zwei Pfade: kräftig hinten,
+abgetönt vorn). Grafikexport und Druck folgen ohne Zusatzcode — beide lesen
+`.node.cheap-leaf` aus dem DOM. 236 Tests grün, davon 14 neue
+(`tests/frontier.test.js`); der Snapshot des kanonischen Beispiels ändert sich
+um genau zwei Knoten (`[x] Zielgruppenanalyse`, `[x] Sitemap` verlieren
+`cheap-leaf`).
+
+**Was das für den gestaffelten Pfad aus der ROADMAP bedeutet:** Dessen
+Status-Hälfte ist damit gebaut. Offen bleibt die **Nutzen-Achse** (Ausbaustufen:
+ist eine Gruppe komplett realisiert, zur nächsten per Nutzen gewählten Stufe
+weiterspringen) — die braucht erst ein Nutzen-Attribut und den Aufwands-Rollup.

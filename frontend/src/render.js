@@ -15,7 +15,7 @@
                     // Diskrepanzen (effectiveStatus() in model.js, D39)
    } */
 
-import { gateOf, needsBreakdown, visibleChildren, cheapCls } from './model.js';
+import { gateOf, needsBreakdown, visibleChildren, cheapCls, isDone } from './model.js';
 
 /* Zusatzklassen eines Knotens: günstigster Pfad (D18), „neu in Produktion"
    gegenüber der zuletzt gesehenen Fassung (D28, `freshSet` optional) und
@@ -68,7 +68,7 @@ function nodeAria(n, opts, fold){
   const effKey = opts.effStatus ? opts.effStatus.get(n) : undefined;
   if(effKey) parts.push(t('a11yEffective', {status: t('st_' + effKey)}));
   if(n.size) parts.push(t('a11ySize', {size: n.size}));
-  else if(cheapPath) parts.push(t('a11ySizeImplicit'));
+  else if(cheapPath && !isDone(n)) parts.push(t('a11ySizeImplicit'));
   if(n.tags && n.tags.length) parts.push(t('a11yTags', {names: n.tags.join(', ')}));
   /* Knoten-ID und Abhängigkeiten (SPEC §1, D36/D37): keine eigene Darstellung
      im Diagramm — sichtbar nur im Tooltip und hier. */
@@ -131,10 +131,13 @@ function nodeHtml(n, extra, opts, fold){
   const tagsHtml = n.tags && n.tags.length
     ? `<span class="tags" aria-hidden="true">${n.tags.map(tag => `<span class="tag">${esc(tag)}</span>`).join('')}</span>`
     : '';
+  /* Das implizite M-Badge macht eine KOSTENANNAHME sichtbar (D18). An einem
+     erledigten Knoten wird keine getroffen — er kostet nichts mehr (D46) —,
+     dort bleibt es deshalb weg. */
   const implicitTip = attr(t('implicitSizeTooltip'));
   const sizeBadge = n.size
     ? `<span class="size" aria-hidden="true">${n.size}</span>`
-    : (cheapPath ? `<span class="size implicit" aria-hidden="true" title="${implicitTip}">M</span>` : '');
+    : (cheapPath && !isDone(n) ? `<span class="size implicit" aria-hidden="true" title="${implicitTip}">M</span>` : '');
   /* High-Risk: Warndreieck (⚠, Textpräsentation via VS15) an der oberen linken
      Ecke. aria-hidden — die Information steckt bereits im Status des aria-label. */
   const riskMark = n.status && n.status.key === 'highrisk'

@@ -126,3 +126,19 @@ entscheiden, **bevor** Code entsteht.
       einem `---`-Trenner (SPEC §11). Umgesetzt (D40): Parser (`desc` am
       Knoten, Warnungen `unknownDesc`/`descStray`), Anzeige im Tooltip +
       `aria-label` mit ”-Marke am Knoten; `tests/desc.test.js`.
+
+## Phase 5 — Der Pfad zeigt, was als Nächstes dran ist
+- [x] Günstigsten Pfad status-bewusst rechnen: Erledigtes (`[x]`/`[^]`) kostet
+      nichts mehr, hervorgehoben wird die offene Front.
+      → Umgesetzt (D46): `isDone()` + `ownCost()` in model.js; Stationen sind
+      die tiefsten noch **offenen** Pfadknoten (`hidesOpenCheap()`), erledigte
+      behalten Farbe und Pfadzugehörigkeit, verlieren aber Punkt und implizites
+      M-Badge. Angefangenes (`[~]`/`[/]`) zählt weiter voll, maßgeblich ist der
+      intrinsische Status. Kein neuer Umschalter — der vorhandene ändert seine
+      Bedeutung. `tests/frontier.test.js`.
+- [ ] Nutzen je Knoten (Gegenstück zur Kosten-Größe) — Schreibweise offen,
+      SPEC-first (siehe ROADMAP „Kleinere Ideen").
+- [ ] Aufwands-Rollup (Größen der Kinder aggregieren) — braucht erst eine
+      Mapping-Konvention, Größen sind ordinal.
+- [ ] Ausbaustufen: ist eine Alternativgruppe komplett realisiert, zur nächsten
+      per Nutzen gewählten Stufe weiterspringen. Baut auf beidem oben auf.

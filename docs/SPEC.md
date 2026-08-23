@@ -459,9 +459,19 @@ Voreinstellung auf kleinem Bildschirm ist **Vollbild** (siehe D17).
 
 ### Günstigster Pfad (Kosten-Hervorhebung)
 Ein Umschalter (Icon-Button im Diagramm-Kopf, Voreinstellung **an**, Zustand
-persistiert) hebt den kostengünstigsten Weg durch den Baum hervor. Ermittelt
+persistiert) hebt den kostengünstigsten Weg durch den Baum hervor. Gerechnet
+wird die **noch offene** Arbeit — der Pfad beantwortet „was ist als Nächstes
+am günstigsten?", nicht „was hätte der Plan von vorn gekostet?". Ermittelt
 werden die für die günstigste Realisierung **nötigen** Knoten:
 
+- **Erledigtes kostet nichts mehr:** Ein Knoten mit `[x]` oder `[^]` (§4) geht
+  mit **0** in die Rechnung, unabhängig von seiner Größe. Angefangenes (`[~]`,
+  `[/]`) zählt dagegen **voll** — die Arbeit ist noch offen. Maßgeblich ist der
+  **intrinsische** Status: Investiert ist investiert, auch wenn Abhängigkeiten
+  den Knoten effektiv zurückhalten (§4). Abgezogen werden nur die **eigenen**
+  Kosten des Knotens, nicht die seines Teilbaums. Folge in Alternativgruppen:
+  Eine bereits realisierte Alternative gewinnt, auch wenn eine unangetastete
+  nominell billiger wäre — die Wahl ist getroffen und bezahlt. Siehe D46.
 - **all of:** alle Kinder sind nötig.
 - **any of:** nur die **günstigste** Alternative ist nötig. „Günstig" =
   kleinste rekursive Kosten (eigene T-Shirt-Größe plus — je Gate — Summe bzw.
@@ -497,20 +507,27 @@ Darstellung per **Inversion**: nicht benötigte Knoten (nicht-gewählte
 any-of-Alternativen und optionale Knoten, je samt Teilbaum) treten zurück
 (blass, entsättigt); der
 günstige Pfad hebt sich dadurch von selbst ab — kein zusätzlicher Rahmen an den
-ohnehin dichten Knoten-Ecken. Wo die Größe **implizit** als `M` angenommen wird,
+ohnehin dichten Knoten-Ecken. **Erledigte Knoten treten nicht zurück**: Sie
+gehören zum Pfad und behalten ihre volle Statusfarbe (§4) — grün bzw. blau sagt
+bereits „hier ist nichts mehr zu tun"; sie auszublassen hieße, sie sähen aus wie
+eine verworfene Alternative. Wo die Größe **implizit** als `M` angenommen wird,
 zeigt der Knoten ein **invertiertes** Größen-Badge (weiß mit petrolfarbenem
-Rand/Text statt gefüllt) mit erläuterndem Tooltip.
+Rand/Text statt gefüllt) mit erläuterndem Tooltip — an einem **erledigten**
+Knoten entfällt es, dort wird keine Kostenannahme mehr getroffen.
 
 Zusätzlich fädelt eine **gestrichelte, geschwungene Petrol-Linie** durch die
-**Endknoten (Blätter)** des Pfads (Katmull-Rom-Spline in Dokument-Reihenfolge,
+**offenen Endknoten** des Pfads (Katmull-Rom-Spline in Dokument-Reihenfolge,
 in allen Modi). Die kräftige Linie liegt **hinter** den Knoten (nur in den
 Lücken voll sichtbar), eine **abgetönte Kopie** davor deutet den Verlauf beim
-Durchschreiten eines Knotens nur schwach an. An jedem echten Endknoten sitzt ein
-großer, **blasser Petrol-Stationspunkt** (U-Bahn-Plan-Prinzip: der Knotentext
-bleibt lesbar) — nur **durchquerte** Fremd- oder Zwischenknoten tragen keinen
-Punkt, sodass eindeutig bleibt, welche Knoten auf dem Pfad **enden**. Linie,
+Durchschreiten eines Knotens nur schwach an. An jedem solchen Endknoten sitzt
+ein großer, **blasser Petrol-Stationspunkt** (U-Bahn-Plan-Prinzip: der
+Knotentext bleibt lesbar) — **durchquerte** Fremd- oder Zwischenknoten und
+**erledigte** Knoten tragen keinen, sodass eindeutig bleibt, wo noch Arbeit
+**endet**. Station ist damit der tiefste noch offene Knoten eines Zweigs: Sind
+alle Kinder erledigt, wird der offene Elternknoten selbst die Station (die
+Restarbeit ist dann seine); ist ein ganzer Zweig erledigt, hat er keine. Linie,
 abgetönte Kopie und Punkte erscheinen bei aktivem Umschalter auch im
-Grafikexport. Siehe D18.
+Grafikexport. Siehe D18, D46.
 
 ### Diagramm aus einer URL laden (`?sourceUrl=`)
 Der Editor kann den Notationstext aus einer externen Textdatei beziehen:
@@ -723,10 +740,13 @@ fokussierten Knoten (WAI-ARIA-Baum-Idiom).
   weiter gemeldet (sie gelten dem Text), und der günstigste Pfad rechnet
   unverändert über den ganzen Baum.
 - **Ein eingeklappter Knoten vertritt seinen Teilbaum auch auf dem günstigsten
-  Pfad:** Liegt darin etwas auf dem Pfad, ist er dessen tiefste noch sichtbare
+  Pfad:** Liegt darin noch **offene** Pfadarbeit (§9, Erledigtes zählt nicht),
+  ist er deren tiefste noch sichtbare
   Station — die Linie führt zu ihm und endet dort mit einem Stationspunkt
   („hier drin liegt noch Pfad"). Ohne das überspränge sie den ganzen Zweig, als
-  wäre dort nichts zu tun. Beim Aufklappen geben die Station wieder die
+  wäre dort nichts zu tun. Ist der verborgene Teilbaum dagegen **fertig**,
+  bekommt der eingeklappte Knoten keinen Punkt — dort ist wirklich nichts mehr
+  zu tun. Beim Aufklappen geben die Station wieder die
   Endknoten darunter. Das gilt auch, wenn der eingeklappte Knoten selbst nicht
   gebraucht wird, sein Teilbaum aber schon (etwa ein per `:#…` gezogenes Ziel):
   Er ist dann der einzige sichtbare Griff auf nötige Arbeit und tritt deshalb

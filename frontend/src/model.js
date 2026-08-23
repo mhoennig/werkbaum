@@ -49,8 +49,19 @@ export function pathChildren(n){
   return n.children.filter(k =>
     !k.optional && (!k.status || k.status.key !== 'verworfen'));
 }
-/* fehlende Größe wird als M interpretiert */
-export function ownCost(n){ return SIZE_RANK[n.size || 'M'] + 1; }
+/* ---------- Erledigt: was nichts mehr kostet (SPEC §9, D46) ----------
+   `[x]` fertig und `[^]` in Produktion. Die Beförderung auf Prod ist keine
+   Kostenfrage (D30: das tut der Deploy), fertig ist also die Schwelle.
+   Angefangenes (`[~]`, `[/]`) zählt bewusst voll: Die Arbeit ist noch offen,
+   und Bruchteile ordinaler T-Shirt-Größen wären erfunden.
+   Maßgeblich ist der INTRINSISCHE Status — investiert ist investiert, auch
+   wenn Abhängigkeiten den Knoten effektiv zurückhalten (D39); deren eigene
+   Kosten stehen ohnehin an ihnen selbst. */
+export function isDone(n){
+  return !!n.status && (n.status.key === 'fertig' || n.status.key === 'prod');
+}
+/* fehlende Größe wird als M interpretiert; Erledigtes kostet nichts mehr */
+export function ownCost(n){ return isDone(n) ? 0 : SIZE_RANK[n.size || 'M'] + 1; }
 export function cheapestCost(n){
   const kids = pathChildren(n);
   let c = ownCost(n);
@@ -185,19 +196,35 @@ export function hidesCheap(n, cheapSet){
   }
   return false;
 }
+/* Dasselbe, aber nur für noch OFFENE Pfadarbeit (D46): Erledigtes zählt nicht
+   mehr, es ist keine Station und hält auch keine unter sich. */
+export function hidesOpenCheap(n, cheapSet){
+  for(const k of n.children || []){
+    if((cheapSet.has(k) && !isDone(k)) || hidesOpenCheap(k, cheapSet)) return true;
+  }
+  return false;
+}
 
 export function cheapCls(n, cheapSet, collapsed){
-  /* Eingeklappt steht der Knoten stellvertretend für seinen ganzen Teilbaum
-     (SPEC §9/D38): Liegt darin etwas auf dem Pfad, ist er dessen tiefste noch
-     SICHTBARE Station — sonst überspränge die Linie den Zweig, als wäre dort
-     nichts zu tun. Das gilt auch, wenn er selbst nicht gebraucht wird, sein
-     Teilbaum aber schon (eine per `:#…` gezogene Alternative, D42): Er ist
-     dann der einzige sichtbare Griff auf nötige Arbeit und darf deshalb auch
-     nicht von der Inversion ausgeblasst werden. */
-  if(collapsed) return (cheapSet.has(n) || hidesCheap(n, cheapSet)) ? 'cheap cheap-leaf' : '';
-  if(!cheapSet.has(n)) return '';
-  const leaf = !pathChildren(n).some(k => cheapSet.has(k));
-  return leaf ? 'cheap cheap-leaf' : 'cheap';
+  /* Stationen sind die tiefsten noch OFFENEN Knoten des Pfads (D46). Ein
+     erledigter Knoten bleibt `cheap` — er gehört zum Pfad und behält seine
+     volle Statusfarbe —, trägt aber keinen Punkt und wird von der Linie
+     übergangen; die zeigt den günstigsten noch zu gehenden Rest.
+     Eingeklappt steht der Knoten stellvertretend für seinen ganzen Teilbaum
+     (SPEC §9/D38): Liegt darin noch offene Pfadarbeit, ist er deren tiefste
+     noch SICHTBARE Station — sonst überspränge die Linie den Zweig, als wäre
+     dort nichts zu tun. Das gilt auch, wenn er selbst nicht gebraucht wird,
+     sein Teilbaum aber schon (eine per `:#…` gezogene Alternative, D42): Er
+     ist dann der einzige sichtbare Griff auf nötige Arbeit und darf deshalb
+     auch nicht von der Inversion ausgeblasst werden. */
+  const onPath = cheapSet.has(n);
+  if(collapsed){
+    if((onPath && !isDone(n)) || hidesOpenCheap(n, cheapSet)) return 'cheap cheap-leaf';
+    return (onPath || hidesCheap(n, cheapSet)) ? 'cheap' : '';
+  }
+  if(!onPath) return '';
+  if(isDone(n)) return 'cheap';
+  return hidesOpenCheap(n, cheapSet) ? 'cheap' : 'cheap cheap-leaf';
 }
 
 /* ---------- Effektiver Status (SPEC §4/§9, D39) ----------

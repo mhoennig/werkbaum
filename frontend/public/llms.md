@@ -74,6 +74,13 @@ One node per line. Everything except the label is optional.
 - No box = neutral node. `x` may also be uppercase `X`.
 - Unknown codes are tolerated: the node renders neutral, with a warning —
   the line is never lost.
+- **`[x]` and `[^]` cost nothing any more.** The cheapest path prices the
+  work that is *left*, so a done node adds zero regardless of its size and
+  carries no station on the path line; started work (`[~]`, `[/]`) still
+  counts in full. A realized alternative therefore wins its `|`/`=` group
+  even when a cheaper unstarted one sits next to it. The *intrinsic* status
+  decides — dependencies may hold a node back effectively, but the work on
+  it is paid for.
 
 ### Size (effort)
 
