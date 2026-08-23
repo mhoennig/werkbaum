@@ -395,7 +395,19 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Bereich selbst um: `revealEditor()` auf Text, `focusNodeOfCaret()` aufs
   Diagramm — **vor** dem Zentrieren. Zustand in `werkbaum-ui` (`mobilePane`),
   Variable oben bei `padView` deklariert (saveUI liest sie).
-  `applyLayout` ruft auf Mobil **kein** `applySplit`. Dazu eigener Legenden-Umschalter
+  `applyLayout` ruft auf Mobil **kein** `applySplit`.
+  **Inhalte ~25 % kleiner** (D17-Nachtrag 2): `MOBILE_ZOOM = 0.75` als **Faktor**
+  auf den Nutzer-Zoom — `effZoom()` ist die Wahrheit, die `applyZoom()` setzt und
+  die die drei Messstellen (`alignStems`, `drawCheapPath`, `drawDepLinks`)
+  zurückrechnen; wer dort wieder `zoom` einsetzt, verschiebt Linien und
+  Stationspunkte. `applyMobile()` ruft `applyZoom()` in **beiden** Zweigen, sonst
+  bliebe der Faktor beim Wechsel auf Desktop stehen. Der **Text** bekommt kein
+  `zoom`, sondern `font-size` (Streifen und Textfeld gemeinsam) — Spiegel und
+  `ch`-Breite hängen an der Schriftgröße (D33). **`diagramToSvg()` stellt den
+  Zoom für die Messung auf 1**: Die Schriftgrößen im Ausgabe-SVG sind feste
+  Zahlen, die Kästen gemessen — bei Zoom ≠ 1 passt sonst beides nicht zusammen
+  (galt schon vorher, wurde durch den Mobil-Faktor nur zum Regelfall).
+  Dazu eigener Legenden-Umschalter
   (`#legendBtn`), schlanke Sprachwahl, Download-Overlay; Default Vollbild +
   Diagramm maximiert. Layout-CSS hängt an `body.mobile`, nicht an einer eigenen
   `@media`-Regel — beide Seiten müssen denselben 640-px-Schwellwert nutzen

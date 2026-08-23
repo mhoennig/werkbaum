@@ -403,7 +403,12 @@ damit genau dann zu sehen, wenn der Text vorn ist. Die übrigen
 umgeschaltet — jeder Bereich zeigt seine eigenen, in der unten beschriebenen
 komprimierten Form. Der sichtbare Bereich wird gemerkt; ein Sprung zwischen
 Diagramm und Text (§9) holt den nötigen Bereich selbst nach vorn.
-Voreinstellung ist das Diagramm. Die **Legende** bekommt hier einen eigenen
+Voreinstellung ist das Diagramm. Beide Inhalte werden hier zudem rund **25 %
+kleiner** dargestellt, damit mehr Plan auf die Fläche passt; das ist ein Faktor
+**auf** den Zoom, der Zoom-Regler arbeitet unverändert relativ dazu und zeigt
+den effektiven Wert (auf dem Telefon also 75 %). Der **Grafikexport** ist davon
+unberührt — er zeichnet immer die unskalierte Geometrie nach. Die **Legende**
+bekommt hier einen eigenen
 Umschalter im Editor-Kopf (statt der dauerhaften „AGENDA“-Zeile), damit sie
 zugeklappt keinen Platz kostet. Der **Modus-Wähler** zeigt nur das aktive Icon
 und schaltet bei jedem Tippen reihum weiter (horizontal → kompakt → vertikal →

@@ -1078,6 +1078,16 @@
      Editor-Kopf tut das weiterhin der Dokumenten-Wähler daneben. */
   body.mobile .panetoggle{display:inline-flex}
   body.mobile .panel.right .panetoggle{margin-right:auto}
+  /* Inhalte rund 25 % kleiner, damit mehr Plan auf die Fläche passt
+     (D17-Nachtrag 2). Das Diagramm macht das über den CSS-`zoom` (Faktor auf
+     den Nutzer-Zoom, siehe MOBILE_ZOOM in app.js); der Text über die
+     Schriftgröße — `zoom` verbietet sich hier, weil Zeilennummern-Streifen und
+     Spiegel am Textfeld messen (D33) und der Streifen seine Breite in `ch`
+     rechnet. Beide müssen dieselbe Typografie tragen, sonst wandern die Zahlen
+     weg; `line-height` ist einheitenlos und skaliert von selbst mit. */
+  body.mobile textarea,
+  body.mobile .lineno{font-size:.64rem}
+  body.mobile textarea{padding:10px 12px}
   /* Untertitel: Kurzfassung, garantiert einzeilig (Ellipsis als Sicherung) */
   body.mobile .sub-full{display:none}
   body.mobile .sub-short{display:inline}

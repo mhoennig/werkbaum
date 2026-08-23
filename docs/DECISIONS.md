@@ -243,6 +243,54 @@ Mobil, die Grid-Minima `--pmin-d`/`--pmin-e`, `syncPanelMins()`,
 `setMobileDrow()` und das Titelzeilen-Tippen; Desktop behält Splitter,
 Presets und Fenster-Buttons unverändert.
 
+**Nachtrag 2 — auf Mobil sind die Inhalte grundsätzlich ~25 % kleiner, und der
+Debug-Kasten minimiert sich statt zu verschwinden.**
+
+**Verkleinerung als Faktor, nicht als neuer Anfangswert.** `MOBILE_ZOOM = 0.75`
+multipliziert den Nutzer-Zoom (`effZoom()`), statt ihn beim ersten Start auf
+0,75 zu setzen. Der Unterschied zählt: Ein Anfangswert wäre nach dem ersten
+Zoomen weg, und „Zurücksetzen" führte zurück auf eine Größe, die auf dem
+Telefon zu groß ist. Als Faktor bleibt die Verkleinerung eine Eigenschaft des
+Geräts, und der Regler arbeitet relativ dazu weiter. Die Anzeige nennt den
+**effektiven** Wert (75 % statt 100 %) — sie soll beschreiben, was man sieht,
+nicht was man eingestellt hat.
+
+**Die drei Messstellen mussten mit.** `alignStems()`, `drawCheapPath()` und
+`drawDepLinks()` rechnen gemessene Pixel durch den CSS-`zoom` zurück; sie lesen
+jetzt `effZoom()` statt `zoom`. Nachgemessen bei 0,75: alle fünf
+Stationspunkte liegen exakt (0 px Abweichung) auf ihren Blattknoten.
+
+**Der Text kann kein `zoom` bekommen.** Zeilennummern-Streifen und Spiegel
+messen am Textfeld (D33), und der Streifen rechnet seine Breite in `ch` — beide
+folgen der **Schriftgröße**, nicht einem Zoom auf einem Vorfahren. Also
+`font-size: .64rem` (= 0,85 × 0,75) an Textfeld **und** Streifen gemeinsam;
+`line-height` ist einheitenlos und skaliert mit. Der Innenabstand des
+Textfelds schrumpft im selben Verhältnis mit (14/16 → 10/12 px), sonst wäre der
+Rand auf 375 px unverhältnismäßig breit. Ergebnis: 27 statt 19 Zeilen im Bild.
+
+**Dabei aufgefallen: der Grafikexport war schon immer zoom-abhängig falsch.**
+Die Schriftgrößen im Ausgabe-SVG sind feste Zahlen (14 für Labels, 9–11 für
+Badges), die Kästen kommen aus der Live-Messung — bei jedem Zoom ≠ 1 passten
+Text und Kasten nicht zueinander. Das fiel nie auf, weil 100 % der Normalfall
+war; mit der Mobil-Verkleinerung wäre es der Regelfall geworden. `diagramToSvg()`
+stellt den Zoom für die Messung deshalb kurz auf 1 und danach zurück —
+derselbe Griff wie bei der `exporting`-Klasse (D25-Nachtrag), und die Funktion
+läuft synchron, es wird nichts davon gezeichnet. Nachgemessen: Knoten auf dem
+Schirm 143 px, im SVG 189,7 px — also die unskalierte Größe, passend zur festen
+Schrift.
+
+**Das Debug-Panel minimiert sich jetzt, statt sich zu schließen.** Ein Klick
+entfernte es bisher ganz — was nichts half, weil der 15-Sekunden-Takt es sofort
+wieder aufbaute; auf dem Telefon verdeckte es damit dauerhaft die untere rechte
+Ecke. Jetzt schaltet der Klick zwischen Kasten und einem 26-px-Icon (⟳) unten
+rechts um. Der Zustand liegt im **localStorage**, nicht am Element: Das Panel
+wird bei jedem Takt neu bespielt, ein Zustand am DOM-Knoten wäre also beim
+nächsten Tick weg. Nachgeprüft über einen echten Intervall-Durchlauf und über
+den `visibilitychange`-Pfad — es bleibt minimiert. (Test-Hilfe, im Prod-Build
+ohnehin unterdrückt; die Gelegenheit genutzt, dem aufgeklappten Kasten
+`white-space: pre-wrap` zu geben — die mit `\n` gefügten Zeilen liefen bisher
+zu einem Absatz zusammen.)
+
 ## D18 — Günstigsten Pfad per Inversion zeigen, fehlende Größe = M
 Der kostengünstigste Weg durch den Baum wird hervorgehoben (Umschalter im
 Diagramm-Kopf, Default an, Zustand persistiert). Nötig sind bei **all of** alle

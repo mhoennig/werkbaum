@@ -259,7 +259,7 @@ function applyOptStairs(){
 function alignStems(){
   out.querySelectorAll('ul.and>li').forEach(li => li.style.removeProperty('--stem-x'));
   if(out.classList.contains('vertical') || out.classList.contains('kompakt')) return;
-  const z = zoom || 1;
+  const z = effZoom() || 1;
   /* `li.opt-group` (Treppe) hat keinen eigenen Knoten — der Stiel zielt auf den
      ERSTEN Knoten der Kaskade. */
   out.querySelectorAll('ul.and>li.has-or, ul.and>li.opt-group').forEach(li => {
@@ -277,7 +277,7 @@ function drawCheapPath(){
   const leaves = [...out.querySelectorAll('.node.cheap-leaf')];   /* Dokument-Reihenfolge = Lese-Reihenfolge */
   if(leaves.length < 2) return;
   const outRect = out.getBoundingClientRect();
-  const z = zoom || 1;
+  const z = effZoom() || 1;
   if(!outRect.width || !outRect.height) return;                   /* Panel eingeklappt */
   const pts = leaves.map(el => {
     const r = el.getBoundingClientRect();
@@ -366,7 +366,7 @@ function drawDepLinks(){
   if(!edges.length) return;
   const outRect = out.getBoundingClientRect();
   if(!outRect.width || !outRect.height) return;   /* Panel eingeklappt */
-  const z = zoom || 1;
+  const z = effZoom() || 1;
   const rect = el => { const r = el.getBoundingClientRect();
     return {x:(r.left - outRect.left)/z, y:(r.top - outRect.top)/z,
             w:r.width/z, h:r.height/z,
@@ -405,6 +405,15 @@ function diagramToSvg(){
      Klasse statt durch Abnehmen von `.current`/`.pulse` — so reißt der Export
      keine laufende Puls-Animation ab und startet sie hinterher nicht neu. */
   out.classList.add('exporting');
+  /* Zoom für die Messung auf 1 stellen. Die Schriftgrößen im Ausgabe-SVG sind
+     feste Zahlen (14 für Labels, 9–11 für Badges), die Kästen kommen dagegen
+     aus der Messung — bei jedem Zoom ≠ 1 passten Text und Kasten also nicht
+     zueinander. Das fiel bisher kaum auf, weil 100 % der Normalfall war; mit
+     der Mobil-Verkleinerung (D17-Nachtrag 2) wäre es der Regelfall geworden.
+     Derselbe Griff wie bei `exporting`: kurz neutralisieren, hinterher zurück —
+     die Funktion läuft synchron, es wird nichts davon gezeichnet. */
+  const zoomBefore = out.style.zoom;
+  out.style.zoom = 1;
   const treeRect = out.getBoundingClientRect();
   const PAD = 24;
   const W = Math.ceil(treeRect.width) + PAD*2;
@@ -581,6 +590,7 @@ function diagramToSvg(){
   });
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="'IBM Plex Sans',system-ui,sans-serif">${parts.join('')}</svg>`;
+  out.style.zoom = zoomBefore;
   out.classList.remove('exporting');
   return {svg, W, H};
 }
@@ -1166,6 +1176,14 @@ const ZMIN = 0.3, ZMAX = 3, ZSTEP = 0.1;
 const ZOOM_COLLAPSE_DELAY = 3000;  /* 3 Sekunden */
 let zoom = 1;
 let zoomCollapseTimeout;
+/* Auf kleinem Bildschirm wird der Inhalt grundsätzlich verkleinert (~25 %),
+   damit mehr Plan auf die Fläche passt (D17-Nachtrag 2). Das ist ein Faktor
+   AUF den Nutzer-Zoom, kein neuer Anfangswert: Wer hineinzoomt, tut das
+   weiterhin relativ hierzu. Der Text bekommt dieselbe Verkleinerung über die
+   Schriftgröße (style.css) — CSS-`zoom` verbietet sich dort, weil der
+   Zeilennummern-Streifen und der Spiegel am Textfeld messen (D33). */
+const MOBILE_ZOOM = 0.75;
+function effZoom(){ return zoom * (isMobile() ? MOBILE_ZOOM : 1); }
 
 function resetZoomCollapseTimeout(){
   const zoomctl = document.querySelector('.zoomctl');
@@ -1179,8 +1197,11 @@ function resetZoomCollapseTimeout(){
 
 function applyZoom(){
   zoom = Math.min(ZMAX, Math.max(ZMIN, Math.round(zoom * 100) / 100));
-  out.style.zoom = zoom;
-  document.getElementById('zoomReset').textContent = Math.round(zoom * 100) + ' %';
+  out.style.zoom = effZoom();
+  /* Angezeigt wird der EFFEKTIVE Wert — die Anzeige soll beschreiben, was man
+     sieht. Auf Mobil steht dort also 75 %, und das erklärt die Verkleinerung,
+     statt sie als „100 %" zu behaupten. */
+  document.getElementById('zoomReset').textContent = Math.round(effZoom() * 100) + ' %';
   resetZoomCollapseTimeout();
   saveUI();
 }
@@ -2959,6 +2980,7 @@ function applyMobile(){
        ausgeblendet — die Regeln hängen zwar an `body.mobile`, aber ein
        stehengebliebener Zustand ist beim nächsten Verkleinern verwirrend. */
     document.body.classList.remove('pane-diagram', 'pane-text');
+    applyZoom();   /* Mobil-Faktor wieder herausrechnen (D17-Nachtrag 2) */
     return;
   }
   /* Genau ein Bereich (D17-Nachtrag): kein Desktop-Collapse, keine Aufteilung.
@@ -2967,6 +2989,7 @@ function applyMobile(){
   clearCollapse();
   app.style.removeProperty('--drow');
   applyMobilePane();
+  applyZoom();   /* Mobil-Faktor an-/abschalten (D17-Nachtrag 2) */
   /* Default Vollbild auf kleinem Bildschirm — nur ohne gespeicherte Wahl. */
   if(!hadStoredUI && !document.body.classList.contains('fullscreen')){
     document.body.classList.add('fullscreen');
@@ -3127,36 +3150,44 @@ function logUpdate(msg){
   localStorage.setItem('werkbaum-update-log', log.join('\n'));
 }
 
-/* Debug-Panel anzeigen (Test-Hilfe; im Prod-Build unterdrückt) */
+/* Debug-Panel anzeigen (Test-Hilfe; im Prod-Build unterdrückt).
+   Ein Klick **minimiert** es auf ein Icon unten rechts, ein weiterer holt es
+   zurück. Vorher entfernte der Klick es ganz — das half nichts, weil der
+   15-Sekunden-Takt es gleich wieder aufbaute; auf dem Telefon verdeckte es so
+   dauerhaft die untere rechte Ecke. Der Zustand liegt im localStorage, nicht am
+   Element: Das Panel wird bei jedem Takt neu bespielt und überlebt so auch ein
+   Neuladen. */
+const LS_DEBUG_MIN = 'werkbaum-update-debug-min';
+function paintUpdateDebug(panel){
+  const min = localStorage.getItem(LS_DEBUG_MIN) === '1';
+  panel.style.cssText =
+    'position:fixed;bottom:10px;right:10px;z-index:999;' +
+    'background:rgba(0,0,0,0.9);color:#0F766E;border:1px solid #0F766E;' +
+    'font-family:monospace;cursor:pointer;' +
+    (min
+      ? 'width:26px;height:26px;padding:0;border-radius:50%;font-size:14px;' +
+        'display:flex;align-items:center;justify-content:center;overflow:hidden;'
+      : 'padding:12px;border-radius:4px;font-size:11px;max-width:240px;' +
+        'max-height:120px;overflow-y:auto;white-space:pre-wrap;');
+  panel.title = 'Update Debug Panel – Klick zum ' + (min ? 'Aufklappen' : 'Minimieren');
+  const log = localStorage.getItem('werkbaum-update-log') || '';
+  panel.textContent = min ? '⟳'
+    : (log ? log.split('\n').slice(-6).join('\n') : 'Keine Einträge');
+}
 function showUpdateDebug(){
   if(isProdBuild) return;
   let panel = document.getElementById('updateDebugPanel');
   if(!panel){
     panel = document.createElement('div');
     panel.id = 'updateDebugPanel';
-    panel.style.cssText = `
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.9);
-      color: #0F766E;
-      padding: 12px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-family: monospace;
-      max-width: 240px;
-      max-height: 120px;
-      overflow-y: auto;
-      z-index: 999;
-      border: 1px solid #0F766E;
-      cursor: pointer;
-    `;
-    panel.title = 'Update Debug Panel – Klick zum Schließen';
     document.body.appendChild(panel);
-    panel.addEventListener('click', () => panel.remove());
+    panel.addEventListener('click', () => {
+      const min = localStorage.getItem(LS_DEBUG_MIN) !== '1';
+      try{ localStorage.setItem(LS_DEBUG_MIN, min ? '1' : '0'); }catch(_){}
+      paintUpdateDebug(panel);
+    });
   }
-  const log = localStorage.getItem('werkbaum-update-log') || '';
-  panel.textContent = log ? log.split('\n').slice(-6).join('\n') : 'Keine Einträge';
+  paintUpdateDebug(panel);
 }
 
 /* Reset-Button im Header neben Fullscreen (Test-Hilfe; im Prod-Build weggelassen) */
