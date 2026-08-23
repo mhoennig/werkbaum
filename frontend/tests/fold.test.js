@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parse, setFoldMark } from '../src/parser.js';
-import { initialCollapsed, computeCheapSet, belowM } from '../src/model.js';
+import { initialCollapsed, computeCheapSet, atMostM } from '../src/model.js';
 import { renderTreeHtml } from '../src/render.js';
 
 const t = key => key;
@@ -256,12 +256,12 @@ describe('Günstigster Pfad an eingeklappten Knoten', () => {
 /* Voreinstellung „unter Größe M zuklappen" im Diagramm-Kopf (SPEC §9, D44).
    Das Falten selbst liegt in app.js (kein headless-Testziel); geprüft wird
    das Prädikat, das entscheidet, WELCHE Knoten es trifft. */
-describe('belowM — Auswahl für „unter Größe M zuklappen"', () => {
-  const groessen = txt => roots(txt).map(n => [n.label, belowM(n)]);
+describe('atMostM — Auswahl für „Größe M und kleiner zuklappen"', () => {
+  const groessen = txt => roots(txt).map(n => [n.label, atMostM(n)]);
 
-  it('trifft XS und S, nicht M und darüber', () => {
+  it('trifft XS, S und M — offen bleiben nur L, XL, XXL', () => {
     expect(groessen('[ ] a (XS)\n[ ] b (S)\n[ ] c (M)\n[ ] d (L)\n[ ] e (XL)\n[ ] f (XXL)'))
-      .toEqual([['a', true], ['b', true], ['c', false], ['d', false],
+      .toEqual([['a', true], ['b', true], ['c', true], ['d', false],
                 ['e', false], ['f', false]]);
   });
 
@@ -277,8 +277,8 @@ describe('belowM — Auswahl für „unter Größe M zuklappen"', () => {
   });
 
   it('gilt auch für Knoten tief im Baum', () => {
-    const [w] = roots('[ ] W (XL)\n  - [ ] A (S)\n    - [ ] A1 (XS)\n  - [ ] B (L)');
-    expect([belowM(w), ...w.children.map(belowM)]).toEqual([false, true, false]);
-    expect(belowM(w.children[0].children[0])).toBe(true);
+    const [w] = roots('[ ] W (XL)\n  - [ ] A (M)\n    - [ ] A1 (XS)\n  - [ ] B (L)');
+    expect([atMostM(w), ...w.children.map(atMostM)]).toEqual([false, true, false]);
+    expect(atMostM(w.children[0].children[0])).toBe(true);
   });
 });

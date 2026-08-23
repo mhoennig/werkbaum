@@ -340,12 +340,15 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Mobil die Tastatur hoch (`keyboardOnJump(true)`). Bei `src.readOnly` (Pad,
   D31) wird nicht geschrieben, dort trägt weiter `foldOverrides` — die
   Überlagerungen werden nach erfolgreichem Schreiben geleert, sonst maskieren
-  sie den Text. **Voreinstellungen** im Diagramm-Kopf (`applyFoldPreset`, D44)
-  gehen denselben Weg: Überlagerungen für ALLE faltbaren Knoten setzen
-  (`belowM(n)` bzw. `false`), dann `writeAllFoldMarks()` — der aus
+  sie den Text. Der **Umschalter** im Diagramm-Kopf (`applyFoldPreset`, D44)
+  geht denselben Weg: Überlagerungen für ALLE faltbaren Knoten setzen
+  (`atMostM(n)` bzw. `false`), dann `writeAllFoldMarks()` — der aus
   `writeFoldToText()` herausgelöste Voll-Rewrite; einen minimalen Patch gibt es
-  hier nicht. Ein Knoten **ohne** Größe zählt nicht als „unter M" (anders als
-  bei den Pfadkosten, D18). **`replaceTextUndoable()` meldet bei unveränderten Text
+  hier nicht. Ein Knoten **ohne** Größe zählt nicht als „bis M" (anders als
+  bei den Pfadkosten, D18). Sein `aria-pressed` wird **in `render()` am Baum
+  abgelesen**, nicht gemerkt und nicht persistiert — sonst behauptete er nach
+  einem einzelnen Umklappen etwas Falsches.
+  **`replaceTextUndoable()` meldet bei unveränderten Text
   `false`** (D38-Nachtrag 3): Ohne Textänderung feuert kein `input`, also läuft
   kein `render()` — der Aufrufer muss dann selbst zeichnen. Sonst bleibt das
   Bild stehen (aufgefallen beim Aufklappen eines nur per Überlagerung

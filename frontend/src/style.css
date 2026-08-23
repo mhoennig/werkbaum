@@ -397,20 +397,6 @@
   .dlgroup{display:inline-flex;align-items:center;gap:3px}
   .dlmenu{display:inline-flex;gap:3px}
   .dltrigger{display:none}
-  /* Faltung für den ganzen Baum (SPEC §9, D44): Anders als die Download-Gruppe
-     klappt diese IMMER auf — die beiden Einträge tragen Text, der inline die
-     Kopfzeile sprengte. Idiom und Maße wie dort. */
-  .foldgroup{display:inline-flex;align-items:center;position:relative}
-  .foldtrigger[aria-expanded="true"]{border-color:var(--or);color:var(--or)}
-  .foldmenu{display:none}
-  .foldgroup.open .foldmenu{
-    display:flex;flex-direction:column;gap:5px;
-    position:absolute;top:calc(100% + 6px);right:0;z-index:40;
-    background:var(--card);border:1px solid rgba(36,52,71,.15);
-    border-radius:8px;padding:5px;box-shadow:0 6px 18px rgba(36,52,71,.28);
-  }
-  .foldbtn{gap:6px;width:100%;justify-content:flex-start;padding-inline:8px;white-space:nowrap}
-  .fold-label{font-size:.68rem;font-weight:500;letter-spacing:.01em}
   .legendbtn{display:none}                             /* nur auf kleinem Bildschirm sichtbar */
   .panetoggle{display:none}                            /* ebenso: dort gibt es nur einen Bereich */
   /* Zurückschreiben der Faltung (D38-Nachtrag 2): Für die Dauer des SYNCHRONEN

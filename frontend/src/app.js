@@ -1,6 +1,6 @@
 import './style.css';
 import { parse, setFoldMark } from './parser.js';
-import { computeCheapPlan, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, belowM } from './model.js';
+import { computeCheapPlan, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, atMostM } from './model.js';
 import { esc, renderTreeHtml } from './render.js';
 import { formatWarning } from './warnings.js';
 import { padUrls } from './remote.js';
@@ -124,13 +124,25 @@ function render(){
     const initFold = initialCollapsed(roots, true);
     const keys = nodeKeys(roots);
     const collapsedSet = new Set();
+    let foldSmallExact = true, foldSmallAny = false;
     foldByLine = new Map();
     keys.forEach((key, n) => {
       const ov = foldOverrides.get(key);
       const collapsed = (ov !== undefined ? ov : initFold.has(n)) && n.children.length > 0;
       if(collapsed) collapsedSet.add(n);
       foldByLine.set(n.line, {key, collapsed, canFold: n.children.length > 0});
+      /* Der Umschalter (D44) merkt sich nichts, er liest ab: gedrückt genau
+         dann, wenn JEDER faltbare Knoten so steht, wie die Voreinstellung ihn
+         stellen würde. */
+      if(n.children.length > 0){
+        if(atMostM(n)) foldSmallAny = true;
+        if(collapsed !== atMostM(n)) foldSmallExact = false;
+      }
     });
+    /* `foldSmallAny`: Gäbe es gar keinen Knoten bis M, wären „zugeklappt" und
+       „alles offen" derselbe Zustand — der Knopf säße dann gedrückt da, ohne
+       dass etwas zugeklappt ist. */
+    foldSmallBtn.setAttribute('aria-pressed', foldSmallExact && foldSmallAny ? 'true' : 'false');
     const r = renderTreeHtml(roots, {t, showDiscarded, cheapPath: cheapPathOn, cheapSet,
                                      freshSet, collapsedSet,
                                      effStatus: effectiveStatus(roots)});
@@ -1001,7 +1013,7 @@ function applyFoldPreset(mode){
   if(!roots.length) return;
   nodeKeys(roots).forEach((key, n) => {
     if(!n.children.length) return;           /* nur faltbare Knoten */
-    foldOverrides.set(key, mode === 'small' ? belowM(n) : false);
+    foldOverrides.set(key, mode === 'small' ? atMostM(n) : false);
   });
   if(!src.readOnly && writeAllFoldMarks(roots, desiredFoldKeys(roots))) foldOverrides.clear();
   else render();                             /* Pad o. nicht ausdrückbar: Überlagerung trägt */
@@ -1399,6 +1411,18 @@ function discardedShown(){ return showc.getAttribute('aria-pressed') === 'true';
 function setDiscarded(on){ showc.setAttribute('aria-pressed', on ? 'true' : 'false'); }
 showc.addEventListener('click', () => { setDiscarded(!discardedShown()); render(); saveUI(); });
 
+/* Faltung für den ganzen Baum (SPEC §9, D44): ein Umschalter wie die beiden
+   Nachbarn. Gedrückt heißt „alles unter Größe M ist zugeklappt". Der Zustand
+   wird nicht gemerkt, sondern bei jedem Rendern am Baum ABGELESEN
+   (`syncFoldSmallBtn`) — klappt jemand danach einen Knoten von Hand um, geht
+   der Knopf von selbst heraus, statt etwas zu behaupten, das nicht mehr
+   stimmt. Deshalb auch nicht in `werkbaum-ui` persistiert: Der Faltzustand
+   steht im Text (D38-Nachtrag 2), der Knopf liest ihn nur ab. */
+const foldSmallBtn = document.getElementById('foldSmallBtn');
+foldSmallBtn.addEventListener('click', () => {
+  applyFoldPreset(foldSmallBtn.getAttribute('aria-pressed') === 'true' ? 'all' : 'small');
+});
+
 /* Günstigster-Pfad-Hervorhebung an/aus */
 const cheapBtn = document.getElementById('cheapBtn');
 cheapBtn.addEventListener('click', () => {
@@ -1466,30 +1490,6 @@ document.addEventListener('click', e => {
   if(dlGroup.classList.contains('open') && !dlGroup.contains(e.target)) closeDlMenu();
 });
 
-/* Faltung für den ganzen Baum (SPEC §9, D44) — dasselbe Menü-Idiom, hier auf
-   allen Bildschirmgrößen, weil die Einträge Text tragen. */
-const foldGroup = document.getElementById('foldGroup');
-const foldTrigger = document.getElementById('foldTrigger');
-function closeFoldMenu(){
-  foldGroup.classList.remove('open');
-  foldTrigger.setAttribute('aria-expanded', 'false');
-}
-foldTrigger.addEventListener('click', () => {
-  const open = foldGroup.classList.toggle('open');
-  foldTrigger.setAttribute('aria-expanded', String(open));
-});
-document.addEventListener('click', e => {
-  if(foldGroup.classList.contains('open') && !foldGroup.contains(e.target)) closeFoldMenu();
-});
-document.addEventListener('keydown', e => {
-  if(e.key === 'Escape' && foldGroup.classList.contains('open')){ closeFoldMenu(); foldTrigger.focus(); }
-});
-document.getElementById('foldExpandAll').addEventListener('click', () => {
-  closeFoldMenu(); applyFoldPreset('all');
-});
-document.getElementById('foldCollapseSmall').addEventListener('click', () => {
-  closeFoldMenu(); applyFoldPreset('small');
-});
 
 /* ---------- Internationalisierung (DE/EN/ES/FR) ---------- */
 const I18N = {
@@ -1516,9 +1516,7 @@ const I18N = {
     riskTooltip:"High Risk – Aufwand noch unklar.",
     discardedTooltip:"Verworfene Knoten samt Teilbaum ein-/ausblenden",
     cheapTooltip:"Günstigsten Pfad hervorheben – nicht benötigte Alternativen treten zurück",
-    foldMenu:"Teilbäume auf- und zuklappen",
-    foldExpandAll:"alle aufklappen",
-    foldCollapseSmall:"unter Größe M zuklappen",
+    foldSmallTooltip:"Knoten der Größe M und kleiner zuklappen – erneut drücken klappt alle wieder auf",
     implicitSizeTooltip:"Keine Größe angegeben – für die Kostenschätzung als M angenommen",
     fullscreenTooltip:"Vollbild – Panels nutzen die ganze Fensterbreite",
     brandTooltip:"„Werkbaum“ bedeutet so viel wie ‚Werk-Baum‘ — der Baum des Projektstrukturplans (WBS).",
@@ -1599,9 +1597,7 @@ const I18N = {
     riskTooltip:"High risk – effort still unclear.",
     discardedTooltip:"Show/hide discarded nodes and their subtree",
     cheapTooltip:"Highlight the cheapest path – unneeded alternatives recede",
-    foldMenu:"Expand and collapse subtrees",
-    foldExpandAll:"expand all",
-    foldCollapseSmall:"collapse below size M",
+    foldSmallTooltip:"Collapse nodes of size M and smaller – press again to expand them all",
     implicitSizeTooltip:"No size given – assumed as M for the cost estimate",
     fullscreenTooltip:"Full screen – panels use the full window width",
     brandTooltip:"“Werkbaum” means roughly ‘work tree’ — the tree of the work breakdown structure (WBS).",
@@ -1682,9 +1678,7 @@ const I18N = {
     riskTooltip:"Alto riesgo – esfuerzo aún incierto.",
     discardedTooltip:"Mostrar u ocultar los nodos descartados y su subárbol",
     cheapTooltip:"Resaltar la ruta más económica: las alternativas no necesarias se atenúan",
-    foldMenu:"Desplegar y plegar subárboles",
-    foldExpandAll:"desplegar todo",
-    foldCollapseSmall:"plegar por debajo de la talla M",
+    foldSmallTooltip:"Plegar los nodos de talla M o menor: pulsa de nuevo para desplegarlos todos",
     implicitSizeTooltip:"Sin tamaño indicado: se asume M para el cálculo de costes",
     fullscreenTooltip:"Pantalla completa – los paneles usan todo el ancho de la ventana",
     brandTooltip:"«Werkbaum» significa algo así como ‘árbol de trabajo’ — el árbol de la estructura de desglose del trabajo (EDT).",
@@ -1765,9 +1759,7 @@ const I18N = {
     riskTooltip:"Risque élevé – effort encore incertain.",
     discardedTooltip:"Afficher/masquer les nœuds abandonnés et leur sous-arbre",
     cheapTooltip:"Mettre en évidence le chemin le moins coûteux – les alternatives inutiles s'estompent",
-    foldMenu:"Déplier et replier les sous-arbres",
-    foldExpandAll:"tout déplier",
-    foldCollapseSmall:"replier en dessous de la taille M",
+    foldSmallTooltip:"Replier les nœuds de taille M et moins – appuyez à nouveau pour tout déplier",
     implicitSizeTooltip:"Aucune taille indiquée – considérée comme M pour l'estimation des coûts",
     fullscreenTooltip:"Plein écran – les panneaux occupent toute la largeur de la fenêtre",
     brandTooltip:"« Werkbaum » signifie à peu près « arbre de travail » — l’arbre de l’organigramme des tâches (WBS).",
@@ -1848,9 +1840,7 @@ const I18N = {
     riskTooltip:"Wysokie ryzyko – nakład jeszcze niejasny.",
     discardedTooltip:"Pokaż/ukryj odrzucone węzły wraz z poddrzewem",
     cheapTooltip:"Wyróżnij najtańszą ścieżkę – niepotrzebne alternatywy są przygaszone",
-    foldMenu:"Rozwijanie i zwijanie poddrzew",
-    foldExpandAll:"rozwiń wszystko",
-    foldCollapseSmall:"zwiń poniżej rozmiaru M",
+    foldSmallTooltip:"Zwiń węzły o rozmiarze M i mniejsze – naciśnij ponownie, aby rozwinąć wszystkie",
     implicitSizeTooltip:"Nie podano rozmiaru – przyjęto M do szacowania kosztów",
     fullscreenTooltip:"Pełny ekran – panele wykorzystują całą szerokość okna",
     brandTooltip:"„Werkbaum” znaczy mniej więcej ‚drzewo pracy’ — drzewo struktury podziału pracy (WBS).",
@@ -1931,9 +1921,7 @@ const I18N = {
     riskTooltip:"Высокий риск – оценка ещё не ясна.",
     discardedTooltip:"Показать/скрыть отклонённые узлы вместе с поддеревом",
     cheapTooltip:"Выделить самый дешёвый путь — ненужные альтернативы приглушаются",
-    foldMenu:"Развернуть и свернуть поддеревья",
-    foldExpandAll:"развернуть все",
-    foldCollapseSmall:"свернуть меньше размера M",
+    foldSmallTooltip:"Свернуть узлы размера M и меньше — нажмите ещё раз, чтобы развернуть все",
     implicitSizeTooltip:"Размер не указан — для оценки затрат принят как M",
     fullscreenTooltip:"Полный экран – панели занимают всю ширину окна",
     brandTooltip:"«Werkbaum» примерно означает ‚дерево работ’ — дерево структуры декомпозиции работ (СДР).",
@@ -2014,9 +2002,7 @@ const I18N = {
     riskTooltip:"उच्च जोखिम – प्रयास अभी अस्पष्ट।",
     discardedTooltip:"अस्वीकृत नोड्स और उनके उप-वृक्ष दिखाएँ/छिपाएँ",
     cheapTooltip:"सबसे किफ़ायती पथ को उजागर करें – अनावश्यक विकल्प मंद हो जाते हैं",
-    foldMenu:"उपवृक्ष खोलें और समेटें",
-    foldExpandAll:"सभी खोलें",
-    foldCollapseSmall:"आकार M से छोटे समेटें",
+    foldSmallTooltip:"आकार M और उससे छोटे नोड समेटें – सभी को खोलने के लिए फिर दबाएँ",
     implicitSizeTooltip:"कोई आकार नहीं दिया गया – लागत अनुमान के लिए M माना गया",
     fullscreenTooltip:"पूर्ण स्क्रीन – पैनल पूरी विंडो चौड़ाई का उपयोग करते हैं",
     brandTooltip:"„Werkbaum“ का अर्थ लगभग ‚कार्य-वृक्ष‘ है — कार्य विभाजन संरचना (WBS) का वृक्ष।",
@@ -2086,9 +2072,7 @@ const I18N = {
     fullscreenTooltip:"全屏——面板占据整个窗口宽度",
     discardedTooltip:"显示/隐藏已放弃的节点及其子树",
     cheapTooltip:"突出显示成本最低的路径——不需要的备选项将淡化",
-    foldMenu:"展开和折叠子树",
-    foldExpandAll:"全部展开",
-    foldCollapseSmall:"折叠小于 M 的节点",
+    foldSmallTooltip:"折叠尺寸 M 及更小的节点——再次点击可全部展开",
     implicitSizeTooltip:"未指定尺寸——成本估算时按 M 计",
     ghostTooltip:"从 M 号起，元素应进一步细分。",
     jumpHint:"Alt+点击：跳转到文本中的该行",
@@ -2169,9 +2153,7 @@ const I18N = {
     fullscreenTooltip:"全画面 — パネルがウィンドウ幅いっぱいを使用",
     discardedTooltip:"破棄したノードとその下位ツリーを表示/非表示",
     cheapTooltip:"最も低コストの経路を強調 – 不要な選択肢は控えめに表示",
-    foldMenu:"サブツリーの展開と折りたたみ",
-    foldExpandAll:"すべて展開",
-    foldCollapseSmall:"サイズ M 未満を折りたたむ",
+    foldSmallTooltip:"サイズ M 以下のノードを折りたたむ – もう一度押すとすべて展開",
     implicitSizeTooltip:"サイズ未指定 – コスト見積もりのため M として扱う",
     ghostTooltip:"サイズ M 以上の要素はさらに分解すべきです。",
     jumpHint:"Alt+クリック：テキストの該当行へ移動",
