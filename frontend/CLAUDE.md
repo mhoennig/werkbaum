@@ -303,7 +303,15 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Dokumentwechsel geleert) und übergibt `collapsedSet` an den Renderer; der
   lässt eingeklappte Kinder **weg** (nicht CSS-verstecken — Export, Messungen
   und Pfadlinie bleiben so von selbst konsistent), meldet deren Warnungen aber
-  weiter (`walkFolded`, zählt zugleich fürs „▸ n"). Umklappen: Klick aufs
+  weiter (`walkFolded`, zählt zugleich fürs „▸ n").
+  **Auf dem günstigsten Pfad vertritt ein eingeklappter Knoten seinen
+  Teilbaum** (D38-Nachtrag): `cheapCls(n, cheapSet, collapsed)` überspringt für
+  ihn die Blatt-Prüfung und fragt `hidesCheap()` — sonst umginge die Pfad-Linie
+  den ganzen Zweig, als wäre dort nichts zu tun. Gilt auch ohne eigene
+  Pfad-Mitgliedschaft (ein per `:#…` gezogenes Ziel unter einem `+`-Knoten):
+  Dann ist er der einzige sichtbare Griff darauf und zählt als `cheap`.
+  `extraCls()` muss dieselbe Eingeklappt-Bedingung bilden wie `itemHtml`
+  (nur mit sichtbaren Kindern). Umklappen: Klick aufs
   `.fold`-Zeichen (preventDefault — es sitzt bei Link-Knoten im `<a>`) oder
   ←/→ am fokussierten Knoten; nach `render()` den Fokus per `data-line`
   wiederherstellen. Export/Druck: „▸ n" bleibt, das ▾ offener Knoten fällt weg

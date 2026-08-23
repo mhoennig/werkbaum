@@ -21,7 +21,12 @@ import { gateOf, needsBreakdown, visibleChildren, cheapCls } from './model.js';
    gegenüber der zuletzt gesehenen Fassung (D28, `freshSet` optional) und
    optionale Knoten (`+`, SPEC §3/D29 — trägt den hohlen Kreis am Abzweig). */
 function extraCls(n, opts){
-  const cheap = cheapCls(n, opts.cheapSet);
+  /* Dieselbe Bedingung wie in `itemHtml`: eingeklappt ist ein Knoten nur, wenn
+     er überhaupt sichtbare Kinder hat. Der Pfad braucht sie hier, weil ein
+     eingeklappter Knoten seine verborgenen Pfad-Knoten vertritt (D38). */
+  const collapsed = !!(opts.collapsedSet && opts.collapsedSet.has(n))
+                 && visibleChildren(n, opts.showDiscarded).length > 0;
+  const cheap = cheapCls(n, opts.cheapSet, collapsed);
   const fresh = opts.freshSet && opts.freshSet.has(n) ? 'fresh' : '';
   return [cheap, fresh, n.optional ? 'opt' : '', n.focus ? 'focusmark' : ''].filter(Boolean).join(' ');
 }

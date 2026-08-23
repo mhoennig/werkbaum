@@ -2223,6 +2223,7 @@ Und der günstigste Pfad rechnet unverändert über den ganzen Baum; seine
 Spline-Linie läuft ohnehin nur durch DOM-Knoten, führt also durch die
 sichtbaren Endknoten. Ein eingeklappter Zweig kann Pfadknoten verbergen —
 hinnehmbar, die Inversion an den sichtbaren Knoten bleibt richtig.
+**Das war falsch — siehe den Nachtrag am Ende dieses Eintrags.**
 
 **Export und Druck:** Verborgene Kinder stehen nicht im DOM — Export,
 Stiel-Messung, Treppe und Pfadlinie sind damit ohne Zusatzcode konsistent
@@ -2230,6 +2231,38 @@ Stiel-Messung, Treppe und Pfadlinie sind damit ohne Zusatzcode konsistent
 per CSS zu verstecken). Die Kennzeichnung „▸ n“ ist Teil des Knotentexts und
 wandert von selbst in den SVG-Export; das ▾ offener Knoten wird dort und im
 Druck entfernt — es ist Bedienelement, keine Aussage über den Plan.
+
+**Nachtrag — der eingeklappte Knoten vertritt seinen Teilbaum auch auf dem
+günstigsten Pfad.** Oben steht, ein eingeklappter Zweig dürfe Pfadknoten
+verbergen, „die Inversion an den sichtbaren Knoten bleibt richtig". Das war zu
+kurz gedacht, und der Nutzer hat es benannt: Die **Linie** blieb eben nicht
+richtig. Sie fädelt durch die `cheap-leaf`-Knoten im DOM; ein eingeklappter
+Pfadknoten ist `cheap`, aber kein Blatt (seine Pfad-Kinder sind ja im Modell
+vorhanden) — also bekam er keine Station, und die Linie **umging den ganzen
+Zweig**. Im mitgelieferten Beispiel nachgemessen: „Concept" war
+`node cheap folded`, verbarg zwei Pfadknoten und trug keinen Punkt; die Linie
+begann erst bei „PWA". Das Bild behauptete damit, in diesem Zweig sei nichts
+zu tun — und das ist eine Aussage über den Plan, keine über die Ansicht. Genau
+die Grenze, die dieser Eintrag sonst zieht.
+
+**Regel: Eingeklappt ist der Knoten die tiefste noch sichtbare Station.**
+`cheapCls(n, cheapSet, collapsed)` überspringt für eingeklappte Knoten die
+Blatt-Prüfung und fragt stattdessen den Teilbaum: Liegt darin etwas auf dem
+Pfad (oder der Knoten selbst), ist er `cheap cheap-leaf`. Beim Aufklappen
+geben die Kinder die Station zurück — nachgemessen 6 → 7 → 6 Stationen beim
+Hin- und Herklappen, Punkte jeweils gleich.
+
+**Auch ohne eigene Pfad-Mitgliedschaft.** Ein per `:#…` gezogenes Ziel kann in
+einem Zweig liegen, dessen Wurzel selbst nicht gebraucht wird (D42, etwa unter
+einem `+`-Knoten). Ist dieser Zweig eingeklappt, ist seine Wurzel der einzige
+sichtbare Griff auf nötige Arbeit — sie wird deshalb Station **und** zählt als
+`cheap`, tritt also nicht zurück. Das ist keine Ausnahme, sondern dieselbe
+Regel: Der eingeklappte Knoten **steht für** seinen Teilbaum, und der enthält
+Nötiges. Ihn auszublassen wäre die Lüge.
+
+Der Preis ist benannt und klein: Ein eingeklappter Zweig zeigt **eine** Station
+statt mehrerer. Das ist keine Ungenauigkeit, sondern die Aussage der Faltung —
+„hier drin liegt noch Pfad", genauer geht es ohne Aufklappen nicht.
 
 ## D39 — Effektiver Status: die Farbe sagt die Wahrheit, die Marke die Box
 Mit den Abhängigkeiten (D37) gibt es zwei Aussagen je Knoten: was in der

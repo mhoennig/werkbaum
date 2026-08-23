@@ -126,3 +126,64 @@ describe('Renderer — eingeklappte Teilbäume', () => {
       .toEqual(['A', 'A2', 'W']);
   });
 });
+
+/* Der eingeklappte Knoten vertritt seinen Teilbaum auch auf dem günstigsten
+   Pfad (SPEC §9, D38-Nachtrag): Sonst überspränge die Pfad-Linie den ganzen
+   Zweig, als wäre dort nichts zu tun. */
+describe('Günstigster Pfad an eingeklappten Knoten', () => {
+  /* Nimmt die BEREITS geparsten Wurzeln: `collapsedSet` und `cheapSet` prüfen
+     auf Objektidentität — ein zweiter Parse-Durchlauf liefert andere Objekte
+     und die Mengen träfen nie zu (dieselbe Falle wie in D28). */
+  const cheapRender = (r, collapsedSet) =>
+    renderTreeHtml(r, {t, showDiscarded: false, cheapPath: true,
+      cheapSet: computeCheapSet(r), collapsedSet: collapsedSet || new Set()}).html;
+  /* Labels der Stationen (`cheap-leaf`) in Dokumentreihenfolge — genau die
+     Menge, durch die drawCheapPath() die Linie fädelt. Gelesen aus dem
+     `aria-label` (erstes Glied = Label): Im Knoteninneren steht bei
+     eingeklappten Knoten das Falt-Zeichen vor dem Text. */
+  const stations = html =>
+    [...html.matchAll(/class="node[^"]*cheap-leaf[^"]*"[^>]*aria-label="([^",]*)/g)]
+      .map(m => m[1]);
+
+  const TXT = `[ ] W (XS)\n  - [ ] A (S)\n    - [ ] A1 (S)\n    - [ ] A2 (S)\n  - [ ] B (S)`;
+
+  it('macht den eingeklappten Knoten zur Station statt den Zweig zu überspringen', () => {
+    const r = roots(TXT);
+    const a = r[0].children[0];
+    expect(stations(cheapRender(r))).toEqual(['A1', 'A2', 'B']);       /* offen */
+    expect(stations(cheapRender(r, new Set([a])))).toEqual(['A', 'B']); /* zu */
+  });
+
+  it('gibt die Station beim Aufklappen wieder an die Kinder ab', () => {
+    const r = roots(TXT);
+    const a = r[0].children[0];
+    const zu  = stations(cheapRender(r, new Set([a])));
+    const auf = stations(cheapRender(r, new Set()));
+    expect(zu).not.toContain('A1');
+    expect(auf).toContain('A1');
+    expect(auf).not.toContain('A');
+  });
+
+  it('vertritt auch einen Teilbaum, den der Knoten selbst nicht braucht', () => {
+    /* `+ O` ist entbehrlich und nicht auf dem Pfad — sein Kind wird aber per
+       Abhängigkeit gezogen (D42). Eingeklappt ist `O` der einzige sichtbare
+       Griff darauf und darf deshalb weder fehlen noch ausgeblasst sein. */
+    const txt = `[ ] W (XS)\n  - [ ] N (S) :#t\n  + [ ] O (S)\n    - [ ] #t: T (S)`;
+    const r = roots(txt);
+    const o = r[0].children[1];
+    const set = computeCheapSet(r);
+    expect([...set].map(n => n.label).sort()).toEqual(['N', 'T', 'W']);  /* O selbst nicht */
+    const {html} = renderTreeHtml(r, {t, showDiscarded: false, cheapPath: true,
+      cheapSet: set, collapsedSet: new Set([o])});
+    expect(stations(html)).toContain('O');
+  });
+
+  it('macht einen eingeklappten Knoten ohne Pfad im Teilbaum NICHT zur Station', () => {
+    const txt = `[ ] W (XS)\n  - [ ] N (S)\n  + [ ] O (S)\n    - [ ] P (S)`;
+    const r = roots(txt);
+    const o = r[0].children[1];
+    const {html} = renderTreeHtml(r, {t, showDiscarded: false, cheapPath: true,
+      cheapSet: computeCheapSet(r), collapsedSet: new Set([o])});
+    expect(stations(html)).toEqual(['N']);
+  });
+});

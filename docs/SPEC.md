@@ -670,8 +670,16 @@ fokussierten Knoten (WAI-ARIA-Baum-Idiom).
   dauerhafte Aussage steht im Text (D34). Ein Dokumentwechsel setzt zurück.
 - Faltung ist **reine Ansicht**: Warnungen aus eingeklappten Teilbäumen werden
   weiter gemeldet (sie gelten dem Text), und der günstigste Pfad rechnet
-  unverändert über den ganzen Baum — seine Linie zeigt nur die sichtbaren
-  Endknoten.
+  unverändert über den ganzen Baum.
+- **Ein eingeklappter Knoten vertritt seinen Teilbaum auch auf dem günstigsten
+  Pfad:** Liegt darin etwas auf dem Pfad, ist er dessen tiefste noch sichtbare
+  Station — die Linie führt zu ihm und endet dort mit einem Stationspunkt
+  („hier drin liegt noch Pfad"). Ohne das überspränge sie den ganzen Zweig, als
+  wäre dort nichts zu tun. Beim Aufklappen geben die Station wieder die
+  Endknoten darunter. Das gilt auch, wenn der eingeklappte Knoten selbst nicht
+  gebraucht wird, sein Teilbaum aber schon (etwa ein per `:#…` gezogenes Ziel):
+  Er ist dann der einzige sichtbare Griff auf nötige Arbeit und tritt deshalb
+  auch nicht zurück.
 - **Export und Druck folgen der sichtbaren Faltung** (dieselbe Regel wie beim
   „verworfene einblenden“-Filter): Verborgene Teilbäume fehlen, eingeklappte
   Knoten behalten die Kennzeichnung „▸ n“ — das Bild behauptet damit keine

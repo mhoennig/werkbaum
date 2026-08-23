@@ -168,7 +168,25 @@ export function computeCheapSet(roots){
 }
 /* CSS-Klassen für den günstigen Pfad. Leere `cheapSet` (Pfad aus) ⇒ ''.
    Endknoten (kein Kind liegt auf dem Pfad) bekommt zusätzlich 'cheap-leaf'. */
-export function cheapCls(n, cheapSet){
+/* Liegt im Teilbaum eines Knotens etwas auf dem Pfad? Gebraucht für
+   eingeklappte Knoten (siehe `cheapCls`). Verworfene sind nie in `cheapSet`
+   (SPEC §9), es braucht also keine eigene Filterung. */
+export function hidesCheap(n, cheapSet){
+  for(const k of n.children || []){
+    if(cheapSet.has(k) || hidesCheap(k, cheapSet)) return true;
+  }
+  return false;
+}
+
+export function cheapCls(n, cheapSet, collapsed){
+  /* Eingeklappt steht der Knoten stellvertretend für seinen ganzen Teilbaum
+     (SPEC §9/D38): Liegt darin etwas auf dem Pfad, ist er dessen tiefste noch
+     SICHTBARE Station — sonst überspränge die Linie den Zweig, als wäre dort
+     nichts zu tun. Das gilt auch, wenn er selbst nicht gebraucht wird, sein
+     Teilbaum aber schon (eine per `:#…` gezogene Alternative, D42): Er ist
+     dann der einzige sichtbare Griff auf nötige Arbeit und darf deshalb auch
+     nicht von der Inversion ausgeblasst werden. */
+  if(collapsed) return (cheapSet.has(n) || hidesCheap(n, cheapSet)) ? 'cheap cheap-leaf' : '';
   if(!cheapSet.has(n)) return '';
   const leaf = !pathChildren(n).some(k => cheapSet.has(k));
   return leaf ? 'cheap cheap-leaf' : 'cheap';
