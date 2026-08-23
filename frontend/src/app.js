@@ -3321,7 +3321,35 @@ mountBuildBadge();
    ALLEN Builds aktiv. */
 const isProdBuild = import.meta.env.VITE_BUILD_BADGE === 'none';
 
-/* Kompakter, deterministischer Hash (cyrb53) über den GESAMTEN HTML-Text.
+/* Beides bewusst NUR im Speicher, nicht im localStorage (D45): Ein gemerktes
+   „Update verfügbar" überlebte das Neuladen, das es gerade eingespielt hat —
+   und meldete dieselbe Fassung wieder und wieder. Nach dem Laden ist nichts
+   bekannt; was noch gilt, findet die nächste Prüfung zwei Sekunden später. */
+let updateAvailable = false;
+let baselineHash = null;
+
+/* Verglichen wird gegen den LAUFENDEN Build, nicht gegen einen gemerkten Abruf.
+   Beide Deploy-Wege spritzen den Commit in den Footer-Versionslink (D16); die
+   laufende Seite trägt ihn also selbst, und die abgerufene Seite auch. Zwei
+   Werte, die im selben Moment vorliegen — kein localStorage dazwischen, damit
+   nichts hängenbleiben und nichts zwischen Tabs durcheinandergeraten kann.
+   Siehe D45. */
+function buildIdFromHtml(html){
+  const m = html.match(/<a class="ver"[^>]*href="[^"]*\/commit\/([0-9a-f]{7,40})/);
+  return m ? m[1] : null;
+}
+let runningBuild;
+function runningBuildId(){
+  if(runningBuild === undefined){
+    const el = document.querySelector('.site-footer .ver');
+    const m = el && (el.getAttribute('href') || '').match(/\/commit\/([0-9a-f]{7,40})\b/);
+    runningBuild = m ? m[1] : null;   /* Platzhalter „…/commit/main" ⇒ null */
+  }
+  return runningBuild;
+}
+
+/* Rückfall für Builds ohne eingespritzten Commit (Dev-Server, `file://`):
+   Kompakter, deterministischer Hash (cyrb53) über den GESAMTEN HTML-Text.
    Wichtig: Der frühere Ansatz „erste 300 + letzte 300 Zeichen" verfehlte JEDE
    Änderung — die Seite ist eine self-contained Datei (D19), der komplette
    App-Code UND die Footer-Version liegen als inline-Bundle in der MITTE, also
@@ -3349,25 +3377,44 @@ async function checkForUpdates(){
     const resp = await fetch(bust.href, { cache: 'no-store' });
     if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
-    /* Voller Content-Hash ist die alleinige Wahrheit. ETag/Last-Modified werden
-       bewusst NICHT mehr herangezogen: GitHub Pages liefert je Cache-Knoten
-       unterschiedliche ETags für identischen Inhalt und löste damit die
-       irreführende Meldung „Metadaten geändert, aber Inhalt gleich" aus. */
+    /* ETag/Last-Modified werden bewusst NICHT herangezogen: GitHub Pages liefert
+       je Cache-Knoten unterschiedliche ETags für identischen Inhalt und löste
+       damit die irreführende Meldung „Metadaten geändert, aber Inhalt gleich" aus. */
     const html = await resp.text();
-    const hash = hashContent(html);
-    const stored = localStorage.getItem('werkbaum-html-hash');
+    const laufend = runningBuildId(), geliefert = buildIdFromHtml(html);
+    let neu;
 
-    if(!stored){
-      logUpdate('✓ Erste Prüfung – Hash gespeichert');
-    } else if(hash === stored){
-      logUpdate('✓ Alles aktuell');
+    if(laufend && geliefert){
+      neu = geliefert !== laufend;
+      logUpdate(neu ? '✅ Neuer Build ' + geliefert.slice(0, 7) : '✓ Alles aktuell');
     } else {
-      localStorage.setItem('werkbaum-update-available', 'true');
-      logUpdate('✅ NEUE VERSION ERKANNT!');
-      if(!document.hidden) checkAndShowUpdateNotification();
+      /* Ohne Marker bleibt nur der Inhalts-Hash. Vergleichsstand ist der ERSTE
+         Abruf dieser Seiten-Sitzung und bleibt es — er im localStorage
+         nachgeführt hieße: ein einzelner Abruf gegen einen veralteten
+         CDN-Knoten setzt den Stand um, und der nächste meldet fälschlich neu. */
+      const hash = hashContent(html);
+      if(baselineHash === null){
+        baselineHash = hash;
+        neu = false;
+        logUpdate('✓ Erste Prüfung – Vergleichsstand gesetzt');
+      } else {
+        neu = hash !== baselineHash;
+        logUpdate(neu ? '✅ NEUE VERSION ERKANNT!' : '✓ Alles aktuell');
+      }
     }
 
-    localStorage.setItem('werkbaum-html-hash', hash);
+    if(neu && !updateAvailable){
+      updateAvailable = true;
+      if(!document.hidden) checkAndShowUpdateNotification();
+      else updateFooterUpdateIcon();
+    } else if(!neu && updateAvailable){
+      /* Zurückgenommen (Rollback, oder der Abruf lief vorher gegen einen
+         veralteten Knoten): Meldung wieder einsammeln, statt sie stehenzulassen. */
+      updateAvailable = false;
+      const notif = document.getElementById('updateNotification');
+      if(notif) notif.remove();
+      updateFooterUpdateIcon();
+    }
   } catch(err) {
     const msg = err.message || err.toString();
     if(msg.includes('Failed to fetch')) {
@@ -3457,16 +3504,12 @@ document.addEventListener('visibilitychange', () => {
   if(!document.hidden){
     checkForUpdates();
     showUpdateDebug();
-    if(localStorage.getItem('werkbaum-update-available')){
-      checkAndShowUpdateNotification();
-    }
+    if(updateAvailable) checkAndShowUpdateNotification();
   }
 });
 
-/* Prüfe beim Laden, falls Update bereits verfügbar */
-if(!document.hidden && localStorage.getItem('werkbaum-update-available')){
-  checkAndShowUpdateNotification();
-}
+/* Beim Laden wird NICHT gemeldet: Was die Seite gerade geladen hat, IST der
+   aktuelle Stand, bis eine Prüfung etwas anderes zeigt (D45). */
 
 function checkAndShowUpdateNotification(){
   const existingNotif = document.getElementById('updateNotification');
@@ -3519,7 +3562,6 @@ function checkAndShowUpdateNotification(){
   document.body.insertBefore(notif, document.body.firstChild);
 
   notif.querySelector('.updateBtn').addEventListener('click', () => {
-    localStorage.removeItem('werkbaum-update-available');
     window.location.reload();
   });
 
@@ -3539,8 +3581,10 @@ function resetToDefaults(){
 
   if(!confirmed) return;
 
-  /* Nicht-Dokument-Zustand auf Defaults (UI, Sprache, Update-Flags) — die
-     Dokumentenliste (werkbaum-docs) bleibt erhalten (D22). */
+  /* Nicht-Dokument-Zustand auf Defaults (UI, Sprache, Update-Log) — die
+     Dokumentenliste (werkbaum-docs) bleibt erhalten (D22). Die beiden
+     Update-Schlüssel schreibt niemand mehr (D45); sie werden nur noch
+     aufgeräumt, falls sie aus einer früheren Fassung herumliegen. */
   ['werkbaum-ui','werkbaum-lang','werkbaum-html-hash','werkbaum-update-available','werkbaum-update-log']
     .forEach(k => { try{ localStorage.removeItem(k); }catch(_){} });
 
@@ -3572,7 +3616,7 @@ function resetToDefaults(){
 /* Update-Benachrichtigung-Symbol im Footer (rechts neben Version) */
 function updateFooterUpdateIcon(){
   let icon = document.getElementById('footerUpdateIcon');
-  const hasUpdate = localStorage.getItem('werkbaum-update-available');
+  const hasUpdate = updateAvailable;
 
   if(hasUpdate && !icon){
     const footer = document.querySelector('.site-footer');
@@ -3609,8 +3653,8 @@ function updateFooterUpdateIcon(){
   }
 }
 
-/* Icon beim Laden und bei Update-Erkennung aktualisieren */
-document.addEventListener('DOMContentLoaded', updateFooterUpdateIcon);
+/* Icon bei Update-Erkennung aktualisieren. Beim Laden gibt es nichts zu zeigen —
+   der Zustand lebt nur in dieser Seiten-Sitzung (D45). */
 const originalCheckAndShowUpdateNotification = checkAndShowUpdateNotification;
 checkAndShowUpdateNotification = function(){
   originalCheckAndShowUpdateNotification.call(this);

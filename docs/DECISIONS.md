@@ -2824,3 +2824,88 @@ hervor, dieser Markensatz ist also nicht schreibbar. Das Bild stimmt trotzdem
 einem Plan ohne `!!!` werden die Marken geschrieben: `- [ ] > Mittel (M)`,
 `- [ ] > Klein (S)` und `- [ ] > Teil 3 (M)`, während `(L)`, `(XL)` und der
 Knoten ohne Größe offen bleiben.
+
+## D45 — Update-Prüfung vergleicht gegen den laufenden Build, nicht gegen einen gemerkten Abruf
+Gemeldet: „Oft wird der Hinweis, dass eine neue Version vorliege, oben
+angezeigt, obwohl genau die bereits geladen wurde“ — mit dem Verdacht auf eine
+Race-Condition und der Vermutung, dass es in der Vorschau-Instanz deshalb
+immer wieder auftritt. Beides trifft zu, und es sind **zwei** Fehler, die
+dieselbe Wurzel haben: Die Prüfung verglich nie mit dem Stand, der gerade
+läuft.
+
+**Wurzel: ein Relais statt eines Vergleichs.** `checkForUpdates()` holte die
+Seite und verglich ihren Inhalts-Hash mit `werkbaum-html-hash` — dem Hash des
+**zuletzt abgerufenen** Stands. Über den läuft die Aussage „neu“ also
+indirekt: Sie sagt „der Server liefert etwas anderes als beim letzten Abruf“,
+nicht „der Server liefert etwas anderes als das, was du vor dir hast“. Das
+sind verschiedene Aussagen, sobald etwas zwischen Laden und Abruf dazwischen
+kommt — und genau das tut ein CDN. Der Kommentar im Code hielt schon fest,
+dass GitHub Pages je Cache-Knoten abweichende ETags liefert; dasselbe gilt
+zeitlich für den **Inhalt**: Während ein Deploy durchläuft, antworten Knoten
+unterschiedlich, aufeinanderfolgende Abrufe wechseln zwischen alt und neu. Der
+Hash im localStorage wurde dabei bei **jedem** Abruf nachgeführt, jeder Wechsel
+schlug also erneut an — auch wenn der laufende Tab längst den neuen Stand
+hatte. Dazu kommt, dass sich alle Tabs denselben Schlüssel teilen: Zwei
+geöffnete Tabs schreiben abwechselnd ihren Stand hinein und melden einander
+Updates.
+
+**Zweiter Fehler, der eigentliche Dauerbrenner: das Flag blieb kleben.**
+`werkbaum-update-available` wurde bei einem Fund gesetzt und **nur** vom Knopf
+„Jetzt laden“ wieder entfernt. Wer statt dessen F5 drückte — oder „Später“, das
+lediglich das Banner-Element entfernte —, behielt das Flag; und beim Laden
+stand:
+
+```js
+if(!document.hidden && localStorage.getItem('werkbaum-update-available')){
+  checkAndShowUpdateNotification();
+}
+```
+
+Also erschien das Banner ausgerechnet auf der Fassung, die es gerade eingespielt
+hatte, und danach bei **jedem** weiteren Laden, bis irgendwann jemand den
+richtigen Knopf traf. Nachgestellt: Flag setzen, neu laden → Banner; „Später“ →
+Flag steht weiter; neu laden → Banner. Endlos.
+
+**Entscheidung: die laufende Seite ist der Vergleichsmaßstab, und sie kennt
+sich selbst.** Beide Deploy-Wege spritzen den Commit in den
+Footer-Versionslink (D16, `<a class="ver" href="…/commit/<sha>">`) — die
+laufende Seite trägt ihre Identität also im DOM, die abgerufene im HTML-Text.
+Zwei Werte, die im selben Moment vorliegen; dazwischen kein Speicher, der
+altern könnte. Damit sind alle drei Ursachen weg: kein Relais (CDN-Flattern
+meldet nichts mehr, solange der gelieferte Commit der laufende ist), keine
+Kopplung zwischen Tabs, und nichts, was ein Neuladen überdauert. Nebengewinn:
+Schon die **erste** Prüfung nach dem Laden ist aussagekräftig — der alte Weg
+konnte beim ersten Mal grundsätzlich nichts sagen, weil er erst einen
+Vergleichsstand anlegen musste.
+
+**Der Zustand lebt nur noch im Speicher.** `werkbaum-update-available` und
+`werkbaum-html-hash` werden nicht mehr geschrieben (der Reset räumt sie noch
+weg, falls sie aus einer früheren Fassung herumliegen). Beim Laden wird
+grundsätzlich **nichts** gemeldet: Was der Browser gerade geholt hat, *ist* der
+aktuelle Stand, bis eine Prüfung etwas anderes zeigt — und die läuft zwei
+Sekunden später ohnehin. Damit kann die Meldung nicht mehr klemmen: Gilt sie
+noch, kommt sie sofort wieder; gilt sie nicht, bleibt sie weg. „Später“ darf
+deshalb weiterhin nur das Element entfernen.
+
+**Die Meldung wird auch wieder eingesammelt.** Sagt eine spätere Prüfung
+„aktuell“, während das Banner steht, verschwinden Banner und Footer-Symbol.
+Das deckt den Rollback ab und den Fall, dass ein einzelner Abruf doch einmal
+gegen einen veralteten Knoten lief.
+
+**Rückfall für Builds ohne Marker** (Dev-Server, `file://`, lokales
+`npm run preview`): dort steht im Footer der Platzhalter `…/commit/main`, also
+keine Commit-Kennung. Dann wird weiter der Inhalts-Hash verglichen — aber gegen
+den **ersten Abruf dieser Seiten-Sitzung**, der als Vergleichsstand stehen
+bleibt, statt gegen einen fortlaufend nachgeführten Wert im localStorage. Der
+Preis ist ein blindes Fenster von zwei Sekunden zwischen Laden und Erstprüfung;
+auf dem Dev-Server ist das gleichgültig, weil dort HMR arbeitet.
+
+**Nachgemessen** (Dev-Server, Marker zum Prüfen von Hand eingespritzt):
+
+| Fall | vorher | nachher |
+|---|---|---|
+| Altes Flag im localStorage, neu laden | Banner, bei jedem Laden erneut | kein Banner, drei Takte „✓ Alles aktuell“ |
+| Gespeicherter Hash ≠ Auslieferung, Seite unverändert | „✅ NEUE VERSION ERKANNT!“ | „✓ Alles aktuell“ |
+| Server liefert anderen Commit | — | „✅ Neuer Build 2222222“, Banner + Footer-Symbol |
+| Danach wieder derselbe Commit | Banner blieb stehen | Banner und Symbol verschwinden |
+| „Später“, dann F5 | Banner sofort wieder da | weg und bleibt weg |

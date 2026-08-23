@@ -491,3 +491,16 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Diagramm maximiert. Layout-CSS hängt an `body.mobile`, nicht an einer eigenen
   `@media`-Regel — beide Seiten müssen denselben 640-px-Schwellwert nutzen
   (SPEC §9, D17).
+- **Update-Prüfung (D45):** verglichen wird der Commit aus dem
+  Footer-Versionslink der **laufenden** Seite (`runningBuildId()`, DOM) gegen
+  den aus der abgerufenen HTML (`buildIdFromHtml()`). Kein localStorage
+  dazwischen — `werkbaum-update-available`/`werkbaum-html-hash` werden **nicht
+  mehr geschrieben** (der Reset räumt sie nur noch weg). Wer hier etwas
+  „merken" will: Genau das war der Fehler — ein gemerktes „Update verfügbar"
+  überlebt das Neuladen, das es einspielt, und meldet dieselbe Fassung endlos
+  weiter. Beim Laden wird deshalb **nichts** gemeldet; die Prüfung nach zwei
+  Sekunden holt es nach. Zum Testen: Auf dem Dev-Server steht im Footer der
+  Platzhalter `…/commit/main` (keine Commit-Kennung) — dort läuft der
+  Hash-Rückfall, der Marker-Pfad ist nur zu prüfen, wenn man einen echten
+  `commit/<sha>` in `index.html` einspritzt (danach zurücknehmen!) und
+  `window.fetch` überschreibt.
