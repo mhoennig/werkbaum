@@ -699,6 +699,15 @@ fokussierten Knoten (WAI-ARIA-Baum-Idiom).
   weil eine Fokusmarke `!!!` ihren Knoten immer wieder hervorholt): Dann wird
   lieber nichts geschrieben, als einen Text zu hinterlassen, der etwas anderes
   sagt als das Bild.
+- **Für den ganzen Baum** gibt es im Diagramm-Kopf ein Menü mit zwei
+  Voreinstellungen: **alle aufklappen** und **unter Größe M zuklappen**. Beide
+  beschreiben einen **vollständigen** Faltzustand — was die Voreinstellung
+  nicht zuklappt, ist danach offen; „unter Größe M“ meint jeden Knoten mit
+  Kindern, dessen **angegebene** Größe (§5) kleiner als `M` ist. Ein Knoten
+  **ohne** Größenangabe wird nicht zugeklappt: Der günstigste Pfad rechnet
+  fehlende Größen zwar als `M` (§9), das ist aber eine Kostenannahme und keine
+  Aussage des Autors. Geschrieben wird wie beim einzelnen Umklappen — ein
+  einziger Rückgängig-Schritt für den ganzen Vorgang. Siehe D44.
 - Faltung ist **reine Ansicht**: Warnungen aus eingeklappten Teilbäumen werden
   weiter gemeldet (sie gelten dem Text), und der günstigste Pfad rechnet
   unverändert über den ganzen Baum.

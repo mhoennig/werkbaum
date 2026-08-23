@@ -159,6 +159,23 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>
         <span class="freshcount" id="freshCount" aria-hidden="true">0</span>
       </button>
+      <!-- Faltung für den ganzen Baum (SPEC §9, D44). Ein Auslöser, zwei
+           Optionen — deshalb ein Aufklapp-Menü und keine zwei Knöpfe. -->
+      <div class="foldgroup" id="foldGroup">
+        <button type="button" class="copybtn foldtrigger" id="foldTrigger" aria-haspopup="true" aria-expanded="false" data-i18n-title="foldMenu" data-i18n-aria="foldMenu" title="Teilbäume auf- und zuklappen" aria-label="Teilbäume auf- und zuklappen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h13M8 9h13M8 15h13M8 20h13M2 6l2.5 2.5L2 11"/></svg>
+        </button>
+        <div class="foldmenu">
+          <button type="button" class="copybtn foldbtn" id="foldExpandAll">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></svg>
+            <span class="fold-label" data-i18n="foldExpandAll">alle aufklappen</span>
+          </button>
+          <button type="button" class="copybtn foldbtn" id="foldCollapseSmall">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V3M8 8l4 4 4-4M8 16l4-4 4 4"/></svg>
+            <span class="fold-label" data-i18n="foldCollapseSmall">unter Größe M zuklappen</span>
+          </button>
+        </div>
+      </div>
       <div class="seg" role="radiogroup" aria-label="Darstellung">
         <label data-i18n-title="modeHorizontal" title="Horizontal – Organigramm, Diagramm über dem Editor">
           <input type="radio" name="layout" value="horizontal" checked data-i18n-aria="modeHorizontal" aria-label="Horizontal – Organigramm">

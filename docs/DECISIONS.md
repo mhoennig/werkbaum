@@ -2717,3 +2717,63 @@ Markdown; die Konvention nutzt `.txt` nur als kleinsten gemeinsamen Nenner),
 und der Footer-Link rückt zwischen Versionsnummer und Copyright — zur
 Werkzeug-Ecke des Footers statt ans Ende hinter die Rechtstexte. Der
 Dateiname bleibt als Linktext (übersetzungsfrei), die Wurzel-Lage bleibt.
+
+## D44 — Falt-Voreinstellungen: ein Menü, „unter M“ statt einer Tiefenzahl
+Einzeln zu falten (D38) reicht für einen Plan mit 167 Knoten nicht — man will
+den Baum am Stück auf eine Arbeitshöhe bringen. Der Diagramm-Kopf bekommt
+deshalb ein Menü mit zwei Einträgen: **alle aufklappen** und **unter Größe M
+zuklappen**.
+
+**Das Kriterium ist die Größe, nicht die Tiefe.** Die naheliegende Alternative
+wäre „bis Ebene n aufklappen“ gewesen. Die Ebene ist aber eine Eigenschaft der
+Schreibweise, nicht der Sache: Wie tief etwas steht, hängt davon ab, wie fein
+der Autor zerlegt hat, und ein sorgfältig aufgeschlüsselter Zweig verschwände
+bei derselben Zahl früher als ein grob notierter. Die T-Shirt-Größe sagt
+dagegen etwas über die **Arbeit**, und die Notation hat dafür bereits eine
+Schwelle: Ab `M` **muss** ein Element zerlegt sein (§5/D8). „Unter M“ ist also
+genau die Menge, die keine Zerlegung mehr braucht — was darunter hängt, ist
+Detail. Die Voreinstellung zeigt damit den Plan auf der Höhe, auf der noch
+Entscheidungen anstehen.
+
+**Ohne Größenangabe wird nicht zugeklappt.** Der günstigste Pfad wertet eine
+fehlende Größe als `M` (D18) — das wäre hier der falsche Präzedenzfall: Dort
+ist es eine bewusst konservative **Kostenannahme** („mindestens M“), hier wäre
+es eine Aussage über den Willen des Autors. Wer keine Größe angegeben hat, hat
+nichts gesagt; einen Zweig deswegen zu verbergen, behandelte eine Vermutung
+wie eine Angabe. Ein Knoten ohne Größe bleibt also offen — und fällt dadurch
+angenehmerweise auf.
+
+**Beide Einträge beschreiben einen vollständigen Zustand.** „Unter M
+zuklappen“ klappt nicht nur zu, es klappt alles **andere auf**. Sonst wäre die
+Wirkung vom Vorzustand abhängig und zweimal Drücken ergäbe zweierlei — für
+eine Voreinstellung die falsche Eigenschaft. Der Preis: Ein von Hand gesetztes
+`>` an einem großen Knoten wird dabei aufgelöst. Das ist vertretbar, weil der
+Nutzer gerade ausdrücklich eine Gesamtansicht angefordert hat, und weil
+**Rückgängig** den ganzen Vorgang in einem Schritt zurücknimmt (nachgemessen:
+`replaceTextUndoable` schreibt genau einmal, Strg+Z stellt Text und Diagramm
+wieder her).
+
+**Umgesetzt über denselben Weg wie das einzelne Umklappen** — die
+Sitzungs-Überlagerungen setzen, dann in den Text schreiben (D38-Nachtrag 2).
+Dafür wanderte der Voll-Rewrite aus `writeFoldToText()` in ein eigenes
+`writeAllFoldMarks(roots, want)`: Für eine Voreinstellung gibt es keinen
+minimalen Patch, sie fasst den ganzen Baum an. Damit gilt auch hier die
+Rückfall-Kette unverändert — ist der Zustand in Marken **nicht ausdrückbar**,
+wird nicht geschrieben und die Überlagerung trägt ihn für die Sitzung.
+
+Genau der Fall tritt im mitgelieferten Werkbaum-Plan auf und ist beim Bauen
+nachgemessen worden: Zwei Knoten sind kleiner als `M` und haben Kinder
+(Zeile 94 und 100), aber in Zeile 103 steht eine Fokusmarke `!!!` unterhalb
+von 94 — die holt ihren Knoten immer wieder hervor, „94 eingeklappt“ ist als
+Markensatz also nicht schreibbar. Das Bild stimmt trotzdem (die Überlagerung
+gewinnt in `render()`), der Text bleibt unangetastet. In einem Plan ohne `!!!`
+werden die Marken geschrieben: `- [ ] > Klein (S)` und `- [ ] > Teil 3 (S)`,
+während `(L)`, `(XL)` und der Knoten ohne Größe offen bleiben.
+
+**Ein Menü, nicht zwei Knöpfe.** Der Diagramm-Kopf trägt schon acht
+Bedienelemente und bricht auf dem Telefon knapp nicht um (D17). Zwei weitere
+Icon-Knöpfe hätten das gekostet — und die beiden Einträge brauchen **Text**:
+„unter Größe M zuklappen“ ist als Piktogramm nicht zu sagen. Dasselbe Idiom
+wie das Download-Menü (D17), nur auf **allen** Bildschirmgrößen aufklappend
+statt nur auf schmalen. Nachgemessen bei 375 px: Das Menü steht mit 159 px
+vollständig im Bild, die Kopfzeile bleibt einzeilig.

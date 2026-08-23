@@ -21,6 +21,13 @@ export function needsBreakdown(n){
   return !!n.size && SIZE_RANK[n.size] >= SIZE_RANK.M && !n.children.length;
 }
 
+/* Faltung-Voreinstellung „alles unter Größe M zuklappen" (SPEC §9, D44):
+   Knoten mit ANGEGEBENER Größe kleiner als M. Fehlt die Angabe, wird nichts
+   angenommen — der günstigste Pfad rechnet sie zwar als M (D18), das ist aber
+   eine Kostenannahme des Werkzeugs und keine Aussage des Autors; danach den
+   Baum zuzuklappen hieße, eine Vermutung wie eine Angabe zu behandeln. */
+export function belowM(n){ return !!n.size && SIZE_RANK[n.size] < SIZE_RANK.M; }
+
 /* Sichtbare Kinder: verworfene ausblenden, außer showDiscarded ist gesetzt. */
 export function visibleChildren(n, showDiscarded){
   if(showDiscarded) return n.children;

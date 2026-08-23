@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parse, setFoldMark } from '../src/parser.js';
-import { initialCollapsed, computeCheapSet } from '../src/model.js';
+import { initialCollapsed, computeCheapSet, belowM } from '../src/model.js';
 import { renderTreeHtml } from '../src/render.js';
 
 const t = key => key;
@@ -250,5 +250,35 @@ describe('Günstigster Pfad an eingeklappten Knoten', () => {
     const {html} = renderTreeHtml(r, {t, showDiscarded: false, cheapPath: true,
       cheapSet: computeCheapSet(r), collapsedSet: new Set([o])});
     expect(stations(html)).toEqual(['N']);
+  });
+});
+
+/* Voreinstellung „unter Größe M zuklappen" im Diagramm-Kopf (SPEC §9, D44).
+   Das Falten selbst liegt in app.js (kein headless-Testziel); geprüft wird
+   das Prädikat, das entscheidet, WELCHE Knoten es trifft. */
+describe('belowM — Auswahl für „unter Größe M zuklappen"', () => {
+  const groessen = txt => roots(txt).map(n => [n.label, belowM(n)]);
+
+  it('trifft XS und S, nicht M und darüber', () => {
+    expect(groessen('[ ] a (XS)\n[ ] b (S)\n[ ] c (M)\n[ ] d (L)\n[ ] e (XL)\n[ ] f (XXL)'))
+      .toEqual([['a', true], ['b', true], ['c', false], ['d', false],
+                ['e', false], ['f', false]]);
+  });
+
+  it('trifft Knoten OHNE Größenangabe nicht', () => {
+    /* Der günstigste Pfad rechnet fehlende Größen als M (D18) — das ist eine
+       Kostenannahme, keine Aussage des Autors, und faltet hier nichts zu. */
+    expect(groessen('[ ] ohne')).toEqual([['ohne', false]]);
+  });
+
+  it('ist von Status und Optionalität unabhängig', () => {
+    expect(groessen('[x] a (S)\n[-] b (S)\n[ ] c (L)').map(([, b]) => b))
+      .toEqual([true, true, false]);
+  });
+
+  it('gilt auch für Knoten tief im Baum', () => {
+    const [w] = roots('[ ] W (XL)\n  - [ ] A (S)\n    - [ ] A1 (XS)\n  - [ ] B (L)');
+    expect([belowM(w), ...w.children.map(belowM)]).toEqual([false, true, false]);
+    expect(belowM(w.children[0].children[0])).toBe(true);
   });
 });

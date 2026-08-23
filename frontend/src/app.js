@@ -1,6 +1,6 @@
 import './style.css';
 import { parse, setFoldMark } from './parser.js';
-import { computeCheapPlan, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus } from './model.js';
+import { computeCheapPlan, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, belowM } from './model.js';
 import { esc, renderTreeHtml } from './render.js';
 import { formatWarning } from './warnings.js';
 import { padUrls } from './remote.js';
@@ -969,21 +969,42 @@ function writeFoldToText(line, collapsed){
   klein[line-1] = setFoldMark(klein[line-1], collapsed ? '>' : null);
   let neu = klein.join('\n');
 
-  if(!foldStateMatches(neu, want)){
-    /* 2) Vollständig: alle Marken neu setzen. Nötig, wenn ein `<` den Zustand
-          nicht mehr trifft — dann wird es hier aufgelöst. */
-    const keys = nodeKeys(roots);
-    const ganz = zeilen.slice();
-    keys.forEach((key, n) => {
-      ganz[n.line-1] = setFoldMark(ganz[n.line-1], want.has(key) ? '>' : null);
-    });
-    neu = ganz.join('\n');
-    /* 3) Nicht ausdrückbar — etwa weil ein `!!!` im Zweig seinen Knoten immer
-          wieder hervorholt (SPEC §9). Dann NICHT schreiben: ein Text, der
-          etwas anderes sagt als das Bild, wäre schlimmer als keine Marke. */
-    if(!foldStateMatches(neu, want)) return false;
-  }
+  if(!foldStateMatches(neu, want)) return writeAllFoldMarks(roots, want);
   return withEditorWritable(() => replaceTextUndoable(neu));
+}
+
+/* Alle Marken neu setzen — der Weg, wenn ein `<` den Zustand nicht mehr trifft
+   (dann wird es hier aufgelöst) und zugleich der einzige sinnvolle für die
+   Voreinstellungen, die ohnehin den ganzen Baum anfassen. Liefert false, wenn
+   der Zustand in Marken NICHT ausdrückbar ist — etwa weil ein `!!!` im Zweig
+   seinen Knoten immer wieder hervorholt (SPEC §9). Dann wird nicht
+   geschrieben: ein Text, der etwas anderes sagt als das Bild, wäre schlimmer
+   als keine Marke. */
+function writeAllFoldMarks(roots, want){
+  const keys = nodeKeys(roots);
+  const zeilen = src.value.split('\n');
+  keys.forEach((key, n) => {
+    zeilen[n.line-1] = setFoldMark(zeilen[n.line-1], want.has(key) ? '>' : null);
+  });
+  const neu = zeilen.join('\n');
+  if(!foldStateMatches(neu, want)) return false;
+  return withEditorWritable(() => replaceTextUndoable(neu));
+}
+
+/* Voreinstellungen aus dem Diagramm-Kopf (SPEC §9, D44): den ganzen Baum auf
+   einmal auf- bzw. bis unter Größe M zuklappen. Gesetzt wird über dieselben
+   Sitzungs-Überlagerungen wie beim einzelnen Umklappen und danach in den Text
+   geschrieben — es ist derselbe Vorgang, nur für viele Knoten. Deshalb auch
+   EIN Undo-Schritt: `replaceTextUndoable` schreibt genau einmal. */
+function applyFoldPreset(mode){
+  const roots = parse(src.value).roots;
+  if(!roots.length) return;
+  nodeKeys(roots).forEach((key, n) => {
+    if(!n.children.length) return;           /* nur faltbare Knoten */
+    foldOverrides.set(key, mode === 'small' ? belowM(n) : false);
+  });
+  if(!src.readOnly && writeAllFoldMarks(roots, desiredFoldKeys(roots))) foldOverrides.clear();
+  else render();                             /* Pad o. nicht ausdrückbar: Überlagerung trägt */
 }
 
 /* Faltung umklappen (SPEC §9, D38). Gelingt das Zurückschreiben, ist der Text
@@ -1445,6 +1466,31 @@ document.addEventListener('click', e => {
   if(dlGroup.classList.contains('open') && !dlGroup.contains(e.target)) closeDlMenu();
 });
 
+/* Faltung für den ganzen Baum (SPEC §9, D44) — dasselbe Menü-Idiom, hier auf
+   allen Bildschirmgrößen, weil die Einträge Text tragen. */
+const foldGroup = document.getElementById('foldGroup');
+const foldTrigger = document.getElementById('foldTrigger');
+function closeFoldMenu(){
+  foldGroup.classList.remove('open');
+  foldTrigger.setAttribute('aria-expanded', 'false');
+}
+foldTrigger.addEventListener('click', () => {
+  const open = foldGroup.classList.toggle('open');
+  foldTrigger.setAttribute('aria-expanded', String(open));
+});
+document.addEventListener('click', e => {
+  if(foldGroup.classList.contains('open') && !foldGroup.contains(e.target)) closeFoldMenu();
+});
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && foldGroup.classList.contains('open')){ closeFoldMenu(); foldTrigger.focus(); }
+});
+document.getElementById('foldExpandAll').addEventListener('click', () => {
+  closeFoldMenu(); applyFoldPreset('all');
+});
+document.getElementById('foldCollapseSmall').addEventListener('click', () => {
+  closeFoldMenu(); applyFoldPreset('small');
+});
+
 /* ---------- Internationalisierung (DE/EN/ES/FR) ---------- */
 const I18N = {
   de: {
@@ -1470,6 +1516,9 @@ const I18N = {
     riskTooltip:"High Risk – Aufwand noch unklar.",
     discardedTooltip:"Verworfene Knoten samt Teilbaum ein-/ausblenden",
     cheapTooltip:"Günstigsten Pfad hervorheben – nicht benötigte Alternativen treten zurück",
+    foldMenu:"Teilbäume auf- und zuklappen",
+    foldExpandAll:"alle aufklappen",
+    foldCollapseSmall:"unter Größe M zuklappen",
     implicitSizeTooltip:"Keine Größe angegeben – für die Kostenschätzung als M angenommen",
     fullscreenTooltip:"Vollbild – Panels nutzen die ganze Fensterbreite",
     brandTooltip:"„Werkbaum“ bedeutet so viel wie ‚Werk-Baum‘ — der Baum des Projektstrukturplans (WBS).",
@@ -1550,6 +1599,9 @@ const I18N = {
     riskTooltip:"High risk – effort still unclear.",
     discardedTooltip:"Show/hide discarded nodes and their subtree",
     cheapTooltip:"Highlight the cheapest path – unneeded alternatives recede",
+    foldMenu:"Expand and collapse subtrees",
+    foldExpandAll:"expand all",
+    foldCollapseSmall:"collapse below size M",
     implicitSizeTooltip:"No size given – assumed as M for the cost estimate",
     fullscreenTooltip:"Full screen – panels use the full window width",
     brandTooltip:"“Werkbaum” means roughly ‘work tree’ — the tree of the work breakdown structure (WBS).",
@@ -1630,6 +1682,9 @@ const I18N = {
     riskTooltip:"Alto riesgo – esfuerzo aún incierto.",
     discardedTooltip:"Mostrar u ocultar los nodos descartados y su subárbol",
     cheapTooltip:"Resaltar la ruta más económica: las alternativas no necesarias se atenúan",
+    foldMenu:"Desplegar y plegar subárboles",
+    foldExpandAll:"desplegar todo",
+    foldCollapseSmall:"plegar por debajo de la talla M",
     implicitSizeTooltip:"Sin tamaño indicado: se asume M para el cálculo de costes",
     fullscreenTooltip:"Pantalla completa – los paneles usan todo el ancho de la ventana",
     brandTooltip:"«Werkbaum» significa algo así como ‘árbol de trabajo’ — el árbol de la estructura de desglose del trabajo (EDT).",
@@ -1710,6 +1765,9 @@ const I18N = {
     riskTooltip:"Risque élevé – effort encore incertain.",
     discardedTooltip:"Afficher/masquer les nœuds abandonnés et leur sous-arbre",
     cheapTooltip:"Mettre en évidence le chemin le moins coûteux – les alternatives inutiles s'estompent",
+    foldMenu:"Déplier et replier les sous-arbres",
+    foldExpandAll:"tout déplier",
+    foldCollapseSmall:"replier en dessous de la taille M",
     implicitSizeTooltip:"Aucune taille indiquée – considérée comme M pour l'estimation des coûts",
     fullscreenTooltip:"Plein écran – les panneaux occupent toute la largeur de la fenêtre",
     brandTooltip:"« Werkbaum » signifie à peu près « arbre de travail » — l’arbre de l’organigramme des tâches (WBS).",
@@ -1790,6 +1848,9 @@ const I18N = {
     riskTooltip:"Wysokie ryzyko – nakład jeszcze niejasny.",
     discardedTooltip:"Pokaż/ukryj odrzucone węzły wraz z poddrzewem",
     cheapTooltip:"Wyróżnij najtańszą ścieżkę – niepotrzebne alternatywy są przygaszone",
+    foldMenu:"Rozwijanie i zwijanie poddrzew",
+    foldExpandAll:"rozwiń wszystko",
+    foldCollapseSmall:"zwiń poniżej rozmiaru M",
     implicitSizeTooltip:"Nie podano rozmiaru – przyjęto M do szacowania kosztów",
     fullscreenTooltip:"Pełny ekran – panele wykorzystują całą szerokość okna",
     brandTooltip:"„Werkbaum” znaczy mniej więcej ‚drzewo pracy’ — drzewo struktury podziału pracy (WBS).",
@@ -1870,6 +1931,9 @@ const I18N = {
     riskTooltip:"Высокий риск – оценка ещё не ясна.",
     discardedTooltip:"Показать/скрыть отклонённые узлы вместе с поддеревом",
     cheapTooltip:"Выделить самый дешёвый путь — ненужные альтернативы приглушаются",
+    foldMenu:"Развернуть и свернуть поддеревья",
+    foldExpandAll:"развернуть все",
+    foldCollapseSmall:"свернуть меньше размера M",
     implicitSizeTooltip:"Размер не указан — для оценки затрат принят как M",
     fullscreenTooltip:"Полный экран – панели занимают всю ширину окна",
     brandTooltip:"«Werkbaum» примерно означает ‚дерево работ’ — дерево структуры декомпозиции работ (СДР).",
@@ -1950,6 +2014,9 @@ const I18N = {
     riskTooltip:"उच्च जोखिम – प्रयास अभी अस्पष्ट।",
     discardedTooltip:"अस्वीकृत नोड्स और उनके उप-वृक्ष दिखाएँ/छिपाएँ",
     cheapTooltip:"सबसे किफ़ायती पथ को उजागर करें – अनावश्यक विकल्प मंद हो जाते हैं",
+    foldMenu:"उपवृक्ष खोलें और समेटें",
+    foldExpandAll:"सभी खोलें",
+    foldCollapseSmall:"आकार M से छोटे समेटें",
     implicitSizeTooltip:"कोई आकार नहीं दिया गया – लागत अनुमान के लिए M माना गया",
     fullscreenTooltip:"पूर्ण स्क्रीन – पैनल पूरी विंडो चौड़ाई का उपयोग करते हैं",
     brandTooltip:"„Werkbaum“ का अर्थ लगभग ‚कार्य-वृक्ष‘ है — कार्य विभाजन संरचना (WBS) का वृक्ष।",
@@ -2019,6 +2086,9 @@ const I18N = {
     fullscreenTooltip:"全屏——面板占据整个窗口宽度",
     discardedTooltip:"显示/隐藏已放弃的节点及其子树",
     cheapTooltip:"突出显示成本最低的路径——不需要的备选项将淡化",
+    foldMenu:"展开和折叠子树",
+    foldExpandAll:"全部展开",
+    foldCollapseSmall:"折叠小于 M 的节点",
     implicitSizeTooltip:"未指定尺寸——成本估算时按 M 计",
     ghostTooltip:"从 M 号起，元素应进一步细分。",
     jumpHint:"Alt+点击：跳转到文本中的该行",
@@ -2099,6 +2169,9 @@ const I18N = {
     fullscreenTooltip:"全画面 — パネルがウィンドウ幅いっぱいを使用",
     discardedTooltip:"破棄したノードとその下位ツリーを表示/非表示",
     cheapTooltip:"最も低コストの経路を強調 – 不要な選択肢は控えめに表示",
+    foldMenu:"サブツリーの展開と折りたたみ",
+    foldExpandAll:"すべて展開",
+    foldCollapseSmall:"サイズ M 未満を折りたたむ",
     implicitSizeTooltip:"サイズ未指定 – コスト見積もりのため M として扱う",
     ghostTooltip:"サイズ M 以上の要素はさらに分解すべきです。",
     jumpHint:"Alt+クリック：テキストの該当行へ移動",
