@@ -2603,6 +2603,9 @@ function updateDocName(){
   updatePadLink();   /* Schreibschutz + Pad-Knopf hängen am aktiven Dokument (D31) */
 }
 let renamingId = null;   /* id des gerade inline umbenannten Dokuments (oder null) */
+/* Kam das Umbenennen von einem frisch angelegten Dokument? Dann geht es danach
+   im Textfeld weiter — Anlegen heißt schreiben wollen (D51). */
+let renameIsNew = false;
 function renderDocMenu(){
   docList.innerHTML = docs.map(d => {
     if(d.id === renamingId){
@@ -2664,7 +2667,7 @@ function restoreDoc(){
   closeDocMenu();
 }
 function openDocMenu(){ renderDocMenu(); updateRestoreBtn(); docMenu.hidden = false; docTrigger.setAttribute('aria-expanded', 'true'); }
-function closeDocMenu(){ renamingId = null; docMenu.hidden = true; docTrigger.setAttribute('aria-expanded', 'false'); }
+function closeDocMenu(){ renamingId = null; renameIsNew = false; docMenu.hidden = true; docTrigger.setAttribute('aria-expanded', 'false'); }
 function toggleDocMenu(){ docMenu.hidden ? openDocMenu() : closeDocMenu(); }
 /* Beim Wechseln/Anlegen/Löschen zuerst den aktuellen Editortext ins aktive
    Dokument sichern, dann das Ziel laden und neu rendern. */
@@ -2728,6 +2731,11 @@ function switchDoc(id){
   loadActiveIntoEditor();
   persistDocs();
 }
+/* Ein neues Dokument beginnt mit seinem Namen (D51): Statt es unter „Neues
+   Dokument" abzulegen und den Cursor ins leere Textfeld zu setzen, öffnet sich
+   sofort das Inline-Umbenennen mit **ausgewähltem** Vorschlag — tippen ersetzt
+   ihn, Enter bestätigt. Wer nichts eingibt, behält den Vorschlag; das Dokument
+   ist bereits angelegt, ein Abbruch verwirft es nicht. */
 function newDoc(){
   flushActive();
   const d = { id: uid(), name: uniqueName(t('docNewName')), text: '' };
@@ -2737,11 +2745,23 @@ function newDoc(){
   loadActiveIntoEditor();
   persistDocs();
   keyboardOnJump(false);   /* neues, leeres Dokument = tippen ist gemeint */
+  renamingId = d.id;
+  renameIsNew = true;
+  renderDocMenu();         /* setzt den Fokus ins Eingabefeld und markiert es */
+}
+/* Nach dem Benennen eines frisch angelegten Dokuments geht es im Textfeld
+   weiter — die zweite Hälfte derselben Geste. Gilt auch für Esc: Der Vorschlag
+   bleibt dann stehen, das Dokument existiert ohnehin. */
+function finishNewDoc(){
+  if(!renameIsNew) return;
+  renameIsNew = false;
+  closeDocMenu();
   src.focus();
 }
 function renameDoc(){
   if(!activeDoc()) return;
   renamingId = activeId;   /* aktives Dokument inline umbenennen */
+  renameIsNew = false;
   renderDocMenu();
 }
 function commitRename(){
@@ -2752,8 +2772,9 @@ function commitRename(){
   renamingId = null;
   if(d && val){ d.name = val; persistDocs(); updateDocName(); }
   renderDocMenu();
+  finishNewDoc();
 }
-function cancelRename(){ renamingId = null; renderDocMenu(); }
+function cancelRename(){ renamingId = null; renderDocMenu(); finishNewDoc(); }
 function deleteDoc(){
   const d = activeDoc();
   if(!d) return;
@@ -3091,7 +3112,9 @@ docList.addEventListener('click', e => {
   switchDoc(btn.dataset.id);
   closeDocMenu();
 });
-document.getElementById('docNew').addEventListener('click', e => { e.stopPropagation(); newDoc(); renderDocMenu(); });
+/* `newDoc()` zeichnet das Menü selbst neu — es geht direkt ins Umbenennen
+   (D51), und ein zweiter Durchlauf baute das Eingabefeld nur noch einmal auf. */
+document.getElementById('docNew').addEventListener('click', e => { e.stopPropagation(); newDoc(); });
 document.getElementById('docRename').addEventListener('click', e => { e.stopPropagation(); renameDoc(); });
 document.getElementById('docDelete').addEventListener('click', e => { e.stopPropagation(); deleteDoc(); });
 document.getElementById('docRestore').addEventListener('click', e => { e.stopPropagation(); restoreDoc(); });

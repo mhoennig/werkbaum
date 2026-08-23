@@ -3247,3 +3247,44 @@ und bei 320 px.
 `overflow` gibt, entscheidet damit über alles, was aus ihr herausragen soll —
 Menüs, Tooltips, Overlays. In `frontend/CLAUDE.md` steht das jetzt bei der
 Kopfzeilen-Stolperfalle.
+
+## D51 — Ein neues Dokument beginnt mit seinem Namen
+Bisher legte „＋ Neu" das Dokument unter „Unbenannt" an und setzte den Cursor
+ins leere Textfeld. Das Umbenennen war ein eigener, zweiter Gang durchs Menü —
+und wurde entsprechend oft nicht gemacht: Wer drei Pläne führt, hat drei
+„Unbenannt". Jetzt öffnet sich unmittelbar das Inline-Umbenennen (D22) mit
+**ausgewähltem** Vorschlag; tippen ersetzt ihn, Enter bestätigt.
+
+**Das Dokument existiert vorher.** Angelegt, gespeichert und aktiviert wird wie
+bisher; nur der Fokus geht ins Namensfeld statt ins Textfeld. Ein **Abbruch
+verwirft nichts** — Esc behält den Vorschlag „Unbenannt", so wie es vorher der
+Normalfall war. Der Gegenentwurf (erst benennen, dann anlegen) hätte ein
+Dokument im Schwebezustand gebraucht und die Frage aufgeworfen, was bei Esc
+passiert; das ist mehr Mechanik für weniger Verlässlichkeit.
+
+**Nach dem Benennen geht es im Textfeld weiter.** Anlegen heißt schreiben
+wollen — den Namen zu vergeben ist die erste Hälfte der Geste, nicht ihr Zweck.
+Der Merker `renameIsNew` unterscheidet diesen Fall vom gewöhnlichen Umbenennen
+aus dem Menü, das unverändert bleibt (Menü bleibt offen, Fokus wandert nicht).
+Er wird in `closeDocMenu()` mit zurückgesetzt, sonst trüge ein abgebrochener
+Vorgang seine Sonderbehandlung in den nächsten hinein.
+
+Für alle drei Wege aus dem Eingabefeld gilt dasselbe: **Enter**, **Esc** und
+**Fokusverlust** benennen (bzw. behalten den Vorschlag), schließen das Menü und
+setzen den Cursor in den Text. Auf dem Telefon ist das zugleich der Moment, in
+dem die Bildschirmtastatur gebraucht wird — `keyboardOnJump(false)` steht schon
+da, aus demselben Grund (D25: neues, leeres Dokument = tippen ist gemeint).
+
+**Nachgemessen:** Nach „＋ Neu" trägt das Eingabefeld den Fokus, der Vorschlag
+ist vollständig markiert (`selectionStart` 0 bis Länge). Enter mit „Sprint 15":
+Titelzeile, `werkbaum-docs` und der Fokus im leeren Textfeld stimmen. Esc:
+Vorschlag bleibt, Menü zu, Fokus im Text. Umbenennen eines bestehenden
+Dokuments: Menü bleibt offen, Fokus bleibt, wo er war.
+
+**Grenze der Prüfung, benannt:** Der Fokusverlust ließ sich nur als
+**zugestelltes Ereignis** prüfen, nicht als echter Fokuswechsel — ein
+synthetisches `.blur()` löst im Automaten keinen aus. Gegenprobe am
+**unveränderten** Pfad (bestehendes Dokument umbenennen): dort passiert
+ebenfalls nichts, es ist also die Werkzeuggrenze und keine Regression. Dieselbe
+Lehre wie in D25 und D17-Nachtrag 4 — was die Geräteumgebung stellt, beweist
+der Emulator nicht.
