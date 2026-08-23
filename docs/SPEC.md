@@ -411,6 +411,13 @@ Siehe D29.
   23-px-Abzweig oben bleibt unverändert; die vertikal **zentrierten**
   all-of-Zwischenknoten bekommen ihn **symmetrisch**, damit ihr Abzweig
   (50 %-Höhe) weiterhin auf der Knotenmitte liegt.
+- Im **vertikalen** Modus tritt die all-of-Verbindung rechts aus dem Knoten aus;
+  die senkrechte Sammelleiste steht deshalb **weiter vom Knoten ab** als in den
+  übrigen Anordnungen (20 statt 9 px). Größen-Badge und Tag-Pillen ragen an der
+  rechten Knotenkante über den Knoten hinaus und lägen sonst unmittelbar an der
+  Leiste — mit ihrem hellen Rand sähe die Linie dort aus, als risse sie ab.
+  Betroffen ist nur der Rechts-Fächer: kompakt führt all-of nach unten, dort
+  treffen Badge und Leiste nie aufeinander.
 
 ### Kleiner Bildschirm (mobil)
 Ab schmaler Breite (≤ 640 px, z. B. Smartphone) ist **immer genau ein Bereich**
