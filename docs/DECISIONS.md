@@ -3076,6 +3076,12 @@ wieder 40 px breit). Das ist die ehrliche Fortschreibung der D17-Regel: Der
 Riegel sollte einen unbemerkten Layout-Wechsel verhindern, nicht ein
 Bedienelement opfern.
 
+*(Das `overflow-x:auto` war ein Fehler und ist zurückgenommen — es machte aus
+der Kopfzeile einen Scroll-Container und klippte damit die beiden
+Aufklapp-Menüs, die als absolut positionierte Kinder darin hängen. Was an
+seine Stelle tritt und warum es niemandem auffiel: **D50**. `flex:0 0 auto`
+gegen den zerdrückten Modus-Wähler bleibt.)*
+
 ## D48 — Der Werkbaum-Plan erklärt sich selbst: ID und Beschreibung an jedem Knoten
 Der mitgelieferte Plan (D27) ist zugleich Vorzeigedokument und Projektübersicht
 — und war für Fremde weitgehend stumm. Ein Knoten wie „Stay greedy, but say so"
@@ -3184,3 +3190,60 @@ rund 53 Zeichen und muss schieben. Wer dort viel liest, zieht den Splitter auf
 oder wechselt in die Textansicht. Ein Umschalter dafür wurde nicht gebaut — aus
 demselben Grund wie in D33: ein Bedienelement plus neun Übersetzungen für einen
 Zustand, den kaum jemand umstellen will.
+
+## D50 — Kein `overflow` an der Titelzeile: sie trägt die Aufklapp-Menüs
+Gemeldet: „Dokumente aufklappen/auswählen funktioniert in Mobilansicht nicht."
+Eine Regression aus D47, einen Tag alt.
+
+**Ursache.** D47 gab der Titelzeile auf Mobil `overflow-x:auto`, damit bei
+320 px alle neun Bedienelemente erreichbar bleiben. Damit wird sie zum
+**Scroll-Container** — und beide Aufklapp-Menüs hängen als absolut
+positionierte Kinder genau darin: `#docMenu` (Dokumente) im Editor-Kopf,
+`.dlmenu` (Download) im Diagramm-Kopf. Beide standen anschließend im
+abgeschnittenen Bereich.
+
+**Der Teil, der beim Bauen übersehen wurde, ist eine CSS-Regel:** `overflow-x`
+auf etwas anderes als `visible` zu setzen hebt ein `visible` der **anderen
+Achse** auf `auto`. Gemessen: `overflow-x:auto` ⇒ `overflow-y:auto`. Geklippt
+wurde also nicht seitlich, wo man es beabsichtigt hatte, sondern **nach
+unten** — dorthin, wo die Menüs aufklappen. Deshalb war der Fehler auch nicht
+auf schmale Geräte beschränkt: Ein Scroll-Container klippt, ob er überläuft
+oder nicht, also auf **jeder** Mobilbreite.
+
+Nachgestellt bei 375 px: Das Dokumenten-Menü ist 153 px hoch und beginnt 156 px
+unterhalb der Kopfunterkante (`clientHeight` 43, `scrollHeight` 200);
+`elementFromPoint` an seiner Stelle liefert das Textfeld. Das Download-Menü
+ebenso — dort kam der Diagramm-Hintergrund zurück. Aufklappen ging also nicht
+bloß „nicht gut", das Menü war gar nicht da.
+
+**Behoben durch Wegnahme, nicht durch einen Umweg.** Erwogen war, die Menüs per
+`position:fixed` aus dem Container zu heben und beim Öffnen aus dem
+Trigger-Rechteck zu positionieren — das hätte beides gerettet, aber JS-Geometrie
+für etwas eingeführt, das CSS bisher allein konnte, samt Nachführen bei jeder
+Größenänderung. Der Preis stand in keinem Verhältnis zum Gewinn: Das `overflow`
+diente **ausschließlich** Breiten unter rund 360 px, kaputt waren die Menüs
+**überall**.
+
+**An seine Stelle tritt Umbrechen — aber nur dort, wo es rechnerisch nicht
+passt.** Unter 360 px (`@media (max-width:360px)`) darf die Zeile umbrechen;
+darüber bleibt `nowrap` als Riegel. Das nimmt D17-Nachtrag 5 nicht zurück: Der
+Riegel sollte einen **unbemerkten** Layout-Wechsel verhindern, und ein Umbruch
+bei einer Breite, bei der neun Fingerziele arithmetisch nicht nebeneinander
+passen, ist keine Überraschung, sondern die einzige ehrliche Möglichkeit.
+Nachgemessen: 375 px eine Reihe zu 49 px, alles innerhalb; 320 px zwei Reihen zu
+78 px, alle neun Elemente vollständig sichtbar, Modus-Wähler weiterhin 40 px
+breit (`flex:0 0 auto` aus D47 bleibt und ist unabhängig richtig).
+
+**Geprüft ist jetzt die Bedienung, nicht die Geometrie.** Der D47-Nachweis
+bestand aus Breiten und Höhen — und genau darin war der Fehler unsichtbar, weil
+die Kopfzeile ja weiterhin 49 px hoch war und alle Knöpfe an ihrem Platz saßen.
+Gemessen wird deshalb jetzt, ob das Menü nach dem Öffnen an seiner eigenen
+Stelle auch **getroffen** wird (`elementFromPoint` landet auf `.docitem` bzw.
+`.dlmenu`) und ob ein Klick darauf das Dokument wirklich wechselt (Werkbaum →
+Example: Titel, `werkbaum-active` und der neu gebaute Baum). Beides bei 375 px
+und bei 320 px.
+
+**Lehre, im selben Geist wie D25 und D17-Nachtrag 4:** Wer einer Leiste
+`overflow` gibt, entscheidet damit über alles, was aus ihr herausragen soll —
+Menüs, Tooltips, Overlays. In `frontend/CLAUDE.md` steht das jetzt bei der
+Kopfzeilen-Stolperfalle.

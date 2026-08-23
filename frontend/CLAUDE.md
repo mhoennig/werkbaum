@@ -504,11 +504,21 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Hash-Rückfall, der Marker-Pfad ist nur zu prüfen, wenn man einen echten
   `commit/<sha>` in `index.html` einspritzt (danach zurücknehmen!) und
   `window.fetch` überschreibt.
-- **Diagramm-Kopfzeile auf Mobil (D17-Nachtrag 5, D47):** Die Zeile ist voll —
-  bei 375 px bleiben mit neun Bedienelementen noch 14 px Luft, bei 320 px passt
-  es arithmetisch nicht mehr und die Zeile **schiebt** (`overflow-x:auto`).
-  Wer ein zehntes Element hinzufügt, misst nach (`scrollWidth - clientWidth`
-  am `.panel-head`) und rechnet damit, dass auf 375 px etwas weichen muss.
+- **Titelzeilen tragen die Aufklapp-Menüs — kein `overflow` daran (D50):**
+  `#docMenu` und `.dlmenu` hängen als absolut positionierte Kinder im
+  `.panel-head`. Ein `overflow` dort macht ihn zum Scroll-Container und klippt
+  sie; `overflow-x` hebt dabei das `visible` der **anderen** Achse auf `auto`,
+  geklippt wird also nach unten — genau dorthin, wo die Menüs aufklappen. Ein
+  Scroll-Container klippt unabhängig davon, ob er überläuft, der Fehler trifft
+  also jede Breite. Er ist rein geometrisch **nicht** zu sehen: Kopfhöhe und
+  Knopfpositionen bleiben korrekt. Prüfen heißt hier: Menü öffnen und mit
+  `elementFromPoint` nachsehen, ob man es trifft.
+- **Diagramm-Kopfzeile auf Mobil (D17-Nachtrag 5, D47, D50):** Die Zeile ist
+  voll — bei 375 px bleiben mit neun Bedienelementen noch 14 px Luft, bei
+  320 px passt es arithmetisch nicht mehr und die Zeile **bricht um**
+  (`@media (max-width:360px)`, zwei Reihen zu 78 px). Wer ein zehntes Element
+  hinzufügt, misst nach (`scrollWidth - clientWidth` am `.panel-head`) und
+  rechnet damit, dass auf 375 px etwas weichen muss.
   Nicht anfassen: die 29 px Knopfgröße (Fingerziel) und `flex:0 0 auto` an den
   Kindern — ohne das schrumpft bei Platzmangel ausgerechnet der Modus-Wähler
   (das einzige Element ohne feste Größe) auf einen 2-px-Strich, während sein
