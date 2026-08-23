@@ -377,6 +377,37 @@ ohnehin unterdrückt; die Gelegenheit genutzt, dem aufgeklappten Kasten
 `white-space: pre-wrap` zu geben — die mit `\n` gefügten Zeilen liefen bisher
 zu einem Absatz zusammen.)
 
+**Nachtrag 5 — die Titelzeile bricht nicht mehr um: die Lücken waren zu
+breit, nicht die Knöpfe zu viele.** Gemeldet, als der Falt-Umschalter (D44)
+den achten Knopf in den Diagramm-Kopf brachte: Die Zeile ging auf drei Reihen
+und 86 statt 49 px — und fraß damit genau die Fläche, für die es den
+Ein-Bereich-Modus (Nachtrag 1) überhaupt gibt.
+
+Nachgemessen war die Diagnose eindeutig, und sie lag nicht bei den Knöpfen:
+Deren Breiten summieren sich bei 375 px auf 243 px. Die **Abstände** brachten
+den Rest — `gap:14px` mal sieben plus 2×16 px Innenabstand sind 130 px, also
+mehr als ein Drittel des Bildschirms. Der Nutzer hat das richtig gesehen:
+„eigentlich ist dort auch genug Platz für alle Buttons".
+
+Auf Mobil deshalb `gap:8px` und `padding-inline:10px`, dazu `flex-wrap:nowrap`
+als Riegel. Die **Knöpfe selbst bleiben unangetastet** — 29 px sind für einen
+Finger ohnehin die Untergrenze; verkleinert wird der Zwischenraum, nicht das
+Ziel. Nachgemessen mit allen acht Bedienelementen (der „Was ist neu?"-Knopf
+ist der, der die Zeile kippen ließ, weil er nur bei fremden Dokumenten mit
+Neuigkeiten erscheint): bei 375 px eine Reihe, 49 px, letztes Element bei
+357 von 359; bei 320 px ebenfalls eine Reihe mit 10 px Luft. Dass es auch bei
+320 px reicht, liegt am `margin-right:auto` des Bereichs-Umschalters — es
+nimmt den Rest auf, wenn welcher da ist, und verschwindet, wenn keiner da ist.
+
+**Warum `nowrap` und nicht einfach engere Lücken:** Ohne den Riegel wäre der
+Umbruch nur weiter hinausgeschoben — der nächste Knopf oder eine längere
+Sprache brächte ihn zurück, und zwar wieder unbemerkt. Mit `nowrap` wird aus
+einem stillen Layout-Wechsel ein sichtbarer Überlauf; das ist der ehrlichere
+Fehler, und die Messung oben zeigt, dass bis 320 px keiner auftritt. Der
+Editor-Kopf trägt dieselbe Regel (er hat nur vier Elemente und war nie
+gefährdet, aber die Zeile soll in beiden Bereichen gleich hoch bleiben);
+Desktop bleibt bei 14 px, dort ist Platz.
+
 ## D18 — Günstigsten Pfad per Inversion zeigen, fehlende Größe = M
 Der kostengünstigste Weg durch den Baum wird hervorgehoben (Umschalter im
 Diagramm-Kopf, Default an, Zustand persistiert). Nötig sind bei **all of** alle

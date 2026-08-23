@@ -447,6 +447,13 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   **einzige** Touch-Navigation Text → Diagramm (Alt gibt es dort nicht). Keinen
   langen Druck ins Textfeld legen — der gehört dem OS (Wortauswahl,
   Auswahlgriffe), anders als im Diagramm, wo D25 ihn sich nehmen konnte.
+  **Die Titelzeile muss einzeilig bleiben** (`body.mobile .panel-head`:
+  `gap:8px`, `padding-inline:10px`, `flex-wrap:nowrap` — D17-Nachtrag 5). Beim
+  Prüfen eines neuen Kopf-Knopfes den **`#freshBtn` einblenden**: Er ist
+  serienmäßig `hidden` und erscheint nur bei fremden Dokumenten mit Neuem —
+  genau er brachte die Zeile zum Umbrechen, und ohne ihn sieht die Messung
+  heil aus. Nicht die Knöpfe verkleinern (29 px sind Fingergröße), sondern die
+  Lücken; bis 320 px reicht es gemessen.
 - `--app-height` (`setAppHeight()`, D17-Nachtrag 4): `body{height:var(--app-height)}`
   kommt aus `visualViewport.height` — nötig gegen überlagernde Browserleisten
   (Brave). **Die Bildschirmtastatur verkleinert denselben Wert** und quetschte

@@ -1097,6 +1097,13 @@
      Editor-Kopf tut das weiterhin der Dokumenten-Wähler daneben. */
   body.mobile .panetoggle{display:inline-flex}
   body.mobile .panel.right .panetoggle{margin-right:auto}
+  /* Die Titelzeile muss EINZEILIG bleiben (D17): Bricht sie um, wächst der
+     Kopf auf das Doppelte und frisst die Fläche, für die es den
+     Ein-Bereich-Modus überhaupt gibt. Die Knöpfe passen längst — es waren die
+     Abstände: 14 px Lücke mal sieben plus 2×16 px Innenabstand sind mehr als
+     ein Drittel von 375 px. Deshalb hier enger und `nowrap` als Riegel; die
+     Knöpfe selbst bleiben unangetastet (Fingergröße). */
+  body.mobile .panel-head{gap:8px;flex-wrap:nowrap;padding-inline:10px}
   /* Inhalte rund 25 % kleiner, damit mehr Plan auf die Fläche passt
      (D17-Nachtrag 2). Das Diagramm macht das über den CSS-`zoom` (Faktor auf
      den Nutzer-Zoom, siehe MOBILE_ZOOM in app.js); der Text über die
