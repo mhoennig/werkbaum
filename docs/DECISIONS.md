@@ -1829,6 +1829,10 @@ waagerechtes Scrollen — im schmalen Spiegel neben einem eingebetteten Pad (D31
 oder auf dem Telefon (D17) wäre der Text damit unlesbar. Der Umbruch ist die
 wichtigere Eigenschaft.
 
+*(Diese Abwägung ist später umgekehrt worden: **D49** schaltet den Umbruch ab.
+Übersehen war, was ein weicher Umbruch mit der **Einrückung** macht — und die
+trägt hier die Hierarchie.)*
+
 **Kein Umschalter.** Die Kopfzeile ist eng (D17), und ein Bedienelement kostet
 i18n in neun Sprachen für etwas, das keinen Zustand hat, den jemand pflegen
 will. Der Streifen ist so schmal wie die Ziffern es verlangen
@@ -3117,3 +3121,66 @@ Beschreibung, **0 Warnungen**, Pfad weiterhin exakt gerechnet mit 24
 Stationen. Der Cursor in einem Beschreibungsblock wählt den beschriebenen
 Knoten aus (D40-Nachtrag 2) — auf Kopf- wie Textzeile geprüft; der
 `---`-Trenner selbst wählt nichts.
+
+## D49 — Das Textfeld bricht nicht mehr um: `wrap="off"` plus waagerechter Balken
+Gewünscht vom Nutzer, und damit die ausdrückliche Umkehrung der D33-Abwägung
+(„Verworfen: `wrap=off` … der Umbruch ist die wichtigere Eigenschaft"). Der
+dort notierte Preis bleibt richtig und wird in Kauf genommen; was dort **nicht**
+bedacht war, ist die andere Seite:
+
+**Ein weicher Umbruch zerstört die Einrückung — und die trägt hier die
+Hierarchie.** In dieser Notation ist der linke Rand keine Formsache, sondern
+die Ebene (§2). Bricht eine Zeile um, beginnt ihre Fortsetzung am linken Rand
+und sieht damit aus wie ein Wurzelknoten; wer die Struktur überfliegt, liest
+eine Ebene, die es nicht gibt. Das trifft genau die langen Zeilen, also die mit
+ID, Größe und Kommentar — und seit D48 ist das praktisch jede Zeile des
+mitgelieferten Plans. Waagerechtes Scrollen kostet Bequemlichkeit; der Umbruch
+kostete Lesbarkeit der Struktur.
+
+**Umgesetzt am Element, nicht in CSS:** `wrap="off"` am `<textarea>`. Es ist
+die Eigenschaft des Feldes, nicht seiner Gestaltung, und es wirkt zuverlässig
+in allen Engines; `overflow:auto` steht daneben im Stylesheet.
+
+**Der Spiegel musste mit.** `syncMirror()` (D25/D33) maß mit `white-space:
+pre-wrap` und **fester Breite** — genau die Kombination, die im Spiegel Zeilen
+umbräche, die im Textfeld ungebrochen stehen. Jede Zeile darunter läge dann zu
+tief, und die Zeilennummern wanderten weg. Der Spiegel ist deshalb jetzt `pre`
+und ohne Breitenvorgabe.
+
+**Gemessen wird trotzdem weiter.** Ohne Umbruch wäre `Zeilenhöhe × n` richtig
+und der Spiegel überflüssig — so hat D33 den Fall beschrieben. Behalten wurde
+die Messung dennoch: Die Schriftgröße unterscheidet sich zwischen Telefon und
+Schreibtisch (D17-Nachtrag 2), und die Messung stimmt in beiden Fällen von
+selbst, ohne eine zweite Stelle, die dieselbe Zahl kennen muss.
+
+**Der Sprung setzt die waagerechte Verschiebung zurück.** `jumpToLine()`
+markiert die **ganze** Zeile (D25) — der Browser scrollt dann von sich aus an
+deren **Ende**, und man landete am rechten Rand, ohne Einrückung, Zeichen und
+Statusbox zu sehen. Also `scrollLeft = 0` nach dem Markieren: Der Sprung zeigt
+auf eine Zeile, nicht auf ihr Ende.
+
+**Der Zeilennummern-Streifen bleibt stehen.** Er verschiebt sich weiterhin nur
+gegen `src.scrollTop`; den waagerechten Balken macht er nicht mit. Das war
+schon so gebaut und ist jetzt das gewünschte Verhalten statt eines
+Nebenprodukts — nachgemessen: linke Kante unverändert, während der Text um
+180 px verschoben ist.
+
+**Nachgemessen** am mitgelieferten Plan (903 Zeilen, längste 122 Zeichen):
+
+| | Schreibtisch | Telefon (375 px) |
+|---|---|---|
+| Bildzeilen zu logischen Zeilen | 903 : 903 | 903 : 903 |
+| waagerechter Schiebeweg | 211 px | 432 px |
+| sichtbare Zeichen | rund 110 | rund 53 |
+| Abweichung der Zahlen am Dateiende | — | 2 px auf 903 Zeilen |
+
+Die zwei Pixel stammen daher, dass `offsetTop` ganzzahlig rundet, die
+Zeilenhöhe aber 17,408 px beträgt; sie sammeln sich nicht auf (jede Zahl wird
+absolut gemessen, nicht fortgeschrieben).
+
+**Der D33-Einwand bleibt bestehen, nur nicht mehr entscheidend:** Im schmalen
+Spiegel neben einem eingebetteten Pad (D31) und auf dem Telefon sieht man jetzt
+rund 53 Zeichen und muss schieben. Wer dort viel liest, zieht den Splitter auf
+oder wechselt in die Textansicht. Ein Umschalter dafür wurde nicht gebaut — aus
+demselben Grund wie in D33: ein Bedienelement plus neun Übersetzungen für einen
+Zustand, den kaum jemand umstellen will.

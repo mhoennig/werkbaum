@@ -98,7 +98,11 @@
          Rahmen gegen diese Spalte, nicht gegen das nackte Textfeld. -->
     <div class="src-wrap" id="srcWrap">
       <div class="lineno" id="lineNos" aria-hidden="true"><div class="lineno-inner"></div></div>
-      <textarea id="src" spellcheck="false" data-i18n-aria="editorTitle" aria-label="Struktur (Text)"></textarea>
+      <!-- `wrap="off"`: Zeilen werden nicht umbrochen, lange Zeilen bekommen
+           einen waagerechten Balken (D49). Die Einrückung trägt hier die
+           Hierarchie — ein weicher Umbruch setzt die Fortsetzung an den linken
+           Rand und lässt die Ebene verschwinden. -->
+      <textarea id="src" wrap="off" spellcheck="false" data-i18n-aria="editorTitle" aria-label="Struktur (Text)"></textarea>
     </div>
     </div>
     <div class="hint-gutter" id="hintGutter" role="separator" data-i18n-title="gutterTooltip" data-i18n-aria="hintGutterAria" title="Ziehen zum Verschieben, Doppelklick setzt zurück" aria-label="Editor und Legende größenverändern" hidden></div>

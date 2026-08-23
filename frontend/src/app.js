@@ -701,22 +701,23 @@ function lineRange(line){
   return {start, end: start + lines[line - 1].length};
 }
 
-/* Vertikale Position eines Zeichenoffsets im Textfeld. Zeilenhöhe × n scheitert
-   an weichen Umbrüchen (lange Zeilen belegen mehrere Bildzeilen), deshalb ein
-   unsichtbarer Spiegel mit gleicher Typografie und Breite plus Marker-Span. */
+/* Vertikale Position eines Zeichenoffsets im Textfeld: ein unsichtbarer Spiegel
+   mit gleicher Typografie plus Marker-Span.
+
+   Seit `wrap="off"` (D49) bricht das Textfeld nicht mehr um — der Spiegel
+   deshalb ebenfalls `white-space:pre` und **ohne** vorgegebene Breite. Beides
+   gehört zusammen: Eine feste Breite bei `pre-wrap` bräche im Spiegel Zeilen um,
+   die im Textfeld ungebrochen stehen, und alles darunter läge zu tief.
+   Gemessen wird trotzdem weiter, statt `Zeilenhöhe × n` zu rechnen — die
+   Schriftgröße unterscheidet sich zwischen Telefon und Schreibtisch (D17), und
+   die Messung stimmt in beiden Fällen von selbst. */
 let mirrorEl = null;
 function syncMirror(){
   if(!mirrorEl){
     mirrorEl = document.createElement('div');
     mirrorEl.setAttribute('aria-hidden', 'true');
-    /* `box-sizing:border-box` ist Pflicht: `src.clientWidth` **enthält** die
-       Innenabstände. Ohne das ist der Spiegel um genau diese 32 px breiter als
-       das Textfeld und bricht später um — lange Zeilen landeten dadurch zu weit
-       oben (fiel beim Bau der Zeilennummern auf, D33; betraf auch schon das
-       Scrollen beim Sprung, D25). */
     mirrorEl.style.cssText = 'position:absolute;visibility:hidden;top:0;left:-9999px;' +
-                             'box-sizing:border-box;' +
-                             'white-space:pre-wrap;overflow-wrap:break-word;';
+                             'box-sizing:border-box;white-space:pre;';
     document.body.appendChild(mirrorEl);
   }
   const cs = getComputedStyle(src);
@@ -724,7 +725,6 @@ function syncMirror(){
                   'paddingTop','paddingLeft','paddingRight','borderTopWidth','tabSize']){
     mirrorEl.style[p] = cs[p];
   }
-  mirrorEl.style.width = src.clientWidth + 'px';
   return mirrorEl;
 }
 const ZWSP = '​';
@@ -804,9 +804,11 @@ function markCurrentLineNo(){
   if(s) s.classList.add('cur');
 }
 src.addEventListener('scroll', syncLineNoScroll);
-/* Der Umbruch hängt an der Breite: Splitter, Fenster, Drehung, Tastatur. Beim
-   Ziehen am Splitter kämen sonst je Bild mehrere Messungen — einmal je Bild
-   genügt. */
+/* Seit D49 hängen die Zeilenhöhen nicht mehr an der Breite (es wird nicht mehr
+   umbrochen), wohl aber an der Schriftgröße — und die wechselt beim Übergang
+   zwischen Telefon und Schreibtisch (D17), den der Beobachter als
+   Größenänderung mitbekommt. Beim Ziehen am Splitter kämen sonst je Bild
+   mehrere Messungen; einmal je Bild genügt. */
 let lineNoPending = false;
 if(window.ResizeObserver) new ResizeObserver(() => {
   if(lineNoPending) return;
@@ -868,6 +870,11 @@ function jumpToLine(line){
   src.focus({preventScroll: true});
   src.setSelectionRange(r.start, r.end);
   scrollEditorToOffset(r.start);
+  /* Ohne Umbruch (D49) scrollt der Browser beim Markieren einer langen Zeile
+     bis an ihr **Ende** — man landete am rechten Rand und sähe den Anfang der
+     Zeile nicht, also gerade Einrückung, Zeichen und Statusbox. Der Sprung
+     zeigt auf eine Zeile, nicht auf ihr Ende. */
+  src.scrollLeft = 0;
   caretLine = line;
   highlightCurrentNode(true);
 }

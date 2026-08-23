@@ -467,9 +467,13 @@
   .docdel:hover{border-color:#D897A8;color:#B4415E}
   .togglebtn[aria-pressed="true"]{background:var(--or);color:#fff;border-color:var(--or)}
   .togglebtn[aria-pressed="true"]:hover{color:#fff}
+  /* Kein Zeilenumbruch (D49, `wrap="off"` am Element): Die Einrückung trägt die
+     Hierarchie, und ein weicher Umbruch setzt die Fortsetzung an den linken Rand
+     — die Ebene wäre damit gerade dort nicht mehr abzulesen, wo eine Zeile lang
+     ist. Lange Zeilen bekommen stattdessen einen waagerechten Balken. */
   textarea{
     display:block;width:100%;min-height:0;
-    border:0;outline:none;resize:none;
+    border:0;outline:none;resize:none;overflow:auto;
     padding:14px 16px;
     font-family:'IBM Plex Mono',monospace;
     font-size:.85rem;line-height:1.7;
@@ -482,9 +486,13 @@
      ist der Hauptinhalt und kein ausgegrautes Formularfeld. */
   textarea.readonly{background:#F1F4F7;cursor:default}
   /* Zeilennummern (D33). Die Warnungen nennen Zeilennummern — ohne Streifen
-     muss man sie im Textfeld abzählen. Weich umbrochene Zeilen belegen mehrere
-     Bildzeilen, deshalb steht jede Zahl auf einer **gemessenen** Höhe
-     (`renderLineNos()` in app.js), nicht auf „Zeilenhöhe × n". Typografie muss
+     muss man sie im Textfeld abzählen. Jede Zahl steht auf einer **gemessenen**
+     Höhe (`renderLineNos()` in app.js), nicht auf „Zeilenhöhe × n"; seit D49
+     bricht nichts mehr um, aber die Schriftgröße unterscheidet sich zwischen
+     Telefon und Schreibtisch, und die Messung stimmt in beiden Fällen von
+     selbst. Der Streifen scrollt **nur senkrecht** mit: Er verschiebt sich
+     gegen `src.scrollTop`, den waagerechten Balken des Textfelds macht er
+     nicht mit — die Zahlen bleiben stehen, wo sie hingehören. Typografie muss
      mit dem Textfeld übereinstimmen, sonst wandern die Zahlen weg. */
   .lineno{
     position:relative;overflow:hidden;flex:0 0 auto;

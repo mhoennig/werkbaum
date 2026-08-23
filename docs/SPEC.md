@@ -677,14 +677,20 @@ Links neben dem Textfeld steht ein schmaler Streifen mit den **Zeilennummern** �
 dieselben, die die Warnungen nennen („Zeile 12: …", §4). Ohne ihn muss man sie
 im Text abzählen.
 
-- Gezählt werden **logische** Zeilen des Notationstexts. Eine weich umbrochene
-  Zeile behält **eine** Nummer; die Nummer steht an ihrer ersten Bildzeile.
+- **Das Textfeld bricht Zeilen nicht um** (D49). Die Einrückung trägt die
+  Hierarchie (§2), und ein weicher Umbruch setzt die Fortsetzung an den linken
+  Rand — die Ebene wäre damit gerade dort nicht mehr abzulesen, wo eine Zeile
+  lang ist. Zu lange Zeilen bekommen einen **waagerechten Balken**; eine
+  logische Zeile ist damit immer genau eine Bildzeile.
+- Der Streifen scrollt **nur senkrecht** mit: Die Zahlen bleiben stehen, wenn
+  der Text waagerecht verschoben wird. Ein Sprung auf eine Zeile (§9) setzt die
+  waagerechte Verschiebung zurück — er zeigt auf eine Zeile, nicht auf ihr Ende.
 - Die **Cursor-Zeile** und Zeilen mit einer **Warnung** heben sich ab (Warnung in
   `--warn`, `#B45309`) — genau die beiden Fälle, für die man hinsieht.
 - Reine Lesehilfe: kein Bestandteil des Notationstexts, nicht im Grafikexport
   und nicht im Druck (dort ist ohnehin nur das Diagramm zu sehen).
 
-Siehe D33.
+Siehe D33, D49.
 
 ### Fokusmarke im Diagramm (`!!!`, §1)
 Ein mit `!!!` markierter Knoten trägt einen **Strahlenkranz in Petrol** —
