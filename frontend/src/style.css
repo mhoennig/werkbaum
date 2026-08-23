@@ -126,11 +126,12 @@
      Vertikal (Toggle an, .side): Editor links, Diagramm rechts.
      Zwischen beiden liegt ein verschiebbarer Gutter (Splitter). */
   .app{
-    /* Defaults der laufzeit-gesetzten Custom-Properties (JS setzt sie als
-       Inline-Style: --col/--drow per Splitter, --pmin-d/-e per syncPanelMins).
-       Werte = die bisherigen var()-Fallbacks; die JS-Erkennung „hat der Nutzer
-       gezogen?" liest app.style (Inline) und bleibt davon unberührt. */
-    --col:360px;--drow:60%;--pmin-d:49px;--pmin-e:44px;
+    /* Defaults der laufzeit-gesetzten Custom-Properties (JS setzt --col/--drow
+       als Inline-Style per Splitter). Werte = die bisherigen var()-Fallbacks;
+       die JS-Erkennung „hat der Nutzer gezogen?" liest app.style (Inline) und
+       bleibt davon unberührt. (--pmin-d/-e hielten auf Mobil die beiden
+       Titelzeilen frei — entfallen mit dem Ein-Bereich-Modell, D17-Nachtrag.) */
+    --col:360px;--drow:60%;
     max-width:1200px;width:100%;margin:0 auto;
     flex:1 1 auto;min-height:0;
     display:grid;gap:0;
@@ -397,6 +398,7 @@
   .dlmenu{display:inline-flex;gap:3px}
   .dltrigger{display:none}
   .legendbtn{display:none}                             /* nur auf kleinem Bildschirm sichtbar */
+  .panetoggle{display:none}                            /* ebenso: dort gibt es nur einen Bereich */
   /* Dokument-Wähler: der Name des aktiven Dokuments in der Editor-Titelzeile ist
      zugleich der Auslöser eines Dropdowns zum Wechseln/Anlegen/Umbenennen/Löschen
      (localStorage-Dokumente, noch kein Backend). */
@@ -1046,26 +1048,36 @@
      oder = gestrichelt grau. */
 
   /* ---------- Kleiner Bildschirm (Smartphone) ----------
-     body.mobile wird per matchMedia (<=640px) gesetzt. Standardmäßig ist ein
-     Bereich groß, der andere schrumpft auf seine Titelzeile und dient als
-     Umschalter (Tippen bringt ihn nach vorn). Die Min/Normal/Max-Buttons
-     entfallen; geteilt wird weiterhin über den **Splitter**, der sichtbar
-     bleibt. Das gestapelte Layout inkl. Gutter liefert bereits die
-     820-px-Regel weiter oben. Die Legende bekommt einen eigenen Umschalter
-     statt der dauerhaften „AGENDA“-Zeile. */
+     body.mobile wird per matchMedia (<=640px) gesetzt. Es ist **immer genau ein
+     Bereich** zu sehen (Diagramm ODER Text); oben links schaltet ein Knopf um.
+     Die Min/Normal/Max-Buttons und der Splitter entfallen hier ganz — es gibt
+     nichts zu teilen. Die Legende bekommt einen eigenen Umschalter statt der
+     dauerhaften „AGENDA“-Zeile. Siehe D17-Nachtrag. */
   body.mobile .winbtns{display:none}
-  /* Mobil: freie Aufteilung per Splitter — beide Titelzeilen bleiben IMMER
-     stehen (Zeilen-Minimum --pmin ≈ Titelzeilenhöhe). Kein diskretes
-     Minimieren/Snap; ein zusammengeschobenes Panel schrumpft nur bis auf seine
-     volle Titelzeile (Körper flext auf 0, Panel ist overflow:hidden). Gilt auch
-     für den Seitenmodus, der auf Mobil ohnehin gestapelt ist. Der Drag setzt
-     --drow (JS klemmt), das Tippen auf eine Titelzeile maximiert das Panel. */
+  /* Ein Bereich füllt die Fläche; der andere ist `display:none` (nicht bloß
+     zusammengeschoben) — nur so bekommt der sichtbare die ganze Höhe, ohne
+     dass eine zweite Titelzeile sie anknabbert. Die Kehrseite steht in
+     app.js: Ein verborgenes Diagramm misst sich zu 0, deshalb wird die
+     Geometrie beim Zurückschalten neu gezeichnet. */
   body.mobile .app,
   body.mobile .app.side{
     grid-template-columns:minmax(0,1fr);
-    grid-template-rows:minmax(var(--pmin-d,49px),var(--drow,60%)) 14px minmax(var(--pmin-e,44px),1fr);
-    grid-template-areas:"diagram" "gutter" "editor";
+    grid-template-rows:minmax(0,1fr);
+    grid-template-areas:"pane";
   }
+  body.mobile .gutter{display:none}
+  body.mobile .panel.editor,
+  body.mobile .panel.right{grid-area:pane}
+  body.pane-diagram.mobile .panel.editor{display:none}
+  body.pane-text.mobile .panel.right{display:none}
+  /* Der Bereichstitel „DIAGRAMM" entfällt — welcher Bereich vorn ist, sagt der
+     Inhalt; die Zeile wird für den Umschalter und die Aktionen gebraucht. */
+  body.mobile .panel.right .panel-head>span[data-i18n="diagramTitle"]{display:none}
+  /* Umschalter oben links; er übernimmt vom entfallenen Titel das
+     `margin-right:auto`, damit die Aktions-Knöpfe rechts stehen bleiben. Im
+     Editor-Kopf tut das weiterhin der Dokumenten-Wähler daneben. */
+  body.mobile .panetoggle{display:inline-flex}
+  body.mobile .panel.right .panetoggle{margin-right:auto}
   /* Untertitel: Kurzfassung, garantiert einzeilig (Ellipsis als Sicherung) */
   body.mobile .sub-full{display:none}
   body.mobile .sub-short{display:inline}

@@ -383,12 +383,19 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   der any-of-Teilbaum. `alignStems()` misst deshalb nach jedem `render()` (und
   in `applyLayout`) die Knotenmitte und setzt `--stem-x`; Fallback im CSS ist
   `50%`. Messwerte durch `zoom` zurückrechnen, sonst stimmt es nur bei 100 %.
-- Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) stapelt
-  Diagramm/Editor mit **stufenlosem** Splitter (kein Snap/Collapse wie auf
-  Desktop): der Gutter-Drag ruft `setMobileDrow()` (klemmt `--drow` zwischen den
-  Kopfhöhen `--pmin-d`/`--pmin-e`, per `syncPanelMins()` gemessen), ein Tipp auf
-  eine Titelzeile maximiert das Panel. `applyLayout` ruft auf Mobil **kein**
-  `applySplit` (das würde `--drow` löschen). Dazu eigener Legenden-Umschalter
+- Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) zeigt **genau
+  einen** Bereich — `body.pane-diagram` bzw. `body.pane-text`, umgeschaltet über
+  je einen festen Knopf pro Titelzeile (`#paneToText`/`#paneToDiagram`,
+  `setMobilePane()`); kein Splitter, keine Fenster-Buttons (D17-Nachtrag).
+  **Der verborgene Bereich ist `display:none` und misst sich damit zu null** —
+  `setMobilePane()` MUSS neu zeichnen: zum Diagramm hin dieselben vier Schritte
+  wie `applyLayout` (`applyOptStairs`/`alignStems`/`drawCheapPath`/
+  `drawDepLinks`), zum Text hin `renderLineNos()`. Ohne das ist nach dem Tippen
+  im Textbereich die Pfad-Linie weg (gemessen). Die Sprünge (D25) schalten den
+  Bereich selbst um: `revealEditor()` auf Text, `focusNodeOfCaret()` aufs
+  Diagramm — **vor** dem Zentrieren. Zustand in `werkbaum-ui` (`mobilePane`),
+  Variable oben bei `padView` deklariert (saveUI liest sie).
+  `applyLayout` ruft auf Mobil **kein** `applySplit`. Dazu eigener Legenden-Umschalter
   (`#legendBtn`), schlanke Sprachwahl, Download-Overlay; Default Vollbild +
   Diagramm maximiert. Layout-CSS hängt an `body.mobile`, nicht an einer eigenen
   `@media`-Regel — beide Seiten müssen denselben 640-px-Schwellwert nutzen

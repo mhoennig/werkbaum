@@ -46,6 +46,12 @@
 <div class="app" id="app">
   <div class="panel editor">
     <div class="panel-head">
+      <!-- Gegenstück zum Knopf im Diagramm-Kopf (D17-Nachtrag). Der
+           Dokumenten-Wähler steht direkt daneben und ist damit genau dann zu
+           sehen, wenn der Text vorn ist — er gehört zu diesem Bereich. -->
+      <button type="button" class="copybtn panetoggle" id="paneToDiagram" data-i18n-title="paneToDiagram" data-i18n-aria="paneToDiagram" title="Zum Diagramm wechseln" aria-label="Zum Diagramm wechseln">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="4" rx="1"/><rect x="2.5" y="17" width="6" height="4" rx="1"/><rect x="15.5" y="17" width="6" height="4" rx="1"/><path d="M12 7V13M5.5 13H18.5M5.5 13V17M18.5 13V17"/></svg>
+      </button>
       <span class="doctrigger" id="docTrigger" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" data-i18n-title="docSwitchTooltip" data-i18n-aria="docSwitchTooltip" title="Dokument wählen oder verwalten" aria-label="Dokument wählen oder verwalten">
         <span class="docname" id="docName"></span>
         <svg class="doc-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
@@ -135,6 +141,13 @@
 
   <div class="panel right">
     <div class="panel-head">
+      <!-- Nur auf kleinem Bildschirm (D17-Nachtrag): dort ist immer genau ein
+           Bereich zu sehen, und dieser Knopf schaltet auf den anderen um. Er
+           zeigt das Ziel, nicht den Zustand — der Zustand ist der Bereich, den
+           man gerade vor sich hat. -->
+      <button type="button" class="copybtn panetoggle" id="paneToText" data-i18n-title="paneToText" data-i18n-aria="paneToText" title="Zum Text wechseln" aria-label="Zum Text wechseln">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h10M4 18h13"/></svg>
+      </button>
       <span data-i18n="diagramTitle">Diagramm</span>
       <button type="button" class="copybtn togglebtn" id="showc" aria-pressed="false" data-i18n-title="discardedTooltip" data-i18n-aria="discardedTooltip" title="Verworfene Knoten samt Teilbaum ein-/ausblenden" aria-label="Verworfene Knoten samt Teilbaum ein-/ausblenden">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2" stroke-dasharray="3 2.5"/><path d="M7 12h10"/></svg>

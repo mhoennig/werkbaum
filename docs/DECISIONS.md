@@ -197,6 +197,52 @@ und die vollständige Sprachliste dennoch erreichbar (frühere Lösung
 Voreinstellung greift nur, wenn noch **keine** gespeicherte Nutzerwahl vorliegt
 (eine bewusste Abschaltung bleibt so erhalten, siehe localStorage-Persistenz).
 
+**Nachtrag — auf Mobil ist jetzt immer genau EIN Bereich zu sehen; der Splitter
+entfällt dort ganz.** Die oben beschriebene stufenlose Aufteilung hat das
+eigentliche Problem nur verwaltet, statt es zu lösen: Auf 375 px ist für zwei
+Bereiche kein Platz. Jede Aufteilung war ein Kompromiss, in dem **beide**
+Bereiche zu klein waren, und die praktisch einzigen sinnvollen Stellungen waren
+ohnehin die Extreme — also genau das, was ein Umschalter direkt anbietet. Der
+Splitter kostete außerdem dauerhaft eine zweite Titelzeile plus 14 px Griff für
+etwas, das man auf dem Telefon nicht dosiert, sondern wechselt.
+
+**Der Umschalter zeigt das Ziel, nicht den Zustand.** Damit weicht er bewusst
+vom Modus-Wähler daneben ab, der das aktive Icon zeigt und reihum schaltet:
+Der hat drei Zustände, die man ohne Anzeige nicht auseinanderhält; hier gibt es
+zwei, und welcher gerade gilt, sieht man am ganzen Bildschirm. Ein Knopf, der
+den Zustand anzeigt, den man ohnehin vor sich hat, sagt nichts — einer, der
+das Ziel zeigt, sagt, was passiert. Umgesetzt als **zwei feste Knöpfe**, je
+einer pro Titelzeile: Weil immer nur eine Zeile sichtbar ist, braucht keiner
+sein Icon zu wechseln.
+
+**Der Dokumenten-Wähler steht neben dem Umschalter** und damit nur im
+Textbereich. Das ist keine Platzentscheidung, sondern die richtige Zuordnung:
+Er bestimmt, *welchen Text* man bearbeitet (D22) — im Diagrammbereich wäre er
+ein Fremdkörper. Die übrigen Aktions-Knöpfe bleiben, wo sie sind, und werden
+dadurch von selbst mitgeschaltet; ihre komprimierte Mobil-Form (Modus-Wähler
+als Reihum-Icon, Download als Overlay) bleibt unverändert.
+
+**Die Falle beim Bauen: ein `display:none`-Panel misst sich zu null.** Der
+verborgene Bereich wird wirklich ausgeblendet — nur so bekommt der sichtbare
+die ganze Höhe. Alles, was aus der Live-Geometrie zeichnet, liefert dann aber
+Unsinn, und `render()` läuft bei **jedem Tastendruck** im Textbereich.
+Nachgemessen nach einer Eingabe bei verborgenem Diagramm: Pfad-Linie **weg**,
+null Stationspunkte, kein `--stem-x`. Das Umschalten zeichnet deshalb neu —
+zum Diagramm hin dieselben vier Schritte wie ein Moduswechsel
+(`applyOptStairs`, `alignStems`, `drawCheapPath`, `drawDepLinks`), zum Text hin
+der Zeilennummern-Streifen, der ebenso am Spiegel misst (D33). Danach wieder
+48 px Pfadlänge, 5 Punkte, `--stem-x: 67,4px`.
+
+Der sichtbare Bereich wird in `werkbaum-ui` gemerkt — global über alle
+Dokumente wie der übrige Ansichts-Zustand (D22). Die Sprünge zwischen Diagramm
+und Text (D25) holen den nötigen Bereich selbst nach vorn: `revealEditor()`
+schaltet auf Text (wie es auf dem Desktop ein zugeklapptes Panel aufklappt),
+`focusNodeOfCaret()` auf das Diagramm — und zwar **vor** dem Zentrieren, sonst
+misst sich der Zielknoten noch zu null. Entfallen sind damit `--drow` auf
+Mobil, die Grid-Minima `--pmin-d`/`--pmin-e`, `syncPanelMins()`,
+`setMobileDrow()` und das Titelzeilen-Tippen; Desktop behält Splitter,
+Presets und Fenster-Buttons unverändert.
+
 ## D18 — Günstigsten Pfad per Inversion zeigen, fehlende Größe = M
 Der kostengünstigste Weg durch den Baum wird hervorgehoben (Umschalter im
 Diagramm-Kopf, Default an, Zustand persistiert). Nötig sind bei **all of** alle

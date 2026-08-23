@@ -56,6 +56,10 @@ let cheapPathOn = true;
    kann — weiter unten stünde sie dann noch in der temporalen Todeszone. */
 const PAD_VIEWS = ['both', 'pad', 'text'];
 let padView = 'both';
+/* Sichtbarer Bereich auf kleinem Bildschirm (D17-Nachtrag): dort ist immer
+   genau einer zu sehen. Aus demselben Grund hier oben deklariert wie `padView`
+   — saveUI() liest ihn und läuft schon aus applySplit() heraus. */
+let mobilePane = 'diagram';
 /* Cursor-Zeile (D25) — bleibt `null`, bis der Cursor das erste Mal bewegt wurde,
    sonst wäre nach dem Laden ungefragt die Wurzel markiert. Hier oben deklariert
    wie `padView`: der Zeilennummern-Streifen (D33) liest sie, und der hängt an
@@ -802,9 +806,10 @@ function revealEditor(){
     saveUI();
   }
   if(isMobile()){
-    const raw = app.style.getPropertyValue('--drow');
-    const collapsed = raw ? parseFloat(raw) > mobileMaxDrow() - 40 : splitState === 'b';
-    if(collapsed) setMobileDrow(app.getBoundingClientRect().height * 0.45, true);
+    /* Auf Mobil ist der Text womöglich gar nicht vorn — dann holt der Sprung
+       ihn nach vorn, so wie er auf dem Desktop ein zugeklapptes Panel aufklappt
+       (D17-Nachtrag). */
+    setMobilePane('text', true);
   } else if(splitState === 'b'){
     splitState = 'normal';
     applySplit();
@@ -983,6 +988,10 @@ function focusNodeOfCaret(){
   const el = out.querySelector('.node[data-line="' + line + '"]');
   if(!el) return;              /* Kommentar, Leerzeile, ausgeblendet Verworfenes */
   caretLine = line;
+  /* Die Gegenrichtung zu revealEditor(): Auf Mobil steht der Text vorn, das
+     Diagramm ist verborgen — dort zu zentrieren zeigte auf nichts. Muss VOR
+     dem Scrollen laufen, sonst misst sich der Knoten noch zu null. */
+  if(isMobile()) setMobilePane('diagram', true);
   /* Erst den Fokus (ohne eigenes Scrollen), dann hervorheben und zentrieren.
      Die Hervorhebung ist **dieselbe wie beim Zeilenwechsel** — Puls
      eingeschlossen; der Unterschied ist allein, dass hier bewusst zentriert
@@ -1052,24 +1061,29 @@ function applySplit(){
 /* Setzt einen Minimier-Zustand während des Ziehens nur bei Änderung. */
 function snapTo(state){ if(splitState!==state){ splitState = state; applySplit(); } }
 
-/* ---------- Mobil: freie Aufteilung (kontinuierlich, kein Snap/Collapse) ----------
-   Beide Titelzeilen bleiben stehen: die Grid-Zeilen-Minima --pmin-d/--pmin-e
-   entsprechen den (gemessenen) Kopfzeilenhöhen. --drow steuert die Diagramm-
-   Höhe; das Tippen auf eine Titelzeile setzt sie auf ein Extrem. */
-function headPx(sel){ return Math.ceil(document.querySelector(sel).getBoundingClientRect().height); }
-function syncPanelMins(){
-  app.style.setProperty('--pmin-d', headPx('.panel.right .panel-head') + 'px');
-  app.style.setProperty('--pmin-e', headPx('.panel.editor .panel-head') + 'px');
+/* ---------- Mobil: genau EIN Bereich, Umschalter oben links (D17-Nachtrag) ----------
+   Auf kleinem Bildschirm gibt es nichts zu teilen — Diagramm ODER Text füllt
+   die Fläche, ein Knopf im Kopf schaltet um. Der frühere Splitter samt --drow,
+   Grid-Minima (--pmin-d/--pmin-e) und Titelzeilen-Tippen ist damit entfallen. */
+function applyMobilePane(){
+  document.body.classList.toggle('pane-diagram', mobilePane === 'diagram');
+  document.body.classList.toggle('pane-text',    mobilePane === 'text');
 }
-function cssPx(name, fallback){ return parseFloat(getComputedStyle(app).getPropertyValue(name)) || fallback; }
-function mobileMinDrow(){ return cssPx('--pmin-d', 49); }
-function mobileMaxDrow(){ return app.getBoundingClientRect().height - 14 - cssPx('--pmin-e', 44); }
-function setMobileDrow(px, save){
-  const v = Math.max(mobileMinDrow(), Math.min(px, mobileMaxDrow()));
-  splitState = 'custom';
-  app.style.setProperty('--drow', v + 'px');
+function setMobilePane(pane, save){
+  mobilePane = pane;
+  applyMobilePane();
+  /* Ein Panel mit `display:none` misst sich zu **null**. Alles, was aus der
+     Live-Geometrie zeichnet, muss deshalb nach dem Sichtbarwerden neu laufen —
+     im Diagramm dieselben vier Schritte wie beim Moduswechsel (applyLayout),
+     im Editor der Zeilennummern-Streifen, der am Spiegel misst (D33). */
+  if(pane === 'diagram'){ applyOptStairs(); alignStems(); drawCheapPath(); drawDepLinks(); }
+  else renderLineNos();
   if(save) saveUI();
 }
+document.getElementById('paneToText')
+  .addEventListener('click', () => setMobilePane('text', true));
+document.getElementById('paneToDiagram')
+  .addEventListener('click', () => setMobilePane('diagram', true));
 document.querySelectorAll('.winbtn').forEach(b => {
   b.addEventListener('click', e => {
     /* Fenster-Buttons sind maßgeblich: nicht zum Titelzeilen-Restore durchreichen */
@@ -1081,13 +1095,9 @@ document.querySelectorAll('.winbtn').forEach(b => {
 [editorPanel, diagramPanel].forEach(panel => {
   panel.querySelector('.panel-head').addEventListener('click', e => {
     if(e.target.closest('button, label, input')) return;   /* Bedienelemente behalten ihre Funktion */
-    if(isMobile()){
-      /* Tippen auf eine Titelzeile klappt DIESES Panel ganz aus (das andere
-         schrumpft auf seine Titelzeile) — funktioniert in jeder Aufteilung. */
-      clearCollapse();
-      setMobileDrow(panel === diagramPanel ? mobileMaxDrow() : 0, true);
-      return;
-    }
+    /* Auf Mobil ist immer genau ein Panel zu sehen — es gibt keins, das per
+       Titelzeile hervorzuholen wäre; das erledigt der Umschalter (D17-Nachtrag). */
+    if(isMobile()) return;
     /* Desktop: nur ein minimiertes Panel per Titelzeile wiederherstellen. */
     if(!panel.classList.contains('collapsed')) return;
     splitState = 'normal';
@@ -1115,12 +1125,6 @@ const SNAP = 72;
 gutter.addEventListener('pointermove', e => {
   if(!dragging) return;
   const rect = app.getBoundingClientRect();
-  if(isMobile()){
-    /* Frei ziehen; die Grid-Minima (--pmin) halten beide Titelzeilen sichtbar.
-       Kein Snap/Collapse — so bleibt der Splitter jederzeit beweglich. */
-    setMobileDrow(e.clientY - rect.top, false);
-    return;
-  }
   if(app.classList.contains('side')){
     const w = e.clientX - rect.left, maxw = rect.width - 14;
     if(w <= SNAP)               snapTo('b');            /* Editor auf Titelzeile */
@@ -1149,10 +1153,9 @@ function endDrag(e){
 }
 gutter.addEventListener('pointerup', endDrag);
 gutter.addEventListener('pointercancel', endDrag);
-/* Doppelklick auf den Splitter stellt die normale Aufteilung wieder her
-   (auf Mobil: Diagramm maximiert). */
+/* Doppelklick auf den Splitter stellt die normale Aufteilung wieder her.
+   (Auf Mobil gibt es keinen Splitter mehr — D17-Nachtrag.) */
 gutter.addEventListener('dblclick', () => {
-  if(isMobile()){ clearCollapse(); setMobileDrow(mobileMaxDrow(), true); return; }
   splitState = 'normal'; applySplit();
 });
 
@@ -1275,6 +1278,8 @@ const I18N = {
     imprint:"Impressum",
     privacy:"Datenschutz",
     legendTooltip:"Legende ein-/ausblenden",
+    paneToText:"Zum Text wechseln",
+    paneToDiagram:"Zum Diagramm wechseln",
     ghostTooltip:"Ab Größe M sollte ein Element weiter untergliedert werden.",
     jumpHint:"Alt+Klick: zur Zeile im Text",
     padReadonly:"Wird im Pad bearbeitet — hier nur lesen.",
@@ -1353,6 +1358,8 @@ const I18N = {
     imprint:"Imprint (Impressum)",
     privacy:"Privacy",
     legendTooltip:"Show/hide legend",
+    paneToText:"Switch to the text",
+    paneToDiagram:"Switch to the diagram",
     ghostTooltip:"From size M upward, an item should be broken down further.",
     jumpHint:"Alt+click: jump to the line in the text",
     padReadonly:"Edited in the pad — read-only here.",
@@ -1431,6 +1438,8 @@ const I18N = {
     imprint:"Aviso legal (Impressum)",
     privacy:"Privacidad",
     legendTooltip:"Mostrar u ocultar la leyenda",
+    paneToText:"Cambiar al texto",
+    paneToDiagram:"Cambiar al diagrama",
     ghostTooltip:"A partir de la talla M, un elemento debería desglosarse más.",
     jumpHint:"Alt+clic: ir a la línea en el texto",
     padReadonly:"Se edita en el pad — aquí solo lectura.",
@@ -1509,6 +1518,8 @@ const I18N = {
     imprint:"Mentions légales (Impressum)",
     privacy:"Confidentialité",
     legendTooltip:"Afficher/masquer la légende",
+    paneToText:"Passer au texte",
+    paneToDiagram:"Passer au diagramme",
     ghostTooltip:"À partir de la taille M, un élément devrait être décomposé davantage.",
     jumpHint:"Alt+clic : aller à la ligne dans le texte",
     padReadonly:"Modifié dans le pad — lecture seule ici.",
@@ -1587,6 +1598,8 @@ const I18N = {
     imprint:"Nota prawna (Impressum)",
     privacy:"Prywatność",
     legendTooltip:"Pokaż/ukryj legendę",
+    paneToText:"Przełącz na tekst",
+    paneToDiagram:"Przełącz na diagram",
     ghostTooltip:"Od rozmiaru M element powinien być dalej podzielony.",
     jumpHint:"Alt+kliknięcie: przejdź do wiersza w tekście",
     padReadonly:"Edytowane w padzie — tu tylko do czytania.",
@@ -1665,6 +1678,8 @@ const I18N = {
     imprint:"Выходные данные (Impressum)",
     privacy:"Конфиденциальность",
     legendTooltip:"Показать/скрыть легенду",
+    paneToText:"Перейти к тексту",
+    paneToDiagram:"Перейти к диаграмме",
     ghostTooltip:"Начиная с размера M элемент следует далее декомпозировать.",
     jumpHint:"Alt+клик: перейти к строке в тексте",
     padReadonly:"Редактируется в паде — здесь только чтение.",
@@ -1743,6 +1758,8 @@ const I18N = {
     imprint:"प्रकाशन विवरण (Impressum)",
     privacy:"गोपनीयता",
     legendTooltip:"लेजेंड दिखाएँ/छिपाएँ",
+    paneToText:"टेक्स्ट पर जाएँ",
+    paneToDiagram:"आरेख पर जाएँ",
     ghostTooltip:"आकार M से ऊपर किसी तत्व को और अधिक उप-विभाजित करना चाहिए।",
     jumpHint:"Alt+क्लिक: टेक्स्ट में उस पंक्ति पर जाएँ",
     padReadonly:"पैड में संपादित होता है — यहाँ केवल पढ़ें।",
@@ -1821,6 +1838,8 @@ const I18N = {
     imprint:"法律声明（Impressum）",
     privacy:"隐私",
     legendTooltip:"显示/隐藏图例",
+    paneToText:"切换到文本",
+    paneToDiagram:"切换到图表",
     brandTooltip:"「Werkbaum」大致意为‘工作之树’——即工作分解结构（WBS）之树。",
     fullscreenTooltip:"全屏——面板占据整个窗口宽度",
     discardedTooltip:"显示/隐藏已放弃的节点及其子树",
@@ -1899,6 +1918,8 @@ const I18N = {
     imprint:"運営者情報（Impressum）",
     privacy:"プライバシー",
     legendTooltip:"凡例を表示/非表示",
+    paneToText:"テキストに切り替え",
+    paneToDiagram:"ダイアグラムに切り替え",
     brandTooltip:"「Werkbaum」はおおよそ『作業の木』の意味 — 作業分解構成図（WBS）のツリーです。",
     fullscreenTooltip:"全画面 — パネルがウィンドウ幅いっぱいを使用",
     discardedTooltip:"破棄したノードとその下位ツリーを表示/非表示",
@@ -2226,6 +2247,9 @@ function saveUI(){
       padView: padView,
       pcol: app.style.getPropertyValue('--pcol') || null,
       prow: app.style.getPropertyValue('--prow') || null,
+      /* Sichtbarer Bereich auf kleinem Bildschirm (D17-Nachtrag) — ebenfalls
+         global über alle Dokumente wie der übrige Ansichts-Zustand. */
+      mobilePane: mobilePane,
       zoom: zoom,
       fullscreen: document.body.classList.contains('fullscreen')
     }));
@@ -2263,6 +2287,7 @@ function restoreState(){
   /* Legende (D26): Aufteilung gilt unabhängig vom Preset des großen Splitters. */
   if(ui && ui.hcol) app.style.setProperty('--hcol', ui.hcol);
   if(ui && ui.hrow) app.style.setProperty('--hrow', ui.hrow);
+  if(ui && (ui.mobilePane === 'diagram' || ui.mobilePane === 'text')) mobilePane = ui.mobilePane;
   if(ui && PAD_VIEWS.indexOf(ui.padView) >= 0) padView = ui.padView;
   if(ui && ui.pcol) app.style.setProperty('--pcol', ui.pcol);
   if(ui && ui.prow) app.style.setProperty('--prow', ui.prow);
@@ -2929,14 +2954,19 @@ function applyMobile(){
   const m = isMobile();
   document.body.classList.toggle('mobile', m);
   if(m) collapseLangsel();   /* Sprachleiste eingeklappt starten (Overlay-Logik) */
-  if(!m) return;
-  /* Freie Aufteilung (kontinuierlich): kein Desktop-Collapse. Ist noch keine
-     Aufteilung gesetzt (frisch oder Alt-Preset), Diagramm maximieren (Editor
-     bleibt als Titelzeile); eine gespeicherte --drow bleibt erhalten. */
+  if(!m){
+    /* Zurück auf Desktop: die Pane-Klassen abräumen, sonst bliebe ein Panel
+       ausgeblendet — die Regeln hängen zwar an `body.mobile`, aber ein
+       stehengebliebener Zustand ist beim nächsten Verkleinern verwirrend. */
+    document.body.classList.remove('pane-diagram', 'pane-text');
+    return;
+  }
+  /* Genau ein Bereich (D17-Nachtrag): kein Desktop-Collapse, keine Aufteilung.
+     Die frühere freie --drow-Größe wird abgeräumt — sie hat hier keine
+     Bedeutung mehr und störte die Grid-Zeile. */
   clearCollapse();
-  syncPanelMins();   /* Grid-Minima = aktuelle Kopfzeilenhöhen */
-  if(app.style.getPropertyValue('--drow')) splitState = 'custom';
-  else setMobileDrow(mobileMaxDrow(), true);
+  app.style.removeProperty('--drow');
+  applyMobilePane();
   /* Default Vollbild auf kleinem Bildschirm — nur ohne gespeicherte Wahl. */
   if(!hadStoredUI && !document.body.classList.contains('fullscreen')){
     document.body.classList.add('fullscreen');

@@ -391,16 +391,19 @@ Siehe D29.
   (50 %-Höhe) weiterhin auf der Knotenmitte liegt.
 
 ### Kleiner Bildschirm (mobil)
-Ab schmaler Breite (≤ 640 px, z. B. Smartphone) werden Diagramm und Texteditor
-**gestapelt** und über den **Splitter** frei geteilt: Ziehen verteilt beliebig,
-jederzeit erneut verstellbar; die beiden **Titelzeilen bleiben dabei immer
-stehen** (jedes Panel schrumpft höchstens bis auf seine volle Titelzeile — die
-Zeilen-Minima entsprechen den gemessenen Kopfhöhen). Ein **Antippen einer
-Titelzeile klappt dieses Panel ganz aus** (das andere schrumpft auf seine
-Titelzeile). Es gibt hier kein diskretes Minimieren/Einrasten mehr (kein Snap,
-keine Min/Normal/Max-Buttons) — die Aufteilung ist durchgehend stufenlos.
-Voreinstellung ist Diagramm maximiert (Editor als Titelzeile). Die **Legende**
-bekommt hier einen eigenen
+Ab schmaler Breite (≤ 640 px, z. B. Smartphone) ist **immer genau ein Bereich**
+zu sehen — Diagramm **oder** Text, jeweils über die ganze Fläche. Oben links in
+der Titelzeile schaltet ein **Knopf** auf den anderen um; er zeigt das Ziel
+(Textzeilen bzw. Baum), denn den Zustand hat man ohnehin vor sich. Es gibt hier
+weder Splitter noch Min/Normal/Max-Buttons — es ist nichts zu teilen. Der
+Bereichstitel „DIAGRAMM" entfällt; die Zeile wird für Umschalter und Aktionen
+gebraucht. Der **Dokumenten-Wähler** steht direkt neben dem Umschalter und ist
+damit genau dann zu sehen, wenn der Text vorn ist. Die übrigen
+**Aktions-Knöpfe** bleiben rechts in der Titelzeile und werden mit
+umgeschaltet — jeder Bereich zeigt seine eigenen, in der unten beschriebenen
+komprimierten Form. Der sichtbare Bereich wird gemerkt; ein Sprung zwischen
+Diagramm und Text (§9) holt den nötigen Bereich selbst nach vorn.
+Voreinstellung ist das Diagramm. Die **Legende** bekommt hier einen eigenen
 Umschalter im Editor-Kopf (statt der dauerhaften „AGENDA“-Zeile), damit sie
 zugeklappt keinen Platz kostet. Der **Modus-Wähler** zeigt nur das aktive Icon
 und schaltet bei jedem Tippen reihum weiter (horizontal → kompakt → vertikal →
