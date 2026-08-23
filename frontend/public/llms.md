@@ -155,6 +155,8 @@ One node per line. Everything except the label is optional.
 - Never mix `|` or `=` with other gates in one sibling group.
 - Decompose everything `(M)` or larger.
 - Put a node ID in front of the title, separated by a colon: `#auth: Backend`.
+- Put a fold mark after the status box, right before the label:
+  `- [x] > Concept`. Before the box it would shift the box by one indent step.
 - Give a node its own status only; express "blocked by" with `:#…`
   dependencies instead of understating the status.
 - Mark nice-to-haves with `+` — otherwise they inflate the cheapest path.

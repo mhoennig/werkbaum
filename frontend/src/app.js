@@ -275,7 +275,12 @@ function drawCheapPath(){
   out.querySelectorAll('svg.cheap-overlay').forEach(e => e.remove());
   if(!cheapPathOn) return;
   const leaves = [...out.querySelectorAll('.node.cheap-leaf')];   /* Dokument-Reihenfolge = Lese-Reihenfolge */
-  if(leaves.length < 2) return;
+  /* EINE Station ist ein gültiger Pfad: Ein eingeklappter Knoten vertritt
+     seinen ganzen Teilbaum (D38-Nachtrag), oben im Baum bleibt davon leicht
+     nur eine einzige sichtbare Station übrig. Die Linie entfällt dann (durch
+     einen Punkt führt keine), der Stationspunkt darf es nicht — sonst
+     verschwände der Pfad genau dort ganz, wo er am dichtesten gefaltet ist. */
+  if(!leaves.length) return;
   const outRect = out.getBoundingClientRect();
   const z = effZoom() || 1;
   if(!outRect.width || !outRect.height) return;                   /* Panel eingeklappt */
@@ -284,16 +289,18 @@ function drawCheapPath(){
     return {x:(r.left + r.width/2 - outRect.left)/z, y:(r.top + r.height/2 - outRect.top)/z};
   });
   const w = outRect.width/z, h = outRect.height/z;
-  const d = catmullRom(pts);
+  const d = pts.length > 1 ? catmullRom(pts) : null;
 
   /* kräftige Linie HINTER die Knoten (als erstes Kind → hinterste Paint-Ebene) */
-  const back = overlaySvg('cheap-back', w, h);
-  back.appendChild(svgEl('path', {class:'cheap-path', d}));
-  out.insertBefore(back, out.firstChild);
+  if(d){
+    const back = overlaySvg('cheap-back', w, h);
+    back.appendChild(svgEl('path', {class:'cheap-path', d}));
+    out.insertBefore(back, out.firstChild);
+  }
 
   /* davor: abgetönte Kopie (deutet den Verlauf über Knoten an) + Stationspunkte */
   const front = overlaySvg('cheap-front', w, h);
-  front.appendChild(svgEl('path', {class:'cheap-path faint', d}));
+  if(d) front.appendChild(svgEl('path', {class:'cheap-path faint', d}));
   pts.forEach(p => front.appendChild(
     svgEl('circle', {class:'cheap-dot', cx:p.x.toFixed(1), cy:p.y.toFixed(1), r:10})));
   out.appendChild(front);
@@ -574,12 +581,13 @@ function diagramToSvg(){
     parts.push(`<text x="${m.x.toFixed(1)}" y="${(m.y+3).toFixed(1)}" text-anchor="middle" fill="#6B7A8C" font-size="9" font-weight="600">1</text>`);
   });
 
-  /* 3b) Günstigster-Pfad: abgetönte Kopie über den Knoten + Stationspunkte */
-  if(cheapPts.length >= 2){
-    parts.push(cheapLine('0.2'));
-    cheapPts.forEach(p => parts.push(
-      `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="10" fill="#0F766E" fill-opacity="0.2" stroke="#0F766E" stroke-opacity="0.35" stroke-width="1.5"/>`));
-  }
+  /* 3b) Günstigster-Pfad: abgetönte Kopie über den Knoten + Stationspunkte.
+     Die Linie braucht zwei Punkte, die Stationen nicht — bei stark gefaltetem
+     Baum bleibt leicht nur eine sichtbare Station übrig (siehe
+     `drawCheapPath`). */
+  if(cheapPts.length >= 2) parts.push(cheapLine('0.2'));
+  cheapPts.forEach(p => parts.push(
+    `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="10" fill="#0F766E" fill-opacity="0.2" stroke="#0F766E" stroke-opacity="0.35" stroke-width="1.5"/>`));
 
   /* 4) Geister-Knoten „Untergliederung fehlt“ */
   out.querySelectorAll('.ghost-node').forEach(g => {
@@ -898,7 +906,12 @@ function foldStateMatches(txt, want){
    Stück zwischen gemeinsamem Anfang und Ende. */
 function replaceTextUndoable(neu){
   const alt = src.value;
-  if(alt === neu) return true;
+  /* Nichts zu schreiben heißt: kein `input`-Ereignis, also auch kein render().
+     Deshalb false — der Aufrufer zeichnet dann selbst neu. Sonst bliebe das
+     Bild stehen, wie es war: Der Fall tritt auf, wenn die Marken den
+     gewünschten Zustand schon beschreiben (etwa beim Aufklappen eines Knotens,
+     dessen Faltung nur in der Sitzungs-Überlagerung stand). */
+  if(alt === neu) return false;
   let s = 0;
   while(s < alt.length && s < neu.length && alt[s] === neu[s]) s++;
   let e = 0;

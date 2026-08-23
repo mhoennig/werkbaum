@@ -2386,6 +2386,37 @@ Der Preis ist benannt und klein: Ein eingeklappter Zweig zeigt **eine** Station
 statt mehrerer. Das ist keine Ungenauigkeit, sondern die Aussage der Faltung —
 „hier drin liegt noch Pfad", genauer geht es ohne Aufklappen nicht.
 
+**Nachtrag 3 — eine einzelne Station ist ein gültiger Pfad.** Der Nachtrag
+oben behob den Fall „eingeklappter Zweig wird übersprungen“ an der
+Klassenvergabe (`cheapCls`) — und ließ dabei eine zweite, ältere Schranke
+stehen: `drawCheapPath()` stieg bei weniger als **zwei** Stationen ganz aus.
+Solange jeder eingeklappte Knoten nur *einen* Zweig vertrat, fiel das nicht
+auf. Es fällt auf, sobald weit oben gefaltet wird: Klappt man den
+**Wurzelknoten** des Werkbaum-Plans zu, bleibt genau eine sichtbare Station —
+und damit verschwand nicht nur die Linie (richtig, durch einen Punkt führt
+keine), sondern auch der **Stationspunkt** (falsch). Der Pfad war ausgerechnet
+dort ganz weg, wo die Faltung ihn am nötigsten vertreten muss. Nachgemessen
+vor der Korrektur: Knoten `root-node cheap cheap-leaf folded`, Stationspunkte
+**0**; danach 1 Punkt, 0 Linien, im Grafikexport dasselbe (1 Kreis, keine
+Pfadlinie).
+
+Die Schranke gehört an die **Linie**, nicht an die Zeichenfunktion: `catmullRom`
+braucht zwei Punkte, die Punkte brauchen einander nicht. Dieselbe Trennung im
+Export (`cheapPts.length >= 2` nur noch für die Linie).
+
+**Dabei gefunden: der zugeklappte Wurzelknoten ließ sich nicht wieder
+aufklappen.** Ein eigener Fehler, nur über denselben Weg erreichbar. Im
+Werkbaum-Plan ist „Wurzel eingeklappt“ **nicht in Marken ausdrückbar** — das
+`<` in Zeile 160 holt seinen Teilbaum immer wieder hervor —, der Zustand liegt
+also in der Sitzungs-Überlagerung (der dritte Fall aus Nachtrag 2). Beim
+**Auf**klappen berechnete `writeFoldToText()` dann einen Text, der mit dem
+vorhandenen identisch war: nichts zu schreiben. `replaceTextUndoable()` meldete
+dafür Erfolg — aber ohne Textänderung feuert kein `input`-Ereignis, also lief
+kein `render()`, und das Bild blieb stehen, wie es war. Jeder weitere Klick tat
+dasselbe. Jetzt meldet die Funktion „nichts geschrieben“, und der Aufrufer
+zeichnet selbst neu. Nachgemessen: 144 Knoten/69 Punkte → 1/1 → 144/69 → 1/1
+über mehrere Klicks.
+
 ## D39 — Effektiver Status: die Farbe sagt die Wahrheit, die Marke die Box
 Mit den Abhängigkeiten (D37) gibt es zwei Aussagen je Knoten: was in der
 Statusbox steht (intrinsisch) und wie weit er wirklich ist (effektiv, §4).

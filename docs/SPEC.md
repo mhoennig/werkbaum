@@ -710,7 +710,11 @@ fokussierten Knoten (WAI-ARIA-Baum-Idiom).
   Endknoten darunter. Das gilt auch, wenn der eingeklappte Knoten selbst nicht
   gebraucht wird, sein Teilbaum aber schon (etwa ein per `:#…` gezogenes Ziel):
   Er ist dann der einzige sichtbare Griff auf nötige Arbeit und tritt deshalb
-  auch nicht zurück.
+  auch nicht zurück. Bleibt so nur **eine** sichtbare Station übrig (etwa bei
+  eingeklapptem Wurzelknoten), entfällt die **Linie** — durch einen einzelnen
+  Punkt führt keine —, der **Stationspunkt bleibt**; sonst verschwände der
+  Pfad ausgerechnet dort ganz, wo der Baum am dichtesten gefaltet ist. Gilt
+  auch im Grafikexport.
 - **Export und Druck folgen der sichtbaren Faltung** (dieselbe Regel wie beim
   „verworfene einblenden“-Filter): Verborgene Teilbäume fehlen, eingeklappte
   Knoten behalten die Kennzeichnung „▸ n“ — das Bild behauptet damit keine

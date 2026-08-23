@@ -316,7 +316,10 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Pfad-Mitgliedschaft (ein per `:#…` gezogenes Ziel unter einem `+`-Knoten):
   Dann ist er der einzige sichtbare Griff darauf und zählt als `cheap`.
   `extraCls()` muss dieselbe Eingeklappt-Bedingung bilden wie `itemHtml`
-  (nur mit sichtbaren Kindern).
+  (nur mit sichtbaren Kindern). **Eine einzelne Station ist ein gültiger Pfad**
+  (D38-Nachtrag 3): `drawCheapPath()` steigt nur bei **null** Stationen aus,
+  die Zwei-Punkte-Schranke gilt allein der Linie (`catmullRom`) — im Export
+  ebenso. Sonst verschwindet der Pfad beim eingeklappten Wurzelknoten ganz.
   **Umklappen schreibt in den TEXT zurück** (`writeFoldToText`, D38-Nachtrag 2):
   Die Ableitung Text → Zustand ist nicht umkehrbar (mehrere Markensätze ergeben
   denselben Zustand; `<` faltet Knoten ohne eigene Marke), deshalb **minimal
@@ -332,7 +335,11 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Mobil die Tastatur hoch (`keyboardOnJump(true)`). Bei `src.readOnly` (Pad,
   D31) wird nicht geschrieben, dort trägt weiter `foldOverrides` — die
   Überlagerungen werden nach erfolgreichem Schreiben geleert, sonst maskieren
-  sie den Text. Umklappen: Klick aufs
+  sie den Text. **`replaceTextUndoable()` meldet bei unveränderten Text
+  `false`** (D38-Nachtrag 3): Ohne Textänderung feuert kein `input`, also läuft
+  kein `render()` — der Aufrufer muss dann selbst zeichnen. Sonst bleibt das
+  Bild stehen (aufgefallen beim Aufklappen eines nur per Überlagerung
+  gefalteten Knotens: der Klick tat sichtbar nichts mehr). Umklappen: Klick aufs
   `.fold`-Zeichen (preventDefault — es sitzt bei Link-Knoten im `<a>`) oder
   ←/→ am fokussierten Knoten; nach `render()` den Fokus per `data-line`
   wiederherstellen. Export/Druck: „▸ n" bleibt, das ▾ offener Knoten fällt weg
