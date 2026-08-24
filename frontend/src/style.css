@@ -544,7 +544,15 @@
   /* Cursor-Zeile und Zeilen mit Warnung heben sich ab — genau die beiden Fälle,
      für die man im Streifen überhaupt nachsieht. */
   .lineno-inner span.cur{opacity:1;color:var(--ink);font-weight:600}
-  .lineno-inner span.warn{opacity:1;color:var(--warn);font-weight:600}
+  /* Die Zahl einer Warn-Zeile trägt die Meldung als Tooltip (D33-Nachtrag).
+     Dafür reicht ihr Kasten über die **ganze** Streifenbreite statt nur über
+     die Ziffern: Ein zwei Zeichen breites Ziel trifft man sonst kaum. Die
+     Ziffern selbst bleiben, wo sie sind (rechtsbündig, 6 px Abstand), und
+     `cursor:help` sagt, dass es hier etwas zu lesen gibt. */
+  .lineno-inner span.warn{
+    opacity:1;color:var(--warn);font-weight:600;
+    left:0;right:0;padding-right:6px;text-align:right;cursor:help;
+  }
   .hint{
     padding:12px 16px;border-top:1px dashed rgba(36,52,71,.18);
     font-size:.8rem;color:var(--muted);line-height:1.7;

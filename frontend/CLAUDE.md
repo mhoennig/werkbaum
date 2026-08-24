@@ -55,6 +55,10 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   neutral. `render()` in app.js führt Parser- und Renderer-Warnungen zusammen
   (nach Zeile sortiert) und zeigt sie via `formatWarning` (warnings.js). Neue
   Warnungstypen dort + i18n-Key in allen 9 Sprachen ergänzen.
+- **Zwei Senken, ein `switch`:** `formatWarning()` liefert HTML (Warnungsbereich),
+  `warningText()` Klartext (der `title` der Zeilennummer, D33-Nachtrag); beide
+  bauen auf `build(w, t, esc)` auf. Einen neuen Typ **nur dort** eintragen —
+  einen zweiten Formatierer danebenzustellen heißt, dass einer veraltet.
 - Modulteilung (D19): `parser.js` (Text→Baum, headless), `model.js` (Baum-/
   Kostenlogik: `gateOf`, `needsBreakdown`, `visibleChildren(n, showDiscarded)`,
   `computeCheapSet`, `cheapCls`), `render.js` (HTML-String via

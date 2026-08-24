@@ -2,7 +2,7 @@ import './style.css';
 import { parse, setFoldMark } from './parser.js';
 import { computeCheapPlan, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, atMostM } from './model.js';
 import { esc, renderTreeHtml, TIP_RULE } from './render.js';
-import { formatWarning } from './warnings.js';
+import { formatWarning, warningText } from './warnings.js';
 import { padUrls } from './remote.js';
 /* Werkbaum, mit Werkbaum geplant — als mitgeliefertes Dokument „Werkbank" (D27).
    Dieselbe Datei, die auch per ?sourceUrl= geladen werden kann; `?raw` bettet
@@ -156,8 +156,16 @@ function render(){
   warnings = warnings.slice().sort((a, b) => (a.line || 0) - (b.line || 0));
   warnBox.innerHTML = warnings.map(w => `<div>⚠ ${formatWarning(w, t)}</div>`).join('');
   /* Der Zeilennummern-Streifen zeigt genau die Zeilen an, die hier genannt
-     werden — deshalb hängt er an derselben Warnungsliste (D33). */
-  lineNoWarn = new Set(warnings.map(w => w.line).filter(Boolean));
+     werden — deshalb hängt er an derselben Warnungsliste (D33). Der Text
+     wandert gleich mit in den `title` der Zahl (D33-Nachtrag); mehrere
+     Warnungen einer Zeile stehen dort untereinander. */
+  lineNoWarn = new Map();
+  for(const w of warnings){
+    if(!w.line) continue;
+    const vorher = lineNoWarn.get(w.line);
+    const text = warningText(w, t);
+    lineNoWarn.set(w.line, vorher ? vorher + '\n' + text : text);
+  }
   renderLineNos();
   applyOptStairs();   /* muss vor dem Messen laufen — es verschiebt Knoten */
   alignStems();
@@ -832,7 +840,7 @@ function lineTops(){
    in den Textfluss lässt sich nichts einfügen, ein `<textarea>` kennt kein
    Markup. Gescrollt wird er nicht selbst, sondern gegen `src.scrollTop`
    verschoben; so kann er nie auseinanderlaufen. */
-let lineNoWarn = new Set();
+let lineNoWarn = new Map();   /* Zeile -> Warnungstext(e), siehe render() */
 function renderLineNos(){
   const tops = lineTops();
   /* Der Marker ist ein Inline-Kasten und steht in seiner Zeilenbox mittig — sein
@@ -856,7 +864,14 @@ function renderLineNos(){
     const s = lineNoInner.children[i], n = i + 1;
     if(s.textContent !== String(n)) s.textContent = n;
     s.style.top = (tops[i] - drop) + 'px';
-    s.classList.toggle('warn', lineNoWarn.has(n));
+    /* Die Warnung steht auch im Warnungsbereich unter dem Diagramm — der
+       Tooltip erspart nur den Weg dorthin und das Suchen der Zeilennummer.
+       Kein Ersatz: Der Streifen ist `aria-hidden`, für Screenreader bleibt die
+       Live-Region die Quelle (D33-Nachtrag). */
+    const warn = lineNoWarn.get(n);
+    s.classList.toggle('warn', !!warn);
+    if(warn){ if(s.title !== warn) s.title = warn; }
+    else if(s.title) s.removeAttribute('title');
   }
   markCurrentLineNo();
   syncLineNoScroll();

@@ -1843,6 +1843,58 @@ will. Der Streifen ist so schmal wie die Ziffern es verlangen
 gar nicht. `scrollEditorToOffset()` zieht die Zahlen deshalb selbst gleich mit,
 statt sich auf das Ereignis zu verlassen.
 
+**Nachtrag — die Warn-Zahl trägt ihre Meldung als Tooltip.** Der Streifen sagte
+bisher nur *dass* eine Zeile eine Warnung hat; *welche*, stand allein unter dem
+Diagramm. Das ist der halbe Weg: Man sieht die orange Zahl, sucht dann in der
+Liste die passende Zeilennummer und liest dort. Der Tooltip schließt genau
+diese Lücke, und er kostet nichts Neues — die Meldung existiert schon, sie wird
+nur ein zweites Mal ausgegeben.
+
+**Wörtlich dieselbe Meldung, aus derselben Quelle.** `formatWarning()` ist seit
+jeher die eine Stelle, die die Warnungstypen kennt; sie bleibt es. Nur der
+**Ausgang** ist ein anderer: Der Warnungsbereich ist HTML, ein `title` ist
+Klartext. Deshalb gibt es jetzt `warningText()` daneben, gebaut aus demselben
+`switch` mit einem anderen Escaper. Ohne die Trennung stünde im Tooltip
+wörtlich `Drag &amp; Drop` — und Labels mit `&`, `<` oder `"` sind keine
+Ausnahme, sondern der Alltag (der Prüf-Plan trug „Plan mit "Drag & Drop"“
+genau deswegen). Ein zweiter, handgeschriebener Formatierer wäre die
+naheliegende Alternative gewesen und die schlechtere: zwei Stellen, die
+dieselben elf Typen kennen müssen, und die eine veraltet.
+
+**Mehrere Warnungen einer Zeile stehen untereinander.** Sie sind ohnehin je
+eine eigene Meldung (D35 begründet das für `xorConflict`: die Warnung zeigt auf
+die Zeile, die man ansehen muss); im Tooltip getrennt durch `\n`, was ein
+`title` als einzige Auszeichnung kann. Der Präfix „Zeile 12: “ bleibt darin
+stehen, obwohl er neben der Zahl redundant ist: Ihn zu entfernen hieße, eine
+lokalisierte Vorlage in neun Sprachen zu zerschneiden — für ein paar
+gesparte Zeichen an einer Stelle, an der die Wortgleichheit mit dem
+Warnungsbereich mehr wert ist.
+
+**Der Kasten der Warn-Zahl reicht über die ganze Streifenbreite.** Die Zahlen
+stehen `position:absolute; right:6px` und sind damit nur so breit wie ihre
+Ziffern — auf dem Telefon rund 7 px. Ein Tooltip an einem so kleinen Ziel ist
+praktisch nicht zu treffen. Warn-Zahlen bekommen deshalb `left:0;right:0` plus
+`padding-right:6px`: Die **Ziffern bleiben punktgenau stehen** (nachgemessen:
+rechte Kante 21,14 px, gleichauf mit einer gewöhnlichen Zahl), nur die
+unsichtbare Fläche wächst. `cursor:help` sagt, dass es dort etwas zu lesen
+gibt — die einzige Auffindbarkeit, die ein Tooltip haben kann (die Lehre aus
+D25).
+
+**Kein Ersatz für den Warnungsbereich, und kein Zweitweg für Screenreader.**
+Der Streifen ist `aria-hidden` (D33: reine Lesehilfe) — ein `title` darin ist
+für einen Screenreader ohnehin nicht da, und das soll so bleiben: Die
+Live-Region meldet neue Warnungen von selbst (§9), ein zweiter Kanal läse sie
+doppelt vor. Auf Touch gibt es keinen Tooltip; anders als bei den
+Knotenbeschreibungen (D52) fehlt dort aber nichts, denn die vollständige
+Meldung steht sichtbar unter dem Diagramm.
+
+**Nachgemessen** an einem Plan mit vier Warnungen in drei Zeilen: Die drei
+Zahlen tragen genau die vier Meldungen des Warnungsbereichs, Zeile 2 beide
+untereinander, `&` und `"` unverfälscht; keine Zahl ohne Warnung trägt einen
+`title`. Nach dem Beheben zweier Warnungen verschwinden Klasse **und** Titel
+mit (Zeile 3 ganz, Zeile 2 von zwei Meldungen auf eine). Im mitgelieferten
+Werkbaum-Plan (941 Zeilen, 155 Knoten, 0 Warnungen): 0 Tooltips.
+
 ## D34 — Abhängigkeiten, IDs, XOR, Falten, Beschreibungen: erst reserviert, dann gebaut
 Fünf Erweiterungen auf einmal — Knoten-**IDs** (`#auth`), **Abhängigkeiten**
 (`:#auth,#api`) samt effektivem Status, **XOR** (`x`), ein- und ausklappbare

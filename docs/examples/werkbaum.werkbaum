@@ -66,6 +66,7 @@
       - [^] #ed.docs.restore: Restore a shipped document from the menu (XS)
     - [^] #ed.jump: Jump between diagram and text (S)
     - [^] #ed.lineno: Line numbers in the text editor (XS)  %% the warnings name them
+      - [x] #ed.lineno.tip: The warning is the tooltip of its number (XS)  %% no hunting in the list
     - [^] #ed.fold: Collapsible subtrees (M)
       - [^] #ed.fold.marks: Initial state from the text: > collapses, < re-opens (S)
       - [^] #ed.fold.click: Fold and unfold in the diagram (S)
@@ -478,6 +479,11 @@
   A narrow strip beside the text field showing the logical line numbers, the
   same ones the warnings name. Measured rather than calculated: a wrapped line
   keeps exactly one number.
+
+#ed.lineno.tip
+  An amber number says that a line has a warning; its tooltip says which one,
+  word for word as it stands below the diagram. Otherwise you read the number,
+  then hunt for it in the list.
 
 #ed.fold
   A large plan is unreadable unless parts of it can be put away. Folding is

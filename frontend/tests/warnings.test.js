@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatWarning } from '../src/warnings.js';
+import { formatWarning, warningText } from '../src/warnings.js';
 
 /* Stub bildet key + interpolierte Variablen sichtbar ab, damit wir prüfen
    können, welche Werte (inkl. Escaping) formatWarning durchreicht. */
@@ -38,5 +38,26 @@ describe('formatWarning — vereinheitlichtes Warnungs-Modell', () => {
   it('unbekannter Typ fällt auf eine generische, escapte Meldung zurück', () => {
     expect(formatWarning({type: 'was?', line: 9}, t)).toBe('was? (9)');
     expect(formatWarning({type: 'x'}, t)).toBe('x (?)');
+  });
+});
+
+/* Der `title` der Zeilennummer ist kein HTML — dort stünde sonst wörtlich
+   „Drag &amp; Drop“ (D33-Nachtrag). Dieselben Typen, dieselbe Vorlage, nur
+   ohne Escaping. */
+describe('warningText — dieselbe Meldung als Klartext', () => {
+  it('lässt das Label unangetastet', () => {
+    expect(warningText({type: 'mixedGate', line: 7, label: 'A & <B>'}, t))
+      .toBe('mixedWarn|{"line":7,"label":"A & <B>"}');
+  });
+
+  it('lässt die URL unangetastet', () => {
+    expect(warningText({type: 'sourceLoad', url: 'https://a/?x=1&y=2', error: 'HTTP 404'}, t))
+      .toBe('sourceLoadWarn|{"url":"https://a/?x=1&y=2","error":"HTTP 404"}');
+  });
+
+  it('deckt dieselben Typen ab wie formatWarning', () => {
+    expect(warningText({type: 'descStray', line: 4}, t)).toBe('descStrayWarn|{"line":4}');
+    expect(warningText({type: 'cheapApprox'}, t)).toBe('cheapApproxWarn|undefined');
+    expect(warningText({type: 'was?', line: 9}, t)).toBe('was? (9)');
   });
 });

@@ -718,6 +718,12 @@ im Text abzählen.
   waagerechte Verschiebung zurück — er zeigt auf eine Zeile, nicht auf ihr Ende.
 - Die **Cursor-Zeile** und Zeilen mit einer **Warnung** heben sich ab (Warnung in
   `--warn`, `#B45309`) — genau die beiden Fälle, für die man hinsieht.
+- Die Zahl einer Warn-Zeile trägt die **Meldung als Tooltip** — wörtlich
+  dieselbe, die unter dem Diagramm im Warnungsbereich steht; mehrere Warnungen
+  einer Zeile stehen darin untereinander. Der Streifen bleibt `aria-hidden`:
+  Für Screenreader ist die Live-Region des Warnungsbereichs die Quelle, der
+  Tooltip erspart nur den Weg dorthin. Ohne Zeiger gibt es ihn nicht (wie
+  überall) — die Meldung steht dort ohnehin vollständig. Siehe D33-Nachtrag.
 - Reine Lesehilfe: kein Bestandteil des Notationstexts, nicht im Grafikexport
   und nicht im Druck (dort ist ohnehin nur das Diagramm zu sehen).
 

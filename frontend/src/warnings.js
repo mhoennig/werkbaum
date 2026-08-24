@@ -43,6 +43,20 @@ import { esc } from './render.js';
 /* Strukturierte Warnung -> lokalisierter Anzeigetext (HTML-escaped Daten).
    `t` ist die i18n-Funktion (key, vars) -> String. */
 export function formatWarning(w, t){
+  return build(w, t, esc);
+}
+
+/* Dasselbe als **Klartext**, ohne HTML-Escaping — für Senken, die kein HTML
+   sind: der `title` der Zeilennummer (D33-Nachtrag). Dort stünde sonst
+   „Drag &amp; Drop“ statt „Drag & Drop“; die Vorlagen selbst enthalten kein
+   Markup, escaped werden ohnehin nur die eingesetzten Daten. */
+export function warningText(w, t){
+  return build(w, t, s => String(s));
+}
+
+/* Der Parameter verdeckt das importierte `esc` bewusst: So bleibt der Rumpf
+   unverändert und es gibt nur **eine** Stelle, die die Typen kennt. */
+function build(w, t, esc){
   switch(w.type){
     case 'mixedGate':
       return t('mixedWarn', {line: w.line, label: esc(w.label)});
