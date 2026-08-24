@@ -286,6 +286,11 @@ effektiv nicht weiter sein als das, was er braucht.
 
 - Ein nacktes `https://…`-Token macht den ganzen Knoten klickbar
   (neuer Tab, `rel="noopener"`); Kennzeichnung mit ↗ hinter dem Label.
+- **Ausnahme auf Touch-Geräten:** Dort öffnet der einfache Tipp nicht die URL,
+  sondern das Knoten-Fenster (§9) — der Link steht darin als eigener Knopf. Ohne
+  Zeiger gibt es keinen Tooltip, und ein einziger Tipp kann nicht beides tun;
+  „ansehen" ist die häufigere Absicht, und der Link bleibt einen Tipp entfernt.
+  Siehe D52.
 
 ## 7. Personen-Tags
 
@@ -329,6 +334,26 @@ dem Label — sie macht die sonst unsichtbare Beschreibung auffindbar und
 spiegelt das `"`-Zeichen der Notation. Die Marke erscheint **nicht** im
 Grafikexport: Der Text selbst kann dort nicht angezeigt werden, eine Marke
 ohne Ziel wäre Rauschen. Siehe D40.
+
+**Auf Touch-Geräten zeigt der einfache Tipp auf einen Knoten dasselbe als
+Fenster** — ohne Zeiger gibt es keinen Tooltip, die Beschreibung wäre dort sonst
+gar nicht zu sehen. Es ist derselbe Inhalt, nur mit dem, was ein `title` nicht
+kann: Die Beschreibung steht als Absatz, die Kurz-Fakten dahinter durch eine
+echte Linie abgesetzt.
+
+- Das Fenster hängt am angetippten Knoten (kleine Spitze zu ihm hin) und weicht
+  nach oben aus, wenn unten kein Platz ist. Der Knoten trägt, solange es offen
+  ist, einen Petrol-Ring.
+- Es schließt beim Tipp daneben, beim erneuten Tipp auf denselben Knoten, mit
+  **Esc**, über sein ×, beim Scrollen des Diagramms und bei jedem Neubau.
+- Ein **verlinkter** Knoten (§6) bekommt darin einen ↗-Knopf, der die URL im
+  neuen Tab öffnet — auf Touch ist das der Weg zum Link.
+- Der **Sprung-Hinweis** nennt hier den langen Druck statt Alt+Klick (§9,
+  Sprung zwischen Diagramm und Text) — Alt gibt es auf dem Telefon nicht.
+- Reine Bedienhilfe: nicht im Grafikexport, nicht im Druck. Auf Geräten mit
+  Zeiger ändert sich nichts, dort bleibt es beim Tooltip.
+
+Siehe D52.
 
 **Die Knotenfarbe zeigt den effektiven Status (§4)**, nicht den intrinsischen —
 das Diagramm beantwortet „wie weit ist das wirklich?“. Wo der eigene Status

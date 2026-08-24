@@ -532,3 +532,16 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   (das einzige Element ohne feste Größe) auf einen 2-px-Strich, während sein
   Icon darüber hinausragt. Das sieht aus wie ein Trennstrich und ist
   unbenutzbar.
+- **Die drei Touch-Gesten am Knoten (D25, D38, D52)** teilen sich `touchstart`/
+  `touchend` und werden am vorhandenen Zustand unterschieden: `armedEl` gesetzt
+  (500 ms um) ⇒ Sprung, Timer läuft noch ⇒ kurzer Tipp ⇒ Knoten-Fenster, beides
+  weg (jedes `touchmove` räumt auf) ⇒ es wurde gescrollt ⇒ nichts. Kein eigenes
+  Merkerfeld nötig. Wer hier eine vierte Geste einhängt, denkt an das
+  **Falt-Zeichen**: Es ist ausgenommen, weil das Fenster `preventDefault()`
+  braucht (sonst öffnet ein Link-Knoten zusätzlich seine URL) — und das
+  verschluckt den Klick, mit dem gefaltet wird.
+- **Das Knoten-Fenster liegt auf `<body>`, nicht in `#out` (D52):** In `#out`
+  erbte es dessen CSS-`zoom` und würde von dessen `overflow` beschnitten (D50).
+  Es schließt bei allem, was seine Aussage hinfällig macht — Tipp daneben,
+  zweiter Tipp, Esc, ×, Diagramm-Scroll, Bereichswechsel, Sprung in den Text,
+  `render()`. Die letzten drei sind beim Bauen zuerst vergessen worden.

@@ -1,7 +1,7 @@
 import './style.css';
 import { parse, setFoldMark } from './parser.js';
 import { computeCheapPlan, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, atMostM } from './model.js';
-import { esc, renderTreeHtml } from './render.js';
+import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning } from './warnings.js';
 import { padUrls } from './remote.js';
 /* Werkbaum, mit Werkbaum geplant — als mitgeliefertes Dokument „Werkbank" (D27).
@@ -84,6 +84,9 @@ let foldOverrides = new Map(), foldByLine = new Map();
    parse -> Wurzeln filtern (verworfene) -> günstigen Pfad markieren ->
    render.js baut den HTML-String -> in #out schreiben -> Pfadlinie zeichnen. */
 function render(){
+  /* Das Knoten-Fenster (D52) hängt an einem Element, das der Neubau ersetzt —
+     und seine Position ist ohnehin gemessen, also gleich hinfällig. */
+  closeNodeTip();
   const parsed = parse(src.value);
   let roots = parsed.roots;
   const showDiscarded = discardedShown();
@@ -865,6 +868,7 @@ src.addEventListener('pointerdown', () => keyboardOnJump(false));
 function jumpToLine(line){
   const r = lineRange(line);
   if(!r) return;
+  closeNodeTip();          /* der Sprung führt weg vom Knoten (D52) */
   revealEditor();
   keyboardOnJump(true);
   src.focus({preventScroll: true});
@@ -1096,15 +1100,20 @@ out.addEventListener('keydown', e => {
    der Zielknoten bekommt den Petrol-Ring („scharf"). Der folgende Klick wird
    unterdrückt, sonst öffnete ein Link-Knoten zusätzlich seine URL; das
    Kontextmenü/Callout ebenso (die Geste ist hier vergeben). */
-let pressTimer = null, armedEl = null;
+let pressTimer = null, armedEl = null, pressNode = null;
 function disarmPress(){
   if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
   if(armedEl){ armedEl.classList.remove('armed'); armedEl = null; }
+  pressNode = null;
 }
 out.addEventListener('touchstart', e => {
   disarmPress();
   const el = nodeFromEvent(e);
   if(!el) return;
+  /* Ein Tipp auf das Falt-Zeichen klappt um (D38) — das darf der kurze Tipp
+     nicht abfangen, sonst wäre Falten auf Touch nicht mehr zu bedienen. */
+  if(e.target && e.target.closest && e.target.closest('.fold')) return;
+  pressNode = el;
   pressTimer = setTimeout(() => {
     pressTimer = null;
     armedEl = el;
@@ -1114,13 +1123,105 @@ out.addEventListener('touchstart', e => {
 out.addEventListener('touchmove', disarmPress, {passive: true});
 out.addEventListener('touchend', e => {
   const el = armedEl;
+  /* Kurzer Tipp: der Timer läuft noch (nach 500 ms wäre `armedEl` gesetzt) und
+     es wurde nicht gewischt (jedes `touchmove` räumt den Timer weg). Der
+     Zustand unterscheidet die drei Gesten also ohne eigenes Merkerfeld. */
+  const tap = !el && pressTimer && pressNode;
+  const tapped = pressNode;
   disarmPress();
-  if(!el) return;
-  e.preventDefault();             /* unterdrückt den nachfolgenden Klick/Link */
-  jumpToLine(+el.dataset.line);   /* echte Nutzergeste -> der Fokus bleibt */
+  if(el){
+    e.preventDefault();             /* unterdrückt den nachfolgenden Klick/Link */
+    jumpToLine(+el.dataset.line);   /* echte Nutzergeste -> der Fokus bleibt */
+    return;
+  }
+  if(!tap) return;
+  /* Der einfache Tipp zeigt den Tooltip als Fenster (SPEC §6/§9, D52). Ohne
+     `preventDefault()` öffnete ein Link-Knoten zusätzlich seine URL — auf Touch
+     ist der Link stattdessen ein Knopf IM Fenster. */
+  e.preventDefault();
+  toggleNodeTip(tapped);
 }, {passive: false});
 out.addEventListener('touchcancel', disarmPress);
 out.addEventListener('contextmenu', e => { if(pressTimer || armedEl) e.preventDefault(); });
+
+/* ---------- Knoten-Fenster auf Touch (SPEC §6/§9, D52) ----------
+   Ein `title` braucht einen Zeiger; ohne Zeiger wäre die Beschreibung (D40) gar
+   nicht zu sehen. Das Fenster zeigt denselben Inhalt, zerlegt am Trennstrich
+   des Tooltips (TIP_RULE) in Beschreibung und Kurz-Fakten — dort, wo der
+   Tooltip 24 `─` malen musste, steht hier eine echte Linie. Kein zweites
+   data-Attribut mit derselben Beschreibung: Das verdoppelte im Werkbaum-Plan
+   rund 20 kB DOM-Text für nichts. */
+const nodeTip = document.getElementById('nodeTip');
+const nodeTipBody = document.getElementById('nodeTipBody');
+let tipNode = null;
+
+function closeNodeTip(){
+  if(!tipNode) return;
+  tipNode.classList.remove('tipped');
+  tipNode = null;
+  nodeTip.hidden = true;
+}
+
+function toggleNodeTip(el){
+  if(tipNode === el){ closeNodeTip(); return; }   /* zweiter Tipp schließt */
+  closeNodeTip();
+  const title = el.getAttribute('title') || '';
+  const sep = '\n\n' + TIP_RULE + '\n';
+  const i = title.indexOf(sep);
+  const desc = i >= 0 ? title.slice(0, i) : '';
+  /* Der Sprung-Hinweis nennt im Tooltip Alt+Klick; hier gibt es kein Alt. */
+  const facts = (i >= 0 ? title.slice(i + sep.length) : title)
+    .replace(t('jumpHint'), t('jumpHintTouch'));
+  const href = el.tagName === 'A' ? el.getAttribute('href') : null;
+  /* Absätze: Leerzeilen trennen (SPEC §1), einzelne Zeilenumbrüche sind bloß
+     der Umbruch der Quelldatei und werden zu Leerzeichen. Der `title` kann das
+     nicht — er zeigt die harten Umbrüche und sah im schmalen Fenster
+     ausgefranst aus (im Werkbaum-Plan bricht jede Beschreibung bei ~76
+     Zeichen). Hier wird umgebrochen, wie es das Fenster braucht. */
+  const paras = desc.split(/\n{2,}/)
+    .map(p => p.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean);
+  nodeTipBody.innerHTML =
+    (paras.length ? `<div class="nodetip-desc">${paras.map(p => `<p>${esc(p)}</p>`).join('')}</div>` : '') +
+    (facts ? `<div class="nodetip-facts">${esc(facts)}</div>` : '') +
+    (href ? `<a class="nodetip-link" href="${esc(href)}" target="_blank" rel="noopener">↗ ${esc(t('tipOpenLink'))}</a>` : '');
+  tipNode = el;
+  el.classList.add('tipped');
+  nodeTip.hidden = false;
+  placeNodeTip(el);
+}
+
+/* Setzt das Fenster unter den Knoten, bei Platzmangel darüber; waagerecht auf
+   die Knotenmitte, geklemmt an den Fensterrand. Die Spitze bleibt über
+   `--tipx` am Knoten, auch wenn das Fenster geklemmt wurde. */
+function placeNodeTip(el){
+  const b = el.getBoundingClientRect();
+  const gap = 10, pad = 8;
+  nodeTip.classList.remove('above');
+  nodeTip.style.left = '0px';                  /* erst messen, dann setzen */
+  nodeTip.style.top = '0px';
+  const w = nodeTip.offsetWidth, h = nodeTip.offsetHeight;
+  const above = b.bottom + gap + h > window.innerHeight && b.top - gap - h > 0;
+  if(above) nodeTip.classList.add('above');
+  const anchorX = b.left + b.width / 2;
+  const left = Math.max(pad, Math.min(anchorX - w / 2, window.innerWidth - w - pad));
+  nodeTip.style.left = left + 'px';
+  nodeTip.style.top = (above ? b.top - gap - h : b.bottom + gap) + 'px';
+  /* Spitze relativ zum Fenster, aber innerhalb seiner Rundungen gehalten. */
+  nodeTip.style.setProperty('--tipx',
+    Math.max(12, Math.min(anchorX - left, w - 12)).toFixed(1) + 'px');
+}
+
+document.getElementById('nodeTipClose').addEventListener('click', closeNodeTip);
+/* Tipp/Klick daneben schließt — der Link-Knopf im Fenster aber nicht. */
+document.addEventListener('pointerdown', e => {
+  if(!tipNode || nodeTip.contains(e.target)) return;
+  if(e.target && e.target.closest && e.target.closest('.node') === tipNode) return;
+  closeNodeTip();
+}, true);
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeNodeTip(); });
+/* Beim Scrollen des Diagramms wandert der Knoten, das `position:fixed`-Fenster
+   nicht — es zeigte dann auf etwas anderes. Also zumachen. */
+document.querySelector('.diagram').addEventListener('scroll', closeNodeTip, {passive: true});
 
 /* Welcher Knoten gehört zu einer Textzeile? Zuerst der Knoten, DER auf dieser
    Zeile steht; sonst der Knoten, dessen **Beschreibung** hier steht (SPEC §9):
@@ -1265,6 +1366,9 @@ function applyMobilePane(){
   document.body.classList.toggle('pane-text',    mobilePane === 'text');
 }
 function setMobilePane(pane, save){
+  /* Das Knoten-Fenster (D52) zeigt auf einen Knoten im Diagramm — wechselt der
+     Bereich, ist das Ziel weg (`display:none`). */
+  closeNodeTip();
   mobilePane = pane;
   applyMobilePane();
   /* Ein Panel mit `display:none` misst sich zu **null**. Alles, was aus der
@@ -1552,6 +1656,10 @@ const I18N = {
     paneToDiagram:"Zum Diagramm wechseln",
     ghostTooltip:"Ab Größe M sollte ein Element weiter untergliedert werden.",
     jumpHint:"Alt+Klick: zur Zeile im Text",
+    /* Auf Touch nennt das Knoten-Fenster (D52) den langen Druck — Alt gibt es dort nicht. */
+    jumpHintTouch:"Langer Druck: zur Zeile im Text",
+    tipClose:"Schließen",
+    tipOpenLink:"Link öffnen",
     padReadonly:"Wird im Pad bearbeitet — hier nur lesen.",
     padEdit:"Pad zum Bearbeiten öffnen",
     padRefresh:"Vom Pad neu laden",
@@ -1634,6 +1742,9 @@ const I18N = {
     paneToDiagram:"Switch to the diagram",
     ghostTooltip:"From size M upward, an item should be broken down further.",
     jumpHint:"Alt+click: jump to the line in the text",
+    jumpHintTouch:"Long press: jump to the line in the text",
+    tipClose:"Close",
+    tipOpenLink:"Open link",
     padReadonly:"Edited in the pad — read-only here.",
     padEdit:"Open the pad to edit",
     padRefresh:"Reload from the pad",
@@ -1716,6 +1827,9 @@ const I18N = {
     paneToDiagram:"Cambiar al diagrama",
     ghostTooltip:"A partir de la talla M, un elemento debería desglosarse más.",
     jumpHint:"Alt+clic: ir a la línea en el texto",
+    jumpHintTouch:"Pulsación larga: ir a la línea en el texto",
+    tipClose:"Cerrar",
+    tipOpenLink:"Abrir enlace",
     padReadonly:"Se edita en el pad — aquí solo lectura.",
     padEdit:"Abrir el pad para editar",
     padRefresh:"Recargar desde el pad",
@@ -1798,6 +1912,9 @@ const I18N = {
     paneToDiagram:"Passer au diagramme",
     ghostTooltip:"À partir de la taille M, un élément devrait être décomposé davantage.",
     jumpHint:"Alt+clic : aller à la ligne dans le texte",
+    jumpHintTouch:"Appui long : aller à la ligne dans le texte",
+    tipClose:"Fermer",
+    tipOpenLink:"Ouvrir le lien",
     padReadonly:"Modifié dans le pad — lecture seule ici.",
     padEdit:"Ouvrir le pad pour modifier",
     padRefresh:"Recharger depuis le pad",
@@ -1880,6 +1997,9 @@ const I18N = {
     paneToDiagram:"Przełącz na diagram",
     ghostTooltip:"Od rozmiaru M element powinien być dalej podzielony.",
     jumpHint:"Alt+kliknięcie: przejdź do wiersza w tekście",
+    jumpHintTouch:"Długie przytrzymanie: przejdź do wiersza w tekście",
+    tipClose:"Zamknij",
+    tipOpenLink:"Otwórz link",
     padReadonly:"Edytowane w padzie — tu tylko do czytania.",
     padEdit:"Otwórz pad do edycji",
     padRefresh:"Wczytaj ponownie z padu",
@@ -1962,6 +2082,9 @@ const I18N = {
     paneToDiagram:"Перейти к диаграмме",
     ghostTooltip:"Начиная с размера M элемент следует далее декомпозировать.",
     jumpHint:"Alt+клик: перейти к строке в тексте",
+    jumpHintTouch:"Долгое нажатие: перейти к строке в тексте",
+    tipClose:"Закрыть",
+    tipOpenLink:"Открыть ссылку",
     padReadonly:"Редактируется в паде — здесь только чтение.",
     padEdit:"Открыть пад для редактирования",
     padRefresh:"Обновить из пада",
@@ -2044,6 +2167,9 @@ const I18N = {
     paneToDiagram:"आरेख पर जाएँ",
     ghostTooltip:"आकार M से ऊपर किसी तत्व को और अधिक उप-विभाजित करना चाहिए।",
     jumpHint:"Alt+क्लिक: टेक्स्ट में उस पंक्ति पर जाएँ",
+    jumpHintTouch:"देर तक दबाएँ: टेक्स्ट में उस पंक्ति पर जाएँ",
+    tipClose:"बंद करें",
+    tipOpenLink:"लिंक खोलें",
     padReadonly:"पैड में संपादित होता है — यहाँ केवल पढ़ें।",
     padEdit:"संपादित करने के लिए पैड खोलें",
     padRefresh:"पैड से फिर लोड करें",
@@ -2133,6 +2259,9 @@ const I18N = {
     implicitSizeTooltip:"未指定尺寸——成本估算时按 M 计",
     ghostTooltip:"从 M 号起，元素应进一步细分。",
     jumpHint:"Alt+点击：跳转到文本中的该行",
+    jumpHintTouch:"长按：跳转到文本中的该行",
+    tipClose:"关闭",
+    tipOpenLink:"打开链接",
     padReadonly:"在 Pad 中编辑 — 此处只读。",
     padEdit:"打开 Pad 进行编辑",
     padRefresh:"从 Pad 重新加载",
@@ -2215,6 +2344,9 @@ const I18N = {
     implicitSizeTooltip:"サイズ未指定 – コスト見積もりのため M として扱う",
     ghostTooltip:"サイズ M 以上の要素はさらに分解すべきです。",
     jumpHint:"Alt+クリック：テキストの該当行へ移動",
+    jumpHintTouch:"長押し：テキストの該当行へ移動",
+    tipClose:"閉じる",
+    tipOpenLink:"リンクを開く",
     padReadonly:"パッドで編集します — ここでは読み取り専用です。",
     padEdit:"編集するにはパッドを開く",
     padRefresh:"パッドから再読み込み",

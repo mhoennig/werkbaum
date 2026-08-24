@@ -49,8 +49,11 @@ export function esc(s){
 function attr(s){ return esc(String(s)).replace(/"/g,'&quot;'); }
 /* Trennstrich im Knoten-Tooltip zwischen Beschreibung und Kurz-Fakten (D40).
    Box-Drawing-Zeichen statt Bindestrichen: `─` stößt gapless aneinander und
-   liest sich als Linie, `---` als Text. */
-const TIP_RULE = '─'.repeat(24);
+   liest sich als Linie, `---` als Text. Exportiert, weil das Touch-Fenster
+   (D52) den `title` daran wieder in seine zwei Teile zerlegt — dort GIBT es
+   Markup, der Strich wird zur echten Linie. Eine zweite Kopie der
+   Beschreibung als data-Attribut wäre der einzige andere Weg gewesen. */
+export const TIP_RULE = '─'.repeat(24);
 
 /* Barrierefreier Name eines Knotens: Label + Status + Aufwand + Zuständige +
    Link. Die visuellen Badges (Größe, Tags, ↗) sind aria-hidden — ihre

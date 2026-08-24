@@ -815,6 +815,64 @@
   /* Stationspunkt: groß, aber blass gefüllt — der Knotentext bleibt lesbar */
   .cheap-dot{fill:var(--or);fill-opacity:.2;stroke:var(--or);stroke-opacity:.35;stroke-width:1.5}
 
+  /* ---------- Knoten-Fenster für Touch (SPEC §6/§9, D52) ----------
+     Auf einem Zeigergerät zeigt der `title` den Tooltip; ohne Zeiger gibt es
+     keinen. Der einfache Tipp öffnet deshalb dieses Fenster mit demselben
+     Inhalt — und mit dem, was ein `title` nicht kann: Absatz, echte Trennlinie,
+     Knöpfe. `position:fixed` (JS setzt left/top aus `getBoundingClientRect()`,
+     die den `zoom` von #out schon enthält): Ein Kind von #out erbte dessen
+     `zoom` und würde von dessen `overflow` beschnitten (D50). */
+  .nodetip{
+    position:fixed;z-index:60;max-width:min(21rem, calc(100vw - 24px));
+    background:var(--card);color:var(--ink);
+    border:1px solid rgba(36,52,71,.15);border-radius:10px;
+    box-shadow:0 8px 24px rgba(36,52,71,.3);
+    padding:10px 30px 10px 12px;font-size:.78rem;line-height:1.45;
+  }
+  .nodetip[hidden]{display:none}
+  .nodetip-x{
+    position:absolute;top:2px;right:2px;width:26px;height:26px;
+    display:flex;align-items:center;justify-content:center;
+    background:none;border:0;border-radius:6px;cursor:pointer;
+    color:var(--muted);font-size:1.05rem;line-height:1;
+  }
+  .nodetip-x:hover{color:var(--ink);background:rgba(36,52,71,.06)}
+  /* Absätze kommen aus Leerzeilen der Notation (§1); JS baut sie zu <p>. */
+  .nodetip-desc p + p{margin-top:.55em}
+  /* Die echte Linie an der Stelle, an der der Tooltip 24 `─` zeichnen musste. */
+  .nodetip-facts{
+    margin-top:8px;padding-top:7px;border-top:1px solid rgba(36,52,71,.15);
+    color:var(--muted);font-size:.72rem;
+  }
+  /* Ohne Beschreibung gibt es nichts zu trennen — der Strich stünde sonst als
+     erste Zeile im Fenster. Dieselbe Regel wie im Tooltip (D40-Nachtrag). */
+  .nodetip-facts:first-child{margin-top:0;padding-top:0;border-top:0}
+  .nodetip-link{
+    display:inline-flex;align-items:center;gap:5px;margin-top:9px;
+    padding:5px 10px;border:1px solid var(--or);border-radius:7px;
+    color:var(--or);text-decoration:none;font-size:.74rem;font-weight:500;
+  }
+  /* Die Spitze zeigt auf den Knoten — ohne sie wäre bei dicht stehenden Knoten
+     nicht zu sehen, welcher gemeint ist. Ein gedrehtes Quadrat mit zwei Kanten:
+     so erbt es Rahmen UND Schatten des Fensters. JS setzt --tipx (Spitze) und
+     dreht sie per .above nach unten, wenn das Fenster über dem Knoten sitzt. */
+  .nodetip-arrow{
+    position:absolute;top:-6px;left:var(--tipx, 50%);width:11px;height:11px;
+    margin-left:-5.5px;background:var(--card);
+    border-left:1px solid rgba(36,52,71,.15);
+    border-top:1px solid rgba(36,52,71,.15);
+    transform:rotate(45deg);
+  }
+  .nodetip.above .nodetip-arrow{
+    top:auto;bottom:-6px;
+    border:0;border-right:1px solid rgba(36,52,71,.15);
+    border-bottom:1px solid rgba(36,52,71,.15);
+  }
+  /* Solange das Fenster offen ist, trägt sein Knoten einen Petrol-Ring — wie
+     der „scharfe" Knoten beim langen Druck (D25). #out-Präfix nötig, weil
+     `ul.or .node{box-shadow:none}` spezifischer ist. */
+  #out .node.tipped{box-shadow:0 0 0 3px rgba(15,118,110,.55)}
+
   /* --- ALL OF: Kinder nebeneinander, durchgezogener Verteiler --- */
   ul.and{display:flex;align-items:flex-start;position:relative;padding-top:14px}
   ul.and::before{
@@ -1210,7 +1268,7 @@
   @media print{
     html,body{height:auto!important;overflow:visible!important;background:#fff!important}
     header,.panel.editor,.gutter,.panel.right .panel-head,
-    .warnings,.zoomctl,.site-footer{display:none!important}
+    .warnings,.zoomctl,.site-footer,.nodetip{display:none!important}
     .app,.app.side{display:block!important;max-width:none!important;width:auto!important;
       height:auto!important;margin:0!important;gap:0!important}
     .panel.right{grid-area:auto!important;background:#fff!important;border:0!important;
@@ -1228,6 +1286,7 @@
     .node.current{transform:none!important;animation:none!important}
     .node.current::after{display:none!important}
     .node.fresh{box-shadow:none!important}     /* „neu seit dem letzten Besuch" ist persönlich (D28) */
+    .node.tipped{box-shadow:none!important}    /* offenes Knoten-Fenster ist Bedienung (D52) */
     /* Faltung (D38): das ▾ offener Knoten ist Bedienelement — nicht drucken;
        das „▸ n" eingeklappter Knoten ist Kennzeichnung und bleibt. */
     .node:not(.folded) .fold{display:none!important}

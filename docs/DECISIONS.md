@@ -3347,3 +3347,105 @@ synthetisches `.blur()` löst im Automaten keinen aus. Gegenprobe am
 ebenfalls nichts, es ist also die Werkzeuggrenze und keine Regression. Dieselbe
 Lehre wie in D25 und D17-Nachtrag 4 — was die Geräteumgebung stellt, beweist
 der Emulator nicht.
+
+## D52 — Auf Touch öffnet der einfache Tipp das Knoten-Fenster, nicht den Link
+Die Beschreibungen (D40) lebten im `title` — und ein `title` braucht einen
+Zeiger. D40 hat das als bekannte Grenze notiert („auf Touch-Geräten gibt es
+keine Tooltips — dort bleibt der Text vorerst nur im `aria-label`; ein Pop-up
+kann später ergänzt werden"). Auf dem Telefon war die Beschreibung damit **gar
+nicht** zu sehen, und seit D48 hängt an jedem der 172 Plan-Knoten eine.
+
+**Die eine echte Frage war der Link.** Ein Knoten mit URL ist ein `<a>` und
+belegt den einfachen Klick vollständig (§6, D6); ein Tipp kann nicht beides
+tun. Entschieden (Nutzer): **Auf Touch öffnet der Tipp immer das Fenster, und
+der Link steht darin als Knopf.** Damit hat die Geste dort **eine** Bedeutung —
+„ansehen" —, und die Tooltips sind auf **allen** Knoten erreichbar. Preis:
+SPEC §6 bekommt eine Touch-Ausnahme, und der Link kostet einen zweiten Tipp.
+
+**Verworfen:**
+- **Nur unverlinkte Knoten** — hätte §6 unangetastet gelassen, aber derselbe
+  Tipp hätte je nach Knoten Verschiedenes getan. Genau das hat D25 für diese
+  Geste ausdrücklich abgelehnt, und ausgerechnet die verlinkten Knoten (oft die
+  interessanten) wären ohne Beschreibung geblieben.
+- **Erster Tipp Fenster, zweiter Tipp Link** — spart den Knopf, führt aber eine
+  unsichtbare Zusatzregel ein: Nichts zeigt an, dass ein zweiter Tipp etwas
+  anderes tut.
+
+**Es hängt an den Touch-Ereignissen, nicht an einer Media Query.** Damit
+verhält sich ein Gerät mit **beidem** (Touch-Notebook) richtig, ohne
+Sonderfall: Der Finger öffnet das Fenster, die Maus öffnet weiterhin den Link
+und zeigt den Tooltip. Nachgemessen am Schreibtisch: Klick auf den verlinkten
+Wurzelknoten öffnet den Link, das Fenster bleibt zu, der `title` steht
+unverändert am Knoten.
+
+**Die drei Touch-Gesten unterscheiden sich am vorhandenen Zustand, ohne neues
+Merkerfeld.** Der lange Druck (D25) setzt nach 500 ms `armedEl`, und jedes
+`touchmove` räumt den Timer weg. Bei `touchend` gilt also: `armedEl` gesetzt ⇒
+Sprung; Timer läuft noch ⇒ kurzer Tipp ohne Wischen ⇒ Fenster; beides weg ⇒ es
+wurde gescrollt ⇒ nichts. **Ausgenommen ist das Falt-Zeichen** (D38): Der Tipp
+darauf muss weiter umklappen, und weil das Fenster `preventDefault()` braucht
+(sonst öffnete der Link-Knoten zusätzlich seine URL), hätte es den folgenden
+Klick sonst verschluckt — Falten wäre auf Touch unbedienbar geworden.
+Nachgemessen: Tipp auf das ▾ des Wurzelknotens 149 → 1 Knoten, kein Fenster.
+
+**Es ist ein Fenster, kein zweiter Tooltip — also nutzt es, was ein `title`
+nicht kann.** Der Trennstrich zwischen Beschreibung und Kurz-Fakten musste
+dort aus 24 `─` gebaut werden (D40-Nachtrag), weil `title` kein Markup kennt;
+hier ist er eine echte Linie, und ohne Beschreibung entfällt er ganz. Zerlegt
+wird der `title` **an genau diesem Strich** (`TIP_RULE`, jetzt exportiert). Die
+Alternative wäre ein zweites data-Attribut mit derselben Beschreibung gewesen —
+im Werkbaum-Plan rund 20 kB DOM-Text als reine Verdopplung.
+
+**Einzelne Zeilenumbrüche werden zu Leerzeichen, Leerzeilen zu Absätzen.** Das
+ist die Lesart von SPEC §1 („Leerzeilen bleiben als Absatztrenner"), und es war
+im Fenster sofort zu sehen: Die Beschreibungen im Plan sind bei ~76 Zeichen
+umgebrochen, und in einem 336 px breiten Fenster stand der Text dadurch
+ausgefranst („…a textual notation for work breakdown / structures, a browser
+editor…"). Der `title` zeigt die harten Umbrüche weiterhin — dort haben wir
+keine Wahl.
+
+**Der Sprung-Hinweis nennt hier den langen Druck.** Der Tooltip endet mit
+„Alt+Klick: zur Zeile im Text"; Alt gibt es auf dem Telefon nicht. Neuer
+i18n-Schlüssel `jumpHintTouch` in allen neun Sprachen, plus `tipClose` und
+`tipOpenLink`.
+
+**`position:fixed` auf `<body>`, nicht in `#out`.** Ein Kind von `#out` erbte
+dessen CSS-`zoom` (der Fenstertext skalierte mit dem Diagramm) und würde von
+dessen `overflow` beschnitten — die Falle aus D50. Gesetzt wird aus
+`getBoundingClientRect()`, das den Zoom schon enthält; waagerecht an den
+Fensterrand geklemmt, nach oben ausweichend, wenn unten kein Platz ist. Die
+Spitze bleibt über `--tipx` am Knoten, auch wenn geklemmt wurde (nachgemessen:
+0 px Abweichung von der Knotenmitte im Normalfall).
+
+**Zu macht es alles, was seine Aussage hinfällig macht:** Tipp daneben, zweiter
+Tipp auf denselben Knoten, Esc, das ×, **Scrollen des Diagramms** (das Fenster
+ist `fixed`, der Knoten wandert — es zeigte danach auf etwas anderes), der
+**Bereichswechsel** auf Mobil (das Ziel ist dann `display:none`), der **Sprung
+in den Text** (er führt weg) und jeder **Neubau** (er ersetzt das Element, an
+dem es hängt). Die letzten drei fehlten in der ersten Fassung und fielen erst
+im Durchspielen auf.
+
+**Nachgemessen** (375 × 812, mitgelieferter Werkbaum-Plan): Tipp auf den
+Wurzelknoten öffnet 336 × 220 px vollständig im Bild, mit Beschreibung als
+einem Absatz ohne harte Umbrüche, Fakten `#wb · in Arbeit · Langer Druck: zur
+Zeile im Text` und Knopf „↗ Link öffnen"; der Knoten trägt den Petrol-Ring, die
+URL wird **nicht** geöffnet. Knoten ohne Beschreibung: nur die Faktenzeile,
+39 px, ohne Trennstrich. Zweiter Tipp, Esc, Tipp daneben und eine **echte**
+Wischgeste (`scrollLeft` 0 → 300) schließen; der lange Druck springt und
+schließt mit.
+
+**Werkzeuggrenze, wie in D25 und D17-Nachtrag 4:** Synthetische `TouchEvent`s
+beweisen nur die eigene Ereignis-Logik — dass der Tipp den Link unterdrückt,
+dass die drei Gesten auseinandergehalten werden, dass Position und Inhalt
+stimmen. Sie beweisen **nicht**, wie ein echter Finger mit dem 300-ms-Klick,
+dem Doppeltipp-Zoom und der Textauswahl des Systems zusammenspielt. Zwei
+Messungen liefen deshalb auffällig ins Leere und sind hier festgehalten, damit
+sie niemand für Befunde nimmt: Ein programmatisch gesetztes `scrollLeft` löste
+**kein** `scroll`-Ereignis aus (die D33-Falle — geprüft wurde daraufhin mit
+einer echten Wischgeste), und ein synthetischer Tipp trifft einen Knoten auch
+dann, wenn er 8968 px **außerhalb** des Bildes liegt — dort zeigte das Fenster
+folgerichtig auf nichts. Ein Finger kann das nicht.
+
+**Nicht im Druck** (`.nodetip` und der `.tipped`-Ring ausgeblendet) und nicht
+im Grafikexport — Bedienung, keine Aussage über den Plan; der Export liest
+ohnehin nur `#out`.
