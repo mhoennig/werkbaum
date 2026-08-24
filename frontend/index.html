@@ -192,6 +192,12 @@
       <button type="button" class="copybtn togglebtn" id="foldSmallBtn" aria-pressed="false" data-i18n-title="foldSmallTooltip" data-i18n-aria="foldSmallTooltip" title="Knoten der Größe M und kleiner zuklappen – erneut drücken klappt alle wieder auf" aria-label="Knoten der Größe M und kleiner zuklappen – erneut drücken klappt alle wieder auf">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V3M8 8l4 4 4-4M8 16l4-4 4 4"/></svg>
       </button>
+      <!-- Knoten-IDs vor dem Titel einblenden (SPEC §9, D56) — geschrieben wie
+           im Text: `#some.id: Titel`. Das Zeichen selbst ist das Symbol; ein
+           gezeichnetes Icon sagte hier weniger als das `#`. -->
+      <button type="button" class="copybtn togglebtn idsbtn" id="idsBtn" aria-pressed="false" data-i18n-title="idsTooltip" data-i18n-aria="idsTooltip" title="Knoten-IDs vor dem Titel einblenden" aria-label="Knoten-IDs vor dem Titel einblenden">
+        <span aria-hidden="true">#</span>
+      </button>
       <div class="seg" role="radiogroup" aria-label="Darstellung">
         <label data-i18n-title="modeHorizontal" title="Horizontal – Organigramm, Diagramm über dem Editor">
           <input type="radio" name="layout" value="horizontal" checked data-i18n-aria="modeHorizontal" aria-label="Horizontal – Organigramm">

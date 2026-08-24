@@ -3922,3 +3922,55 @@ erste `#`-Token, zeichengenaue Erhaltung von Einrückung, Zeichen, Statusbox
 und Faltmarke, und dass das Ergebnis denselben Baum ergibt wie die von Hand
 ausgeschriebene Fassung). Das Zusammenspiel mit dem Textfeld bleibt
 Browser-Sache — die Lehre aus D54-Nachtrag 3.
+
+## D56 — `#`-Umschalter: die Knoten-ID vor dem Titel, geschrieben wie im Text
+Die ID ist die **Adresse** eines Knotens — Ziel der Abhängigkeiten (§1), Schlüssel
+der Beschreibungsblöcke, und seit D55 auch das, was man beim Tippen abkürzt. Im
+Diagramm stand sie bisher nur im Tooltip (D36: „eine eigene Darstellung hat sie
+(noch) nicht"). Wer Text und Bild nebeneinander liest, musste jeden Knoten
+antippen, um zu wissen, welcher er ist.
+
+Ein Umschalter im Diagramm-Kopf blendet sie ein, **geschrieben wie im Text**:
+`#some.id: Titel`, mit Doppelpunkt und Leerzeichen. Dieselbe Schreibweise auf
+beiden Seiten ist der ganze Zweck — eine eigene Darstellung (Badge in der Ecke,
+Klammern, Kapitälchen) wäre eine zweite Konvention für dieselbe Sache.
+
+**Als Renderer-Option, nicht per CSS versteckt.** Der naheliegende Weg wäre eine
+Klasse an `#out` und `display:none` gewesen. Dann aber stünde die ID trotzdem im
+`textContent` — und genau daraus zieht `diagramToSvg()` den Knotentext. Der
+Export hätte die IDs also **immer** enthalten, egal was auf dem Schirm steht.
+Als Option in `renderTreeHtml(roots, {…, showIds})` folgt er von selbst;
+nachgemessen im ausgegebenen SVG: `>#not.line: Line format</text>` mit
+Umschalter, `>Line format</text>` ohne. Das entspricht der Hausregel, UI-State
+als **Parameter** zu übergeben (frontend/CLAUDE.md), und der Linie von D38/D44:
+Export und Druck zeigen, was sichtbar ist.
+
+**Zurückgenommen dargestellt:** Mono-Schrift wie im Textfeld, 0,86 em, in
+`--muted` (am dunklen Wurzelknoten in Weiß mit 75 %). Die ID ist die Adresse,
+nicht der Name — der Titel soll die Zeile weiter anführen. `aria-hidden`, weil
+der Screenreader sie über `a11yId` ohnehin bekommt (D36) und sie sonst doppelt
+vorläse. Der Zustand gehört zur Ansicht und wird wie Modus, Zoom und Aufteilung
+global gemerkt (D22).
+
+**Der Knopf trägt das Zeichen selbst.** Ein gezeichnetes Icon sagte hier
+weniger als `#` — dasselbe Argument wie beim Fenster-Wähler in D31, nur
+umgekehrt: Wo es ein etabliertes Schriftzeichen gibt, ist es das beste Symbol.
+
+**Das zehnte Bedienelement hat die Kopfzeile gekippt — zweimal dieselbe
+Rechnung wie D17-Nachtrag 5.** Nachgemessen statt geschätzt:
+
+- **Schreibtisch:** 738 px nötig, 728 verfügbar — 10 px zu wenig, die Zeile ging
+  auf 82 statt 49 px. Nicht die Knöpfe waren das Problem (566 px für elf
+  Elemente), sondern der Weißraum: zehn Lücken à 14 px sind 140 px. `gap:10`
+  statt `14` gibt 40 px zurück, also fast genau die Breite des neuen Knopfes;
+  danach 698 von 728 und wieder 49 px — mit **und** ohne den Knopf.
+- **Telefon (375 px):** Dort sind alle Ziele schon auf dem 29-px-Fingerminimum
+  und die Lücken auf 6 px; ein zehntes passt arithmetisch nicht (386 gegen
+  359 px). Die Umbruch-Schwelle aus D50 wandert deshalb von 360 auf 440 px —
+  dieselbe Rechnung, ein Element mehr. Sie greift auch nur dann wirklich: Der
+  „Was ist neu?"-Knopf (44 px) erscheint nur bei Neuigkeiten, ohne ihn bleiben
+  336 px und damit eine Reihe. Gemessen: mit allen zehn 78 px und zwei Reihen,
+  alles innerhalb; ohne den Neuigkeiten-Knopf 49 px und eine Reihe.
+
+Ein `overflow` an der Kopfzeile bleibt weiterhin ausgeschlossen — es klippt die
+beiden Aufklapp-Menüs (D50).

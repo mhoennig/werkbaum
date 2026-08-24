@@ -305,7 +305,12 @@
   .panel-head{
     flex:0 0 auto;position:relative;
     padding:10px 16px;
-    display:flex;justify-content:space-between;align-items:center;gap:14px;
+    /* gap:10 statt 14 — dieselbe Rechnung wie in D17-Nachtrag 5, nur für den
+       Schreibtisch: Beim zehnten Bedienelement (D56) fehlten 10 px, und zehn
+       Lücken à 14 px machen 140 px Weißraum für 566 px Knöpfe. Verkleinert
+       wird der Zwischenraum, nicht das Ziel; 4 px weniger je Lücke geben die
+       Breite des neuen Knopfes zurück. */
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
     font-family:'IBM Plex Mono',monospace;
     font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;
     color:var(--muted);
@@ -635,6 +640,21 @@
      nachlesbar. Spiegelt das "-Zeichen der Notation; gedeckt, kein Klickziel. */
   .node .desc-mark{color:var(--muted);margin-left:4px;font-weight:600}
   .root-node .desc-mark{color:rgba(255,255,255,.75)}
+  /* Knoten-ID vor dem Titel (D56). Zurückgenommen und in der Mono-Schrift des
+     Textfelds: Sie ist die Adresse, nicht der Name — der Titel soll die Zeile
+     weiter anführen. Kein `margin-right`; das trennende Leerzeichen steht im
+     Markup, damit der Grafikexport (er liest den Knotentext) es mitbekommt. */
+  .node .nid{
+    font-family:'IBM Plex Mono',monospace;font-size:.86em;font-weight:500;
+    color:var(--muted);
+  }
+  .root-node .nid{color:rgba(255,255,255,.75)}
+  /* Der Knopf trägt das Zeichen selbst statt eines Icons — in der Größe der
+     SVGs daneben, damit die Kopfzeile ihre Höhe behält. */
+  .copybtn.idsbtn span{
+    display:block;width:15px;height:15px;line-height:15px;text-align:center;
+    font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;
+  }
   /* Sichtbarer Tastatur-Fokus (Knoten sind fokussierbar: Fokusreihenfolge =
      Lese-/Dokumentreihenfolge; Screenreader liest den aria-label). */
   .node:focus-visible{outline:2px solid var(--or);outline-offset:2px;box-shadow:0 2px 8px rgba(36,52,71,.22)}
@@ -1235,17 +1255,22 @@
      ein sichtbarer Überlauf (D17-Nachtrag 5). */
   body.mobile .panel-head{gap:6px;flex-wrap:nowrap;padding-inline:8px}
   body.mobile .panel-head>*{flex:0 0 auto}
-  /* Unterhalb von rund 360 px ist es reine Arithmetik: neun Bedienelemente à
-     29 px plus Lücken brauchen mehr, als dort überhaupt da ist (bei 320 px
-     fehlen 41 px). Kleiner als 29 px darf ein Fingerziel nicht werden
-     (D17-Nachtrag 5) — dort darf die Zeile deshalb umbrechen.
+  /* Unterhalb von rund 440 px ist es reine Arithmetik: **zehn** Bedienelemente
+     à 29 px (D56 hat den ID-Umschalter hinzugefügt) plus Lücken brauchen
+     386 px, bei 375 px stehen 359 zur Verfügung. Kleiner als 29 px darf ein
+     Fingerziel nicht werden (D17-Nachtrag 5) — dort darf die Zeile deshalb
+     umbrechen. Sie tut es aber nur, wenn wirklich alle zehn da sind: Der
+     „Was ist neu?"-Knopf (44 px) erscheint nur bei Neuigkeiten, ohne ihn
+     bleiben 336 px und damit eine Reihe. Die Schwelle stand vorher bei 360 px
+     und ist mit dem zehnten Element mitgewandert — dieselbe Rechnung, ein
+     Element mehr.
      **Kein `overflow` an dieser Stelle** (D50): Die Kopfzeile trägt die beiden
      Aufklapp-Menüs (Dokumente, Download) als absolut positionierte Kinder. Ein
      Scroll-Container klippt sie — und weil `overflow-x` das `visible` der
      anderen Achse auf `auto` hebt, klippt er auch nach unten, wo die Menüs
      stehen. Sie waren damit auf **jeder** Mobilbreite unerreichbar, nicht nur
      auf den schmalen. */
-  @media (max-width:360px){
+  @media (max-width:440px){
     body.mobile .panel-head{flex-wrap:wrap}
   }
   /* Inhalte rund 25 % kleiner, damit mehr Plan auf die Fläche passt

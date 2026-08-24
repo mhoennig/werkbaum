@@ -90,7 +90,7 @@ function nodeAria(n, opts, fold){
 }
 
 function nodeHtml(n, extra, opts, fold){
-  const { t, cheapPath } = opts;
+  const { t, cheapPath, showIds } = opts;
   const need = needsBreakdown(n);
   /* Die Knotenfarbe zeigt den EFFEKTIVEN Status (SPEC §9/D39); bei Diskrepanz
      trägt die Marke unten links die eigene Statusbox in den eigenen Farben. */
@@ -163,7 +163,16 @@ function nodeHtml(n, extra, opts, fold){
   const ownChip = effKey
     ? `<span class="chip ownst st-${n.status.key}" aria-hidden="true">[${n.status.code}]</span>`
     : '';
+  /* ID vor dem Titel, mit `: ` abgetrennt — dieselbe Schreibweise wie im Text
+     (SPEC §1/D36), damit man beides nebeneinander lesen kann. Umschaltbar im
+     Diagramm-Kopf; als Renderer-Option und nicht per CSS versteckt, damit der
+     Grafikexport (er liest den Knotentext) von selbst folgt. `aria-hidden`:
+     Der Screenreader bekommt die ID schon über `a11yId` (D56). */
+  const idHtml = showIds && n.id
+    ? `<span class="nid" aria-hidden="true">#${esc(n.id)}:</span> `
+    : '';
   const inner = foldHtml +
+                idHtml +
                 esc(n.label) +
                 /* ”-Marke (D40): macht die sonst unsichtbare Beschreibung
                    auffindbar (Lehre aus D25) — spiegelt das "-Zeichen der

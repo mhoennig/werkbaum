@@ -703,6 +703,17 @@ verknüpft (siehe D25):
 - Die Hervorhebung ist eine reine Editierhilfe: nicht im Grafikexport, nicht im
   Druck.
 
+### Knoten-IDs im Diagramm einblenden (`#`)
+Ein Umschalter im Diagramm-Kopf stellt die Knoten-ID **vor den Titel**, in
+derselben Schreibweise wie im Text (§1/D36): `#some.id: Titel`. Dargestellt in
+der Mono-Schrift des Textfelds und zurückgenommen gefärbt — die ID ist die
+Adresse, der Titel führt die Zeile weiter an. Der Zustand wird gemerkt.
+
+**Grafikexport und Druck folgen dem Umschalter** (wie beim „verworfene
+einblenden"-Filter und der Faltung): Ist er an, stehen die IDs auch im
+ausgegebenen Bild. Für Screenreader ändert sich nichts — sie bekommen die ID
+ohnehin über das `aria-label`. Siehe D56.
+
 ### Kurzschreibweise der Knoten-ID beim Tippen (`#.name`)
 Eine **Eingabehilfe**, keine Notation: Wer `#.kc` unter einem Knoten mit der ID
 `#prod-stage` schreibt, findet beim **Verlassen der Zeile** `#prod-stage.kc` im

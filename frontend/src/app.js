@@ -53,6 +53,7 @@ const lineNoInner = lineNoBox.firstElementChild;
    Pfad) lebt headless in model.js, das HTML-Erzeugen in render.js. Hier bleibt
    nur der UI-State des Günstigster-Pfad-Toggles (persistiert). */
 let cheapPathOn = true;
+let showIds = false;   /* Knoten-IDs im Diagramm einblenden (D56) */
 /* Ansicht bei einem Pad-Dokument (D31): beide | nur Pad | nur Spiegel. Hier oben
    deklariert, weil saveUI() sie liest und schon aus applySplit() heraus laufen
    kann — weiter unten stünde sie dann noch in der temporalen Todeszone. */
@@ -148,7 +149,7 @@ function render(){
        „alles offen" derselbe Zustand — der Knopf säße dann gedrückt da, ohne
        dass etwas zugeklappt ist. */
     foldSmallBtn.setAttribute('aria-pressed', foldSmallExact && foldSmallAny ? 'true' : 'false');
-    const r = renderTreeHtml(roots, {t, showDiscarded, cheapPath: cheapPathOn, cheapSet,
+    const r = renderTreeHtml(roots, {t, showDiscarded, cheapPath: cheapPathOn, cheapSet, showIds,
                                      freshSet, collapsedSet,
                                      effStatus: effectiveStatus(roots)});
     out.innerHTML = r.html;
@@ -1662,6 +1663,18 @@ cheapBtn.addEventListener('click', () => {
   saveUI();
 });
 
+/* Knoten-IDs im Diagramm an/aus (D56). Wie die Nachbarn ein Umschalter mit
+   `aria-pressed`; der Zustand gehört zur Ansicht und wird wie Modus, Zoom und
+   Aufteilung global gemerkt (D22). Neu gerendert statt per CSS versteckt —
+   dann folgt der Grafikexport von selbst. */
+const idsBtn = document.getElementById('idsBtn');
+idsBtn.addEventListener('click', () => {
+  showIds = !showIds;
+  idsBtn.setAttribute('aria-pressed', showIds ? 'true' : 'false');
+  render();
+  saveUI();
+});
+
 /* ---------- Von Station zu Station (SPEC §9, D47) ----------
    Kein Umschalter, sondern eine Bewegung: Jeder Druck holt die nächste noch
    offene Station des günstigsten Pfads in die Mitte — beim ersten Druck die
@@ -1802,6 +1815,7 @@ const I18N = {
     snapTooltip:"Frühere Stände dieses Dokuments", snapMenuAria:"Frühere Stände",
     snapNone:"Noch keine früheren Stände – gesichert wird auf Knopfdruck und alle 10 Minuten, sobald sich etwas geändert hat.",
     snapAddTooltip:"Aktuellen Stand jetzt sichern",
+    idsTooltip:"Knoten-IDs vor dem Titel einblenden",
     snapLines:"{n} Zeilen",
     docNew:"Neues Dokument", docRename:"Umbenennen", docDelete:"Löschen",
     docNewName:"Unbenannt",
@@ -1891,6 +1905,7 @@ const I18N = {
     snapTooltip:"Earlier states of this document", snapMenuAria:"Earlier states",
     snapNone:"No earlier states yet – one is kept on demand and every 10 minutes, once something has changed.",
     snapAddTooltip:"Save the current state now",
+    idsTooltip:"Show node ids before the title",
     snapLines:"{n} lines",
     docNew:"New document", docRename:"Rename", docDelete:"Delete",
     docNewName:"Untitled",
@@ -1980,6 +1995,7 @@ const I18N = {
     snapTooltip:"Estados anteriores de este documento", snapMenuAria:"Estados anteriores",
     snapNone:"Aún no hay estados anteriores: se guarda uno al pulsar el botón y cada 10 minutos, cuando algo ha cambiado.",
     snapAddTooltip:"Guardar ahora el estado actual",
+    idsTooltip:"Mostrar los id de nodo antes del título",
     snapLines:"{n} líneas",
     docNew:"Nuevo documento", docRename:"Renombrar", docDelete:"Eliminar",
     docNewName:"Sin título",
@@ -2069,6 +2085,7 @@ const I18N = {
     snapTooltip:"États antérieurs de ce document", snapMenuAria:"États antérieurs",
     snapNone:"Pas encore d’état antérieur : un état est conservé sur demande et toutes les 10 minutes, dès que quelque chose a changé.",
     snapAddTooltip:"Enregistrer l’état actuel maintenant",
+    idsTooltip:"Afficher les identifiants de nœud avant le titre",
     snapLines:"{n} lignes",
     docNew:"Nouveau document", docRename:"Renommer", docDelete:"Supprimer",
     docNewName:"Sans titre",
@@ -2158,6 +2175,7 @@ const I18N = {
     snapTooltip:"Wcześniejsze stany tego dokumentu", snapMenuAria:"Wcześniejsze stany",
     snapNone:"Brak wcześniejszych stanów – zapisywany jest na żądanie i co 10 minut, gdy coś się zmieni.",
     snapAddTooltip:"Zapisz bieżący stan teraz",
+    idsTooltip:"Pokaż identyfikatory węzłów przed tytułem",
     snapLines:"wierszy: {n}",
     docNew:"Nowy dokument", docRename:"Zmień nazwę", docDelete:"Usuń",
     docNewName:"Bez nazwy",
@@ -2247,6 +2265,7 @@ const I18N = {
     snapTooltip:"Прежние состояния этого документа", snapMenuAria:"Прежние состояния",
     snapNone:"Прежних состояний пока нет — они сохраняются по нажатию кнопки и каждые 10 минут, если что-то изменилось.",
     snapAddTooltip:"Сохранить текущее состояние сейчас",
+    idsTooltip:"Показывать идентификаторы узлов перед заголовком",
     snapLines:"строк: {n}",
     docNew:"Новый документ", docRename:"Переименовать", docDelete:"Удалить",
     docNewName:"Без названия",
@@ -2336,6 +2355,7 @@ const I18N = {
     snapTooltip:"इस दस्तावेज़ की पिछली स्थितियाँ", snapMenuAria:"पिछली स्थितियाँ",
     snapNone:"अभी कोई पिछली स्थिति नहीं — बटन दबाने पर और कुछ बदलने पर हर 10 मिनट में एक सहेजी जाती है।",
     snapAddTooltip:"मौजूदा स्थिति अभी सहेजें",
+    idsTooltip:"शीर्षक से पहले नोड आईडी दिखाएँ",
     snapLines:"{n} पंक्तियाँ",
     docNew:"नया दस्तावेज़", docRename:"नाम बदलें", docDelete:"हटाएँ",
     docNewName:"बिना शीर्षक",
@@ -2425,6 +2445,7 @@ const I18N = {
     snapTooltip:"此文档的早期状态", snapMenuAria:"早期状态",
     snapNone:"暂无早期状态——可随时手动保存；内容有变动时，也会每 10 分钟保存一次。",
     snapAddTooltip:"立即保存当前状态",
+    idsTooltip:"在标题前显示节点 ID",
     snapLines:"{n} 行",
     docNew:"新建文档", docRename:"重命名", docDelete:"删除",
     docNewName:"未命名",
@@ -2514,6 +2535,7 @@ const I18N = {
     snapTooltip:"このドキュメントの以前の状態", snapMenuAria:"以前の状態",
     snapNone:"以前の状態はまだありません — ボタンを押したとき、および変更があれば 10 分ごとに保存されます。",
     snapAddTooltip:"現在の状態を今すぐ保存",
+    idsTooltip:"タイトルの前にノード ID を表示",
     snapLines:"{n} 行",
     docNew:"新規ドキュメント", docRename:"名前を変更", docDelete:"削除",
     docNewName:"無題",
@@ -2808,6 +2830,7 @@ function saveUI(){
       mode: modeEl ? modeEl.value : 'horizontal',
       discarded: discardedShown(),
       cheapPath: cheapPathOn,
+      showIds,
       split: splitState,
       col: app.style.getPropertyValue('--col') || null,
       drow: app.style.getPropertyValue('--drow') || null,
@@ -2845,6 +2868,10 @@ function restoreState(){
     if(typeof ui.cheapPath === 'boolean'){
       cheapPathOn = ui.cheapPath;
       cheapBtn.setAttribute('aria-pressed', cheapPathOn ? 'true' : 'false');
+    }
+    if(typeof ui.showIds === 'boolean'){
+      showIds = ui.showIds;
+      idsBtn.setAttribute('aria-pressed', showIds ? 'true' : 'false');
     }
     if(typeof ui.zoom === 'number') zoom = ui.zoom;
     if(ui.split) splitState = ui.split;

@@ -68,6 +68,7 @@
     - [^] #ed.jump: Jump between diagram and text (S)
     - [^] #ed.lineno: Line numbers in the text editor (XS)  %% the warnings name them
     - [x] #ed.shortid: Type #.kc under #prod-stage, get #prod-stage.kc (XS)  %% an input aid, not notation
+    - [x] #ed.showids: A # button shows the ids before the titles (XS)  %% written as in the text, with a colon
       - [^] #ed.lineno.tip: The warning is the tooltip of its number (XS)  %% no hunting in the list
     - [^] #ed.fold: Collapsible subtrees (M)
       - [^] #ed.fold.marks: Initial state from the text: > collapses, < re-opens (S)
@@ -497,6 +498,11 @@
   The dotted prefix repeats what the indentation already says. Resolved while
   typing, not while parsing: the file keeps the full id, so it stays greppable
   and survives re-ordering, which is what the :#... references rely on.
+
+#ed.showids
+  The id is the address of a node, but the diagram only carried it in the
+  tooltip. The switch writes it before the title the same way the text does,
+  so both can be read side by side; the graphic export follows the switch.
 
 #ed.fold
   A large plan is unreadable unless parts of it can be put away. Folding is

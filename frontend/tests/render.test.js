@@ -141,3 +141,42 @@ describe('renderTreeHtml — data-line je Knoten (D25)', () => {
     expect(html).not.toMatch(/ghost-node[^>]*data-line/);
   });
 });
+
+/* Knoten-IDs im Diagramm (D56). Als Renderer-Option gebaut und nicht per CSS
+   versteckt — nur so folgt der Grafikexport, der den Knotentext ausliest. */
+describe('showIds — die ID vor dem Titel, geschrieben wie im Text', () => {
+  const ids = (text, showIds) => renderTreeHtml(parse(text).roots,
+    {t, showDiscarded: false, cheapPath: false, cheapSet: new Set(), showIds}).html;
+
+  it('bleibt ohne Umschalter aus dem Knotentext heraus', () => {
+    const html = ids('#auth: Backend', false);
+    expect(html).toContain('>Backend<');
+    expect(html).not.toContain('nid');
+  });
+
+  it('stellt die ID mit Doppelpunkt und Leerzeichen davor', () => {
+    expect(ids('#auth: Backend', true))
+      .toContain('<span class="nid" aria-hidden="true">#auth:</span> Backend');
+  });
+
+  it('lässt Knoten ohne ID unangetastet', () => {
+    const html = ids('- [x] Ohne ID', true);
+    expect(html).toContain('>Ohne ID<');
+    expect(html).not.toContain('nid');
+  });
+
+  /* Die ID steht ohnehin im aria-label (D36) — sichtbar doppelt vorgelesen
+     würde sie sonst. */
+  it('versteckt die sichtbare ID vor dem Screenreader', () => {
+    expect(ids('#auth: Backend', true)).toContain('<span class="nid" aria-hidden="true">');
+  });
+
+  /* Markup kann in einer ID gar nicht vorkommen — `<`, `&` und `"` gehören
+     nicht zur Zeichenmenge (SPEC §1), die ID endet dort. Geprüft wird deshalb
+     genau das: `#a<b` ergibt die ID `a`, der Rest bleibt (escaped) im Label. */
+  it('endet an einem Zeichen außerhalb der ID-Zeichenmenge', () => {
+    const html = ids('#a<b: X', true);
+    expect(html).toContain('<span class="nid" aria-hidden="true">#a:</span>');
+    expect(html).toContain('&lt;b: X');
+  });
+});
