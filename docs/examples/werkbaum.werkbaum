@@ -59,7 +59,7 @@
       - [^] #ed.i18n.auto: Default taken from the browser (XS)
     - [^] #ed.a11y: Accessibility: aria labels, focus order (S)
     - [^] #ed.mobile: Works on a phone (S)
-      - [x] #ed.mobile.tip: A tap on a node opens its tooltip as a window (XS)  %% no pointer, no tooltip
+      - [^] #ed.mobile.tip: A tap on a node opens its tooltip as a window (XS)  %% no pointer, no tooltip
     - [^] #ed.docs: Several documents in one editor (M)
       - [^] #ed.docs.picker: Switcher in the editor title bar (S)
       - [^] #ed.docs.url: Load a document from ?sourceUrl= (S)
@@ -71,7 +71,7 @@
       - [^] #ed.fold.click: Fold and unfold in the diagram (S)
       - [^] #ed.fold.write: Folding writes the mark back into the text (S)  %% one undo step
       - [^] #ed.fold.preset: One switch folds everything from size M downward (S)  %% see D44
-    - [x] #ed.snaps: Earlier states of a document, every ten minutes (S)  %% only when something changed
+    - [^] #ed.snaps: Earlier states of a document, every ten minutes (S)  %% only when something changed
     - [ ] #ed.files: Open and save .werkbaum files (S)
     + [^] #ed.fresh: Show what is new since your last visit (S)
     + [?] #ed.percolor: A pastel colour per person (S)
