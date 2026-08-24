@@ -14,6 +14,8 @@ Alle Bestandteile außer dem Label sind optional. Die Extraktion erfolgt in
 dieser Reihenfolge (wichtig für Kollisionsfreiheit):
 
 1. Kommentar entfernen: alles ab `%%` bis Zeilenende.
+1b. Fortsetzung: Endet die Zeile jetzt auf Leerraum + `\`, gehört die
+   Folgezeile noch dazu (siehe unten). Erst danach ist die Zeile vollständig.
 2. Einrückung, Zeichen (`-` / `+` / `|` / `=`), Statusbox `[…]` und Faltmarke
    (`>` / `<`) per Zeilen-Regex; `=` nur mit folgendem Leerraum (§3),
    die Faltmarke ebenso (siehe unten).
@@ -24,6 +26,38 @@ dieser Reihenfolge (wichtig für Kollisionsfreiheit):
 7. Abhängigkeiten: alle alleinstehend angesetzten `:#a,#b`-Token (siehe unten).
 8. Fokusmarke: `!!!` als **alleinstehendes** Token (siehe unten).
 9. Rest, whitespace-normalisiert = Label. Leeres Label ⇒ Zeile ignorieren.
+
+**Fortsetzungszeile `\`** — eine lange Zeile darf auf mehrere Textzeilen
+verteilt werden, ohne dass ein neuer Knoten entsteht:
+
+- Endet eine Zeile — **nach** dem Entfernen des Kommentars — auf **Leerraum und
+  dann `\`** als letztem Zeichen, wird die **Folgezeile angehängt**: Der `\`
+  entfällt, die Einrückung der Folgezeile entfällt, verbunden wird mit **genau
+  einem Leerzeichen**. Mehrere `\` hintereinander setzen die Zeile über
+  entsprechend viele Textzeilen fort.
+- **Leerraum davor ist Pflicht** (`… \`, nicht `…\`) — dieselbe Sorte Regel wie
+  bei `=`, `>`/`<` und `"`, nur an der anderen Seite des Zeichens. Sie hält
+  Labels heraus, die selbst auf einen Backslash enden (`C:\temp\`): Ohne sie
+  verschluckte so eine Zeile stumm den folgenden Knoten. Der Preis ist die
+  umgekehrte Verwechslung — wer aus der Shell `…\` gewohnt ist, bekommt keine
+  Fortsetzung —, und die ist die harmlosere: Die Zeile bleibt stehen, was man
+  sofort sieht.
+- **Alles gehört zur ersten Zeile:** Ihre Einrückung bestimmt die Ebene (§2),
+  ihre Nummer nennen die Warnungen, und Werkzeuge, die zurückschreiben
+  (Faltmarke §9, ID-Kurzform §9), fassen nur sie an. Der Cursor in einer
+  Fortsetzungszeile wählt den Knoten der ersten aus (§9, Sprung).
+- Ein Token darf **nicht** über den Umbruch hinweg getrennt werden — verbunden
+  wird mit einem Leerzeichen, eine zerschnittene URL bleibt zerschnitten.
+- Gilt nur im **Baumteil**. Im Beschreibungsteil hinter `---` (siehe unten) sind
+  Zeilenumbrüche Absatzstruktur; ein `\` bleibt dort gewöhnlicher Text.
+- Steht der `\` in der **letzten** Zeile der Datei, gibt es nichts anzuhängen:
+  Er entfällt, die Zeile bleibt für sich.
+
+Referenz-Regex (Schritt 1b, geprüft auf der kommentarfreien Zeile):
+
+```
+(^|[ \t])\\[ \t]*$
+```
 
 **Faltmarke `>` / `<`** — bestimmt, wie das Dokument **eröffnet** wird:
 
@@ -709,8 +743,10 @@ verknüpft (siehe D25):
   „hinschauen": Er holt **keine Bildschirmtastatur** herauf — die erscheint erst,
   wenn das Textfeld selbst angetippt wird.
 - **Text → Diagramm:** Der Knoten der **Cursor-Zeile** wird im Diagramm
-  hervorgehoben und beim Zeilenwechsel ins Bild gescrollt. **Beschreibungszeilen
-  zählen zu ihrem Knoten**: Steht der Cursor in einer `"`-Zeile (§1) oder in
+  hervorgehoben und beim Zeilenwechsel ins Bild gescrollt. **Beschreibungs- und
+  Fortsetzungszeilen (§1)
+  zählen zu ihrem Knoten**: Steht der Cursor in einer `"`-Zeile (§1), in einer
+  Fortsetzung hinter `\` oder in
   einem ID-Block des `---`-Beschreibungsteils (Kopfzeile eingeschlossen), gilt
   der beschriebene Knoten als ausgewählt — solche Zeilen tragen keinen eigenen
   Knoten, gehören aber zu einem, und wer darin schreibt, arbeitet an genau

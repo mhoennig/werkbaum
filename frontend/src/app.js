@@ -1943,6 +1943,7 @@ const I18N = {
     hint_size:"Aufwand als T-Shirt-Größe in Klammern, Link einfach als URL anhängen:",
     hint_break:"Ab (M) gilt: weiter untergliedern — fehlt die Untergliederung, erscheint ein Platzhalter im Diagramm.",
     hint_comment:"Kommentare mit %% — als ganze Zeile oder am Zeilenende.",
+    hint_cont:"Leerzeichen und \\ am Zeilenende — die nächste Zeile gehört noch dazu.",
     hint_people:"Personen mit @name — erscheinen unten rechts am Knoten.",
     hint_id:"Knoten-ID mit #name: vor dem Titel — erscheint im Tooltip des Knotens.",
     hint_deps:"Abhängigkeiten mit :#name,#name — erscheinen im Tooltip.",
@@ -2043,6 +2044,7 @@ const I18N = {
     hint_size:"Effort as a T-shirt size in parentheses; add a link simply as a URL:",
     hint_break:"From (M) on: break it down further — if the breakdown is missing, a placeholder appears in the diagram.",
     hint_comment:"Comments with %% — whole line or at the end of a line.",
+    hint_cont:"A space and \\ at the end of a line — the next line still belongs to it.",
     hint_people:"People with @name — shown at the bottom-right of the node.",
     hint_id:"Node ID with #name: before the title — shown in the node's tooltip.",
     hint_deps:"Dependencies with :#name,#name — shown in the tooltip.",
@@ -2143,6 +2145,7 @@ const I18N = {
     hint_size:"Esfuerzo como talla de camiseta entre paréntesis; añade un enlace simplemente como URL:",
     hint_break:"A partir de (M): sigue desglosando — si falta el desglose, aparece un marcador de posición en el diagrama.",
     hint_comment:"Comentarios con %% — línea completa o al final de la línea.",
+    hint_cont:"Un espacio y \\ al final de una línea — la línea siguiente sigue perteneciendo a ella.",
     hint_people:"Personas con @nombre — aparecen abajo a la derecha del nodo.",
     hint_id:"ID de nodo con #nombre: delante del título — visible en el tooltip del nodo.",
     hint_deps:"Dependencias con :#nombre,#nombre — visibles en el tooltip.",
@@ -2243,6 +2246,7 @@ const I18N = {
     hint_size:"Effort en taille de T-shirt entre parenthèses ; ajoutez un lien simplement comme URL :",
     hint_break:"À partir de (M) : décomposer davantage — si la décomposition manque, un espace réservé apparaît dans le diagramme.",
     hint_comment:"Commentaires avec %% — ligne entière ou en fin de ligne.",
+    hint_cont:"Une espace et \\ en fin de ligne — la ligne suivante en fait encore partie.",
     hint_people:"Personnes avec @nom — affichées en bas à droite du nœud.",
     hint_id:"ID de nœud avec #nom : devant le titre — visible dans l’infobulle du nœud.",
     hint_deps:"Dépendances avec :#nom,#nom — visibles dans l’infobulle.",
@@ -2343,6 +2347,7 @@ const I18N = {
     hint_size:"Nakład jako rozmiar koszulki w nawiasach; link dodaj po prostu jako URL:",
     hint_break:"Od (M): dziel dalej — gdy brakuje podziału, w diagramie pojawia się symbol zastępczy.",
     hint_comment:"Komentarze z %% — cały wiersz lub na końcu wiersza.",
+    hint_cont:"Spacja i \\ na końcu wiersza — następny wiersz nadal do niego należy.",
     hint_people:"Osoby z @nazwa — pokazywane w prawym dolnym rogu węzła.",
     hint_id:"ID węzła przez #nazwa: przed tytułem — widoczne w podpowiedzi węzła.",
     hint_deps:"Zależności przez :#nazwa,#nazwa — widoczne w podpowiedzi.",
@@ -2443,6 +2448,7 @@ const I18N = {
     hint_size:"Трудоёмкость как размер футболки в скобках; ссылку добавьте просто как URL:",
     hint_break:"С (M): дробите дальше — если декомпозиции нет, в диаграмме появляется заполнитель.",
     hint_comment:"Комментарии через %% — вся строка или в конце строки.",
+    hint_cont:"Пробел и \\ в конце строки — следующая строка всё ещё относится к ней.",
     hint_people:"Люди через @имя — показываются справа внизу узла.",
     hint_id:"ID узла через #имя: перед заголовком — виден во всплывающей подсказке узла.",
     hint_deps:"Зависимости через :#имя,#имя — видны в подсказке.",
@@ -2543,6 +2549,7 @@ const I18N = {
     hint_size:"प्रयास कोष्ठक में टी-शर्ट आकार के रूप में; लिंक बस URL के रूप में जोड़ें:",
     hint_break:"(M) से आगे: और विभाजित करें — विभाजन न होने पर आरेख में प्लेसहोल्डर दिखता है।",
     hint_comment:"%% से टिप्पणियाँ — पूरी पंक्ति या पंक्ति के अंत में।",
+    hint_cont:"पंक्ति के अंत में स्पेस और \\ — अगली पंक्ति उसी की बनी रहती है।",
     hint_people:"@नाम से व्यक्ति — नोड के नीचे-दाएँ दिखते हैं।",
     hint_id:"शीर्षक से पहले #नाम: के रूप में नोड आईडी — नोड के टूलटिप में दिखती है।",
     hint_deps:":#नाम,#नाम से निर्भरताएँ — टूलटिप में दिखती हैं।",
@@ -2643,6 +2650,7 @@ const I18N = {
     hint_size:"用括号中的 T 恤尺码表示工作量；链接直接作为 URL 附加：",
     hint_break:"从 (M) 起：继续细分——若缺少细分，图表中会出现占位符。",
     hint_comment:"用 %% 注释——整行或行尾。",
+    hint_cont:"行尾的空格加 \\ —— 下一行仍属于这一行。",
     hint_people:"用 @姓名 表示人员——显示在节点右下角。",
     hint_id:"用 #名称: 写在标题前指定节点 ID——显示在节点提示中。",
     hint_deps:"用 :#名称,#名称 表示依赖——显示在提示中。",
@@ -2743,6 +2751,7 @@ const I18N = {
     hint_size:"工数は括弧内の T シャツサイズで；リンクは URL としてそのまま追加：",
     hint_break:"(M) 以上：さらに分解 — 分解がないと図にプレースホルダーが表示されます。",
     hint_comment:"%% でコメント — 行全体または行末。",
+    hint_cont:"行末の空白と \\ — 次の行も同じ行に属します。",
     hint_people:"@名前 で担当者 — ノードの右下に表示されます。",
     hint_id:"タイトルの前に #名前: でノード ID — ノードのツールチップに表示されます。",
     hint_deps:":#名前,#名前 で依存関係 — ツールチップに表示されます。",
@@ -2780,6 +2789,7 @@ function buildHint(){
     <code>- [ ] Backend (L) https://…</code><br>
     ${esc(t('hint_break'))}<br>
     ${esc(t('hint_comment'))}
+    ${esc(t('hint_cont'))}
     ${esc(t('hint_people'))}
     ${esc(t('hint_id'))}
     ${esc(t('hint_deps'))}

@@ -8,6 +8,7 @@
       - [^] #not.status: Status box, eight states (S)
       - [^] #not.size: T-shirt size and the "decompose from M" rule (S)
       - [^] #not.people: People tags, bare URLs, %% comments (XS)
+      - [x] #not.cont: A trailing backslash continues the line (XS)  %% space before it is required
     - [^] #not.gates: And/or decomposition (S)
     - [^] #not.opt: Optional nodes — neither required nor an alternative (S)
     - [^] #not.id: Node IDs, (#auth:) before the title (S)  %% often the ticket number, see SPEC §11
@@ -205,6 +206,12 @@
   One line is one node: indentation, gate character, status box, fold mark,
   label, size, URL, tags, comment. The order in which those are extracted is
   fixed, which is what keeps them from colliding with each other.
+
+#not.cont
+  A long line may be spread over several text lines: ending one with a space
+  and a backslash makes the next line part of it, so no new node begins. The
+  space is required, or a label like C:\temp\ would silently swallow the node
+  below it.
 
 #not.status
   Eight states from vague idea to live in production, written as an extended

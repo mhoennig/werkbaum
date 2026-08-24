@@ -4202,3 +4202,76 @@ Besuchsvergleich darunter bleibt damit das erste, worauf der Blick fällt.
 nichts. Der Schlüssel ist trotzdem in allen neun Sprachen angelegt, auch auf
 Englisch: Ein Loch in der Tabelle lädt dazu ein, beim nächsten Durchsehen für
 einen Fehler gehalten und „repariert" zu werden.
+
+## D59 — Fortsetzungszeilen: `\` am Zeilenende, Leerraum davor Pflicht
+Eine Zeile trägt in dieser Notation alles auf einmal — Einrückung, Zeichen,
+Statusbox, Label, Größe, URL, Tags, ID, Abhängigkeiten, Fokusmarke, Kommentar.
+Im mitgelieferten Plan ist die längste Zeile 122 Zeichen lang (D49), und seit
+das Textfeld nicht mehr umbricht, muss man dafür waagerecht schieben. Ein `\`
+am Zeilenende verteilt sie jetzt auf mehrere Textzeilen, ohne dass ein neuer
+Knoten entsteht.
+
+**Leerraum vor dem `\` ist Pflicht** — `… \` setzt fort, `…\` nicht. Das ist
+die entscheidende Festlegung, und sie geht bewusst gegen die Gewohnheit aus
+Shell, C und Makefile, wo `foo\` fortsetzt. Der Grund ist die **Asymmetrie der
+Fehlerfälle**:
+
+- Ohne die Regel verschluckt ein Label, das selbst auf einen Backslash endet
+  (`C:\temp\`), **stumm den folgenden Knoten**. Ein Knoten verschwindet aus dem
+  Diagramm, und im Text sieht die Zeile richtig aus.
+- Mit der Regel bekommt, wer aus der Shell `foo\` schreibt, **keine
+  Fortsetzung**. Die Zeile bleibt stehen, der `\` ist sichtbar, der Fehler
+  erklärt sich beim Hinsehen.
+
+Der zweite Fehler ist häufiger, der erste ist schlimmer — und dieses Projekt
+zieht durchweg den lauten dem stillen vor (SPEC §4, D40). Die Regel ist zudem
+keine neue Sorte: `=`, `>`/`<` und `"` verlangen alle Leerraum, nur auf der
+**anderen** Seite des Zeichens. Ein `\\`-Escape als Alternative wäre die dritte
+Möglichkeit gewesen — verworfen, weil die Notation sonst nirgends escapt und
+eine einzige Escape-Regel für einen Randfall mehr Erklärung kostet, als sie
+wert ist.
+
+**Verbunden wird mit genau einem Leerzeichen.** Damit ist ein Token nicht über
+den Umbruch trennbar — eine zerschnittene URL bleibt zerschnitten. Das ist eine
+echte Einschränkung und trotzdem richtig herum: Ohne das Leerzeichen führen
+`Backend \` + `Frontend` zu `BackendFrontend`, und *das* wäre die stille
+Variante. Wer eine lange URL hat, lässt sie in ihrer Zeile.
+
+**Alles gehört zur ersten Zeile.** Ihre Einrückung bestimmt die Ebene, ihre
+Nummer nennen die Warnungen, und alles, was zurückschreibt, fasst nur sie an —
+`setFoldMark()` (D38) und `expandShortIds()` (D55) finden Gate und Statusbox
+dort. `expandShortIds()` musste dafür lernen, Fortsetzungszeilen zu
+**überspringen**: Sonst hätte es eine solche Zeile für eine Wurzelzeile
+gehalten (sie hat kein Gate) und den Vorfahren-Stapel verdorben.
+
+**Der Cursor in einer Fortsetzungszeile wählt ihren Knoten aus** — dieselbe
+Regel wie bei Beschreibungszeilen (D40-Nachtrag 2), und aus demselben Grund:
+Die Zeile trägt keinen eigenen Knoten, gehört aber zu einem, und wer darin
+schreibt, arbeitet an genau diesem. Getragen wird das von `node.descLines`, das
+damit nicht mehr nur Beschreibungen führt; der Name bleibt, weil eine
+Umbenennung durch Renderer, Tests und Snapshots nichts hinzufügte, was der
+Kommentar nicht sagt.
+
+**Gilt nur im Baumteil.** Hinter dem `---`-Trenner ist der Zeilenumbruch
+Absatzstruktur (§1), und der Inhalt ist ausdrücklich Freitext — ein `\` bleibt
+dort gewöhnlicher Text.
+
+**Reihenfolge gegenüber dem Kommentar:** Kommentare fallen zuerst weg (§1,
+Schritt 1), das Verbinden ist Schritt 1b. Also setzt `- A \ %% Notiz` fort und
+`- A %% Notiz \` nicht — beides ist die natürliche Lesart, und sie fällt ohne
+Sonderregel richtig aus.
+
+**Umgesetzt als Vor-Durchlauf** (`logicalLines()` in parser.js): Er liefert
+statt roher Zeilen `{raw, line, cont}`, und `parse()` arbeitet unverändert
+darauf weiter. Dadurch gibt es genau **eine** Stelle, die die Regel kennt, und
+die Extraktionsreihenfolge aus §1 bleibt unangetastet — die Folgezeile ist
+schon Teil der Zeile, bevor irgendetwas aus ihr gelesen wird. Ein Sonderfall
+steckt darin: Bleibt von der ersten Zeile nur die **Einrückung** übrig (`  \`),
+darf sie nicht mit weggeputzt werden — sie trägt die Ebene.
+
+**Nachgemessen** im laufenden Editor: `- Ein Knoten mit einem \` + `sehr langen
+Titel (L) @anna` ergibt einen Knoten mit `data-line="2"` und
+`data-desc-lines="3"`, Größe `L` und Tag `anna` von der zweiten Zeile gelesen,
+0 Warnungen; der Cursor auf Zeile 3 hebt denselben Knoten hervor wie auf Zeile
+2. 20 neue Tests; die Gegenprobe (Leerraum-Pflicht aus dem Regex entfernt)
+lässt genau die zwei danach benannten Zusicherungen fallen.

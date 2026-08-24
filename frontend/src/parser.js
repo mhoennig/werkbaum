@@ -38,6 +38,41 @@ export function setFoldMark(line, mark){
 
 const RE_LINE = /^([ \t]*)([-|+]|=(?=[ \t]))?\s*(?:([><])(?=[ \t])\s*)?(?:\[([^\]])\]\s*)?(?:([><])(?=[ \t])\s*)?(.*)$/;
 const RE_ID_TOKEN = /(^|\s)#([\p{L}\p{N}._-]+)/u;
+/* Fortsetzungszeile (SPEC §1): Leerraum, dann `\` als letztes Zeichen. Der
+   Leerraum davor ist Pflicht — ohne ihn verschluckte ein Label wie `C:\temp\`
+   stumm den folgenden Knoten. */
+const RE_CONT = /(^|[ \t])\\[ \t]*$/;
+const RE_SEP = /^[ \t]*-{3,}[ \t]*$/;
+
+/* Text → logische Zeilen: `%%`-Kommentare weg (SPEC §1, Schritt 1), dann
+   Fortsetzungen anhängen (Schritt 1b). Ergebnis je Eintrag:
+   `{raw, line, cont}` — `line` ist die Nummer der ERSTEN Textzeile (sie trägt
+   Einrückung, Gate und Statusbox und wird von allen Rückschreibern angefasst),
+   `cont` sind die Nummern der angehängten.
+
+   Verbunden wird mit genau einem Leerzeichen, die Einrückung der Folgezeile
+   entfällt — bis auf den Fall, dass von der ersten Zeile nur die Einrückung
+   übrig bleibt (`  \`): Dann trägt sie die Ebene und muss stehen bleiben.
+   Hinter dem `---`-Trenner wird nicht mehr verbunden; dort ist der
+   Zeilenumbruch Absatzstruktur (SPEC §1). */
+export function logicalLines(text){
+  const lines = text.split('\n');
+  const out = [];
+  let inDesc = false;
+  for(let i = 0; i < lines.length; i++){
+    const rec = {raw: lines[i].replace(/%%.*$/, ''), line: i + 1, cont: []};
+    if(!inDesc && RE_SEP.test(rec.raw)) inDesc = true;
+    while(!inDesc && RE_CONT.test(rec.raw)){
+      rec.raw = rec.raw.replace(RE_CONT, '$1');
+      if(i + 1 >= lines.length) break;         /* letzte Zeile: der `\` entfällt einfach */
+      if(rec.raw && !/[ \t]$/.test(rec.raw)) rec.raw += ' ';
+      rec.raw += lines[++i].replace(/%%.*$/, '').replace(/^[ \t]*/, '');
+      rec.cont.push(i + 1);
+    }
+    out.push(rec);
+  }
+  return out;
+}
 
 /* Kurzschreibweise der Knoten-ID auflösen: `#.kc` unter `#prod-stage` wird zu
    `#prod-stage.kc` (D55). Das ist eine **Eingabehilfe**, keine Notation — die
@@ -55,12 +90,19 @@ export function expandShortIds(text){
   const lines = text.split('\n');
   const stack = [];        /* {width, id} — auch Knoten OHNE ID stehen drin */
   let changed = false;
+  let fortsetzung = false; /* die vorige Zeile endete auf `\` (SPEC §1) */
   for(let i = 0; i < lines.length; i++){
     const raw = lines[i];
     if(/^\s*-{3,}\s*$/.test(raw)) break;
     const k = raw.indexOf('%%');
     const head = k === -1 ? raw : raw.slice(0, k);
     const tail = k === -1 ? '' : raw.slice(k);
+    /* Eine Fortsetzungszeile trägt keinen eigenen Knoten: Sie darf weder den
+       Vorfahren-Stapel verändern noch als Ort einer Kurzform gelten — die ID
+       steht an der ersten Zeile. */
+    const warFortsetzung = fortsetzung;
+    fortsetzung = RE_CONT.test(head);
+    if(warFortsetzung) continue;
     const m = head.match(RE_LINE);
     if(!m) continue;
     const body = m[6];
@@ -100,8 +142,10 @@ const REALIZED = new Set(['arbeit', 'durchstich', 'fertig', 'prod']);
    `desc` (SPEC §11/D40) ist der Beschreibungstext: `"`-Zeilen unter dem
    Knoten (Kurzform) und ID-Blöcke aus dem `---`-Beschreibungsteil (Langform),
    in Dokumentreihenfolge mit Zeilenumbrüchen zusammengefügt; null ohne.
-   `descLines` sind die ZEILENNUMMERN dieser Beschreibung (SPEC §9): Steht der
-   Cursor dort, gilt dieser Knoten als ausgewählt.
+   `descLines` sind die ZEILENNUMMERN der Zeilen, die zu diesem Knoten gehören,
+   ohne einen eigenen zu tragen (SPEC §9): die der Beschreibung und die der
+   Fortsetzungen hinter `\`. Steht der Cursor dort, gilt dieser Knoten als
+   ausgewählt.
    `fold` ('>'|'<'|null, SPEC §1/D38) ist nur der ANFANGSZUSTAND der Faltung —
    den wirksamen Zustand rechnet `initialCollapsed()` in model.js.
    `deps` sind ID-Strings, keine Knoten-Referenzen — aufgelöst wird erst beim
@@ -147,8 +191,11 @@ export function parse(text){
     arr.push(text);
   };
 
-  text.split('\n').forEach((raw, i) => {
-    raw = raw.replace(/%%.*$/, '');   /* %%-Kommentare entfernen (Mermaid-Konvention) */
+  /* Kommentare sind bereits entfernt und Fortsetzungszeilen angehängt
+     (`logicalLines`, SPEC §1 Schritt 1 und 1b). `i` ist ab hier die Nummer der
+     ERSTEN Textzeile einer logischen Zeile, minus eins. */
+  logicalLines(text).forEach(rec => {
+    const raw = rec.raw, i = rec.line - 1;
     /* Trenner `---` (SPEC §11, D40): drei oder mehr Bindestriche, umgebender
        Leerraum erlaubt — ab hier gilt der Beschreibungsteil. Es gibt keinen
        Schlusszaun; weitere Trennzeilen darin haben keine Bedeutung. */
@@ -265,6 +312,10 @@ export function parse(text){
     parent.children.push(node);
     stack.push({node, width});
     lastNode = node;
+    /* Die Fortsetzungszeilen gehören diesem Knoten (SPEC §1/§9) — genau wie
+       Beschreibungszeilen tragen sie keinen eigenen und wählen ihn deshalb
+       aus, wenn der Cursor darin steht. */
+    rec.cont.forEach(n => ownLine(node, n - 1));
     if(id != null && !idNodes.has(id)) idNodes.set(id, node);
   });
 

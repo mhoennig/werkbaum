@@ -18,6 +18,25 @@ https://werkbaum.javagil.de renders the notation as a diagram;
 
 One node per line. Everything except the label is optional.
 
+### Line continuation (`\` at the end)
+
+- A line ending in **whitespace followed by `\`** continues on the next line:
+  no new node begins. The `\` and the next line's indentation are dropped, the
+  two parts are joined with **exactly one space**. Several `\` in a row extend
+  the line further.
+- The whitespace before the `\` is **required** — `C:\temp\` stays a label and
+  does not swallow the following node. Note this differs from shell habit,
+  where `foo\` continues.
+- Everything belongs to the **first** line: its indentation sets the level, its
+  number is the one warnings report, and tools that write back (fold mark, id
+  shorthand) only touch it.
+- A token must not be split across the break — the join inserts a space, so a
+  cut URL stays cut.
+- Only in the tree part. Behind the `---` divider line breaks are paragraph
+  structure, and `\` is ordinary text.
+- Comments are removed **first**: `- A \ %% note` continues, `- A %% note \`
+  does not.
+
 ### Hierarchy (indentation)
 
 - Indentation defines the tree: a node's parent is the nearest line **above**

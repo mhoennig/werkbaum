@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-24
 
+- A line ending in a space and `\` continues on the next line, so a long node no longer has to fit into one
 - A star in the header opens What's new: the changes of the last few days, and a link per day that shows the nodes it touched in the diagram
 - A warning triangle replaces the question mark as the pointer over faulty line numbers
 - The node window replaces the browser tooltip everywhere — at the pointer, on keyboard focus and on touch
