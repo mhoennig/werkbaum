@@ -4006,6 +4006,66 @@ und Faltmarke, und dass das Ergebnis denselben Baum ergibt wie die von Hand
 ausgeschriebene Fassung). Das Zusammenspiel mit dem Textfeld bleibt
 Browser-Sache — die Lehre aus D54-Nachtrag 3.
 
+**Nachtrag — aufgelöst wird schon beim Doppelpunkt, nicht erst beim Verlassen
+der Zeile.** Gefragt war, ob es „schon in dem Moment" gehen könnte, „wo ein `:`
+geschrieben wird oder der Cursor hinter einem vorhandenen `:` in der Zeile
+landet". Beides ist im Kern **derselbe** Anlass, und er ist besser als der
+bisherige: **Der Doppelpunkt schließt die ID ab.** Er ist per D36 der übliche
+Trenner vor dem Titel und zugleich der Anfang einer Abhängigkeitsliste
+(`#.kc:#db`) — steht er da, kann sich der Name der ID durch nichts mehr ändern,
+was danach getippt wird. Das Verlassen der Zeile war nie das eigentliche
+Kriterium, sondern nur der späteste Zeitpunkt, zu dem man sicher sein kann.
+
+**Der Gewinn ist nicht Bequemlichkeit, sondern Nachprüfbarkeit.** Aufgelöst
+wird gegen den **Baum**-Vorfahren, und der ist nach D48 nicht immer der, dessen
+Namen das gepunktete Präfix trägt — im eigenen Plan bei **50 von 181 IDs
+(28 %)** nicht (gemessen oben). Wer das Ergebnis erst zwei Zeilen später bekommt, sieht es
+womöglich gar nicht mehr; wer es beim Doppelpunkt bekommt, liest es dort, wo
+sein Blick ohnehin steht, und kann es sofort hinschreiben, wie er es will.
+
+**Eine Regel, zwei Auslöser.** Der Doppelpunkt wird entweder gerade getippt
+oder er steht schon da; im zweiten Fall greift es beim **nächsten
+Tastendruck** in dieser Zeile. Formuliert ist es deshalb als Zustand („die
+Kurzform ist abgeschlossen"), nicht als zwei Ereignisse.
+
+**Der Cursor allein genügt nicht — bewusst gegen den Wortlaut der Frage.**
+„Der Cursor landet hinter einem `:`" wäre der dritte Auslöser gewesen und
+hätte die D55-Regel gebrochen, die genau hier steht: Angefasst wird nur die
+Zeile, **in der auch getippt wurde**. Ohne die Einschränkung schriebe bloßes
+Durchklicken ein fremdes Dokument um — es fiele damit aus dem Nachziehen
+mitgelieferter Fassungen (D27) und zeigte fortan „Original wiederherstellen".
+Ein Klick ist keine Absicht, ein Tastendruck ist eine.
+
+**Umgesetzt als Vorfilter, nicht als zweite Regel-Instanz.**
+`shortIdClosed(zeile)` in `parser.js` beantwortet nur die billige Frage („folgt
+der Kurzform unmittelbar ein `:`?"), damit nicht bei jedem Tastendruck der
+ganze Text durchgesehen wird. Ob die Zeile überhaupt einen Knoten trägt und ob
+es einen Vorfahren mit ID gibt, weiß weiterhin allein `expandShortIds()` —
+dieselbe Haltung wie bei `initialCollapsed()` (D38-Nachtrag 2): eine Stelle
+kennt die Bedeutung, alles andere fragt sie. Scheitert die Auflösung (noch kein
+Vorfahr mit ID), bleibt die Zeile stehen und der nächste Tastendruck versucht
+es erneut; das Verlassen der Zeile fängt es ohnehin auf.
+
+`writeShortId()` ist aus `resolveShortId()` herausgelöst, weil der neue Weg die
+Prüfung „ist das die getippte Zeile?" nicht braucht — er hängt am
+`input`-Ereignis, ist also per Definition darin. Das `setTimeout(…, 0)` bleibt
+für **beide** Wege nötig, und beim Doppelpunkt sogar offensichtlicher als
+vorher: Der Aufruf steckt jetzt unmittelbar im `input`-Ereignis, und
+`execCommand` verweigert dort den Dienst — `replaceTextUndoable` fiele auf
+`src.value =` zurück und löschte die Undo-Historie (D38-Nachtrag 2, D53).
+
+**Nachgemessen** mit echten Tastendrücken: `  - #.kc` + `:` ergibt sofort
+`  - #prod-stage.kc:`, die Schreibmarke steht unmittelbar hinter dem
+Doppelpunkt; ` Keycloak` tippt sich normal weiter, und zweimal Rückgängig nimmt
+erst den Titel, dann die Auflösung zurück (die Historie lebt also). In eine
+Zeile mit fertigem `#.kc: Keycloak` **hineinzuklicken** ändert nichts; **ein**
+Tastendruck darin löst auf, und das getippte Zeichen bleibt an seiner Stelle
+(`Keycloa!k`). Ohne Vorfahren mit ID bleibt `#.kc: …` über mehrere
+Tastendrücke stehen und wird aufgelöst, sobald es einen gibt. Zehn neue
+Zusicherungen für den Vorfilter; Gegenprobe: Lockert man ihn auf „irgendwo ein
+`:`", fällt genau die danach benannte, nimmt man die Punkt-Prüfung heraus,
+fallen genau die drei anderen.
+
 ## D56 — `#`-Umschalter: die Knoten-ID vor dem Titel, geschrieben wie im Text
 Die ID ist die **Adresse** eines Knotens — Ziel der Abhängigkeiten (§1), Schlüssel
 der Beschreibungsblöcke, und seit D55 auch das, was man beim Tippen abkürzt. Im

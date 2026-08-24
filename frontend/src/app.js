@@ -1,5 +1,5 @@
 import './style.css';
-import { parse, setFoldMark, expandShortIds } from './parser.js';
+import { parse, setFoldMark, expandShortIds, shortIdClosed } from './parser.js';
 import { computeCheapPlan, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, atMostM } from './model.js';
 import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning, warningText } from './warnings.js';
@@ -1427,10 +1427,14 @@ function syncCaret(){
 }
 for(const ev of ['click','keyup','input','focus']) src.addEventListener(ev, syncCaret);
 
-/* Kurzschreibweise der ID auflösen (D55): `#.kc` wird beim **Verlassen der
-   Zeile** zu `#prod-stage.kc`. Eingabehilfe, keine Notation — in der Datei
-   steht danach die volle ID, sie bleibt also durchsuchbar und überlebt das
-   Umsortieren.
+/* Kurzschreibweise der ID auflösen (D55): `#.kc` wird zu `#prod-stage.kc`.
+   Eingabehilfe, keine Notation — in der Datei steht danach die volle ID, sie
+   bleibt also durchsuchbar und überlebt das Umsortieren.
+
+   **Wann:** sobald die ID abgeschlossen ist, also sobald ihr ein Doppelpunkt
+   folgt (`#.kc:`) — beim Tippen des Doppelpunkts ebenso wie beim nächsten
+   Tastendruck in einer Zeile, die ihn schon trägt. Sonst beim **Verlassen der
+   Zeile**, spätestens dann ist sie fertig (D55-Nachtrag).
 
    Angefasst wird nur die **eine** Zeile, in der auch getippt wurde. Beides ist
    nötig: `#.foo` ist schon heute eine gültige ID, und wer ein fremdes Dokument
@@ -1438,13 +1442,33 @@ for(const ev of ['click','keyup','input','focus']) src.addEventListener(ev, sync
    Nachziehen mitgelieferter Fassungen fallen, D27). Geschrieben wird
    undo-fähig — ein Griff daneben kostet ein Strg+Z (D53). */
 let touchedLine = null;
-src.addEventListener('input', () => { touchedLine = caretLineOf(); });
+src.addEventListener('input', () => {
+  touchedLine = caretLineOf();
+  /* Der Vorfilter fragt nur die Zeile unter der Schreibmarke — ob wirklich
+     etwas aufzulösen ist, entscheidet `expandShortIds()`. Scheitert es (noch
+     kein Vorfahr mit ID), bleibt `touchedLine` stehen: Der nächste Tastendruck
+     versucht es erneut, und das Verlassen der Zeile fängt es ohnehin auf. */
+  if(shortIdClosed(caretLineText())) writeShortId(touchedLine);
+});
+/* Die Zeile unter der Schreibmarke, ohne den ganzen Text zu zerlegen — das
+   liefe bei jedem Tastendruck über alle Zeilen. */
+function caretLineText(){
+  const v = src.value, p = src.selectionStart;
+  const s = v.lastIndexOf('\n', p - 1) + 1;
+  const e = v.indexOf('\n', p);
+  return e === -1 ? v.slice(s) : v.slice(s, e);
+}
 function resolveShortId(line){
-  if(src.readOnly || line == null || line !== touchedLine) return;
+  if(line == null || line !== touchedLine) return;
   touchedLine = null;
-  /* **Nicht** sofort schreiben: Der Zeilenwechsel kommt oft aus dem
-     `input`-Ereignis der Enter-Taste, und `execCommand` verweigert den Dienst,
-     wenn es re-entrant darin aufgerufen wird. `replaceTextUndoable` fiele dann
+  writeShortId(line);
+}
+function writeShortId(line){
+  if(src.readOnly || line == null) return;
+  /* **Nicht** sofort schreiben: Beide Wege hierher hängen am
+     `input`-Ereignis — der Doppelpunkt unmittelbar, der Zeilenwechsel über die
+     Enter-Taste —, und `execCommand` verweigert den Dienst, wenn es
+     re-entrant darin aufgerufen wird. `replaceTextUndoable` fiele dann
      auf `src.value =` zurück — und das löscht die Undo-Historie (D38-Nachtrag
      2). Gemessen: erstes Rückgängig ohne Wirkung, jedes weitere `false`.
      Deshalb ein Zug später, wenn das Ereignis zugestellt ist.

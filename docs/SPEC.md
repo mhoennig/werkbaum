@@ -813,18 +813,25 @@ ohnehin über das `aria-label`. Siehe D56.
 
 ### Kurzschreibweise der Knoten-ID beim Tippen (`#.name`)
 Eine **Eingabehilfe**, keine Notation: Wer `#.kc` unter einem Knoten mit der ID
-`#prod-stage` schreibt, findet beim **Verlassen der Zeile** `#prod-stage.kc` im
-Text. Aufgelöst wird gegen den nächsten Vorfahren **mit** ID; gibt es keinen
-oder trägt er selbst noch eine Kurzform, bleibt die Zeile stehen (`#.kc` ist
-ohnehin eine gültige ID — der Punkt gehört zur Zeichenmenge, §1). `#..x` wird
-nicht angefasst.
+`#prod-stage` schreibt, findet `#prod-stage.kc` im Text. Aufgelöst wird gegen
+den nächsten Vorfahren **mit** ID; gibt es keinen oder trägt er selbst noch eine
+Kurzform, bleibt die Zeile stehen (`#.kc` ist ohnehin eine gültige ID — der
+Punkt gehört zur Zeichenmenge, §1). `#..x` wird nicht angefasst.
+
+**Aufgelöst wird, sobald die ID abgeschlossen ist** — also sobald ihr
+unmittelbar ein **Doppelpunkt** folgt (`#.kc:`), der übliche Trenner vor dem
+Titel (§1) und zugleich der Anfang einer Abhängigkeitsliste. Das gilt beim
+Tippen des Doppelpunkts ebenso wie beim nächsten Tastendruck in einer Zeile,
+die ihn schon trägt. Ohne Doppelpunkt bleibt es beim **Verlassen der Zeile** —
+spätestens dann ist die ID fertig.
 
 Die Datei enthält danach immer die volle ID: Sie bleibt durchsuchbar und
 überlebt das Umsortieren, worauf die Abhängigkeiten `:#…` bauen. **An der
 Notation ändert sich dadurch nichts** — der Parser sieht nie eine Kurzform,
 und `llms.md` (§13) bleibt unberührt. Angefasst wird nur die Zeile, in der auch
-getippt wurde; Abhängigkeiten (`:#…`) und der Beschreibungsteil hinter `---`
-bleiben außen vor. Siehe D55.
+**getippt** wurde — den Cursor hineinzusetzen genügt nicht, sonst schriebe
+bloßes Durchklicken ein fremdes Dokument um; Abhängigkeiten (`:#…`) und der
+Beschreibungsteil hinter `---` bleiben außen vor. Siehe D55.
 
 ### Zeilennummern im Texteditor
 Links neben dem Textfeld steht ein schmaler Streifen mit den **Zeilennummern** —

@@ -131,6 +131,24 @@ export function expandShortIds(text){
   return changed ? lines.join('\n') : text;
 }
 
+/* Ist die Kurzform in dieser Zeile schon **abgeschlossen**? Also folgt ihr
+   unmittelbar ein Doppelpunkt — der übliche Trenner vor dem Titel (§1/D36) und
+   zugleich der Anfang einer Abhängigkeitsliste (`#.kc:#db`). Dann steht fest,
+   wie die ID heißt, und der Editor löst sofort auf, statt das Verlassen der
+   Zeile abzuwarten (D55-Nachtrag).
+
+   Bewusst nur ein **Vorfilter**: Ob die Zeile überhaupt einen Knoten trägt und
+   ob es einen Vorfahren mit ID gibt, weiß allein `expandShortIds()` — es bleibt
+   die eine Stelle, die die Regel kennt. */
+export function shortIdClosed(line){
+  const k = line.indexOf('%%');
+  const head = k === -1 ? line : line.slice(0, k);
+  const m = head.match(RE_ID_TOKEN);
+  /* `.kc` ja, `..kc` nein — dieselbe Prüfung wie oben. */
+  if(!m || !/^\.[^.]/.test(m[2])) return false;
+  return head[m.index + m[0].length] === ':';
+}
+
 /* Status, die als „realisiert" zählen (XOR-Regel, SPEC §3/D35): Kosten sind
    investiert oder mehr. Absicht (`[?]`, `[ ]`, `[!]`), Ablehnung (`[-]`) und
    neutrale Knoten zählen nicht. */

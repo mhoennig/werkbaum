@@ -28,7 +28,7 @@ reverse.
 - A warning triangle replaces the question mark as the pointer over faulty line numbers
 - The node window replaces the browser tooltip everywhere — at the pointer, on keyboard focus and on touch
 - A `#` button in the diagram header puts node IDs in front of the titles
-- Typing `#.kc` under `#prod-stage` now expands to `#prod-stage.kc` when you leave the line
+- Typing `#.kc` under `#prod-stage` expands to `#prod-stage.kc`, right when you close the id with a colon
 - A camera button next to the history saves a snapshot on demand
 - Fix: the manual snapshot button confirmed without saving anything while nothing had changed yet
 - Warning line numbers carry their message as a tooltip

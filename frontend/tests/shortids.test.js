@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { expandShortIds, parse } from '../src/parser.js';
+import { expandShortIds, shortIdClosed, parse } from '../src/parser.js';
 
 /* Kurzschreibweise der Knoten-ID (D55): `#.kc` unter `#prod-stage` wird beim
    Verlassen der Zeile zu `#prod-stage.kc`. Eingabehilfe, keine Notation — in
@@ -113,5 +113,53 @@ describe('expandShortIds — das Ergebnis parst wie eine von Hand geschriebene I
     const text = ['#a: A', '  - #.b: B', '  - #.c: C :#a.b'].join('\n');
     const r = parse(expandShortIds(text));
     expect(r.warnings).toEqual([]);           /* kein unknownDep mehr */
+  });
+});
+
+/* Vorfilter für den frühen Zeitpunkt (D55-Nachtrag): Folgt der Kurzform
+   unmittelbar ein Doppelpunkt, steht fest, wie die ID heißt — der Editor löst
+   dann sofort auf, statt das Verlassen der Zeile abzuwarten. */
+describe('shortIdClosed — die Kurzform ist mit einem Doppelpunkt abgeschlossen', () => {
+  it('erkennt den Trenner vor dem Titel', () => {
+    expect(shortIdClosed('  - #.kc: Keycloak')).toBe(true);
+  });
+
+  it('erkennt ihn auch am Zeilenende, noch ohne Titel', () => {
+    expect(shortIdClosed('  - #.kc:')).toBe(true);
+  });
+
+  it('zählt auch den Anfang einer Abhängigkeitsliste', () => {
+    expect(shortIdClosed('  - #.kc:#db')).toBe(true);
+  });
+
+  it('sagt ohne Doppelpunkt nein — dort wird beim Verlassen der Zeile aufgelöst', () => {
+    expect(shortIdClosed('  - #.kc Keycloak')).toBe(false);
+  });
+
+  it('verlangt ihn unmittelbar, nicht irgendwo in der Zeile', () => {
+    expect(shortIdClosed('  - #.kc Keycloak: Stage')).toBe(false);
+  });
+
+  it('lässt die volle ID in Ruhe — da gibt es nichts aufzulösen', () => {
+    expect(shortIdClosed('  - #prod-stage.kc: Keycloak')).toBe(false);
+  });
+
+  it('fasst `#..x` nicht an, wie expandShortIds auch nicht', () => {
+    expect(shortIdClosed('  - #..x: X')).toBe(false);
+  });
+
+  it('sieht nur das erste `#`-Token', () => {
+    expect(shortIdClosed('  - #a: siehe #.b: dort')).toBe(false);
+  });
+
+  it('übergeht den Kommentar', () => {
+    expect(shortIdClosed('  - #.kc Keycloak  %% #.x: Notiz')).toBe(false);
+  });
+
+  it('was er meldet, löst expandShortIds auch wirklich auf', () => {
+    const zeile = '  - #.kc: Keycloak';
+    expect(shortIdClosed(zeile)).toBe(true);
+    expect(expandShortIds(['#prod-stage: Stage', zeile].join('\n')))
+      .toContain('#prod-stage.kc: Keycloak');
   });
 });
