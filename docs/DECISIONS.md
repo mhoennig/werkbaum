@@ -3002,6 +3002,65 @@ Status-Hälfte ist damit gebaut. Offen bleibt die **Nutzen-Achse** (Ausbaustufen
 ist eine Gruppe komplett realisiert, zur nächsten per Nutzen gewählten Stufe
 weiterspringen) — die braucht erst ein Nutzen-Attribut und den Aufwands-Rollup.
 
+**Nachtrag — „erledigt tritt nicht zurück" galt nur auf dem Pfad; jetzt gilt es
+überall.** Gemeldet als Frage: „Manche Knoten, die schon in Produktion sind,
+werden blau dargestellt und manche grau." Beispiel `#ed.fresh` — grau, außer
+wenn der Cursor darauf steht.
+
+Die Ursache war nicht der Status, sondern die Pfad-Inversion: Der Knoten ist
+eine **Zugabe** (`+`), und optionale Knoten liegen per D29 nie auf dem
+günstigsten Pfad — `.cheap-on .node:not(.cheap)` blasste ihn also aus (Deckkraft
+0,32, Sättigung 0,4; Pastellblau `#DBEAF8` liest sich so als Grau). Dass er beim
+Anklicken blau wurde, war die Cursor-Ausnahme aus D25.
+
+**Der Widerspruch liegt in diesem Eintrag selbst.** Oben steht „sie auszublassen
+hieße, sie sähen aus wie eine verworfene Alternative" — die Regel griff aber nur
+für erledigte Knoten **auf** dem Pfad, weil sie an `cheapCls()` hing. Durch das
+Raster fielen die fertige Zugabe und die fertige, nicht gewählte Alternative:
+`#ed.fresh` ist gebaut und deployed und sah aus wie etwas, das nie passieren
+wird. Das Argument von oben trägt dort genauso weit; die Regel war zu eng
+gefasst, nicht falsch begründet.
+
+**Entschieden (Nutzer): Was `[x]` oder `[^]` trägt, wird nie ausgeblasst.**
+Damit hat die Blässe genau **eine** Bedeutung: „hier ist nichts getan und wird
+auch nichts getan". Vorher hieß sie manchmal auch „ist längst fertig" — und die
+beiden Fälle sind das Gegenteil voneinander.
+
+**Umgesetzt als eigene Klasse `done`, nicht über die Statusklassen.**
+`.cheap-on .node:not(.cheap).st-fertig, …st-prod` hätte ohne neue Klasse
+funktioniert, wäre aber **falsch**: `st-…` trägt den **effektiven** Status
+(D39), und ein von Abhängigkeiten zurückgehaltenes `[x]` heißt dort z. B.
+`st-arbeit`. Die Ausnahme muss dem **intrinsischen** Status folgen — dieselbe
+Linie wie bei der XOR-Regel (D35), bei „Was ist neu?" (D28) und bei der
+Kostenrechnung dieses Eintrags: Geleistete Arbeit ist geleistet. `render.js`
+setzt die Klasse deshalb per `isDone(n)`, also aus derselben Funktion, die auch
+die Kosten auf 0 zieht. Gefärbt wird unverändert nach dem effektiven Status —
+ein zurückgehaltenes `[x]` steht jetzt in **voller** Stärke in seiner
+effektiven Farbe, und die Diskrepanz-Marke (D39) erklärt den Unterschied.
+
+Es ist die **vierte** Ausnahme von der Inversion, nach `.fresh` (D28),
+`.focusmark` (D32) und `.current` (D25-Nachtrag) — und alle vier sind
+nachgereicht worden, nachdem jemand einen unsichtbaren Knoten gemeldet hat. Das
+ist inzwischen ein Muster und steht als Prüffrage in `frontend/CLAUDE.md`: Wer
+eine neue Aussage an einen Knoten hängt, fragt zuerst, ob sie ausgeblasst noch
+etwas sagt.
+
+**Nebenbefund: Der Grafikexport hatte den Fehler nie.** `diagramToSvg()` liest
+`backgroundColor`, nicht `opacity`/`filter` — im exportierten SVG standen diese
+Knoten also immer schon in voller Farbe. Der Bildschirm zieht damit nach, statt
+dass etwas Neues entsteht.
+
+**Nachgemessen** am mitgelieferten Werkbaum-Plan (149 sichtbare Knoten, Pfad
+an): Vorher blass und fertig waren genau **drei** Knoten — `#ed.fresh`,
+`#ed.export.print` (beide `+`) und `#ed.closure.greedy` (die nicht gewählte
+Alternative neben `#ed.closure.exact`, das als gewähltes schon voll stand).
+Alle drei jetzt `opacity 1`, `filter none`, Füllung `rgb(219, 234, 248)` — also
+identisch mit den fertigen Knoten auf dem Pfad. Weiterhin blass bleiben **31**
+Knoten, darunter **kein einziger** fertiger. 240 Tests grün, davon 4 neue in
+`tests/frontier.test.js`; drei Snapshots und eine Zusicherung in
+`effective.test.js` (`node root-node held done st-arbeit` — genau der Fall
+„intrinsisch fertig, effektiv zurückgehalten") sind um die Klasse ergänzt.
+
 ## D47 — Von Station zu Station: ein Knopf, der geht, statt zu schalten
 Mit dem status-bewussten Pfad (D46) zeigt das Diagramm die offene Front — im
 mitgelieferten Plan 24 Stationen, verteilt über einen Baum von über 20 000 px

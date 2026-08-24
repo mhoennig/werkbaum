@@ -68,7 +68,10 @@ describe('Darstellung — Farbe effektiv, Marke intrinsisch', () => {
 
   it('färbt den Knoten mit dem effektiven Status und markiert ihn als held', () => {
     const {html} = render(TXT);
-    expect(html).toContain('class="node root-node held st-arbeit" tabindex="0" data-line="2"');
+    /* `done` steht daneben: Es folgt dem INTRINSISCHEN Status (D46-Nachtrag) —
+       die Arbeit ist getan, auch wenn die Abhängigkeit den Knoten effektiv
+       zurückhält. Die Farbe bleibt die effektive. */
+    expect(html).toContain('class="node root-node held done st-arbeit" tabindex="0" data-line="2"');
     expect(html).not.toContain('st-fertig" tabindex="0" data-line="2"');
   });
 

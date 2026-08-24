@@ -3,6 +3,7 @@ import { parse } from '../src/parser.js';
 import {
   isDone, ownCost, cheapestCost, cheapCls, computeCheapSet,
 } from '../src/model.js';
+import { renderTreeHtml } from '../src/render.js';
 
 /* Status-bewusster günstigster Pfad (SPEC §9, D46): Erledigtes kostet nichts
    mehr und ist keine Station; hervorgehoben wird der günstigste noch OFFENE
@@ -142,5 +143,52 @@ describe('Eingeklappt — der Knoten vertritt offene Arbeit, nicht erledigte', (
     const set = computeCheapSet(rs);
     const zweig = rs[0].children[0];
     expect(cheapCls(zweig, set, true)).toBe('cheap');   /* auf dem Pfad, aber nichts zu tun */
+  });
+});
+
+/* Die Klasse `done` trägt allein die Ausnahme von der Pfad-Inversion
+   (D46-Nachtrag): Erledigtes wird nie ausgeblasst, auch wenn es nicht auf
+   dem Pfad liegt. Sie folgt dem INTRINSISCHEN Status. */
+describe('Klasse `done` — Erledigtes tritt nie zurück', () => {
+  const html = txt => {
+    const rs = roots(txt);
+    return renderTreeHtml(rs, {t: k => k, showDiscarded: false,
+                               cheapPath: true, cheapSet: computeCheapSet(rs)}).html;
+  };
+
+  it('setzt sie an [x] und [^], nicht an offenen Knoten', () => {
+    const h = html(`[ ] W (XS)
+  - [x] Fertig (S)
+  - [^] Live (S)
+  - [~] Offen (S)`);
+    expect(h).toContain('class="node cheap done st-fertig"');
+    expect(h).toContain('class="node cheap done st-prod"');
+    expect(h).toContain('class="node cheap cheap-leaf st-arbeit"');
+  });
+
+  it('setzt sie auch am fertigen OPTIONALEN Knoten, der nie auf dem Pfad liegt', () => {
+    const rs = roots(`[ ] W (XS)
+  - [ ] Pflicht (S)
+  + [^] Zugabe (S)`);
+    const set = computeCheapSet(rs);
+    const zugabe = rs[0].children[1];
+    expect(set.has(zugabe)).toBe(false);            /* `+` ist nie auf dem Pfad (D29) */
+    const h = renderTreeHtml(rs, {t: k => k, showDiscarded: false,
+                                  cheapPath: true, cheapSet: set}).html;
+    expect(h).toContain('class="node opt done st-prod"');
+  });
+
+  it('setzt sie an der fertigen, nicht gewählten Alternative', () => {
+    const h = html(`[ ] W (XS)
+  | [^] Alt A (XS)
+  | [^] Alt B (XS)`);
+    expect(h.match(/class="node[^"]*done[^"]*st-prod"/g)).toHaveLength(2);
+  });
+
+  it('setzt sie nicht am verworfenen Knoten', () => {
+    const h = html(`[ ] W (XS)
+  - [ ] A (S)
+  - [-] Weg (S)`);
+    expect(h).not.toContain('done st-verworfen');
   });
 });

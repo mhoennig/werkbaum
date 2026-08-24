@@ -771,6 +771,14 @@
      Zurücktreten die Aussage IST, ist hier gar keine Aussage über den Plan
      gemeint — es ist eine Editierhilfe. */
   .cheap-on .node:not(.cheap).current{opacity:1;filter:none}
+  /* Erledigtes tritt NIE zurück (D46-Nachtrag). D46 hatte das schon entschieden
+     — „sie auszublassen hieße, sie sähen aus wie eine verworfene Alternative" —,
+     die Regel griff aber nur für erledigte Knoten AUF dem Pfad. Ein fertiger
+     OPTIONALER Knoten (`+`, D29: nie auf dem Pfad) und eine fertige, nicht
+     gewählte Alternative fielen durch das Raster: `#ed.fresh` ist gebaut und
+     deployed, sah aber aus wie etwas, das nie passieren wird. Blassheit heißt
+     jetzt einheitlich „hier ist nichts getan und wird auch nichts getan". */
+  .cheap-on .node:not(.cheap).done{opacity:1;filter:none}
   /* implizit als M angenommene Größe: invertiertes Badge (weiß statt petrol) */
   .size.implicit{background:var(--card);color:var(--or);border-color:var(--or)}
   /* Günstigster-Pfad-Linie: gestrichelt, geschwungen, petrol — fädelt durch

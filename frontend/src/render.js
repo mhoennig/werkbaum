@@ -92,8 +92,13 @@ function nodeHtml(n, extra, opts, fold){
   /* Die Knotenfarbe zeigt den EFFEKTIVEN Status (SPEC §9/D39); bei Diskrepanz
      trägt die Marke unten links die eigene Statusbox in den eigenen Farben. */
   const effKey = opts.effStatus ? opts.effStatus.get(n) : undefined;
+  /* `done` = erledigt laut eigener Statusbox (`[x]`/`[^]`). Trägt allein die
+     Ausnahme von der Pfad-Inversion (D46-Nachtrag): Was getan ist, wird nie
+     ausgeblasst — auch als optionaler Knoten oder nicht gewählte Alternative.
+     Der INTRINSISCHE Status entscheidet, wie überall dort, wo es um geleistete
+     Arbeit geht (D35/D28/D46); die Farbe bleibt die des effektiven (D39). */
   const cls = ['node', extra || '', fold && fold.collapsed ? 'folded' : '',
-               effKey ? 'held' : '',
+               effKey ? 'held' : '', isDone(n) ? 'done' : '',
                n.status ? 'st-' + (effKey || n.status.key) : '']
     .filter(Boolean).join(' ');
   /* Zeilennummer am Knoten (D25): Grundlage für den Sprung ins Textfeld und

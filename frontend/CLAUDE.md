@@ -62,13 +62,21 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `app.js` (DOM/Events/i18n/Persistenz/Export). Modell/Renderer bekommen UI-State
   (verworfene einblenden, Pfad an/aus) als **Parameter** — keine Globals; nur
   `cheapPathOn` lebt als UI-State in `app.js`. Tests: `tests/*.test.js`.
-- Günstigster Pfad: `markCheapest()`/`cheapestCost()` (in `model.js`) markieren
+- Günstigster Pfad: `computeCheapPlan()`/`cheapestCost()`/`cheapCls()` (in
+  `model.js`) markieren
   die nötigen Knoten (Klassen `cheap`, `cheap-leaf`); `drawCheapPath()` (app.js)
   zeichnet nach jedem
   `render()` **und** nach `applyLayout()` zwei Overlay-SVGs in `#out` (hinten
   kräftige Linie, vorne abgetönte Kopie + Stationspunkte). Overlays erben den
   CSS-`zoom` von `#out`, Punkte in unskalierte `#out`-Koordinaten umrechnen
   (`/zoom`). `diagramToSvg()` zeichnet dieselbe Linie/Punkte nach (SPEC §9, D18).
+  **Die Inversion `.cheap-on .node:not(.cheap)` hat vier Ausnahmen** — `.fresh`
+  (D28), `.focusmark` (D32), `.current` (D25) und `.done` (D46-Nachtrag: `[x]`
+  oder `[^]`, gesetzt in `render.js` per `isDone()`). Wer eine fünfte Aussage an
+  einen Knoten hängt, prüft, ob sie ausgeblasst noch etwas sagt; die ersten drei
+  sind je einzeln nachgereicht worden, nachdem sie unsichtbar waren. Der
+  **Grafikexport** blasst ohnehin nie aus (er liest `backgroundColor`, nicht
+  `opacity`) — er war damit schon immer die Ansicht ohne Inversion.
 - Zerlegt eine any-of-Alternative selbst all-of, wird der Teilbaum **nur
   horizontal** schmal transponiert (`ul.or>li.has-and>ul.and`, siehe D18) —
   sonst schiebt der breite Fächer den Elternbaum nach rechts. Bei Layout-

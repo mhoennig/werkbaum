@@ -507,10 +507,16 @@ Darstellung per **Inversion**: nicht benötigte Knoten (nicht-gewählte
 any-of-Alternativen und optionale Knoten, je samt Teilbaum) treten zurück
 (blass, entsättigt); der
 günstige Pfad hebt sich dadurch von selbst ab — kein zusätzlicher Rahmen an den
-ohnehin dichten Knoten-Ecken. **Erledigte Knoten treten nicht zurück**: Sie
-gehören zum Pfad und behalten ihre volle Statusfarbe (§4) — grün bzw. blau sagt
-bereits „hier ist nichts mehr zu tun"; sie auszublassen hieße, sie sähen aus wie
-eine verworfene Alternative. Wo die Größe **implizit** als `M` angenommen wird,
+ohnehin dichten Knoten-Ecken. **Erledigte Knoten treten nie zurück**: Ein Knoten
+mit `[x]` oder `[^]` behält seine volle Statusfarbe (§4) — grün bzw. blau sagt
+bereits „hier ist nichts mehr zu tun"; ihn auszublassen hieße, er sähe aus wie
+eine verworfene Alternative. Das gilt **unabhängig davon, ob er auf dem Pfad
+liegt**: auch die fertige Zugabe (`+`, §3) und die fertige, nicht gewählte
+Alternative behalten ihre Farbe. Blass heißt damit einheitlich „hier ist nichts
+getan und wird auch nichts getan". Maßgeblich ist der **intrinsische** Status
+(die eigene Box), gefärbt wird weiterhin nach dem effektiven (oben) — ein von
+Abhängigkeiten zurückgehaltenes `[x]` steht also in voller Stärke in seiner
+effektiven Farbe. Wo die Größe **implizit** als `M` angenommen wird,
 zeigt der Knoten ein **invertiertes** Größen-Badge (weiß mit petrolfarbenem
 Rand/Text statt gefüllt) mit erläuterndem Tooltip — an einem **erledigten**
 Knoten entfällt es, dort wird keine Kostenannahme mehr getroffen.
