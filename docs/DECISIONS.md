@@ -4842,3 +4842,77 @@ mitten im Wort, `\n` im Knotentext); die showIds-Tests sind auf die eigene
 Zeile umgeschrieben. Der neue Plan-Knoten `#ed.render.wrap (S)` kippte prompt
 die Größenprüfung des eigenen Plans (`#ed.render (M)` mit nun 4×S, D62) —
 ehrlich nachgezogen auf `(L)`, danach wieder 0 Warnungen.
+
+## D65 — Abgerissene Linien im vertikalen Modus: Geometrie-Fehler, kein Rendering-Problem
+Gemeldet: „Es geschieht immer wieder, dass die Verbindungslinien zu Sub-Knoten
+nicht durchgängig sind, sondern Lücken haben — meistens fehlen in der
+vertikalen Ansicht kurze vertikale Linien", mit der Frage, ob das stabil zu
+fixen sei oder ein Umstieg auf Canvas-Rendering nötig würde. Der entscheidende
+Hinweis kam nachgereicht: „meistens, wenn es nur einen einzigen oder zwei
+Unterknoten gibt."
+
+**Es ist kein Rundungs- oder Rendering-Problem, sondern ein deterministischer
+Geometrie-Fehler** — gemessen statt geraten: Ein Scanner über die
+Pseudo-Element-Geometrie aller 45 vertikalen all-of-Gruppen des mitgelieferten
+Plans fand **8 kaputte**, alle mit 1–3 Kindern, alle exakt reproduzierbar.
+Zwei Fehlerarten, eine gemeinsame Wurzel: **Der Eltern-Stub dockt bei 50 % der
+Gruppenhöhe an** (`li.has-and{align-items:center}`, D9), **die Sammelleiste
+endet aber am Abzweigpunkt des Rand-Kindes** — und nichts garantierte, dass
+die 50 % dazwischen liegen.
+
+- **Einziges Kind:** `li:only-child::after{border:0}` schaltete die Leiste ganz
+  ab — in der Annahme, Stub (50 %) und Kind-Abzweig (fest 23 px) fielen
+  zusammen. Das taten sie, solange das `<li>` symmetrisch gepolstert war
+  (5+5 px: Mitte 22,15 ≈ 23). Der **20-px-Zusatzabstand nach unten**
+  (D-Transponiert, gegen Badge/Tag-Überlappung) verschob die Mitte auf 29,65 —
+  **6,6 px Lücke**; mehrzeilige Knoten (D64) machten daraus **15,8 px**. Der
+  Fehler war also alt und wurde schrittweise sichtbarer — daher „immer wieder".
+- **Letztes Kind mit großem Teilbaum:** Die Leiste läuft vom ersten bis zum
+  letzten Abzweig (je 23 px unter der Zellen-Oberkante). Trägt das letzte Kind
+  einen großen Teilbaum, liegt die Gruppen-**Mitte** unterhalb seines Abzweigs
+  — der Stub hing frei in der Luft (gemessen: 4,5 bis **98 px**).
+
+**Fix in zwei Teilen, je auf dem billigsten tragfähigen Weg:**
+
+- **Einziges Kind rein in CSS:** Bei `:only-child` ist die Gruppenhöhe die
+  Kindhöhe (`padding-top:0`), 50 % ist also im `<li>` ausdrückbar —
+  `top:23px; height:max(0px, calc(50% - 23px))` verbindet Abzweig und Stub
+  exakt. Für ein has-and-Einzelkind bleibt `border:0` (Abzweig liegt dort
+  selbst bei 50 %, beides fällt zusammen).
+- **Letztes Kind per Messung:** Die Gruppenmitte relativ zum letzten `<li>`
+  kann CSS nicht ausdrücken — dieselbe Lage wie bei `--stem-x`
+  (D29-Nachtrag 2), also derselbe Griff: `alignVRails()` misst nach jedem
+  Rendern/Moduswechsel und setzt `--vrail-ext` (unskalierte px, durch
+  `effZoom()` zurückgerechnet); die CSS-Regel
+  `li:last-child:not(.has-and):not(:only-child)::after{height:var(--vrail-ext, 23px)}`
+  verlängert die Leiste bis zum Stub. **has-and-Letztkinder brauchen das
+  nie** — deren Abzweig liegt bei 50 % ihrer Zelle, und die Gruppenmitte kann
+  rechnerisch nie darunter liegen (H/2 > H − h/2 hieße h > H). Nach **oben**
+  kann die Mitte ebenfalls nie herausfallen (der erste Abzweig liegt höchstens
+  23 px unter dem Gruppenanfang, und H/2 ≥ 23 gilt ab 46 px Gruppenhöhe —
+  ein einzelner Knoten ist schon höher).
+
+**Canvas (oder eine SVG-Volleinzeichnung) ist damit nicht nötig.** Die Frage
+war berechtigt — viele einzeln positionierte Border-Segmente sind die
+fehleranfälligere Bauart als ein durchgezogener Pfad —, aber der konkrete
+Fehler lag in zwei falschen Annahmen der Geometrie, nicht im Mechanismus.
+Ein Umstieg kostete die CSS-gestützte Selbstverständlichkeit von Fokus,
+Hover, Zoom und Druck und müsste alle über D9–D64 austarierten Sonderfälle
+(Treppe, only-child-Leiterstück, has-and-Zentrierung) neu beweisen. Sollte
+je das **zweite** Phänomen auftreten — 1-px-Haarlinien an Segment-Stößen
+unter `zoom` ≠ 1 —, wäre das ein eigener Fall mit eigenem Mittel
+(Segmente an Stößen minimal überlappen lassen), kein Grund für einen Umbau.
+
+**Export und Kompakt-Modus waren nie betroffen:** `diagramToSvg()` spannt die
+Leiste seit jeher über die Kinder **und** die Elternmitte
+(`kids.map(cy).concat(p.cy)`, D29-Nachtrag 4); im kompakten Modus dockt der
+Stub oben an (kein Zentrieren). Beides nachgemessen (Scanner: 0 Befunde in
+45 Kompakt-Gruppen; 0 verwaiste `--vrail-ext` nach Moduswechsel).
+
+**Nachgemessen** nach dem Fix (mitgelieferter Plan, vertikal): 0 Befunde in
+45 Gruppen; der Only-Child-Verbinder endet auf 0,0 px genau am Stub
+(336,5 → 352,3 = Stub-Höhe); die 98-px-Lücke trägt jetzt eine
+121-px-Verlängerung bis zum Stub; Zoom-Gegenprobe bei 0,9 sauber (die Variable
+ist zoom-invariant, wie `--stem-x`). 405 Tests grün — die Regeln sind
+DOM-Geometrie und damit Browser-geprüft, nicht unit-testbar (dieselbe Grenze
+wie `alignStems()`, D29).

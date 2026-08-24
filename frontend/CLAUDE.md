@@ -474,6 +474,18 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   müssen **hinter** den first/last-Regeln stehen: Ein einziges Kind ist auch
   das letzte, und bei gleicher Spezifität gewinnt die spätere Regel — genau
   daran war `:only-child::after` jahrelang wirkungslos.
+- `--vrail-ext` (D65): Im **vertikalen** Modus dockt der Eltern-Stub bei 50 %
+  der Gruppenhöhe an, die Sammelleiste endet aber am 23-px-Abzweig des letzten
+  Kindes — trägt das einen großen Teilbaum, liegt die Gruppenmitte darunter
+  und der Stub hinge in der Luft. `alignVRails()` (läuft an denselben drei
+  Stellen wie `alignStems()`) misst das und verlängert die Leiste per
+  `--vrail-ext`; das **einzige** Kind löst CSS allein
+  (`:only-child::after{top:23px;height:calc(50% - 23px)}` — dort ist
+  Gruppenhöhe == Kindhöhe). Kein `border:0` mehr am nicht-has-and-Einzelkind:
+  Genau das war die Lücke („kurze vertikale Linien fehlen"). has-and-Kinder
+  brauchen beides nie (Abzweig bei 50 % der Zelle). Wer an den
+  vertikalen first/last/only-Regeln dreht, prüft mit dem Geometrie-Scanner
+  (Pseudo-Element-Rects: Leisten-Segmente vs. Stub-Höhe) statt mit dem Auge.
 - Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) zeigt **genau
   einen** Bereich — `body.pane-diagram` bzw. `body.pane-text`, umgeschaltet über
   je einen festen Knopf pro Titelzeile (`#paneToText`/`#paneToDiagram`,

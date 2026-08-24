@@ -206,6 +206,7 @@ function render(){
   renderLineNos();
   applyOptStairs();   /* muss vor dem Messen laufen — es verschiebt Knoten */
   alignStems();
+  alignVRails();
   drawCheapPath();
   /* Querverbindungen (D41) zeichnet highlightCurrentNode() unten mit —
      es kennt die zweite Hälfte der Auswahl (Cursor-Zeile). */
@@ -329,6 +330,32 @@ function alignStems(){
     const lr = li.getBoundingClientRect(), nr = node.getBoundingClientRect();
     if(!lr.width) return;                                  /* Panel eingeklappt */
     li.style.setProperty('--stem-x', ((nr.left - lr.left + nr.width/2)/z).toFixed(1) + 'px');
+  });
+}
+
+/* Sammelleisten-Verlängerung im vertikalen Modus (D65). Der Eltern-Stub dockt
+   bei 50 % der Gruppenhöhe an, die Leiste endet aber am 23-px-Abzweig des
+   letzten Kindes — trägt das einen großen Teilbaum, liegt die Gruppenmitte
+   TIEFER und der Stub hinge in der Luft (gemessen: 4,5 bis 98 px Lücke). CSS
+   kann die Gruppenmitte relativ zum letzten <li> nicht ausdrücken; wie bei
+   `alignStems()` misst deshalb JS und setzt `--vrail-ext` (unskalierte px,
+   durch effZoom() zurückgerechnet). Nur nicht-has-and-Letztkinder: Bei
+   has-and liegt der Abzweig bei 50 % der Zelle, und die Gruppenmitte liegt
+   beweisbar nie darunter. Nach oben kann die Mitte nie aus der Leiste fallen
+   (der erste Abzweig liegt höchstens 23 px unter dem Gruppenanfang). */
+function alignVRails(){
+  out.querySelectorAll('ul.and>li').forEach(li => li.style.removeProperty('--vrail-ext'));
+  if(!out.classList.contains('vertical')) return;
+  const z = effZoom() || 1;
+  out.querySelectorAll('li.has-and>ul.and').forEach(ul => {
+    const kids = [...ul.children].filter(e => e.tagName === 'LI');
+    if(kids.length < 2) return;                      /* :only-child löst CSS allein (50 %) */
+    const last = kids[kids.length - 1];
+    if(last.classList.contains('has-and')) return;
+    const ur = ul.getBoundingClientRect(), lr = last.getBoundingClientRect();
+    if(!ur.height) return;                           /* Panel eingeklappt */
+    const ext = (ur.top + ur.height/2 - lr.top)/z;
+    if(ext > 23.5) last.style.setProperty('--vrail-ext', ext.toFixed(1) + 'px');
   });
 }
 
@@ -1752,6 +1779,7 @@ function applyLayout(mode){
   if(!isMobile()) applySplit();   /* Desktop: Preset neu setzen. Mobil: freie --drow-Aufteilung behalten */
   applyOptStairs();   /* Treppe gilt nur im Fächer — beim Moduswechsel bauen/auflösen */
   alignStems();       /* Stiel gilt nur im Fächer — beim Moduswechsel neu setzen/löschen */
+  alignVRails();      /* Leisten-Verlängerung gilt nur vertikal — ebenso (D65) */
   drawCheapPath();    /* Blatt-Positionen ändern sich mit dem Modus */
   drawDepLinks();     /* Knoten-Positionen ebenso (D41) */
 }
@@ -1805,7 +1833,7 @@ function setMobilePane(pane, save){
      Live-Geometrie zeichnet, muss deshalb nach dem Sichtbarwerden neu laufen —
      im Diagramm dieselben vier Schritte wie beim Moduswechsel (applyLayout),
      im Editor der Zeilennummern-Streifen, der am Spiegel misst (D33). */
-  if(pane === 'diagram'){ applyOptStairs(); alignStems(); drawCheapPath(); drawDepLinks(); }
+  if(pane === 'diagram'){ applyOptStairs(); alignStems(); alignVRails(); drawCheapPath(); drawDepLinks(); }
   else renderLineNos();
   if(save) saveUI();
 }

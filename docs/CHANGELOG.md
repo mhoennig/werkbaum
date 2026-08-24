@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-24
 
+- Fix: in the vertical layout, the line from a parent to one or two children was torn — the collector rail now always reaches the parent's stub
 - The legend shows the high-risk status `[!]` and mentions the size check
 - `llms.md` tabulates the size ranges and aligns its table columns
 - Long node titles wrap into evenly balanced lines of at most forty characters
