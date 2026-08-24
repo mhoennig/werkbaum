@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-24
 
+- Dependency links now run behind every node, highlighted ones included — no more lines struck through node titles
 - Fix: the line to an only child was torn where the child does not sit centred in its cell
 - An optional node (`+`) joins the cheapest path while it is being worked on — started work is the open front
 - Fix: a started alternative lost its `|`/`=` group to an untouched cheaper one, although the choice was already made

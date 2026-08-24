@@ -961,9 +961,13 @@ eigenen Zeichenebene **hinter** den Knoten, mit einer kleinen **offenen
 Pfeilspitze auf das Gebrauchte** („braucht“-Richtung; ein Winkel aus zwei
 Strichen, kein gefülltes Dreieck). Der Baum trägt weiterhin die Hauptaussage.
 
+- **Alle** Kanten laufen **hinter** den Knoten durch, auch die hervorgehobenen:
+  sichtbar in den Lücken, verdeckt vom Knoten selbst. Der Baum bleibt damit
+  lesbar — eine Kante, die quer über fremde Knoten hinwegläuft, durchstreicht
+  deren Beschriftung.
 - Die Kanten des **ausgewählten** Knotens — Tastaturfokus im Diagramm, sonst
-  der Knoten der Cursor-Zeile — liegen hervorgehoben in Tinte auf einer
-  vorderen Ebene, ein- wie ausgehende.
+  der Knoten der Cursor-Zeile — sind in Tinte hervorgehoben, ein- wie
+  ausgehende; sie liegen über den übrigen Kanten, aber unter jedem Knoten.
 - Kanten zu gerade nicht sichtbaren Knoten (eingeklappt §9, verworfen
   ausgeblendet §4) entfallen; bei doppelter ID zielt die Kante auf die erste
   Vergabe (D36/D39).

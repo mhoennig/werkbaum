@@ -426,18 +426,23 @@ function drawDepLinks(){
             cx:(r.left - outRect.left + r.width/2)/z,
             cy:(r.top - outRect.top + r.height/2)/z}; };
   const w = outRect.width/z, h = outRect.height/z;
+  /* EINE Ebene, und die liegt hinter den Knoten (D41-Nachtrag 2): Die Kanten
+     laufen durch fremde Knoten hindurch, statt über sie hinweg. Die
+     hervorgehobenen werden zuletzt eingehängt — damit liegen sie über den
+     übrigen Kanten, aber weiterhin unter jedem Knoten. */
   const back = overlaySvg('dep-overlay dep-back', w, h);
-  const front = overlaySvg('dep-overlay dep-front', w, h);
   const hi = activeDepNode();
+  const hoch = [];
   for(const [from, to] of edges){
     const hl = hi && (from === hi || to === hi);
     const c = depCurve(rect(from), rect(to));
-    const layer = hl ? front : back;
-    layer.appendChild(svgEl('path', {class:'dep-edge' + (hl ? ' hl' : ''), d:c.d}));
-    layer.appendChild(svgEl('path', {class:'dep-arrow' + (hl ? ' hl' : ''), d:depArrow(c.end, c.ctrl)}));
+    const kante = svgEl('path', {class:'dep-edge' + (hl ? ' hl' : ''), d:c.d});
+    const spitze = svgEl('path', {class:'dep-arrow' + (hl ? ' hl' : ''), d:depArrow(c.end, c.ctrl)});
+    if(hl) hoch.push(kante, spitze);
+    else { back.appendChild(kante); back.appendChild(spitze); }
   }
+  for(const p of hoch) back.appendChild(p);
   out.insertBefore(back, out.firstChild);
-  if(front.childNodes.length) out.appendChild(front);
 }
 /* Hervorhebung folgt dem Fokus; die Basis-Kanten selbst ändern sich nicht. */
 out.addEventListener('focusin', drawDepLinks);

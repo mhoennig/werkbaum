@@ -918,12 +918,12 @@
      Blättern zeigen, welche Knoten wirklich auf dem Pfad enden — durchquerte
      Fremdknoten tragen keinen Punkt. Reihenfolge im DOM steuert vorn/hinten. */
   .cheap-overlay{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
-  /* Die VORDEREN Ebenen müssen über JEDEN Knoten — auch über die, die sich
-     selbst eine Stapelposition nehmen: Cursor-Zeile (`z-index:3`, D25),
+  /* Die VORDERE Ebene muss über JEDEN Knoten — auch über die, die sich selbst
+     eine Stapelposition nehmen: Cursor-Zeile (`z-index:3`, D25),
      Strahlenkränze (`z-index:2`, D28/D32). Ohne das deckt ausgerechnet der
-     hervorgehobene Knoten seinen eigenen Stationspunkt zu, und die
-     hervorgehobenen Abhängigkeits-Kanten enden unter ihm. „Vorn" heißt vorn. */
-  .dep-overlay.dep-front{z-index:4}
+     hervorgehobene Knoten seinen eigenen Stationspunkt zu. „Vorn" heißt vorn.
+     (Die Abhängigkeits-Kanten hatten aus demselben Grund einmal `.dep-front`
+     mit `z-index:4`; sie liegen jetzt vollständig hinten — D41-Nachtrag 2.) */
   .cheap-overlay.cheap-front{z-index:5}
   /* Querverbindungen der Abhängigkeiten (SPEC §9, D41): blassgrau GEPUNKTET
      und gekrümmt — Punktierung und Krümmung unterscheiden sie doppelt von den

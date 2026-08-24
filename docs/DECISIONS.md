@@ -2805,6 +2805,61 @@ Zweiter Schritt derselben Rückmeldung: Auch die **Pfeilspitze** ist jetzt
 Dreiecks — das Dreieck stach als einziger satter Fleck aus der gepunkteten
 Linie heraus. Die Hervorhebung bekommt denselben Winkel in Tinte.
 
+**Nachtrag 2 — auch die hervorgehobenen Kanten laufen hinter den Knoten
+durch.** Gemeldet: „die Abhängigkeits-Pfeile sollen im Hintergrund durch andere
+Knoten durchlaufen, derzeit werden die Pfeile drüber gemalt."
+
+**Nachgemessen war es genau eine Hälfte.** Die **Basis**-Kanten lagen schon
+richtig: In einem eigens gebauten Fall — eine Kante quer über drei breite
+Knoten hinweg, zur Sichtbarkeit magenta und 6 px dick gefärbt — erschien sie
+**nur in den Lücken** zwischen den Knoten, nie über deren Fläche. Sichtbar
+„drüber" war allein die **Hervorhebung**: Steht der Cursor auf einer Zeile mit
+`:#…`, wandern deren Kanten auf `svg.dep-front` (`z-index:4`) und laufen als
+durchgezogene Tinte-Linie mitten durch die Beschriftung der Knoten dazwischen.
+
+**Damit fällt die Begründung des Haupttextes** — „vorn dürfen sie den Baum
+überlagern, denn die Hervorhebung ist flüchtig und gerade angefragt". Der
+Einwand des Nutzers wiegt schwerer, und er ist derselbe, aus dem die
+Basis-Kanten von Anfang an hinten liegen: Eine Linie quer über einen fremden
+Knoten **durchstreicht dessen Titel**. Das trifft ausgerechnet die Knoten, die
+mit der Sache nichts zu tun haben — die Kante sagt etwas über ihre beiden
+Enden, nicht über das, was zufällig dazwischen steht. „Flüchtig" ist dabei kein
+Freibrief, sondern eher das Gegenteil: Beim Tippen wechselt die Hervorhebung
+mit jeder Zeile, der Schaden ist also nicht selten, sondern dauernd.
+
+**Eine Ebene statt zweier.** `svg.dep-front` entfällt; hervorgehobene Kanten
+werden **zuletzt** in dieselbe hintere Ebene gehängt und liegen dadurch über
+den übrigen Kanten, aber unter jedem Knoten. Die Unterscheidung trägt weiterhin
+das Aussehen (durchgezogen in Tinte gegen gepunktet in Blassgrau), und das ist
+genug: Sie war nie an der Ebene festgemacht, sondern nur zusätzlich betont.
+
+**Der Preis, benannt:** In einer dichten Reihe breiter Knoten bleibt von der
+hervorgehobenen Kante wenig mehr als ein Stück in jeder Lücke. Zu **finden**
+ist ihr Ziel trotzdem, denn die **Pfeilspitze sitzt auf der Knotenkante** und
+liegt damit außerhalb jedes Kastens. Für den Fall, dass das eines Tages nicht
+reicht, steht das Hausmittel bereit: eine **abgetönte Kopie davor**, wie sie
+der günstigste Pfad seit D18 für genau dieses Problem hat („deutet den Verlauf
+beim Durchschreiten eines Knotens nur schwach an"). Bewusst nicht vorab
+gebaut — gefragt war, dass die Kanten hinten laufen, und eine zweite Ebene
+zurückzuholen, um die erste zu erklären, ist der falsche Anfang.
+
+**Was dadurch obsolet wird:** D25-Nachtrag 3 gab `.dep-front` seinen
+`z-index:4`, weil die hervorgehobenen Kanten sonst unter dem hervorgehobenen
+Knoten endeten („vorn heißt vorn"). Das war für eine vordere Ebene richtig und
+ist mit ihr weggefallen; für `.cheap-front` (`z-index:5`) gilt es unverändert
+weiter — der Stationspunkt gehört über den Knoten.
+
+**Export und Druck waren nie betroffen:** `diagramToSvg()` zeichnet die
+Basis-Kanten in Schritt 1a, also vor den Knoten, und die Hervorhebung gar nicht
+(Interaktion, siehe oben). Das Bild auf dem Schirm zieht damit nach, statt dass
+etwas Neues entsteht — derselbe Befund wie bei D46-Nachtrag.
+
+**Nachgemessen** nach der Änderung, an demselben Fall: `svg.dep-front` gibt es
+nicht mehr, alle Kanten hängen in `svg.dep-back` als erstem Kind von `#out`,
+die hervorgehobene als letztes Element darin. Die Tinte-Linie ist in den Lücken
+zu sehen und über den Knoten nicht mehr; die Pfeilspitze steht unverändert an
+der Kante des gebrauchten Knotens.
+
 ## D42 — Closure-Pfad: erschöpfend über die gekoppelten Gruppen, gierig nur benannt
 Die letzte Baustelle aus D34: Mit Abhängigkeiten zählt der günstigste Pfad
 nicht mehr den gewählten Teilbaum, sondern die **Hülle** — jeder nötige Knoten
