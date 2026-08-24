@@ -2964,12 +2964,22 @@ function dropOldestSnap(){
    außen vor: Ihr Text ist schreibgeschützt, ein alter Stand ließe sich dort
    gar nicht wieder einsetzen — Stände zu sammeln, die niemand laden kann,
    wäre nur Ballast. */
-function snapshotNow(){
+/* `manuell` schaltet die `snapBase`-Sperre ab — und das ist der ganze
+   Unterschied zwischen Takt und Knopf. `snapBase` ist der Text beim Öffnen des
+   Dokuments; solange nichts daran geändert wurde, soll der **Takt** nichts
+   sammeln (sonst legte jedes bloße Ansehen einen Stand an). Für den Knopf wäre
+   dieselbe Sperre falsch: „vor der großen Änderung sichern" heißt gerade, dass
+   noch nichts geändert ist. Bei leerer Liste ist der Text dann **nirgends**
+   gesichert, und der Knopf bestätigte etwas, das nicht stimmte (gemeldet und
+   nachgestellt, D54-Nachtrag 2). Verglichen wird für ihn nur noch gegen den
+   **letzten Eintrag** — der Doppelte bleibt vermieden, und die Zusage „dein
+   Stand ist gesichert" wird in jedem Fall wahr. */
+function snapshotNow(manuell){
   const d = activeDoc();
   if(!d || src.readOnly) return false;
   const text = src.value;
   const list = snaps[d.id] || (snaps[d.id] = []);
-  const letzter = list.length ? list[list.length-1].text : snapBase;
+  const letzter = list.length ? list[list.length-1].text : (manuell ? null : snapBase);
   if(text === letzter) return false;
   list.push({t: Date.now(), text});
   while(list.length > SNAP_KEEP) list.shift();
@@ -2978,7 +2988,10 @@ function snapshotNow(){
   if(!snapMenu.hidden) renderSnapMenu();
   return true;
 }
-setInterval(snapshotNow, SNAP_EVERY);
+/* `() => snapshotNow()`, nicht `snapshotNow` direkt: Ein durchgereichtes
+   Argument wäre wahr und hebelte die `snapBase`-Sperre des Takts aus —
+   dieselbe Falle wie bei `setAppHeight` (D17-Nachtrag 4). */
+setInterval(() => snapshotNow(), SNAP_EVERY);
 
 const snapBtn = document.getElementById('snapBtn');
 const snapAddBtn = document.getElementById('snapAddBtn');
@@ -3023,7 +3036,7 @@ function renderSnapMenu(){
    nicht drin ist — sonst wäre er das Einzige, was der Griff verlöre. */
 function loadSnapshot(s){
   if(src.readOnly) return;
-  snapshotNow();
+  snapshotNow(true);   /* bewusstes Wegleg-Ereignis wie der Knopf, nicht der Takt */
   closeSnapMenu();
   if(!replaceTextUndoable(s.text)) render();
   snapBase = src.value;
@@ -3054,7 +3067,7 @@ snapBtn.addEventListener('click', e => {
    sieht man den neuen Eintrag entstehen. */
 snapAddBtn.addEventListener('click', e => {
   e.stopPropagation();
-  snapshotNow();
+  snapshotNow(true);
   flashBtn(snapAddBtn);
 });
 document.addEventListener('click', e => {

@@ -3738,3 +3738,49 @@ trotzdem. Text geändert, Klick → **2**; Menü zeigt beide, neueste zuoberst,
 und liegt vollständig im Panel. Im schmalen Layout kostet der Knopf nichts:
 Kopfhöhe 44 px und Zeilenzahl sind mit und ohne ihn identisch, die Breite des
 Dokument-Namens bleibt bei 54 px.
+
+**Nachtrag 2 — der Knopf sicherte nichts, wenn noch nichts geändert war.**
+Gemeldet: „I took a manual snapshot, and expected it to appear in the list of
+snapshots. but it does not appear. List is empty." Nachgestellt und
+bestätigt — und es war die schlimmste Bauart eines Fehlers: Es wurde **nichts
+gespeichert, der Knopf bestätigte aber trotzdem**. Er hat gelogen.
+
+**Die Ursache ist der Denkfehler des ersten Nachtrags.** `snapshotNow()`
+vergleicht bei **leerer** Liste gegen `snapBase` — den Text beim Öffnen des
+Dokuments. Für den Takt ist das richtig und der Grund, warum bloßes Ansehen
+keine Stände sammelt. Für den Knopf ist es falsch, und die Begründung von oben
+(„bei unverändertem Text steht er schon oben in der Liste") trifft genau dann
+nicht zu, wenn die Liste leer ist: Dann steht er **nirgends**. Das ist
+ausgerechnet der Fall, für den der Knopf gebaut wurde — Dokument öffnen,
+zuerst sichern, *dann* die große Änderung. Die Messung des ersten Nachtrags
+hat ihn nicht gefunden, weil sie mit einer Eingabe begann; sie prüfte die
+Wirkung des Knopfes, nicht seinen Anlass.
+
+**Behoben mit einem Schalter, nicht mit einer zweiten Funktion:**
+`snapshotNow(manuell)` lässt die `snapBase`-Sperre nur für den Takt gelten.
+Verglichen wird für den Knopf allein gegen den **letzten Eintrag** — der
+doppelte Eintrag bleibt vermieden, und die Zusage „dein Stand ist gesichert"
+wird in jedem Fall wahr, statt nur meistens.
+
+Zwei Stellen zogen mit. `loadSnapshot()` legt den aktuellen Stand ebenfalls
+als **bewusstes** Ereignis weg (in der Sache unverändert — dort ist die Liste
+nie leer, sonst gäbe es nichts zu laden — aber jetzt sagt der Aufruf, was er
+meint). Und der Takt heißt jetzt `setInterval(() => snapshotNow(), …)`: Ein
+durchgereichtes Argument wäre wahr und hebelte genau die Sperre aus, die er
+als Einziger braucht — dieselbe Falle, die schon D17-Nachtrag 4 bei
+`setAppHeight` benannt hat.
+
+**Nachgemessen**, beide Richtungen getrennt. Knopf (kleines Dokument, Liste
+zuvor leer): 10 Zeilen, Klick **ohne jede Eingabe** → Liste `[10]`; eine Zeile
+eingefügt, Klick → `[10, 11]`; Menü zeigt beide, neueste zuoberst; ältesten
+laden → Text zurück auf 10 Zeilen, kein zusätzlicher Eintrag. Takt (für die
+Prüfung auf 2 s verkürzt, danach zurückgestellt und nachgesehen): Dokument nur
+angesehen, drei Takte → **0** Stände; nach einer Änderung → 1; weitere Takte
+ohne Änderung → weiterhin 1. Die Sperre wirkt also weiter genau dort, wo sie
+hingehört.
+
+**Nicht durch Tests gedeckt:** Die Stände leben in `app.js` (localStorage,
+DOM), und dafür gibt es keine Testumgebung — dieselbe Lücke wie bei
+`applyOptStairs()` (D29) und `drawDepLinks()` (D41). Ein Fehler dieser Art
+fällt deshalb erst im Browser auf, und das ist der Preis dafür, dass die
+Zustandslogik im UI-Modul sitzt statt in `model.js`.
