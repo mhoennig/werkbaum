@@ -4928,3 +4928,65 @@ bleiben unberührt. Sichtbare Folge: mehr Knoten brechen um (rund 100 Zeichen
 ergeben jetzt vier statt drei Zeilen), dafür wird der breiteste Fächer
 schmaler. Testerwartungen mit dem echten Algorithmus nachgerechnet statt
 geschätzt.
+
+## D66 — Fehlende Größe wird aus den Teilpaketen geschätzt statt pauschal M
+Gewünscht vom Nutzer: „Die Kostenschätzung für Knoten ohne explizite
+T-Shirt-Größe soll anhand der Sub-Knoten geschehen. Mindestens die größte
+T-Shirt-Größe der Sub-Knoten; wenn mehr als 2 diese Größe haben, also ab 3,
+dann sogar eine T-Shirt-Größe mehr." Die alte D18-Pauschale — fehlende Größe
+= M — unterschätzte jeden größenlosen Sammelknoten, sobald ein Kind über M
+lag; die Kinder sagen mehr, als die Pauschale nutzte.
+
+**Die Regel:** Angenommen wird **mindestens die größte Größe der zählenden
+Kinder**; tragen **drei oder mehr** Kinder diese größte Größe, eine Stufe
+mehr (Deckel `XXL`). Ein Knoten ohne Größe und ohne zählende Kinder bleibt
+beim M-Rückfall — für ein Blatt gibt es nichts abzuleiten, und D18 nannte M
+selbst schon „die konservative Annahme ‚mindestens M'".
+
+**Es zählen dieselben Kinder wie beim Größen-Konflikt (§5/D62)** — direkte,
+verworfene und optionale (`+`) nie, in einer disjunktiven Gruppe (`|`/`=`)
+nur die **kleinste** Alternative —, mit genau einem Unterschied: Kinder
+**ohne** Größe zählen hier mit, ihre Größe wird nach derselben Regel
+**rekursiv** mitgeschätzt. D62 schließt sie aus, weil eine fehlende Größe
+keine Autoren-Aussage ist und die Konfliktprüfung nur meldet, was sicher
+ist; hier wird ohnehin geschätzt — sie auszuschließen hieße, drei größenlose
+Blätter für kostenlos zu halten. Die D62-Zählung zu übernehmen statt eine
+dritte Regelmenge zu erfinden hält die Doku bei einem Satz: „dieselben
+Kinder wie beim Größen-Konflikt".
+
+**Disjunktiv gilt das Minimum, und keine Stufe mehr.** Realisiert wird genau
+eine Alternative — die kleinste ist der Boden, den jede Wahl mindestens
+kostet, und drei gleich große Alternativen sind kein dreifacher Aufwand. Ist
+in der Gruppe etwas realisiert, ist die Wahl getroffen (D61, `chosenPool`):
+Dann zählt die kleinste der **realisierten**. Bewusst **nicht** die
+Alternative, die der günstigste Pfad wählt — die Wahl hängt von den Kosten
+ab und die Kosten hingen dann von der Wahl: ein Zirkel. Das Minimum ist
+deterministisch und für ein „mindestens" die ehrliche Untergrenze.
+
+**Nur die Kostenschätzung ändert sich.** Die §5-Semantik bleibt unberührt,
+die Konfliktprüfung (D62) rechnet weiter nur mit angegebenen Größen, und die
+Falt-Voreinstellung „ab M abwärts" (D44, `atMostM`) klappt weiterhin nichts
+ohne Größenangabe zu — dort wäre die Schätzung eine Vermutung, die wie eine
+Angabe behandelt würde (die D44-Begründung gilt wörtlich weiter).
+
+**Das invertierte Badge zeigt jetzt die geschätzte Größe** statt immer „M";
+Tooltip und `aria-label` sagen „mindestens {size} angenommen". Die beiden
+vorhandenen i18n-Schlüssel wurden **parameterisiert** statt verdoppelt: Ein
+Text mit „mindestens {size}" stimmt für die Ableitung wie für den
+M-Rückfall — kein neuer Schlüssel in neun Sprachen für dieselbe Aussage.
+
+**Memoisiert per WeakMap**, nicht am Knotenobjekt und nicht ungecacht:
+`computeCheapPlan` (D42) ruft `ownCost` je Suchbelegung über die ganze
+nötige Menge — eine ungecachte Rekursion wäre O(n²) je Belegung, bei 20 000
+Belegungen zu viel. Der Parse-Baum wird bei jedem Tastendruck neu gebaut,
+der Cache kann also nie veralten, und die WeakMap gibt alte Bäume von
+selbst frei.
+
+**Nachgemessen:** Der mitgelieferte Plan hat genau **einen** größenlosen
+Knoten (`#not.people`, ein Blatt → weiterhin M) — Pfadknoten 135 und
+Stationen 27 unverändert, 0 Warnungen. Das kanonische Beispiel (§10) ändert
+sich nicht (seine größenlosen Knoten sind Blätter); alle Snapshots bleiben
+stehen. 424 Tests, davon 19 neue in `tests/assumed.test.js`. Gegenprobe per
+Mutation: Stufe-ab-drei entfernt → genau die drei danach benannten
+Zusicherungen fallen; disjunktiv Maximum statt Minimum → genau eine; alte
+M-Pauschale in `ownCost` zurückgebaut → genau die zwei Kosten-Tests.

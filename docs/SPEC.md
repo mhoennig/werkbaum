@@ -603,8 +603,17 @@ werden die für die günstigste Realisierung **nötigen** Knoten:
   entbehrlich (§3). Siehe D61.
 - Verworfene Knoten zählen nie mit (unabhängig vom „verworfene einblenden"-
   Filter).
-- **Fehlende Größe wird als `M` gewertet** (nur für diese Kostenschätzung; die
-  SPEC-Semantik der Größen in §5 bleibt unberührt).
+- **Fehlende Größe wird aus den Teilpaketen geschätzt** (nur für diese
+  Kostenschätzung; die SPEC-Semantik der Größen in §5 bleibt unberührt):
+  Angenommen wird **mindestens die größte Größe der zählenden Kinder**;
+  tragen **drei oder mehr** Kinder diese größte Größe, eine Stufe mehr
+  (Deckel: `XXL`). Es zählen dieselben Kinder wie beim Größen-Konflikt (§5) —
+  nur die direkten, verworfene und optionale (`+`) nie, in einer disjunktiven
+  Gruppe (`|`/`=`) nur die **kleinste** Alternative (ist dort etwas realisiert,
+  §3, die kleinste der realisierten) —, mit einem Unterschied: Kinder **ohne**
+  Größe zählen hier mit, ihre Größe wird nach derselben Regel **rekursiv**
+  mitgeschätzt — geschätzt wird ohnehin. Ein Knoten ohne Größe und ohne
+  zählende Kinder wird weiterhin als `M` gewertet.
 
 **Mit Abhängigkeiten (§1) zählt die Dependency Closure.** Jeder nötige Knoten
 zieht seine `:#…`-Ziele samt deren Realisierung in die nötige Menge; gemeinsam
@@ -637,10 +646,11 @@ Alternative behalten ihre Farbe. Blass heißt damit einheitlich „hier ist nich
 getan und wird auch nichts getan". Maßgeblich ist der **intrinsische** Status
 (die eigene Box), gefärbt wird weiterhin nach dem effektiven (oben) — ein von
 Abhängigkeiten zurückgehaltenes `[x]` steht also in voller Stärke in seiner
-effektiven Farbe. Wo die Größe **implizit** als `M` angenommen wird,
-zeigt der Knoten ein **invertiertes** Größen-Badge (weiß mit petrolfarbenem
-Rand/Text statt gefüllt) mit erläuterndem Tooltip — an einem **erledigten**
-Knoten entfällt es, dort wird keine Kostenannahme mehr getroffen.
+effektiven Farbe. Wo die Größe **implizit** angenommen wird (aus den
+Teilpaketen geschätzt bzw. `M`, oben), zeigt der Knoten die angenommene Größe
+als **invertiertes** Größen-Badge (weiß mit petrolfarbenem Rand/Text statt
+gefüllt) mit erläuterndem Tooltip — an einem **erledigten** Knoten entfällt
+es, dort wird keine Kostenannahme mehr getroffen.
 
 Zusätzlich fädelt eine **gestrichelte, geschwungene Petrol-Linie** durch die
 **offenen Endknoten** des Pfads (Katmull-Rom-Spline in Dokument-Reihenfolge,
@@ -1070,7 +1080,7 @@ Das Diagramm wird aus der Live-Geometrie in ein eigenständiges SVG (nur Formen
 ### Barrierefreiheit
 Die visuell codierten Knoten-Eigenschaften werden für Screenreader in einem
 sprechenden **`aria-label`** je Knoten zusammengefasst — Label, Status, Aufwand
-(inkl. „(angenommen)“ beim impliziten M), Zuständige, ob der Knoten optional
+(inkl. „(angenommen)“ bei implizit geschätzter Größe), Zuständige, ob der Knoten optional
 (§3) und ob er verlinkt ist —, alles in der aktuellen UI-Sprache. Die rein visuellen Beiwerke
 (Größen-Badge, Tags, ↗-Pfeil) sind `aria-hidden`, damit sie nicht kryptisch
 doppelt vorgelesen werden. **Alle** Knoten sind fokussierbar (`tabindex="0"`

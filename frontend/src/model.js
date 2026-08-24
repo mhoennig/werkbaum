@@ -24,9 +24,9 @@ export function needsBreakdown(n){
 /* Faltung-Voreinstellung „Größe M und kleiner zuklappen" (SPEC §9, D44):
    Knoten mit ANGEGEBENER Größe bis einschließlich M — offen bleiben also nur
    L, XL, XXL. Fehlt die Angabe, wird nichts angenommen: Der günstigste Pfad
-   rechnet sie zwar als M (D18), das ist aber eine Kostenannahme des Werkzeugs
-   und keine Aussage des Autors; danach den Baum zuzuklappen hieße, eine
-   Vermutung wie eine Angabe zu behandeln. */
+   schätzt sie zwar (`assumedSize`, D18/D66), das ist aber eine Kostenannahme
+   des Werkzeugs und keine Aussage des Autors; danach den Baum zuzuklappen
+   hieße, eine Vermutung wie eine Angabe zu behandeln. */
 export function atMostM(n){ return !!n.size && SIZE_RANK[n.size] <= SIZE_RANK.M; }
 
 /* Sichtbare Kinder: verworfene ausblenden, außer showDiscarded ist gesetzt. */
@@ -40,7 +40,8 @@ export function visibleChildren(n, showDiscarded){
    any-of und XOR ⇒ nur die günstigste Alternative. „Günstig" = kleinste rekursive
    Kosten (eigene Größe + Kinder; any-of das Minimum). Verworfene zählen nie
    mit (unabhängig vom Einblenden-Toggle). Gleichstand ⇒ erste. Fehlende
-   Größe = M. Ist in einer disjunktiven Gruppe etwas realisiert, wird nur noch
+   Größe wird aus den Teilpaketen geschätzt (`assumedSize`, D66).
+   Ist in einer disjunktiven Gruppe etwas realisiert, wird nur noch
    unter den realisierten gewählt (`chosenPool`, D61).
    Optionale Kinder (`+`, SPEC §3/D29) fallen hier ebenfalls heraus — sie sind
    per Definition entbehrlich, also weder Kostenanteil noch Pfadknoten. Da alle
@@ -80,8 +81,43 @@ export function chosenPool(kids){
   const real = kids.filter(isRealized);
   return real.length ? real : kids;
 }
-/* fehlende Größe wird als M interpretiert; Erledigtes kostet nichts mehr */
-export function ownCost(n){ return isDone(n) ? 0 : SIZE_RANK[n.size || 'M'] + 1; }
+/* ---------- Geschätzte Größe bei fehlender Angabe (SPEC §9, D66) ----------
+   Statt pauschal M (die alte D18-Annahme) wird aus den Teilpaketen geschätzt:
+   MINDESTENS die größte Größe der zählenden Kinder; tragen drei oder mehr
+   Kinder diese größte Größe, eine Stufe mehr (Deckel XXL). Es zählen dieselben
+   Kinder wie beim Größen-Konflikt (§5/D62) — direkte, verworfene und optionale
+   nie, disjunktiv (`|`/`=`) nur die kleinste Alternative (aus `chosenPool`,
+   D61: eine getroffene Wahl gilt) — nur dass Kinder OHNE Größe hier rekursiv
+   mitgeschätzt werden: geschätzt wird ohnehin. Ohne zählende Kinder bleibt es
+   beim M-Rückfall. Memo per WeakMap: `computeCheapPlan` ruft `ownCost` je
+   Suchbelegung über die ganze Menge — ungecacht wäre das O(n²) je Belegung;
+   der Parse-Baum wird bei jedem Tastendruck neu gebaut, der Cache kann also
+   nie veralten. */
+const SIZE_BY_RANK = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const ASSUMED = new WeakMap();
+export function assumedSize(n){
+  if(n.size) return n.size;
+  const memo = ASSUMED.get(n);
+  if(memo) return memo;
+  const kids = n.children.filter(k =>
+    !k.optional && (!k.status || k.status.key !== 'verworfen'));
+  let size = 'M';
+  if(kids.length){
+    if(gateOf(kids) !== 'and'){
+      /* nur eine Alternative wird realisiert — die kleinste ist der Boden */
+      size = SIZE_BY_RANK[Math.min(...chosenPool(kids).map(k => SIZE_RANK[assumedSize(k)]))];
+    } else {
+      const ranks = kids.map(k => SIZE_RANK[assumedSize(k)]);
+      const max = Math.max(...ranks);
+      const atMax = ranks.filter(r => r === max).length;
+      size = SIZE_BY_RANK[Math.min(max + (atMax >= 3 ? 1 : 0), SIZE_RANK.XXL)];
+    }
+  }
+  ASSUMED.set(n, size);
+  return size;
+}
+/* fehlende Größe wird geschätzt (assumedSize); Erledigtes kostet nichts mehr */
+export function ownCost(n){ return isDone(n) ? 0 : SIZE_RANK[assumedSize(n)] + 1; }
 export function cheapestCost(n){
   const kids = pathChildren(n);
   let c = ownCost(n);

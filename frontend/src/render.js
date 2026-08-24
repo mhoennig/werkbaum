@@ -7,7 +7,7 @@
    opts = {
      t,             // i18n-Funktion (key, vars?) -> String
      showDiscarded, // verworfene einblenden?
-     cheapPath,     // günstigster Pfad aktiv? (steuert das implizite M-Badge)
+     cheapPath,     // günstigster Pfad aktiv? (steuert das implizite Größen-Badge)
      cheapSet,      // Set der nötigen Knoten (leer, wenn Pfad aus)
      freshSet,      // optional: Knoten, die neu in Produktion sind (D28)
      collapsedSet,  // optional: eingeklappte Knoten (Faltung, SPEC §9/D38)
@@ -15,7 +15,7 @@
                     // Diskrepanzen (effectiveStatus() in model.js, D39)
    } */
 
-import { gateOf, needsBreakdown, visibleChildren, cheapCls, isDone } from './model.js';
+import { gateOf, needsBreakdown, visibleChildren, cheapCls, isDone, assumedSize } from './model.js';
 
 /* Zusatzklassen eines Knotens: günstigster Pfad (D18), „neu in Produktion"
    gegenüber der zuletzt gesehenen Fassung (D28, `freshSet` optional) und
@@ -106,7 +106,7 @@ function nodeAria(n, opts, fold){
   const effKey = opts.effStatus ? opts.effStatus.get(n) : undefined;
   if(effKey) parts.push(t('a11yEffective', {status: t('st_' + effKey)}));
   if(n.size) parts.push(t('a11ySize', {size: n.size}));
-  else if(cheapPath && !isDone(n)) parts.push(t('a11ySizeImplicit'));
+  else if(cheapPath && !isDone(n)) parts.push(t('a11ySizeImplicit', {size: assumedSize(n)}));
   /* Größen-Konflikt (SPEC §5/D62): die Warnfärbung des Badges kommt beim
      Screenreader sonst nicht an. */
   if(n.sizeConflict) parts.push(t('sizeConflictTooltip'));
@@ -172,10 +172,12 @@ function nodeHtml(n, extra, opts, fold){
                    ? t('heldTooltip', {eff: t('st_' + effKey), own: t('st_' + n.status.key)})
                    : (n.status ? t('st_' + n.status.key) : ''),
                  n.optional ? t('a11yOptional') : '',
-                 /* Die Kostenannahme „Größe fehlt, gilt als M" (D18) hatte einen
-                    eigenen `title` am Badge — der erschiene neben dem Fenster
-                    ein zweites Mal. Sie gehört ohnehin zu den Kurz-Fakten. */
-                 (!n.size && cheapPath && !isDone(n)) ? t('implicitSizeTooltip') : '',
+                 /* Die Kostenannahme „Größe fehlt, mindestens … angenommen"
+                    (D18/D66) hatte einen eigenen `title` am Badge — der
+                    erschiene neben dem Fenster ein zweites Mal. Sie gehört
+                    ohnehin zu den Kurz-Fakten. */
+                 (!n.size && cheapPath && !isDone(n))
+                   ? t('implicitSizeTooltip', {size: assumedSize(n)}) : '',
                  /* Größen-Konflikt (SPEC §5/D62): das warnfarbene Badge braucht
                     seine Begründung dort, wo man nachsieht. */
                  n.sizeConflict ? t('sizeConflictTooltip') : '',
@@ -191,15 +193,16 @@ function nodeHtml(n, extra, opts, fold){
   const tagsHtml = n.tags && n.tags.length
     ? `<span class="tags" aria-hidden="true">${n.tags.map(tag => `<span class="tag">${esc(tag)}</span>`).join('')}</span>`
     : '';
-  /* Das implizite M-Badge macht eine KOSTENANNAHME sichtbar (D18). An einem
-     erledigten Knoten wird keine getroffen — er kostet nichts mehr (D46) —,
-     dort bleibt es deshalb weg. */
+  /* Das implizite Größen-Badge macht eine KOSTENANNAHME sichtbar (D18) —
+     seit D66 die aus den Teilpaketen geschätzte Größe statt pauschal M. An
+     einem erledigten Knoten wird keine getroffen — er kostet nichts mehr
+     (D46) —, dort bleibt es deshalb weg. */
   const implicitSize = !n.size && cheapPath && !isDone(n);
   /* Größen-Konflikt (SPEC §5/D62): das Badge wechselt auf die Warnfarbe —
      die Größe selbst bleibt stehen, korrigiert wird nichts. */
   const sizeBadge = n.size
     ? `<span class="size${n.sizeConflict ? ' conflict' : ''}" aria-hidden="true">${n.size}</span>`
-    : (implicitSize ? `<span class="size implicit" aria-hidden="true">M</span>` : '');
+    : (implicitSize ? `<span class="size implicit" aria-hidden="true">${assumedSize(n)}</span>` : '');
   /* High-Risk: Warndreieck (⚠, Textpräsentation via VS15) an der oberen linken
      Ecke. aria-hidden — die Information steckt bereits im Status des aria-label. */
   /* Kein eigener `title` mehr: Er zeigte sonst zusätzlich zum Knoten-Fenster

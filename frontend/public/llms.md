@@ -108,7 +108,11 @@ One node per line. Everything except the label is optional.
 - T-shirt sizes in parentheses: `(XS) (S) (M) (L) (XL) (XXL)`.
 - From `(M)` upward a node **should be decomposed further**; a node ≥ M
   without children gets a placeholder hint in the diagram.
-- For cost estimation a missing size counts as `M`.
+- For cost estimation a missing size is **estimated from the sub-packages**:
+  at least the largest size among the counting children (same children as
+  the conflict check below, except unsized children count too — estimated
+  recursively); three or more children at that largest size raise it by one
+  step, capped at `XXL`. Without counting children it stays `M`.
 - **Size conflict check:** a given size must fit the direct children. For
   this one check each size is read as a range (lower bounds double, XXL is
   open-ended):
