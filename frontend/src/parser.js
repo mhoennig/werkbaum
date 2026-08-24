@@ -288,7 +288,13 @@ export function parse(text){
        der führende Leerraum wird mitgefangen und wieder eingesetzt. */
     let focus = false;
     rest = rest.replace(/(^|\s)!!!(?=\s|$)/g, (s, pre) => { focus = true; return pre; });
-    const label = rest.replace(/\s+/g, ' ').trim();
+    /* Bleibt kein Titel übrig, vertritt die ID ihn (SPEC §1): `- #US-123`
+       ergibt einen Knoten mit dem Label `#US-123`. Ohne ID bleibt es dabei,
+       dass eine labellose Zeile keine ist. `labelFromId` merkt den Fall — der
+       `#`-Umschalter (§9) darf die ID dann nicht ein zweites Mal davorsetzen. */
+    let label = rest.replace(/\s+/g, ' ').trim();
+    const labelFromId = !label && id != null;
+    if(labelFromId) label = '#' + id;
     if(!label) return;
 
     let status = null;
@@ -308,7 +314,7 @@ export function parse(text){
     while(stack.length > 1 && stack[stack.length-1].width >= width) stack.pop();
     const parent = stack[stack.length-1].node;
 
-    const node = {label, type, optional, fold, status, url, size, tags, id, deps, desc:null, descLines:null, focus, children:[], line:i+1};
+    const node = {label, labelFromId, type, optional, fold, status, url, size, tags, id, deps, desc:null, descLines:null, focus, children:[], line:i+1};
     parent.children.push(node);
     stack.push({node, width});
     lastNode = node;

@@ -42,10 +42,38 @@ describe('Parser — `#name` als Knoten-ID', () => {
     expect(nodes.map(n => n.id)).toEqual(['123', 'größe-1']);
   });
 
-  it('ignoriert eine Zeile, die nur aus einer ID besteht — die ID bleibt frei', () => {
-    const {roots: r, warnings} = parse(`- #auth\n- [ ] Echt #auth`);
-    expect(r.map(n => [n.label, n.id])).toEqual([['Echt', 'auth']]);
+  /* Bis D60 war so eine Zeile keine: Sie wurde ignoriert und die ID blieb
+     frei. Jetzt vertritt die ID den fehlenden Titel — gedacht für den Fall,
+     dass die Kennung schon der Name ist (Ticket-Referenzen). */
+  it('macht aus einer Zeile mit NUR einer ID einen Knoten mit `#id` als Titel', () => {
+    const {roots: r, warnings} = parse('- #auth');
+    expect(r.map(n => [n.label, n.id, n.labelFromId])).toEqual([['#auth', 'auth', true]]);
     expect(warnings).toEqual([]);
+  });
+
+  it('nimmt den Doppelpunkt dabei mit weg', () => {
+    expect(parse('- #US-123:').roots.map(n => n.label)).toEqual(['#US-123']);
+  });
+
+  it('vergibt die ID dabei wirklich — eine zweite meldet sich', () => {
+    const {roots: r, warnings} = parse('- #auth\n- [ ] Echt #auth');
+    expect(r.map(n => n.label)).toEqual(['#auth', 'Echt']);
+    expect(warnings).toEqual([{type: 'duplicateId', line: 2, id: 'auth', firstLine: 1}]);
+  });
+
+  it('setzt `labelFromId` NICHT, wenn ein Titel dasteht', () => {
+    expect(parse('- #auth: Backend').roots[0].labelFromId).toBe(false);
+  });
+
+  /* Die übrigen Bestandteile werden ganz normal gelesen — übrig bleibt nur
+     kein Titel. */
+  it('liest Größe, Status und Tag auch ohne Titel', () => {
+    const n = parse('- [x] #US-123 (L) @anna').roots[0];
+    expect([n.label, n.size, n.tags, n.status.key]).toEqual(['#US-123', 'L', ['anna'], 'fertig']);
+  });
+
+  it('lässt eine Zeile ohne ID und ohne Label weiterhin weg', () => {
+    expect(parse('- (L) @anna').roots).toEqual([]);
   });
 });
 

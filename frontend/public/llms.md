@@ -138,7 +138,12 @@ One node per line. Everything except the label is optional.
    shared pointer for collaborative editing. Independent of status and
    necessity; `Wow!!!` stays a label.
 8. Whatever remains, whitespace-normalized, is the **label**. An empty label
-   means the line is ignored.
+   means the line is ignored — **unless the line carries a node ID**: then
+   `#id` becomes the label, with or without the trailing colon. `- #US-123`
+   and `- #US-123:` both render a node titled `#US-123`. Use this when the
+   identifier already is the name (ticket references); writing the title next
+   to it would just repeat it. The `#` toggle in the diagram adds no prefix to
+   such a node — the ID is already there.
 
 ### Dependency semantics
 

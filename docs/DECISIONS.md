@@ -4275,3 +4275,47 @@ Titel (L) @anna` ergibt einen Knoten mit `data-line="2"` und
 0 Warnungen; der Cursor auf Zeile 3 hebt denselben Knoten hervor wie auf Zeile
 2. 20 neue Tests; die Gegenprobe (Leerraum-Pflicht aus dem Regex entfernt)
 lässt genau die zwei danach benannten Zusicherungen fallen.
+
+## D60 — Ohne Titel vertritt die Knoten-ID ihn
+D36 hielt fest: „Eine Zeile, die **nur** aus einer ID besteht, wird wie jede
+leere Zeile ignoriert und belegt die ID nicht." Das ist jetzt umgekehrt — eine
+solche Zeile ist ein Knoten, und sein Label ist `#id`.
+
+**Der Anlass ist die Ticket-Referenz.** §11 hält fest, dass die Kennung eines
+Trackers oft die natürliche Knoten-ID ist (`#US-123`, `#ABC-123`). Wo das
+zutrifft, **ist die Kennung schon der Name** — `- #US-123: US-123` daneben zu
+schreiben wäre eine Verdopplung, und wer sie wegließe, verlor bisher den
+ganzen Knoten. Die alte Regel war für den Fall gedacht, dass jemand eine ID
+ohne Absicht stehen lässt; sie hat dabei den häufigeren Fall miterschlagen.
+
+**Das Label ist `#id`, mit Doppelkreuz.** Erwogen war die ID ohne `#`
+(`US-123`) oder eine eigene, zurückgenommene Darstellung wie beim
+`#`-Umschalter (mono, grau, D56). Beides verworfen: Ohne `#` liest sich der
+Knoten wie ein gewöhnlicher Titel, der zufällig nach einer Kennung aussieht —
+das `#` sagt „hier steht die Adresse, weil es keinen Titel gibt". Und eine
+durchgehend graue Beschriftung ließe den Knoten wie zurückgetreten aussehen,
+was er nicht ist.
+
+**Der `#`-Umschalter setzt bei so einem Knoten nichts davor.** Sonst stünde
+dort `#US-123: #US-123`. Erkannt wird das an `labelFromId` am Knoten und nicht
+am Vergleich `label === '#' + id`: Wer `#a: #a` bewusst schreibt, hat einen
+Titel, und der soll auch mit Umschalter so erscheinen. Aus demselben Grund
+entfallen für solche Knoten die ID-Zeile im Tooltip und `a11yId` im
+`aria-label` — ein Screenreader läse die Kennung sonst zweimal hintereinander.
+
+**Die ID ist damit vergeben.** Das ist die eigentliche Verhaltensänderung und
+die einzige, die jemandem auffallen kann: `- #auth` gefolgt von
+`- [ ] Echt #auth` gibt jetzt zwei Knoten und eine `duplicateId`-Warnung, wo
+vorher einer und keine Warnung stand. Das ist richtig herum — die erste Zeile
+ist jetzt ein Knoten, und zwei Knoten mit derselben ID sind genau der Fall,
+für den es die Warnung gibt.
+
+Eine Zeile **ohne** ID und ohne Label bleibt, was sie war: keine Zeile. Auch
+`- (L) @anna` ergibt weiterhin nichts — Größe und Zuständige allein sind kein
+Knoten.
+
+**Nachgemessen:** `- [x] #US-123 (L) @anna` ergibt einen Knoten mit Label
+`#US-123`, Größe `L`, Tag `anna`, Status fertig; mit eingeschaltetem
+`#`-Umschalter bekommt er **keine** `nid`-Spanne, der Nachbar `#auth: Backend`
+schon. 337 Tests, davon 6 neue; der eine alte, der die frühere Regel festhielt,
+ist umgeschrieben und benennt jetzt diese.

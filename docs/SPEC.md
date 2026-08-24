@@ -25,7 +25,9 @@ dieser Reihenfolge (wichtig für Kollisionsfreiheit):
 6. Knoten-ID: das **erste** alleinstehend angesetzte `#name`-Token (siehe unten).
 7. Abhängigkeiten: alle alleinstehend angesetzten `:#a,#b`-Token (siehe unten).
 8. Fokusmarke: `!!!` als **alleinstehendes** Token (siehe unten).
-9. Rest, whitespace-normalisiert = Label. Leeres Label ⇒ Zeile ignorieren.
+9. Rest, whitespace-normalisiert = Label. Leeres Label ⇒ Zeile ignorieren —
+   **außer** die Zeile trägt eine Knoten-ID; dann wird `#id` das Label
+   (siehe unten).
 
 **Fortsetzungszeile `\`** — eine lange Zeile darf auf mehrere Textzeilen
 verteilt werden, ohne dass ein neuer Knoten entsteht:
@@ -102,8 +104,15 @@ sie ist die Adresse für Abhängigkeiten und Beschreibungsblöcke (§11).
   **Leerraum oder Zeilenende** folgt; ein Doppelpunkt im Label (`#auth: Regel:
   nur mit Token`) bleibt also stehen, und `#auth:#db` bleibt ID plus
   Abhängigkeit. Die Stellung ist frei — `Backend #auth` bedeutet dasselbe.
-- Die ID gehört **nicht** zum Label. Eine eigene Darstellung im Diagramm hat
-  sie (noch) nicht; sichtbar ist sie im Knoten-Tooltip und im `aria-label`.
+- Die ID gehört **nicht** zum Label. Sichtbar ist sie im Knoten-Tooltip, im
+  `aria-label` und — auf Wunsch — vor dem Titel (§9, `#`-Umschalter).
+- **Ohne Titel vertritt die ID ihn:** Bleibt nach der Extraktion kein Label
+  übrig, die Zeile trägt aber eine ID, dann ist `#id` das Label — mit
+  Doppelpunkt geschrieben (`#US-123:`) wie ohne. Die Zeile wird also **nicht**
+  ignoriert, sondern ein gewöhnlicher Knoten, und die ID ist vergeben. Gedacht
+  für den Fall, dass die Kennung schon der Name ist (Ticket-Referenzen, §11) —
+  den Titel danebenzuschreiben wäre eine Verdopplung. Der `#`-Umschalter (§9)
+  setzt bei so einem Knoten **nichts** davor: Die ID steht bereits da.
 - **Doppelte ID:** Warnung `duplicateId` mit beiden Zeilennummern; die spätere
   ID gilt trotzdem am Knoten (fehlertolerant wie §4 — die Zeile geht nicht
   verloren).

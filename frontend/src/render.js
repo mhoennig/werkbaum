@@ -75,7 +75,9 @@ function nodeAria(n, opts, fold){
   if(n.tags && n.tags.length) parts.push(t('a11yTags', {names: n.tags.join(', ')}));
   /* Knoten-ID und Abhängigkeiten (SPEC §1, D36/D37): keine eigene Darstellung
      im Diagramm — sichtbar nur im Tooltip und hier. */
-  if(n.id) parts.push(t('a11yId', {id: n.id}));
+  /* Nicht, wenn das Label die ID selbst ist (SPEC §1) — sonst hört ein
+     Screenreader sie zweimal hintereinander. */
+  if(n.id && !n.labelFromId) parts.push(t('a11yId', {id: n.id}));
   if(n.deps && n.deps.length)
     parts.push(t('a11yDeps', {ids: n.deps.map(d => '#' + d).join(', ')}));
   if(n.optional) parts.push(t('a11yOptional'));
@@ -126,7 +128,7 @@ function nodeHtml(n, extra, opts, fold){
      bleibt schmaler als die Fakten-Zeile (die den Sprung-Hinweis enthält),
      verbreitert den Tooltip also nicht. Der `aria-label` bekommt ihn NICHT:
      ein Screenreader läse die Striche einzeln vor (nodeAria oben). */
-  const facts = [n.id ? '#' + n.id : '',
+  const facts = [(n.id && !n.labelFromId) ? '#' + n.id : '',
                  n.deps && n.deps.length ? '→ ' + n.deps.map(d => '#' + d).join(', ') : '',
                  effKey
                    ? t('heldTooltip', {eff: t('st_' + effKey), own: t('st_' + n.status.key)})
@@ -179,7 +181,9 @@ function nodeHtml(n, extra, opts, fold){
      Diagramm-Kopf; als Renderer-Option und nicht per CSS versteckt, damit der
      Grafikexport (er liest den Knotentext) von selbst folgt. `aria-hidden`:
      Der Screenreader bekommt die ID schon über `a11yId` (D56). */
-  const idHtml = showIds && n.id
+  /* Nicht bei einem Knoten, dessen Label die ID selbst IST (SPEC §1) — sonst
+     stünde dort `#US-123: #US-123`. */
+  const idHtml = showIds && n.id && !n.labelFromId
     ? `<span class="nid" aria-hidden="true">#${esc(n.id)}:</span> `
     : '';
   const inner = foldHtml +
