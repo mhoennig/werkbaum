@@ -4,6 +4,8 @@ import { computeCheapPlan, freshProdSet, initialCollapsed, nodeKeys, effectiveSt
 import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning, warningText } from './warnings.js';
 import { padUrls } from './remote.js';
+import { LS_SNAPS, SNAP_EVERY, parseSnaps, addSnapshot, persistSnaps, snapLabel }
+  from './snapshots.js';
 /* Werkbaum, mit Werkbaum geplant — als mitgeliefertes Dokument „Werkbank" (D27).
    Dieselbe Datei, die auch per ?sourceUrl= geladen werden kann; `?raw` bettet
    sie beim Build in die eine Ausgabedatei ein (D19), es wird nichts nachgeladen
@@ -2926,65 +2928,24 @@ function flushActive(){ const d = activeDoc(); if(d) d.text = src.value; }
    wenn er sich seit dem letzten Stand geändert hat. Aufgehoben werden die
    letzten 20 je Dokument (rund 3½ Stunden Arbeit bei gleichmäßigen Abständen).
    Es ist ein Sicherheitsnetz gegen Versehen, kein Versionsverwaltungssystem —
-   wer weiter zurück will, hat Git. */
-const LS_SNAPS = 'werkbaum-snaps';
-const SNAP_EVERY = 10 * 60 * 1000;
-const SNAP_KEEP = 20;
+   wer weiter zurück will, hat Git.
+
+   Die Regeln stehen in snapshots.js und sind dort getestet; hier bleibt nur,
+   was DOM oder Speicher berührt: welches Dokument aktiv ist, ob sein Text
+   beschreibbar ist (Pad-Dokumente, D31, bleiben außen vor — ein alter Stand
+   ließe sich dort gar nicht einsetzen), und das Nachzeichnen des Menüs. */
 let snaps = {};        /* {docId: [{t, text}, …]} — ältester zuerst */
 let snapBase = '';     /* Text bei Dokumentwechsel; Vergleich, solange es keinen Stand gibt */
 
-function loadSnaps(){
-  try{ const o = JSON.parse(localStorage.getItem(LS_SNAPS) || '{}');
-       snaps = o && typeof o === 'object' ? o : {}; }
-  catch(_){ snaps = {}; }
-}
-/* Der Platz im localStorage ist geteilt. Läuft er über, sollen die
-   **Dokumente** überleben, nicht ihre Stände — der Fehlerfall wirft deshalb
-   Stände weg, bis es passt, notfalls alle. */
-function persistSnaps(){
-  for(;;){
-    try{ localStorage.setItem(LS_SNAPS, JSON.stringify(snaps)); return true; }
-    catch(_){
-      if(!dropOldestSnap()){ try{ localStorage.removeItem(LS_SNAPS); }catch(_){} return false; }
-    }
-  }
-}
-function dropOldestSnap(){
-  let id = null, t = Infinity;
-  for(const k in snaps){
-    const l = snaps[k];
-    if(l && l.length && l[0].t < t){ t = l[0].t; id = k; }
-  }
-  if(id === null) return false;
-  snaps[id].shift();
-  if(!snaps[id].length) delete snaps[id];
-  return true;
-}
-/* Legt den aktuellen Text weg, wenn er neu ist. Pad-Dokumente (D31) bleiben
-   außen vor: Ihr Text ist schreibgeschützt, ein alter Stand ließe sich dort
-   gar nicht wieder einsetzen — Stände zu sammeln, die niemand laden kann,
-   wäre nur Ballast. */
-/* `manuell` schaltet die `snapBase`-Sperre ab — und das ist der ganze
-   Unterschied zwischen Takt und Knopf. `snapBase` ist der Text beim Öffnen des
-   Dokuments; solange nichts daran geändert wurde, soll der **Takt** nichts
-   sammeln (sonst legte jedes bloße Ansehen einen Stand an). Für den Knopf wäre
-   dieselbe Sperre falsch: „vor der großen Änderung sichern" heißt gerade, dass
-   noch nichts geändert ist. Bei leerer Liste ist der Text dann **nirgends**
-   gesichert, und der Knopf bestätigte etwas, das nicht stimmte (gemeldet und
-   nachgestellt, D54-Nachtrag 2). Verglichen wird für ihn nur noch gegen den
-   **letzten Eintrag** — der Doppelte bleibt vermieden, und die Zusage „dein
-   Stand ist gesichert" wird in jedem Fall wahr. */
+function loadSnaps(){ snaps = parseSnaps(localStorage.getItem(LS_SNAPS)); }
+
 function snapshotNow(manuell){
   const d = activeDoc();
   if(!d || src.readOnly) return false;
   const text = src.value;
-  const list = snaps[d.id] || (snaps[d.id] = []);
-  const letzter = list.length ? list[list.length-1].text : (manuell ? null : snapBase);
-  if(text === letzter) return false;
-  list.push({t: Date.now(), text});
-  while(list.length > SNAP_KEEP) list.shift();
+  if(!addSnapshot(snaps, d.id, text, Date.now(), {base: snapBase, manual: manuell})) return false;
   snapBase = text;
-  persistSnaps();
+  persistSnaps(snaps, localStorage);
   if(!snapMenu.hidden) renderSnapMenu();
   return true;
 }
@@ -2997,16 +2958,6 @@ const snapBtn = document.getElementById('snapBtn');
 const snapAddBtn = document.getElementById('snapAddBtn');
 const snapMenu = document.getElementById('snapMenu');
 
-function snapLabel(ms){
-  const d = new Date(ms);
-  const heute = d.toDateString() === new Date().toDateString();
-  try{
-    return heute
-      ? d.toLocaleTimeString(lang, {hour: '2-digit', minute: '2-digit'})
-      : d.toLocaleString(lang, {day: '2-digit', month: '2-digit',
-                                hour: '2-digit', minute: '2-digit'});
-  }catch(_){ return d.toISOString().slice(0, 16).replace('T', ' '); }
-}
 function renderSnapMenu(){
   const d = activeDoc();
   const list = d ? (snaps[d.id] || []) : [];
@@ -3025,7 +2976,7 @@ function renderSnapMenu(){
     b.className = 'snapitem';
     b.setAttribute('role', 'menuitem');
     b.innerHTML = '<span></span><span class="snapsize"></span>';
-    b.firstChild.textContent = snapLabel(s.t);
+    b.firstChild.textContent = snapLabel(s.t, lang, Date.now());
     b.lastChild.textContent = t('snapLines', {n: s.text.split('\n').length});
     b.addEventListener('click', e => { e.stopPropagation(); loadSnapshot(s); });
     snapMenu.appendChild(b);
@@ -3186,7 +3137,7 @@ function deleteDoc(){
   if(!window.confirm(t('docDeleteConfirm', {name: d.name}))) return;
   if(padSource && padSource.id === d.id) stopPad();   /* danach gibt es nichts mehr zu holen (D31) */
   docs = docs.filter(x => x.id !== d.id);
-  if(snaps[d.id]){ delete snaps[d.id]; persistSnaps(); }   /* mit dem Dokument gehen seine Stände (D54) */
+  if(snaps[d.id]){ delete snaps[d.id]; persistSnaps(snaps, localStorage); }   /* mit dem Dokument gehen seine Stände (D54) */
   if(!docs.length) docs = [{ id: EXAMPLE_ID, name: EXAMPLE_NAME, text: INITIAL }];
   activeId = docs[0].id;
   foldOverrides.clear();

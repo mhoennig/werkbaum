@@ -3784,3 +3784,61 @@ DOM), und dafür gibt es keine Testumgebung — dieselbe Lücke wie bei
 `applyOptStairs()` (D29) und `drawDepLinks()` (D41). Ein Fehler dieser Art
 fällt deshalb erst im Browser auf, und das ist der Preis dafür, dass die
 Zustandslogik im UI-Modul sitzt statt in `model.js`.
+
+**Nachtrag 3 — die Regeln ziehen nach `snapshots.js` um, damit sie prüfbar
+sind.** Nachtrag 2 endete mit dem Satz, die Stände seien „nicht durch Tests
+gedeckt … das ist der Preis dafür, dass die Zustandslogik im UI-Modul sitzt".
+Der Preis war zu hoch: Der Fehler kam bis in Produktion, und ein Test hätte
+ihn in einer Zeile gefunden. Also wird nicht der Preis bezahlt, sondern die
+Ursache beseitigt.
+
+**Geschnitten wird nach dem Vorbild von `remote.js` (D31): die entscheidbare
+Hälfte heraus, die I/O bleibt.** `snapshots.js` beantwortet, **was gilt** —
+wann ein Stand entsteht (`addSnapshot`), was bei Platzmangel zuerst fliegt
+(`dropOldestSnap`, `persistSnaps`), was aus dem Speicher überhaupt gelesen
+werden darf (`parseSnaps`) und wie ein Eintrag heißt (`snapLabel`). In
+`app.js` bleibt, **woher die Werte kommen** (aktives Dokument, Schreibschutz,
+Textfeld) und **wohin sie gehen** (`localStorage`, Menü). Der Speicher wird
+als `{setItem, removeItem}` hereingereicht, die Uhr als Zahl — genau die
+beiden Abhängigkeiten, an denen die Prüfbarkeit vorher scheiterte. `app.js`
+verliert dabei 55 Zeilen; `snapshotNow()` schrumpft auf sechs.
+
+**Kein Store-Objekt, keine Klasse:** Die Nachbarmodule sind schlichte
+Funktionsmodule, und `snaps` als Parameter durchzureichen kostet nichts. Wo
+das Original den Zustand verändert hat, tut es das weiter (`addSnapshot`
+hängt an die Liste an) — das ist im Test genauso ablesbar und hält den Diff
+klein.
+
+**Die Gegenprobe zählt, nicht die Zahl der Tests.** Baut man exakt den
+ausgelieferten Fehler wieder ein (`manual ? null : base` → `base`), fällt
+**genau eine** Zusicherung — die, die nach ihm benannt ist —, und die
+übrigen 27 bleiben grün. Ein Test, von dem man das nicht geprüft hat, ist nur
+eine Behauptung.
+
+28 Tests decken jetzt ab: Knopf gegen Takt (beide Richtungen, inklusive des
+gemeldeten Falls), kein Doppel-Eintrag, Deckelung bei 20, dokumentübergreifende
+Verdrängung des Ältesten, das Aufgeben bei vollem Speicher samt Wegräumen des
+Schlüssels, sechs Formen beschädigten Speichers und die Beschriftung (heute
+nur Uhrzeit, sonst mit Datum, Kalendertag statt 24 Stunden, Rückfall bei
+unbekannter Sprache).
+
+**Zwei Verhaltensänderungen, beide bewusst.** `parseSnaps()` wirft Einträge
+weg, die nicht die erwartete Form haben (Liste kein Array, `t` keine Zahl,
+`text` kein String) — vorher wären sie stehen geblieben und hätten beim Lesen
+zugeschlagen. Und ein Array statt eines Objekts im Speicher ergibt jetzt `{}`
+statt eines halb benutzbaren Zustands. Ein Sicherheitsnetz darf die App nicht
+umbringen.
+
+**Was Unit-Tests weiterhin nicht abdecken, ist die Verdrahtung** — dass
+`app.js` `base` und `manual` richtig durchreicht. Dafür bleibt die Messung im
+Browser, und sie ist nach dem Umbau wiederholt worden: Knopf ohne jede
+Eingabe → ein Stand; Takt (für die Prüfung auf 2 s) bei bloß angesehenem
+Dokument → **0**, nach einer Änderung → 1, weitere Takte → 1.
+
+**Nebenbefund, als Werkzeugfalle notiert:** Die Konsole des Browser-Werkzeugs
+puffert kumulativ — `console.clear()` und ein Neuladen räumen sie nicht. Eine
+`ReferenceError`-Meldung aus einer HMR-Zwischenfassung stand deshalb noch da,
+als der Fehler längst weg war. Auseinandergehalten hat es der `?t=`-Stempel
+im Stacktrace gegen den der geladenen Datei (`performance.getEntriesByType`):
+`…961240` gegen `…049984`. Dieselbe Sorte Lehre wie D25 und D17-Nachtrag 4 —
+die Meldung des Werkzeugs ist noch kein Befund.

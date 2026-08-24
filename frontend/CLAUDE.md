@@ -66,6 +66,16 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `app.js` (DOM/Events/i18n/Persistenz/Export). Modell/Renderer bekommen UI-State
   (verworfene einblenden, Pfad an/aus) als **Parameter** — keine Globals; nur
   `cheapPathOn` lebt als UI-State in `app.js`. Tests: `tests/*.test.js`.
+- **Was entscheidbar ist, gehört in ein eigenes Modul** — auch bei Features, die
+  wie reine UI aussehen: `remote.js` (Pad-URLs normalisieren, D31),
+  `warnings.js` (Warnung → Text), `snapshots.js` (frühere Stände: wann entsteht
+  ein Stand, was fliegt bei Platzmangel raus, wie sieht der Speicherinhalt aus).
+  Dort steht **was gilt**, in `app.js` bleibt **woher die Werte kommen und wohin
+  sie gehen**; Speicher (`{setItem, removeItem}`) und Uhr (`Date.now()`) werden
+  hereingereicht, damit der Test sie stellen kann. Anlass war ein Fehler, der bis
+  in Produktion kam und den ein Test in einer Zeile gefunden hätte
+  (D54-Nachtrag 3). Faustregel: Sobald du eine Regel im Browser „nachmisst",
+  gehört sie in ein Modul.
 - Günstigster Pfad: `computeCheapPlan()`/`cheapestCost()`/`cheapCls()` (in
   `model.js`) markieren
   die nötigen Knoten (Klassen `cheap`, `cheap-leaf`); `drawCheapPath()` (app.js)
