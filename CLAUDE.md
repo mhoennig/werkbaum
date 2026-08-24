@@ -19,6 +19,10 @@ Integrations-Backend.
   Eintrag begründen, alte Einträge nie löschen. Besonders D13 (Backend-Stack)
   und D14 (Parser-Hoheit) beachten.
 - Ziele: docs/ROADMAP.md · Offene Arbeit: docs/TASKS.md (Checkboxen pflegen).
+- Änderungen: @docs/CHANGELOG.md — **jedes Feature und jeder behobene Fehler
+  bekommt dort eine Zeile**, englisch, ein Satz, unter der Überschrift des
+  Tages (`## JJJJ-MM-TT`). Die Datei speist das Neuigkeiten-Popup im Editor
+  (D58); ohne die Zeile geschieht die Änderung für den Benutzer unsichtbar.
 
 ## Querschnitts-Konventionen
 - Doku auf Deutsch. Die Editor-UI ist mehrsprachig (DE/EN/ES/FR direkt,

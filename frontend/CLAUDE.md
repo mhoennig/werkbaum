@@ -526,6 +526,18 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Hash-Rückfall, der Marker-Pfad ist nur zu prüfen, wenn man einen echten
   `commit/<sha>` in `index.html` einspritzt (danach zurücknehmen!) und
   `window.fetch` überschreibt.
+- **Neuigkeiten (D58):** `NEWS` kommt aus dem virtuellen Modul
+  `virtual:werkbaum-news` (Vite-Plugin in `vite.config.js`), gefüllt zur
+  **Bauzeit** aus `docs/CHANGELOG.md` (die Notizen) und der git-Historie des
+  mitgelieferten Plans (die Knoten je Tag). Die Regeln stehen in
+  `scripts/news.mjs` und sind getestet; `app.js` verdrahtet nur. Drei Dinge, die
+  beim Anfassen auffallen: Der **Dev-Server liest einmal beim Start** — neue
+  Changelog-Zeilen erscheinen erst nach einem Neustart, nicht per HMR. Ein
+  vorgeführter Tag muss **nach** `switchDoc()` gesetzt werden, denn das räumt
+  ihn ausdrücklich weg. Und die Backtick-Ersetzung läuft **nach** `esc()`, damit
+  aus einer Changelog-Zeile kein Markup werden kann. Ein Feature ohne Zeile in
+  `docs/CHANGELOG.md` geschieht für den Benutzer unsichtbar (Regel in der
+  Wurzel-CLAUDE.md).
 - **Titelzeilen tragen die Aufklapp-Menüs — kein `overflow` daran (D50):**
   `#docMenu` und `.dlmenu` hängen als absolut positionierte Kinder im
   `.panel-head`. Ein `overflow` dort macht ihn zum Scroll-Container und klippt

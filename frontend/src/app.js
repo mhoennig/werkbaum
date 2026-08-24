@@ -6,6 +6,10 @@ import { formatWarning, warningText } from './warnings.js';
 import { padUrls } from './remote.js';
 import { LS_SNAPS, SNAP_EVERY, parseSnaps, addSnapshot, persistSnaps, snapLabel }
   from './snapshots.js';
+/* Neuigkeiten (D58): die git-Historie, zur BAUZEIT eingelesen (Vite-Plugin in
+   vite.config.js). Zur Laufzeit gibt es kein git — und keinen Server, der
+   nachliefern könnte (D11/D19). Leer, wo git nicht erreichbar war. */
+import NEWS from 'virtual:werkbaum-news';
 /* Werkbaum, mit Werkbaum geplant — als mitgeliefertes Dokument „Werkbank" (D27).
    Dieselbe Datei, die auch per ?sourceUrl= geladen werden kann; `?raw` bettet
    sie beim Build in die eine Ausgabedatei ein (D19), es wird nichts nachgeladen
@@ -76,6 +80,12 @@ let sourceWarning = null;
    Vergleichsfassung. `freshBaseline` ist der Text, gegen den verglichen wurde;
    er wird erst beim Bestätigen fortgeschrieben. */
 let freshSet = new Set(), freshDocId = null, freshBaseline = null, freshPrevRoots = null;
+/* Führt das Neuigkeiten-Popup gerade einen Tag vor (D58)? Dann tritt dessen
+   Knotenmenge an die Stelle des Besuchsvergleichs — `newsDay` ist das Datum
+   (auch die Marke im Popup), `newsKeySet` die Label-Pfade. Sitzungssache: Der
+   Faltzustand steht im Text (D38), der Besuchsstand im localStorage — eine
+   vorgeführte Chronik ist weder das eine noch das andere. */
+let newsDay = null, newsKeySet = null;
 /* Faltung (SPEC §9, D38): `foldOverrides` sind die interaktiven Eingriffe des
    Nutzers (Schlüssel = Label-Pfad wie bei D28, damit sie das Neu-Parsen bei
    jedem Tastendruck überleben); sie überlagern den Anfangszustand aus den
@@ -118,17 +128,26 @@ function render(){
       if(!plan.exact) warnings = warnings.concat([{type: 'cheapApprox'}]);
     }
     out.classList.toggle('cheap-on', cheapPathOn);
-    /* Die Menge MUSS aus denselben Knotenobjekten gebildet werden, die gerade
-       gerendert werden — `freshProdSet` liefert Knoten aus `roots`. Eine früher
-       berechnete Menge stammte aus einem anderen Parse-Durchlauf und träfe per
-       Objektidentität nie zu (D28). */
-    freshSet = (freshDocId === activeId && freshPrevRoots)
-      ? freshProdSet(freshPrevRoots, roots) : new Set();
     /* Faltung (D38): Anfangszustand aus den Textmarken (`!!!` holt sich mit
        hervor), überlagert von den Sitzungs-Eingriffen des Nutzers. Wie bei
        `freshSet` muss die Menge aus den gerade geparsten Knoten bestehen. */
     const initFold = initialCollapsed(roots, true);
     const keys = nodeKeys(roots);
+    /* Die Menge MUSS aus denselben Knotenobjekten gebildet werden, die gerade
+       gerendert werden — `freshProdSet` liefert Knoten aus `roots`. Eine früher
+       berechnete Menge stammte aus einem anderen Parse-Durchlauf und träfe per
+       Objektidentität nie zu (D28).
+       Führt das Neuigkeiten-Popup gerade einen Tag vor (D58), gilt dessen
+       Knotenmenge STATT des Vergleichs mit dem letzten Besuch: Es ist dieselbe
+       Ansicht, nur mit einer anderen Frage — „was geschah am 24.08." statt
+       „was ist seit deinem letzten Besuch live gegangen". */
+    if(newsKeySet){
+      freshSet = new Set();
+      keys.forEach((key, n) => { if(newsKeySet.has(key)) freshSet.add(n); });
+    } else {
+      freshSet = (freshDocId === activeId && freshPrevRoots)
+        ? freshProdSet(freshPrevRoots, roots) : new Set();
+    }
     const collapsedSet = new Set();
     let foldSmallExact = true, foldSmallAny = false;
     foldByLine = new Map();
@@ -1353,7 +1372,7 @@ document.addEventListener('pointerdown', e => {
   if(e.target && e.target.closest && e.target.closest('.node') === tipNode) return;
   closeNodeTip();
 }, true);
-document.addEventListener('keydown', e => { if(e.key === 'Escape') closeNodeTip(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ closeNodeTip(); closeNewsMenu(); } });
 /* Beim Scrollen des Diagramms wandert der Knoten, das `position:fixed`-Fenster
    nicht — es zeigte dann auf etwas anderes. Also zumachen. */
 document.querySelector('.diagram').addEventListener('scroll', closeNodeTip, {passive: true});
@@ -1884,7 +1903,16 @@ const I18N = {
     agenda:"Agenda", discarded:"verworfene",
     gutterTooltip:"Ziehen zum Verschieben, Doppelklick setzt zurück", gutterAria:"Bereiche größenverändern",
     hintGutterAria:"Editor und Legende größenverändern",
-    freshTooltip:"Neu in Produktion seit dem letzten Ansehen: {n}. Klicken markiert sie als gesehen.",
+    freshTooltip:"Neu in Produktion seit dem letzten Ansehen: {n}.",
+    newsTooltip:"Neuigkeiten",
+    newsTitle:"Neuigkeiten",
+    newsEmpty:"Keine Einträge.",
+    newsUnseen:"Neuigkeiten aus {n} Tagen, die du noch nicht angesehen hast.",
+    newsSince:"Seit deinem letzten Besuch: {n} neu in Produktion.",
+    newsSeen:"gesehen",
+    newsShow:"{n} Knoten im Diagramm zeigen",
+    newsShowOff:"Hervorhebung aufheben",
+    newsShowing:"Neuigkeiten vom {d} werden im Diagramm gezeigt.",
     modeHorizontal:"Horizontal – Organigramm, Diagramm über dem Editor",
     modeKompakt:"Kompakt – alles nach unten, platzsparend",
     modeVertikal:"Vertikal – Baum nach rechts, Diagramm neben dem Editor",
@@ -1974,7 +2002,16 @@ const I18N = {
     agenda:"Legend", discarded:"discarded",
     gutterTooltip:"Drag to resize, double-click resets", gutterAria:"Resize the areas",
     hintGutterAria:"Resize editor and legend",
-    freshTooltip:"New in production since you last looked: {n}. Click to mark them as seen.",
+    freshTooltip:"New in production since you last looked: {n}.",
+    newsTooltip:"What's new",
+    newsTitle:"What's new",
+    newsEmpty:"Nothing recorded.",
+    newsUnseen:"News from {n} days you haven't looked at yet.",
+    newsSince:"Since your last visit: {n} new in production.",
+    newsSeen:"seen",
+    newsShow:"Show {n} nodes in the diagram",
+    newsShowOff:"Clear the highlight",
+    newsShowing:"Showing the changes of {d} in the diagram.",
     modeHorizontal:"Horizontal – org chart, diagram above the editor",
     modeKompakt:"Compact – everything downward, space-saving",
     modeVertikal:"Vertical – tree to the right, diagram beside the editor",
@@ -2064,7 +2101,16 @@ const I18N = {
     agenda:"Leyenda", discarded:"descartados",
     gutterTooltip:"Arrastra para redimensionar, doble clic restablece", gutterAria:"Redimensionar las áreas",
     hintGutterAria:"Redimensionar editor y leyenda",
-    freshTooltip:"Nuevo en producción desde la última vez: {n}. Haz clic para marcarlo como visto.",
+    freshTooltip:"Nuevo en producción desde la última vez: {n}.",
+    newsTooltip:"Novedades",
+    newsTitle:"Novedades",
+    newsEmpty:"Sin entradas.",
+    newsUnseen:"Novedades de {n} días que aún no has visto.",
+    newsSince:"Desde tu última visita: {n} nuevo en producción.",
+    newsSeen:"visto",
+    newsShow:"Mostrar {n} nodos en el diagrama",
+    newsShowOff:"Quitar el resaltado",
+    newsShowing:"Se muestran en el diagrama los cambios del {d}.",
     modeHorizontal:"Horizontal – organigrama, diagrama sobre el editor",
     modeKompakt:"Compacto – todo hacia abajo, ahorra espacio",
     modeVertikal:"Vertical – árbol hacia la derecha, diagrama junto al editor",
@@ -2154,7 +2200,16 @@ const I18N = {
     agenda:"Légende", discarded:"abandonnés",
     gutterTooltip:"Glisser pour redimensionner, double-clic pour réinitialiser", gutterAria:"Redimensionner les zones",
     hintGutterAria:"Redimensionner l'éditeur et la légende",
-    freshTooltip:"Nouveau en production depuis votre dernière visite : {n}. Cliquez pour marquer comme vu.",
+    freshTooltip:"Nouveau en production depuis votre dernière visite : {n}.",
+    newsTooltip:"Nouveautés",
+    newsTitle:"Nouveautés",
+    newsEmpty:"Aucune entrée.",
+    newsUnseen:"Nouveautés de {n} jours que vous n'avez pas encore consultées.",
+    newsSince:"Depuis votre dernière visite : {n} nouveau en production.",
+    newsSeen:"vu",
+    newsShow:"Afficher {n} nœuds dans le diagramme",
+    newsShowOff:"Retirer la mise en évidence",
+    newsShowing:"Les changements du {d} sont affichés dans le diagramme.",
     modeHorizontal:"Horizontal – organigramme, diagramme au-dessus de l'éditeur",
     modeKompakt:"Compact – tout vers le bas, gain de place",
     modeVertikal:"Vertical – arbre vers la droite, diagramme à côté de l'éditeur",
@@ -2244,7 +2299,16 @@ const I18N = {
     agenda:"Legenda", discarded:"odrzucone",
     gutterTooltip:"Przeciągnij, aby zmienić rozmiar; dwuklik przywraca", gutterAria:"Zmień rozmiar obszarów",
     hintGutterAria:"Zmień rozmiar edytora i legendy",
-    freshTooltip:"Nowe na produkcji od ostatniego razu: {n}. Kliknij, aby oznaczyć jako zobaczone.",
+    freshTooltip:"Nowe na produkcji od ostatniego razu: {n}.",
+    newsTooltip:"Nowości",
+    newsTitle:"Nowości",
+    newsEmpty:"Brak wpisów.",
+    newsUnseen:"Nowości z {n} dni, których jeszcze nie oglądałeś.",
+    newsSince:"Od twojej ostatniej wizyty: {n} nowe na produkcji.",
+    newsSeen:"zobaczone",
+    newsShow:"Pokaż {n} węzłów na diagramie",
+    newsShowOff:"Usuń podświetlenie",
+    newsShowing:"Na diagramie pokazane są zmiany z {d}.",
     modeHorizontal:"Poziomo – schemat organizacyjny, diagram nad edytorem",
     modeKompakt:"Kompaktowo – wszystko w dół, oszczędza miejsce",
     modeVertikal:"Pionowo – drzewo w prawo, diagram obok edytora",
@@ -2334,7 +2398,16 @@ const I18N = {
     agenda:"Легенда", discarded:"отклонённые",
     gutterTooltip:"Потяните, чтобы изменить размер; двойной щелчок сбрасывает", gutterAria:"Изменить размер областей",
     hintGutterAria:"Изменить размер редактора и легенды",
-    freshTooltip:"Новое в продакшене с прошлого раза: {n}. Нажмите, чтобы отметить как просмотренное.",
+    freshTooltip:"Новое в продакшене с прошлого раза: {n}.",
+    newsTooltip:"Новости",
+    newsTitle:"Новости",
+    newsEmpty:"Записей нет.",
+    newsUnseen:"Новости за {n} дней, которые вы ещё не просматривали.",
+    newsSince:"С вашего последнего визита: {n} новых в продакшене.",
+    newsSeen:"просмотрено",
+    newsShow:"Показать {n} узлов на диаграмме",
+    newsShowOff:"Снять выделение",
+    newsShowing:"На диаграмме показаны изменения от {d}.",
     modeHorizontal:"Горизонтально – оргсхема, диаграмма над редактором",
     modeKompakt:"Компактно – всё вниз, экономит место",
     modeVertikal:"Вертикально – дерево вправо, диаграмма рядом с редактором",
@@ -2424,7 +2497,16 @@ const I18N = {
     agenda:"लेजेंड", discarded:"अस्वीकृत",
     gutterTooltip:"आकार बदलने के लिए खींचें, डबल-क्लिक रीसेट करता है", gutterAria:"क्षेत्रों का आकार बदलें",
     hintGutterAria:"संपादक और लेजेंड का आकार बदलें",
-    freshTooltip:"पिछली बार से उत्पादन में नया: {n}. देखा गया चिह्नित करने के लिए क्लिक करें।",
+    freshTooltip:"पिछली बार से उत्पादन में नया: {n}।",
+    newsTooltip:"नया क्या है",
+    newsTitle:"नया क्या है",
+    newsEmpty:"कोई प्रविष्टि नहीं।",
+    newsUnseen:"{n} दिनों की खबरें, जो आपने अभी तक नहीं देखीं।",
+    newsSince:"आपकी पिछली यात्रा से: {n} उत्पादन में नए।",
+    newsSeen:"देखा गया",
+    newsShow:"आरेख में {n} नोड दिखाएँ",
+    newsShowOff:"हाइलाइट हटाएँ",
+    newsShowing:"आरेख में {d} के बदलाव दिखाए जा रहे हैं।",
     modeHorizontal:"क्षैतिज – संगठन-चार्ट, संपादक के ऊपर आरेख",
     modeKompakt:"सघन – सब नीचे की ओर, जगह बचाता है",
     modeVertikal:"लंबवत – पेड़ दाईं ओर, संपादक के बगल में आरेख",
@@ -2514,7 +2596,16 @@ const I18N = {
     agenda:"图例", discarded:"已放弃",
     gutterTooltip:"拖动可调整大小，双击可重置", gutterAria:"调整区域大小",
     hintGutterAria:"调整编辑器和图例大小",
-    freshTooltip:"自上次查看以来新上线：{n}。点击标记为已查看。",
+    freshTooltip:"自上次查看以来新上线：{n}。",
+    newsTooltip:"最新动态",
+    newsTitle:"最新动态",
+    newsEmpty:"暂无记录。",
+    newsUnseen:"有 {n} 天的动态你还没有看过。",
+    newsSince:"自你上次访问以来：{n} 项新上线。",
+    newsSeen:"已查看",
+    newsShow:"在图中显示 {n} 个节点",
+    newsShowOff:"取消高亮",
+    newsShowing:"正在图中显示 {d} 的变更。",
     modeHorizontal:"横向——组织结构图，图表在编辑器上方",
     modeKompakt:"紧凑——全部向下，节省空间",
     modeVertikal:"纵向——树向右展开，图表在编辑器旁边",
@@ -2604,7 +2695,16 @@ const I18N = {
     agenda:"凡例", discarded:"破棄",
     gutterTooltip:"ドラッグでサイズ変更、ダブルクリックでリセット", gutterAria:"領域のサイズを変更",
     hintGutterAria:"エディターと凡例のサイズを変更",
-    freshTooltip:"前回以降に本番化されたもの：{n} 件。クリックで既読にします。",
+    freshTooltip:"前回以降に本番化されたもの：{n} 件。",
+    newsTooltip:"更新情報",
+    newsTitle:"更新情報",
+    newsEmpty:"項目はありません。",
+    newsUnseen:"まだ見ていない {n} 日分の更新があります。",
+    newsSince:"前回の訪問以降：{n} 件が本番化されました。",
+    newsSeen:"確認済み",
+    newsShow:"図に {n} 件のノードを表示",
+    newsShowOff:"ハイライトを解除",
+    newsShowing:"図に {d} の変更を表示しています。",
     modeHorizontal:"横 — 組織図、ダイアグラムはエディターの上",
     modeKompakt:"コンパクト — すべて下方向、省スペース",
     modeVertikal:"縦 — ツリーを右へ、ダイアグラムはエディターの横",
@@ -2703,6 +2803,10 @@ function applyLang(l){
   }
   render();
   updateDocName();   /* Titelzeilen-Tooltip nach dem data-i18n-title-Durchlauf setzen */
+  /* Das Neuigkeiten-Popup wird bei jedem Öffnen gebaut — steht es gerade
+     offen, muss es die neue Sprache jetzt bekommen (auch die Datumsangaben,
+     die `toLocaleDateString` liefert). */
+  if(newsMenu && !newsMenu.hidden) renderNewsMenu();
   try{ localStorage.setItem('werkbaum-lang', l); }catch(_){}
 }
 const langsel = document.querySelector('.langsel');
@@ -3177,19 +3281,136 @@ function acknowledgeFresh(){
   freshPrevRoots = null;
   render();                     /* render() bildet die Menge neu und meldet dem Knopf */
 }
-const freshBtn = document.getElementById('freshBtn');
+/* ---------- Neuigkeiten (D58) ----------
+   Der Stern aus dem Diagramm-Kopf steht jetzt permanent in der Kopfzeile und
+   trägt zwei Aussagen, die zusammengehören: die **Chronik** aus der
+   git-Historie (`NEWS`, zur Bauzeit eingelesen) und den persönlichen
+   Besuchsvergleich des aktiven Dokuments (D28). Bernstein heißt „ungesehen" —
+   für beides. */
+const LS_NEWS_SEEN = 'werkbaum-news-seen';
+const newsBtn = document.getElementById('newsBtn');
+const newsMenu = document.getElementById('newsMenu');
 const freshCount = document.getElementById('freshCount');
-function updateFreshBtn(){
-  const n = freshDocId === activeId ? freshSet.size : 0;
-  if(!freshBtn) return;
-  freshBtn.hidden = !n;
-  if(!n) return;
-  freshCount.textContent = String(n);
-  const tip = t('freshTooltip', {n: n});
-  freshBtn.title = tip;
-  freshBtn.setAttribute('aria-label', tip);
+
+function newsSeenDate(){
+  try{ return localStorage.getItem(LS_NEWS_SEEN) || ''; }catch(_){ return ''; }
 }
-freshBtn.addEventListener('click', acknowledgeFresh);
+function unseenDays(){
+  const seen = newsSeenDate();
+  return NEWS.filter(e => e.date > seen).length;
+}
+/* Datum in der Sprache der Oberfläche. `T00:00` ist Pflicht: Ein blankes
+   `new Date('2026-08-24')` liest der Browser als UTC-Mitternacht und zeigt
+   westlich davon den Vortag. */
+function newsDateLabel(iso){
+  const d = new Date(iso + 'T00:00');
+  try{ return d.toLocaleDateString(lang, {day: 'numeric', month: 'long', year: 'numeric'}); }
+  catch(_){ return iso; }
+}
+/* Welche Schlüssel gibt es im mitgelieferten Plan überhaupt noch? Ein Label
+   kann seit damals umbenannt worden sein — dann trifft sein Schlüssel nichts
+   mehr, und der Link verspräche etwas, das er nicht halten kann. Einmal je
+   Aufklappen, nicht einmal je Tag: Der Plan hat 900 Zeilen. */
+function planKeySet(){
+  const doc = docs.find(d => d.id === WERKBAUM_ID);
+  return doc ? new Set(nodeKeys(parse(doc.text).roots).values()) : new Set();
+}
+
+function updateFreshBtn(){
+  if(!newsBtn) return;
+  const n = (!newsKeySet && freshDocId === activeId) ? freshSet.size : 0;
+  const offen = unseenDays();
+  freshCount.hidden = !n;
+  if(n) freshCount.textContent = String(n);
+  newsBtn.classList.toggle('unseen', !!(n || offen));
+  newsBtn.classList.toggle('active', !!newsDay);
+  const tip = newsDay ? t('newsShowing', {d: newsDateLabel(newsDay)})
+    : n ? t('freshTooltip', {n: n})
+    : offen ? t('newsUnseen', {n: offen})
+    : t('newsTooltip');
+  newsBtn.title = tip;
+  newsBtn.setAttribute('aria-label', tip);
+}
+
+function renderNewsMenu(){
+  const seit = (!newsKeySet && freshDocId === activeId && freshSet.size)
+    ? `<div class="newssince"><span>${esc(t('newsSince', {n: freshSet.size}))}</span>`
+      + `<button type="button" class="newsseen" id="newsSeenBtn">${esc(t('newsSeen'))}</button></div>`
+    : '';
+  const vorhanden = NEWS.some(e => e.keys.length) ? planKeySet() : new Set();
+  const tage = NEWS.map(e => {
+    const treffer = e.keys.filter(k => vorhanden.has(k)).length;
+    const an = newsDay === e.date;
+    /* `\`#auth\`` im Changelog wird zu einem Code-Stück — die Notizen nennen
+       Notation, und nackte Backticks läsen sich wie ein Tippfehler. Ersetzt
+       wird NACH dem Escapen, damit der Weg zu eigenem Markup verschlossen
+       bleibt: Was hier eintrifft, ist bereits harmloser Text. */
+    const notiz = l => esc(l).replace(/`([^`]+)`/g, '<code>$1</code>');
+    const lines = e.lines.length
+      ? `<ul class="newslines">${e.lines.map(l => `<li>${notiz(l)}</li>`).join('')}</ul>` : '';
+    const knopf = treffer
+      ? `<button type="button" class="newsshow" data-news-day="${esc(e.date)}"`
+        + ` aria-pressed="${an ? 'true' : 'false'}">`
+        + `${esc(an ? t('newsShowOff') : t('newsShow', {n: treffer}))}</button>` : '';
+    return `<div class="newsday"><div class="newsdate">${esc(newsDateLabel(e.date))}</div>`
+      + lines + knopf + '</div>';
+  }).join('');
+  newsMenu.innerHTML = `<div class="newshead"><span>${esc(t('newsTitle'))}</span>`
+    + `<button type="button" class="newsclose" id="newsCloseBtn"`
+    + ` title="${esc(t('tipClose'))}" aria-label="${esc(t('tipClose'))}">×</button></div>`
+    + seit + (tage || `<div class="newsempty">${esc(t('newsEmpty'))}</div>`);
+}
+function openNewsMenu(){
+  renderNewsMenu();
+  newsMenu.hidden = false;
+  newsBtn.setAttribute('aria-expanded', 'true');
+  /* Aufgeschlagen heißt gelesen: Der Deckel wandert auf den neuesten Tag der
+     Liste, nicht auf „heute" — sonst hinge er an der Uhr des Betrachters. */
+  if(NEWS.length){ try{ localStorage.setItem(LS_NEWS_SEEN, NEWS[0].date); }catch(_){} }
+  updateFreshBtn();
+}
+function closeNewsMenu(){
+  if(!newsMenu || newsMenu.hidden) return;
+  newsMenu.hidden = true;
+  newsBtn.setAttribute('aria-expanded', 'false');
+}
+/* Einen Tag im Diagramm vorführen. Die Schlüssel sind Label-Pfade des
+   MITGELIEFERTEN Plans — steht ein anderes Dokument vorn, wird gewechselt;
+   ohne das zeigte die Ansicht auf nichts. */
+function showNewsDay(date){
+  const e = NEWS.find(x => x.date === date);
+  if(!e) return;
+  /* Erst wechseln, dann setzen: `switchDoc()` räumt einen vorgeführten Tag
+     ausdrücklich weg — in der anderen Reihenfolge löschte es gerade den, den
+     wir zeigen wollen. */
+  if(activeId !== WERKBAUM_ID && docs.some(d => d.id === WERKBAUM_ID)) switchDoc(WERKBAUM_ID);
+  newsDay = date;
+  newsKeySet = new Set(e.keys);
+  render();
+  closeNewsMenu();
+  const erster = out.querySelector('.node.fresh');
+  if(erster) erster.scrollIntoView({block: 'center', inline: 'center'});
+}
+function clearNewsDay(){
+  if(!newsDay) return;
+  newsDay = null; newsKeySet = null;
+  render();
+}
+newsBtn.addEventListener('click', () => {
+  if(newsMenu.hidden) openNewsMenu(); else closeNewsMenu();
+});
+newsMenu.addEventListener('click', e => {
+  const tag = e.target.closest('[data-news-day]');
+  if(tag){ const d = tag.getAttribute('data-news-day');
+    if(newsDay === d){ clearNewsDay(); renderNewsMenu(); } else showNewsDay(d);
+    return; }
+  if(e.target.closest('#newsSeenBtn')){ acknowledgeFresh(); renderNewsMenu(); return; }
+  if(e.target.closest('#newsCloseBtn')) closeNewsMenu();
+});
+document.addEventListener('pointerdown', e => {
+  if(!newsMenu || newsMenu.hidden) return;
+  if(!e.target.closest('#newsMenu') && !e.target.closest('#newsBtn')) closeNewsMenu();
+});
 
 function loadActiveIntoEditor(){ const d = activeDoc(); src.value = d ? d.text : '';
   /* Vergleichsstand für den nächsten Snapshot (D54): Ohne ihn legte der
@@ -3201,6 +3422,10 @@ function switchDoc(id){
   flushActive();
   activeId = id;
   foldOverrides.clear();   /* Falt-Eingriffe gelten je Dokument-Sitzung (D38) */
+  /* Ein vorgeführter Neuigkeiten-Tag (D58) gehört dem mitgelieferten Plan —
+     in einem anderen Dokument zeigten seine Schlüssel ins Leere. Kein
+     `clearNewsDay()`: `loadActiveIntoEditor()` zeichnet gleich selbst. */
+  newsDay = null; newsKeySet = null;
   loadActiveIntoEditor();
   persistDocs();
 }

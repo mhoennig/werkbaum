@@ -4077,3 +4077,111 @@ mit synthetischem `focusin` öffnete es sofort. Erst das Fronten des Tabs samt
 echtem Klick und echter Tab-Taste hat es bewiesen. Wie D25 (synthetische
 `TouchEvent`s), D17-Nachtrag 4 (Bildschirmtastatur) und D53 (synthetisches
 Strg+Z): Was die Umgebung stellt, stellt der Emulator nicht.
+
+## D58 — Neuigkeiten: der Stern wandert in die Kopfzeile und bekommt ein Popup
+Der „Was ist neu?"-Knopf (D28) stand im Diagramm-Kopf und war **verborgen,
+solange es nichts gab** — er konnte also nur etwas über das gerade offene
+Dokument sagen, und meistens sagte er gar nichts. Jetzt steht er permanent in
+der oberen Bedienleiste, zeigt ein Popup mit der Chronik der letzten Tage, und
+jeder Tag führt seine Knoten im Diagramm vor.
+
+**Zwei Aussagen, ein Knopf.** Die **Chronik** ist allgemein („was ist am
+Produkt geschehen"), der **Besuchsvergleich** persönlich („was ist seit deinem
+letzten Besuch live gegangen"). Sie zu trennen hieße, zwei Knöpfe in eine Zeile
+zu setzen, die D56 gerade erst auf zehn Elemente zurechtgemessen hat — und für
+den Betrachter sind es ohnehin dieselbe Frage in zwei Zeitmaßstäben. Der
+Besuchsvergleich steht als abgesetzter Abschnitt **zuoberst** im Popup und
+trägt den „gesehen"-Knopf, den vorher der Knopf selbst war.
+
+**Bernstein heißt ungesehen, Petrol heißt „wird vorgeführt".** Zwei Zustände,
+zwei Farben, beide schon vergeben: Bernstein ist die Farbe des Strahlenkranzes
+am Knoten (D28) — Knopf und Knoten sagen damit dasselbe —, Petrol die für
+Interaktion (D32). Ein dritter Kanal war nicht nötig.
+
+**Aufgeschlagen heißt gelesen.** Der Deckel wandert beim Öffnen auf den
+**neuesten gelisteten Tag**, nicht auf „heute": Ein Datum aus der Uhr des
+Betrachters verglichen mit einem Datum aus dem Build ginge schief, sobald die
+Uhren auseinanderliegen. Der Besuchsvergleich behält seinen eigenen Knopf — er
+hat eine andere Basis (den Text der zuletzt gesehenen Fassung, D28).
+
+**Woher die Daten kommen: zwei Quellen, jede in ihrer Rolle.**
+
+- `docs/CHANGELOG.md` → **was** geschehen ist, ein englischer Satz je Änderung.
+- Die git-Historie von `docs/examples/werkbaum.werkbaum` → **welche Knoten**
+  sich an diesem Tag bewegt haben (neu oder mit anderem Status).
+
+Beides wird **zur Bauzeit** eingelesen und als virtuelles Modul eingebettet
+(Vite-Plugin). Zur Laufzeit gibt es kein git und keinen Server, der nachliefern
+könnte (D11/D19), und nachladen würde D20 brechen. Der Preis ist benannt: Der
+Dev-Server liest einmal beim Start, neue Einträge erscheinen nach einem
+Neustart.
+
+**Die Notizen kommen NICHT aus den Commit-Betreffs** — obwohl sie dort stünden
+und die erste Fassung sie genau so gezogen hat (samt Filter für Bau-, Test- und
+Beförderungs-Commits). Der Nutzer hat die richtige Frage gestellt: *„Sind die
+Neuigkeiten nun in allen unterstützten Sprachen? Da hätte ich eine Rückfrage
+erwartet."* Die Betreffs sind **deutsch** (CLAUDE.md: Doku auf Deutsch), das
+Popup aber ist Produkt-Oberfläche in neun Sprachen — ein japanischer Besucher
+hätte einen japanischen Rahmen um deutsche Sätze bekommen. Entschieden
+(Nutzer): eine **gepflegte englische Changelog-Datei**, wie der mitgelieferte
+Plan und `llms.md` ausgeliefertes Artefakt mit weltweitem Publikum (D22, D43).
+
+Verworfen waren: **deutsch lassen und benennen** (billig, aber acht der neun
+Sprachen lesen es nicht) und **die Notizen aus den Knoten-Labels des Plans
+ableiten** (schon englisch, keine Pflege, Text und Hervorhebung sagten
+zwangsläufig dasselbe — aber „Fold marks → fertig" ist eine Statusmeldung, kein
+Satz, und Tage ohne Plan-Änderung fielen ganz weg). Der Preis der gewählten
+Lösung ist ehrlich zu nennen: **eine Datei mehr, die beim Bauen eines Features
+mitgeschrieben werden muss** — als Regel in CLAUDE.md festgehalten, sonst
+veraltet sie still.
+
+**Der Link je Tag nennt die Zahl der Knoten, die es HEUTE noch gibt.** Die
+Schlüssel sind Label-Pfade (dieselbe Identität wie D28/D38); ein seither
+umbenannter Knoten ist nicht mehr zu treffen. Gezählt wird deshalb gegen den
+aktuellen Plan — im mitgelieferten Stand sind das beim 22.08. dreißig statt der
+zweiunddreißig gespeicherten. Ein Link, der „32 Knoten" verspricht und 30
+zeigt, wäre eine kleine Lüge an einer Stelle, an der es nichts kostet, die
+Wahrheit zu sagen.
+
+**Ein Tag kann einen Link ohne Notizen haben, aber nie umgekehrt.** Der
+Beförderungs-Commit (D30) ist der Regelfall: An einem reinen Deploy-Tag bewegt
+sich der Plan, ohne dass jemand einen Changelog-Eintrag schreibt. Ohne die
+Vereinigung beider Quellen fiele ausgerechnet der Tag stumm unter den Tisch, an
+dem etwas in Produktion gegangen ist.
+
+**Die Vorführung ersetzt den Besuchsvergleich, statt neben ihm zu stehen.** Es
+ist dieselbe Ansicht (gelber Kranz), nur mit einer anderen Frage; zwei
+gleichzeitige Mengen im selben Kanal wären nicht auseinanderzuhalten.
+Umgeschaltet wird dabei auf den mitgelieferten Plan — dessen Knoten sind
+gemeint. **Reihenfolge beachtet:** `switchDoc()` räumt einen vorgeführten Tag
+ausdrücklich weg (in einem anderen Dokument zeigten seine Schlüssel ins Leere),
+also muss erst gewechselt und dann gesetzt werden. In der anderen Reihenfolge
+löschte der Wechsel gerade den Tag, den man zeigen wollte — beim Bauen
+hineingelaufen.
+
+**Nicht persistiert.** Der Faltzustand steht im Text (D38), der Besuchsstand im
+localStorage (D28) — eine vorgeführte Chronik ist weder das eine noch das
+andere. Sie endet mit der Sitzung, mit dem Dokumentwechsel oder mit dem zweiten
+Druck.
+
+**Auf dem Telefon ist der Bezug die Werkzeugleiste, nicht der Knopf.** Das
+Popup ist 351 px breit, der Knopf 30 — an ihm ausgerichtet begann es bei
+**−116 px**, also außerhalb des Bildes (nachgemessen bei 375 px). `body.mobile
+.newswrap{position:static}` macht die `.header-tools` zum Bezug, deren rechter
+Rand auch der der Seite ist: danach 17 bis 368 px. Ein `overflow` an der
+Kopfzeile als Ausweg verbietet sich — das klippt genau diese Menüs (D50).
+
+**Backticks werden zu Code-Stücken**, und zwar **nach** dem Escapen: Was der
+Ersetzung vorliegt, ist bereits harmloser Text, der Weg zu eigenem Markup
+bleibt also verschlossen. Ohne die Ersetzung stünde `` `#auth` `` mit nackten
+Backticks im Popup und läse sich wie ein Tippfehler.
+
+**Nachgemessen** (Werkbaum-Plan, Dev-Server): 12 Tage im Popup, davon einer
+(28.07.) ohne Notizen mit Link — der Deploy-Tag. Der Link des 24.08. hebt 12
+Knoten hervor, holt den ersten in die Mitte und färbt den Knopf petrol; ein
+zweiter Druck stellt die 11 Knoten des Besuchsvergleichs wieder her; „gesehen"
+löscht sie und nimmt dem Knopf das Bernstein. Bei 375 px liegt das Popup
+vollständig im Bild und wird an beiden Kanten getroffen (`elementFromPoint`),
+die Kopfzeile bleibt einreihig. 20 neue Tests in `frontend/tests/news.test.js`,
+darunter einer, der die **ausgelieferte** `docs/CHANGELOG.md` liest — ist sie
+unlesbar, stünde das Popup sonst leer da, ohne dass es jemand merkt.

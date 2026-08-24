@@ -23,6 +23,17 @@
       <span data-i18n-title="brandTooltip" title="„Werkbaum“ bedeutet so viel wie ‚Werk-Baum‘ — der Baum des Projektstrukturplans (WBS).">Werk<span style="color:var(--or)">baum</span></span>
     </h1>
     <div class="header-tools">
+    <!-- Neuigkeiten (D58): der Stern aus dem Diagramm-Kopf, jetzt permanent.
+         Sein Popup zeigt die Änderungen der letzten Tage (aus der git-Historie,
+         zur Bauzeit eingelesen); je Tag führt ein Link die betroffenen Knoten
+         in der „Was ist neu?"-Ansicht (D28) im Diagramm vor. -->
+    <span class="newswrap">
+      <button type="button" id="newsBtn" class="fsbtn newsbtn" aria-haspopup="dialog" aria-expanded="false" data-i18n-title="newsTooltip" data-i18n-aria="newsTooltip" title="Neuigkeiten" aria-label="Neuigkeiten">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>
+        <span class="freshcount" id="freshCount" aria-hidden="true" hidden>0</span>
+      </button>
+      <div class="newsmenu" id="newsMenu" role="dialog" data-i18n-aria="newsTitle" aria-label="Neuigkeiten" hidden></div>
+    </span>
     <button type="button" id="fsToggle" class="fsbtn" aria-pressed="false" data-i18n-title="fullscreenTooltip" data-i18n-aria="fullscreenTooltip" title="Vollbild – Panels nutzen die ganze Fensterbreite" aria-label="Vollbild – Panels nutzen die ganze Fensterbreite">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
     </button>
@@ -178,15 +189,13 @@
       </button>
       <!-- Von Station zu Station des günstigsten Pfads (SPEC §9, D47). Kein
            Umschalter, sondern eine Bewegung: jeder Druck holt die nächste noch
-           offene Station in die Mitte. Verborgen, solange es keine gibt (wie
-           der „Was ist neu?"-Knopf daneben). -->
+           offene Station in die Mitte. Verborgen, solange es keine gibt. -->
       <button type="button" class="copybtn" id="leanNextBtn" title="Zur nächsten Station des günstigsten Pfads" aria-label="Zur nächsten Station des günstigsten Pfads" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12h5" stroke-dasharray="2.5 2.5"/><circle cx="11" cy="12" r="3"/><path d="M15 12h6M18.5 9.5l2.5 2.5-2.5 2.5"/></svg>
       </button>
-      <button type="button" class="copybtn freshbtn" id="freshBtn" title="Neu in Produktion" aria-label="Neu in Produktion" hidden>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>
-        <span class="freshcount" id="freshCount" aria-hidden="true">0</span>
-      </button>
+      <!-- Der Stern stand hier bis D58 („Was ist neu?", D28) und ist in die
+           Kopfzeile gewandert: Er sagt jetzt nicht nur etwas über das aktive
+           Dokument, sondern über das Produkt — und ist deshalb immer da. -->
       <!-- Faltung für den ganzen Baum (SPEC §9, D44): ein Umschalter wie die
            beiden Nachbarn. Gedrückt = alles ab Größe M abwärts ist zugeklappt. -->
       <button type="button" class="copybtn togglebtn" id="foldSmallBtn" aria-pressed="false" data-i18n-title="foldSmallTooltip" data-i18n-aria="foldSmallTooltip" title="Knoten der Größe M und kleiner zuklappen – erneut drücken klappt alle wieder auf" aria-label="Knoten der Größe M und kleiner zuklappen – erneut drücken klappt alle wieder auf">

@@ -80,6 +80,7 @@
       - [^] #ed.snaps.manual: Save a state by hand, before a larger change (XS)  %% ten minutes is the wrong beat for that moment
     - [ ] #ed.files: Open and save .werkbaum files (S)
     + [^] #ed.fresh: Show what is new since your last visit (S)
+      - [x] #ed.fresh.news: A star in the header, with the last few days (S)  %% see D58
     + [?] #ed.percolor: A pastel colour per person (S)
     - [?] #ed.dates: Dates and milestones (M)
       | [?] #ed.dates.attr: An attribute in the line (S)
@@ -554,6 +555,12 @@
   For documents that come from outside, nodes that went to production since
   your last visit get a yellow halo. New means live, not "line added" — a line
   diff would be mostly noise.
+
+#ed.fresh.news
+  A star that is always in the header opens a popup with the changes of the
+  last few days; every day can show its nodes in the diagram, in the very same
+  halo view. Notes come from docs/CHANGELOG.md, the nodes from the plan's git
+  history, both read at build time.
 
 #ed.percolor
   Give every @name a colour derived from the name itself, so the same person

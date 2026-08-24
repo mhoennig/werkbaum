@@ -87,6 +87,63 @@
   .fsbtn svg{display:block}
   .fsbtn:hover{border-color:var(--or);color:var(--or)}
   .fsbtn.active{background:var(--or);color:#fff;border-color:var(--or)}
+  /* Neuigkeiten (D58). Der Knopf steht permanent in der Kopfzeile; **bernstein**
+     heißt „da ist etwas, das du noch nicht gesehen hast" — dieselben Töne, die
+     der Strahlenkranz am Knoten trägt (D28), damit Knopf und Knoten dasselbe
+     sagen. Petrol (`.active`) heißt etwas anderes: Es wird gerade ein
+     bestimmter Tag im Diagramm vorgeführt. */
+  .newswrap{position:relative;display:inline-flex;flex:0 0 auto}
+  .newsbtn{width:auto;min-width:30px;padding:0 6px;gap:2px}
+  .newsbtn.unseen{color:#A16207;border-color:#FACC15;background:#FEFCE8}
+  .newsbtn.unseen:hover{color:#854D0E;border-color:#EAB308}
+  .newsbtn .freshcount[hidden]{display:none}
+  .newsmenu{
+    position:absolute;top:calc(100% + 6px);right:0;z-index:60;
+    width:min(420px,calc(100vw - 24px));max-height:min(70vh,520px);overflow:auto;
+    background:var(--card);border:1px solid rgba(36,52,71,.15);border-radius:10px;
+    padding:10px 12px;box-shadow:0 8px 24px rgba(36,52,71,.22);
+    text-transform:none;letter-spacing:0;font-family:'IBM Plex Sans',sans-serif;
+    text-align:left;color:var(--ink);
+  }
+  .newsmenu[hidden]{display:none}
+  .newshead{
+    display:flex;align-items:center;gap:8px;
+    font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  }
+  .newshead .newsclose{
+    margin-left:auto;border:0;background:transparent;cursor:pointer;
+    color:var(--muted);font-size:1rem;line-height:1;padding:2px 4px;border-radius:6px;
+  }
+  .newshead .newsclose:hover{color:var(--ink);background:rgba(36,52,71,.07)}
+  /* „Seit deinem letzten Besuch" (D28) — die persönliche Hälfte, deshalb
+     bernstein abgesetzt und oben, vor der allgemeinen Chronik. */
+  .newssince{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    margin-top:8px;padding:8px 10px;border-radius:8px;
+    background:#FEFCE8;border:1px solid #FACC15;color:#854D0E;font-size:.82rem;
+  }
+  .newssince .newsseen{
+    margin-left:auto;border:1px solid rgba(133,77,14,.35);border-radius:7px;
+    background:transparent;color:inherit;cursor:pointer;
+    padding:3px 9px;font-family:inherit;font-size:.78rem;
+  }
+  .newssince .newsseen:hover{background:rgba(133,77,14,.1)}
+  .newsday{margin-top:10px;padding-top:9px;border-top:1px solid rgba(36,52,71,.12)}
+  .newsdate{font-weight:600;font-size:.84rem}
+  .newslines{margin:5px 0 0;padding-left:17px;font-size:.82rem;line-height:1.55;color:var(--ink)}
+  .newslines li{margin:1px 0}
+  .newslines code{
+    font-family:'IBM Plex Mono',monospace;font-size:.92em;
+    background:rgba(36,52,71,.07);border-radius:4px;padding:0 3px;
+  }
+  .newsshow{
+    margin-top:6px;border:1px solid rgba(36,52,71,.2);border-radius:7px;
+    background:var(--card);color:var(--muted);cursor:pointer;
+    padding:4px 9px;font-family:inherit;font-size:.78rem;
+  }
+  .newsshow:hover{border-color:var(--or);color:var(--or)}
+  .newsshow[aria-pressed="true"]{background:var(--or);color:#fff;border-color:var(--or)}
+  .newsempty{margin-top:8px;color:var(--muted);font-size:.82rem}
   /* Vollbild: Panels nutzen fast die ganze Fensterbreite; es bleibt ein
      schmaler Rand (halber Panel-Zwischenraum = 7 px), damit es nicht gedrängt
      wirkt. */
@@ -263,9 +320,8 @@
      Splitter, nur schmaler. Ohne offene Legende gibt es nichts zu teilen. */
   /* Neuheiten-Knopf im Diagramm-Kopf (D28): Sternchen + Anzahl, nur sichtbar,
      wenn es etwas gibt. Gelb wie der Strahlenkranz am Knoten. */
-  .freshbtn{position:relative;color:#A16207;border-color:#FACC15;background:#FEFCE8}
-  .freshbtn:hover{color:#854D0E;border-color:#EAB308}
-  .freshbtn[hidden]{display:none}
+  /* Die Zahl der neuen Knoten sitzt seit D58 am Neuigkeiten-Knopf in der
+     Kopfzeile (die bernsteinfarbene Fassung steht dort bei `.newsbtn.unseen`). */
   .freshcount{
     font-family:'IBM Plex Mono',monospace;font-size:.62rem;font-weight:600;
     margin-left:3px;vertical-align:2px;
@@ -1306,6 +1362,12 @@
      statt die Zeile zu verbreitern); nach der Auswahl klappt sie wieder ein
      (JS). Das „…“ entfällt hier — die aktive Sprache ist selbst der Auslöser. */
   body.mobile .header-tools{position:relative}
+  /* Das Neuigkeiten-Popup ist breiter als sein Knopf. Am Knopf ausgerichtet
+     (`.newswrap{position:relative}`) begänne es auf dem Telefon bei −116 px,
+     also außerhalb des Bildes — nachgemessen bei 375 px. Hier zählt deshalb
+     die **Werkzeugleiste** als Bezug: Ihr rechter Rand ist auch der der Seite.
+     Kein `overflow` an der Kopfzeile als Ausweg — das klippt die Menüs (D50). */
+  body.mobile .newswrap{position:static}
   body.mobile .langsel button[data-lang]{display:none}
   body.mobile .langsel button[data-lang].active{display:inline-block}
   body.mobile .langmore{display:none}

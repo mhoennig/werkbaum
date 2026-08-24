@@ -650,11 +650,47 @@ Bei Dokumenten, die von außen kommen (mitgeliefert, per `?sourceUrl=` oder
 gezeigt, was sich seit dem letzten Besuch getan hat. **„Neu" heißt: neu in
 Produktion** — ein Knoten trägt jetzt `[^]` und tat es in der zuletzt gesehenen
 Fassung nicht. Solche Knoten bekommen einen **gelben Strahlenkranz** nach außen
-(die Füllung bleibt die Statusfarbe aus §4). Ein Knopf im Diagramm-Kopf nennt
-die Anzahl und bestätigt per Klick; danach ist die aktuelle Fassung die neue
+(die Füllung bleibt die Statusfarbe aus §4). Die Anzahl steht am
+**Neuigkeiten-Knopf** in der Kopfzeile (siehe unten), bestätigt wird im Popup;
+danach ist die aktuelle Fassung die neue
 Vergleichsbasis. Beim ersten Ansehen eines Dokuments leuchtet nichts. Der Kranz
 erscheint weder im Druck noch im Grafikexport — er hängt am persönlichen
 Besuchsstand. Siehe D28.
+
+### Neuigkeiten (Stern in der Kopfzeile)
+Ein **Stern-Knopf in der oberen Bedienleiste** ist immer sichtbar und öffnet ein
+Popup mit den Änderungen der letzten Tage — je Tag ein Datum und ein paar kurze
+Notizen. Er trägt zwei Aussagen, die zusammengehören:
+
+- **Die Chronik** (allgemein): was am Produkt geschehen ist. Die Notizen stehen
+  in `docs/CHANGELOG.md`, die Knoten je Tag kommen aus der Versionsgeschichte
+  des mitgelieferten Plans; beides wird **beim Bauen** eingelesen und
+  eingebettet (zur Laufzeit lädt Werkbaum nichts nach, D20).
+- **Der Besuchsvergleich** (persönlich): „Was ist neu?" des aktiven Dokuments
+  (oben) — als abgesetzter Abschnitt zuoberst im Popup, mit dem Knopf
+  „gesehen".
+
+**Bernstein heißt ungesehen** — dieselben Töne wie der Strahlenkranz am Knoten,
+damit Knopf und Knoten dasselbe sagen. Er färbt sich, solange es unangesehene
+Tage gibt oder das aktive Dokument neue Knoten hat; die Zahl daneben ist die der
+neuen Knoten. Aufgeschlagen heißt gelesen: Das Öffnen des Popups merkt den
+neuesten gelisteten Tag als gesehen.
+
+**Jeder Tag mit Knotenänderungen trägt einen Link**, der genau diese Knoten im
+Diagramm in der „Was ist neu?"-Ansicht vorführt (gelber Kranz, §9) — dieselbe
+Ansicht, nur mit einer anderen Frage: „was geschah am 24.08." statt „was ist
+seit deinem letzten Besuch live gegangen". Dabei wird auf den mitgelieferten
+Plan umgeschaltet, denn dessen Knoten sind gemeint; der Knopf steht dann in
+Petrol („wird gerade vorgeführt") und ein zweiter Druck hebt es wieder auf.
+Genannt wird die Zahl der Knoten, die es **heute noch gibt** — ein seither
+umbenannter Knoten ist nicht mehr zu treffen, und der Link verspricht nichts,
+was er nicht halten kann. Die Vorführung ist Sitzungssache und wird nicht
+gemerkt.
+
+Die **Notizen sind englisch**, auch wenn die Oberfläche in einer anderen Sprache
+steht: `docs/CHANGELOG.md` ist ein ausgeliefertes Artefakt mit weltweitem
+Publikum, wie der mitgelieferte Plan und `llms.md` (§13). Übersetzt ist alles
+übrige — Titel, Knöpfe und die Datumsangaben. Siehe D58.
 
 ### Sprung zwischen Diagramm und Text
 Jeder Knoten kennt seine Zeilennummer im Notationstext; beide Richtungen sind
