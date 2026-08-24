@@ -23,7 +23,7 @@
     - [^] #not.desc: Node descriptions, shown as a tooltip (M)
       - [^] #not.desc.short: A short text right at the node (S)  %% a " line below the node
       - [^] #not.desc.long: A long block at the end, addressed by its id (S)  %% behind a --- separator
-    - [x] #not.sizes: Size conflict — sub-packages must fit the given size (S)  %% ranges, XXL open-ended, see D62
+    - [^] #not.sizes: Size conflict — sub-packages must fit the given size (S)  %% ranges, XXL open-ended, see D62
     - [-] #not.store: A separate storage format for the structure (L)  %% the text is the format
     - [ ] #not.ticket: Ticket references (#123,#US-123) (S)  %% Taiga writes #US-123 for a user story
     - [^] #not.llms: llms.md, the notation explained to AI agents (S)
