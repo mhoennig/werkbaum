@@ -74,7 +74,7 @@
       - [^] #ed.fold.write: Folding writes the mark back into the text (S)  %% one undo step
       - [^] #ed.fold.preset: One switch folds everything from size M downward (S)  %% see D44
     - [^] #ed.snaps: Earlier states of a document, every ten minutes (S)  %% only when something changed
-      - [x] #ed.snaps.manual: Save a state by hand, before a larger change (XS)  %% ten minutes is the wrong beat for that moment
+      - [^] #ed.snaps.manual: Save a state by hand, before a larger change (XS)  %% ten minutes is the wrong beat for that moment
     - [ ] #ed.files: Open and save .werkbaum files (S)
     + [^] #ed.fresh: Show what is new since your last visit (S)
     + [?] #ed.percolor: A pastel colour per person (S)
