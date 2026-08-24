@@ -3522,3 +3522,63 @@ Undo deshalb über `execCommand('undo')`; das steht jetzt auch in
 `frontend/CLAUDE.md`. Dieselbe Lehre wie D25 (synthetische `TouchEvent`s) und
 D17-Nachtrag 4 (Bildschirmtastatur): Was die Umgebung stellt, stellt der
 Emulator nicht.
+
+## D54 — Frühere Stände: alle zehn Minuten, nur bei Änderung, die letzten zwanzig
+Ein Sicherheitsnetz gegen Versehen — und der Anlass war ein echtes: Der
+Tab-Fehler aus D53 konnte eine ganze Auswahl löschen und nahm dabei auch noch
+das Rückgängig mit. Ohne Netz war der Text dann weg.
+
+**Aufbewahrt werden die letzten 20 je Dokument** (Nutzer-Entscheidung), also
+rund 3½ Stunden bei gleichmäßigen Abständen und höchstens ~800 kB beim größten
+Dokument. Erwogen und verworfen: **ausgedünnt** (alle der letzten Stunde,
+stündlich für einen Tag, täglich für eine Woche — reicht weiter zurück, kostet
+aber eine Ausdünn-Regel, die man beim Lesen erst verstehen muss) und
+**lückenlos 24 Stunden** (bis zu 144 Stände, beim großen Plan ~5,8 MB und damit
+über dem localStorage-Limit — es bräuchte doch wieder eine Notbremse). Der
+Anspruch ist bewusst klein: Wer weiter zurück will, hat Git.
+
+**„Nur bei Änderung" heißt: gegen den letzten Stand, nicht gegen das Laden.**
+Gibt es noch keinen Stand, wird gegen den Text beim Aktivieren des Dokuments
+verglichen (`snapBase`). Ohne das legte der erste Takt nach dem Öffnen auch ein
+**unverändertes** Dokument weg — beim Herumklicken durch mehrere Dokumente
+sammelte sich so Ballast, den niemand erzeugt hat. Nachgemessen: Ohne Eingabe
+entsteht der Schlüssel im localStorage gar nicht erst.
+
+**Die Dokumente sind wichtiger als ihre Stände.** Beide teilen sich den
+localStorage. Läuft er über, wirft `persistSnaps()` deshalb so lange den
+jeweils ältesten Stand weg, bis es passt, notfalls alle — statt eine Ausnahme
+hochzureichen und damit womöglich das Speichern der **Dokumente** zu
+gefährden. Ein gelöschtes Dokument nimmt seine Stände mit.
+
+**Zurückgeholt wird undo-fähig** (`replaceTextUndoable`, D53): ein Griff
+daneben kostet ein Strg+Z, keine Rückfrage — dieselbe Haltung wie beim Falten
+(D38-Nachtrag 2). Vorher wird der **aktuelle** Stand weggelegt, falls er noch
+nicht drin ist; sonst wäre ausgerechnet er das Einzige, was das Zurückholen
+verlöre.
+
+**Pad-Dokumente (D31) bleiben außen vor.** Ihr Textfeld ist schreibgeschützt —
+ein alter Stand ließe sich dort gar nicht einsetzen, und Stände zu sammeln,
+die niemand laden kann, wäre nur Ballast. Der Knopf ist dort verborgen
+(`src.readOnly` bewacht Sammeln, Laden und Sichtbarkeit).
+
+**Platzierung: rechts neben dem Dokumenten-Wähler** (Nutzer-Vorgabe), beide in
+einer Gruppe, die das `margin-right:auto` trägt. Der Positionsbezug des Menüs
+ist der **Knopf**, nicht die Gruppe: An der Gruppe ausgerichtet (`right:0`)
+begann es 190 px weiter links und lief aus dem Panel heraus — in der ersten
+Fassung gebaut, im Bild sofort zu sehen und nachgemessen (linke Kante bei
+−65 px). Jetzt `position:relative` an einer Hülle um den Knopf und `left:0` am
+Menü: linke Kante bei 99 px, gleichauf mit dem Knopf, ganz im Panel.
+
+Jeder Eintrag nennt **Uhrzeit und Zeilenzahl** — die Zeilenzahl sagt auf einen
+Blick, welchen der ähnlich benannten Stände man greift. Neueste zuoberst,
+danach sucht man zuerst.
+
+**Nachgemessen** (Takt für die Prüfung auf 2 s verkürzt, danach zurückgestellt
+und geprüft): ohne Eingabe kein Eintrag; nach einer Eingabe genau einer; ohne
+weitere Eingabe kommt keiner dazu; nach 29 Änderungen sind es **20** (gedeckelt,
+Zeitstempel aufsteigend, der älteste ist der kleinste Text). Menü: 20 Einträge,
+neueste zuoberst. Klick auf einen älteren Eintrag lädt ihn (36 → 32 Zeilen),
+schließt das Menü, das Diagramm zeichnet neu (30 Knoten) — und ein `undo` holt
+den vorherigen Stand zeichengenau zurück. Der **Pad-Fall** ist durch die
+`readOnly`-Wächter im Code abgedeckt, aber nicht live durchgespielt (er
+bräuchte ein echtes Pad).

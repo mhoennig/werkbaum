@@ -414,9 +414,22 @@
   /* Dokument-Wähler: der Name des aktiven Dokuments in der Editor-Titelzeile ist
      zugleich der Auslöser eines Dropdowns zum Wechseln/Anlegen/Umbenennen/Löschen
      (localStorage-Dokumente, noch kein Backend). */
+  /* Wähler + Snapshot-Knopf als eine Gruppe: Sie trägt das `margin-right:auto`
+     (schiebt die übrigen Knöpfe nach rechts) und ist der Positionsbezug des
+     Snapshot-Menüs — dadurch klappt es unter seinem Knopf auf, ohne dass JS
+     rechnen muss. Am Wähler selbst darf das auto-Margin nicht mehr stehen,
+     sonst schöbe es den Snapshot-Knopf von ihm weg. */
+  .docgroup{
+    display:inline-flex;align-items:center;gap:4px;
+    margin-right:auto;max-width:62%;min-width:0;
+  }
+  /* Bezug des Menüs ist der KNOPF, nicht die Gruppe: An der Gruppe ausgerichtet
+     (`right:0`) begänne es 190 px weiter links und liefe aus dem Panel heraus —
+     nachgemessen bei der ersten Fassung. */
+  .snapwrap{position:relative;display:inline-flex;flex:0 0 auto}
   .doctrigger{
     display:inline-flex;align-items:center;gap:5px;cursor:pointer;
-    margin-right:auto;max-width:60%;color:var(--muted);
+    min-width:0;color:var(--muted);
     padding:2px 6px;margin-left:-6px;border-radius:6px;
     text-transform:none;letter-spacing:0;font-family:'IBM Plex Mono',monospace;
   }
@@ -450,6 +463,27 @@
     padding:5px 7px;color:var(--ink);background:var(--card);
     font-family:inherit;font-size:.86rem;outline:none;
   }
+  /* Snapshot-Menü (D54): wie das Dokument-Menü, aber am rechten Rand seiner
+     Gruppe ausgerichtet — also unter dem Knopf. */
+  .snapbtn{flex:0 0 auto}
+  .snapmenu{
+    position:absolute;top:calc(100% + 6px);left:0;z-index:50;min-width:190px;
+    max-height:280px;overflow:auto;
+    display:flex;flex-direction:column;gap:2px;
+    background:var(--card);border:1px solid rgba(36,52,71,.15);border-radius:10px;
+    padding:6px;box-shadow:0 8px 24px rgba(36,52,71,.22);
+    text-transform:none;letter-spacing:0;font-family:'IBM Plex Sans',sans-serif;
+  }
+  .snapmenu[hidden]{display:none}
+  .snapitem{
+    display:flex;align-items:baseline;gap:8px;width:100%;
+    border:0;background:transparent;cursor:pointer;text-align:left;
+    padding:6px 9px;border-radius:7px;color:var(--ink);
+    font-family:inherit;font-size:.84rem;white-space:nowrap;
+  }
+  .snapitem:hover{background:rgba(15,118,110,.08)}
+  .snapitem .snapsize{margin-left:auto;color:var(--muted);font-size:.74rem}
+  .snapempty{padding:7px 9px;color:var(--muted);font-size:.8rem}
   .docmenu-actions{
     display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;padding-top:6px;
     border-top:1px solid rgba(36,52,71,.12);

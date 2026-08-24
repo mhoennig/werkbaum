@@ -1744,6 +1744,10 @@ const I18N = {
     brandTooltip:"„Werkbaum“ bedeutet so viel wie ‚Werk-Baum‘ — der Baum des Projektstrukturplans (WBS).",
     editorTitle:"Struktur (Text)", diagramTitle:"Diagramm",
     docSwitchTooltip:"Dokument wählen oder verwalten", docMenuAria:"Dokumente",
+    /* Frühere Stände (D54) — alle 10 Minuten, nur bei Änderung. */
+    snapTooltip:"Frühere Stände dieses Dokuments", snapMenuAria:"Frühere Stände",
+    snapNone:"Noch keine früheren Stände – gesichert wird alle 10 Minuten, sobald sich etwas geändert hat.",
+    snapLines:"{n} Zeilen",
     docNew:"Neues Dokument", docRename:"Umbenennen", docDelete:"Löschen",
     docNewName:"Unbenannt",
     docDeleteConfirm:"Dokument „{name}“ löschen?",
@@ -1829,6 +1833,9 @@ const I18N = {
     brandTooltip:"“Werkbaum” means roughly ‘work tree’ — the tree of the work breakdown structure (WBS).",
     editorTitle:"Structure (text)", diagramTitle:"Diagram",
     docSwitchTooltip:"Choose or manage document", docMenuAria:"Documents",
+    snapTooltip:"Earlier states of this document", snapMenuAria:"Earlier states",
+    snapNone:"No earlier states yet – one is kept every 10 minutes, once something has changed.",
+    snapLines:"{n} lines",
     docNew:"New document", docRename:"Rename", docDelete:"Delete",
     docNewName:"Untitled",
     docDeleteConfirm:"Delete document “{name}”?",
@@ -1914,6 +1921,9 @@ const I18N = {
     brandTooltip:"«Werkbaum» significa algo así como ‘árbol de trabajo’ — el árbol de la estructura de desglose del trabajo (EDT).",
     editorTitle:"Estructura (texto)", diagramTitle:"Diagrama",
     docSwitchTooltip:"Elegir o gestionar documento", docMenuAria:"Documentos",
+    snapTooltip:"Estados anteriores de este documento", snapMenuAria:"Estados anteriores",
+    snapNone:"Aún no hay estados anteriores: se guarda uno cada 10 minutos, cuando algo ha cambiado.",
+    snapLines:"{n} líneas",
     docNew:"Nuevo documento", docRename:"Renombrar", docDelete:"Eliminar",
     docNewName:"Sin título",
     docDeleteConfirm:"¿Eliminar el documento «{name}»?",
@@ -1999,6 +2009,9 @@ const I18N = {
     brandTooltip:"« Werkbaum » signifie à peu près « arbre de travail » — l’arbre de l’organigramme des tâches (WBS).",
     editorTitle:"Structure (texte)", diagramTitle:"Diagramme",
     docSwitchTooltip:"Choisir ou gérer le document", docMenuAria:"Documents",
+    snapTooltip:"États antérieurs de ce document", snapMenuAria:"États antérieurs",
+    snapNone:"Pas encore d’état antérieur : un état est conservé toutes les 10 minutes, dès que quelque chose a changé.",
+    snapLines:"{n} lignes",
     docNew:"Nouveau document", docRename:"Renommer", docDelete:"Supprimer",
     docNewName:"Sans titre",
     docDeleteConfirm:"Supprimer le document « {name} » ?",
@@ -2084,6 +2097,9 @@ const I18N = {
     brandTooltip:"„Werkbaum” znaczy mniej więcej ‚drzewo pracy’ — drzewo struktury podziału pracy (WBS).",
     editorTitle:"Struktura (tekst)", diagramTitle:"Diagram",
     docSwitchTooltip:"Wybierz lub zarządzaj dokumentem", docMenuAria:"Dokumenty",
+    snapTooltip:"Wcześniejsze stany tego dokumentu", snapMenuAria:"Wcześniejsze stany",
+    snapNone:"Brak wcześniejszych stanów – zapisywany jest co 10 minut, gdy coś się zmieni.",
+    snapLines:"wierszy: {n}",
     docNew:"Nowy dokument", docRename:"Zmień nazwę", docDelete:"Usuń",
     docNewName:"Bez nazwy",
     docDeleteConfirm:"Usunąć dokument „{name}”?",
@@ -2169,6 +2185,9 @@ const I18N = {
     brandTooltip:"«Werkbaum» примерно означает ‚дерево работ’ — дерево структуры декомпозиции работ (СДР).",
     editorTitle:"Структура (текст)", diagramTitle:"Диаграмма",
     docSwitchTooltip:"Выбрать документ или управлять им", docMenuAria:"Документы",
+    snapTooltip:"Прежние состояния этого документа", snapMenuAria:"Прежние состояния",
+    snapNone:"Прежних состояний пока нет — они сохраняются каждые 10 минут, если что-то изменилось.",
+    snapLines:"строк: {n}",
     docNew:"Новый документ", docRename:"Переименовать", docDelete:"Удалить",
     docNewName:"Без названия",
     docDeleteConfirm:"Удалить документ «{name}»?",
@@ -2254,6 +2273,9 @@ const I18N = {
     brandTooltip:"„Werkbaum“ का अर्थ लगभग ‚कार्य-वृक्ष‘ है — कार्य विभाजन संरचना (WBS) का वृक्ष।",
     editorTitle:"संरचना (टेक्स्ट)", diagramTitle:"आरेख",
     docSwitchTooltip:"दस्तावेज़ चुनें या प्रबंधित करें", docMenuAria:"दस्तावेज़",
+    snapTooltip:"इस दस्तावेज़ की पिछली स्थितियाँ", snapMenuAria:"पिछली स्थितियाँ",
+    snapNone:"अभी कोई पिछली स्थिति नहीं — कुछ बदलने पर हर 10 मिनट में एक सहेजी जाती है।",
+    snapLines:"{n} पंक्तियाँ",
     docNew:"नया दस्तावेज़", docRename:"नाम बदलें", docDelete:"हटाएँ",
     docNewName:"बिना शीर्षक",
     docDeleteConfirm:"दस्तावेज़ „{name}“ हटाएँ?",
@@ -2339,6 +2361,9 @@ const I18N = {
     riskTooltip:"高风险 – 工作量尚不明确。",
     editorTitle:"结构（文本）", diagramTitle:"图表",
     docSwitchTooltip:"选择或管理文档", docMenuAria:"文档",
+    snapTooltip:"此文档的早期状态", snapMenuAria:"早期状态",
+    snapNone:"暂无早期状态——内容有变动时，每 10 分钟保存一次。",
+    snapLines:"{n} 行",
     docNew:"新建文档", docRename:"重命名", docDelete:"删除",
     docNewName:"未命名",
     docDeleteConfirm:"删除文档“{name}”？",
@@ -2424,6 +2449,9 @@ const I18N = {
     riskTooltip:"高リスク – 規模はまだ不明。",
     editorTitle:"構造（テキスト）", diagramTitle:"ダイアグラム",
     docSwitchTooltip:"ドキュメントを選択・管理", docMenuAria:"ドキュメント",
+    snapTooltip:"このドキュメントの以前の状態", snapMenuAria:"以前の状態",
+    snapNone:"以前の状態はまだありません — 変更があれば 10 分ごとに保存されます。",
+    snapLines:"{n} 行",
     docNew:"新規ドキュメント", docRename:"名前を変更", docDelete:"削除",
     docNewName:"無題",
     docDeleteConfirm:"ドキュメント「{name}」を削除しますか？",
@@ -2869,6 +2897,130 @@ function toggleDocMenu(){ docMenu.hidden ? openDocMenu() : closeDocMenu(); }
    Dokument sichern, dann das Ziel laden und neu rendern. */
 function flushActive(){ const d = activeDoc(); if(d) d.text = src.value; }
 
+/* ---------- Frühere Stände (Snapshots, D54) ----------
+   Alle zehn Minuten wird der Text des aktiven Dokuments weggelegt — aber nur,
+   wenn er sich seit dem letzten Stand geändert hat. Aufgehoben werden die
+   letzten 20 je Dokument (rund 3½ Stunden Arbeit bei gleichmäßigen Abständen).
+   Es ist ein Sicherheitsnetz gegen Versehen, kein Versionsverwaltungssystem —
+   wer weiter zurück will, hat Git. */
+const LS_SNAPS = 'werkbaum-snaps';
+const SNAP_EVERY = 10 * 60 * 1000;
+const SNAP_KEEP = 20;
+let snaps = {};        /* {docId: [{t, text}, …]} — ältester zuerst */
+let snapBase = '';     /* Text bei Dokumentwechsel; Vergleich, solange es keinen Stand gibt */
+
+function loadSnaps(){
+  try{ const o = JSON.parse(localStorage.getItem(LS_SNAPS) || '{}');
+       snaps = o && typeof o === 'object' ? o : {}; }
+  catch(_){ snaps = {}; }
+}
+/* Der Platz im localStorage ist geteilt. Läuft er über, sollen die
+   **Dokumente** überleben, nicht ihre Stände — der Fehlerfall wirft deshalb
+   Stände weg, bis es passt, notfalls alle. */
+function persistSnaps(){
+  for(;;){
+    try{ localStorage.setItem(LS_SNAPS, JSON.stringify(snaps)); return true; }
+    catch(_){
+      if(!dropOldestSnap()){ try{ localStorage.removeItem(LS_SNAPS); }catch(_){} return false; }
+    }
+  }
+}
+function dropOldestSnap(){
+  let id = null, t = Infinity;
+  for(const k in snaps){
+    const l = snaps[k];
+    if(l && l.length && l[0].t < t){ t = l[0].t; id = k; }
+  }
+  if(id === null) return false;
+  snaps[id].shift();
+  if(!snaps[id].length) delete snaps[id];
+  return true;
+}
+/* Legt den aktuellen Text weg, wenn er neu ist. Pad-Dokumente (D31) bleiben
+   außen vor: Ihr Text ist schreibgeschützt, ein alter Stand ließe sich dort
+   gar nicht wieder einsetzen — Stände zu sammeln, die niemand laden kann,
+   wäre nur Ballast. */
+function snapshotNow(){
+  const d = activeDoc();
+  if(!d || src.readOnly) return false;
+  const text = src.value;
+  const list = snaps[d.id] || (snaps[d.id] = []);
+  const letzter = list.length ? list[list.length-1].text : snapBase;
+  if(text === letzter) return false;
+  list.push({t: Date.now(), text});
+  while(list.length > SNAP_KEEP) list.shift();
+  snapBase = text;
+  persistSnaps();
+  if(!snapMenu.hidden) renderSnapMenu();
+  return true;
+}
+setInterval(snapshotNow, SNAP_EVERY);
+
+const snapBtn = document.getElementById('snapBtn');
+const snapMenu = document.getElementById('snapMenu');
+
+function snapLabel(ms){
+  const d = new Date(ms);
+  const heute = d.toDateString() === new Date().toDateString();
+  try{
+    return heute
+      ? d.toLocaleTimeString(lang, {hour: '2-digit', minute: '2-digit'})
+      : d.toLocaleString(lang, {day: '2-digit', month: '2-digit',
+                                hour: '2-digit', minute: '2-digit'});
+  }catch(_){ return d.toISOString().slice(0, 16).replace('T', ' '); }
+}
+function renderSnapMenu(){
+  const d = activeDoc();
+  const list = d ? (snaps[d.id] || []) : [];
+  snapMenu.innerHTML = '';
+  if(!list.length){
+    const p = document.createElement('div');
+    p.className = 'snapempty';
+    p.textContent = t('snapNone');
+    snapMenu.appendChild(p);
+    return;
+  }
+  /* Neueste zuoberst — danach sucht man zuerst. */
+  list.slice().reverse().forEach(s => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'snapitem';
+    b.setAttribute('role', 'menuitem');
+    b.innerHTML = '<span></span><span class="snapsize"></span>';
+    b.firstChild.textContent = snapLabel(s.t);
+    b.lastChild.textContent = t('snapLines', {n: s.text.split('\n').length});
+    b.addEventListener('click', e => { e.stopPropagation(); loadSnapshot(s); });
+    snapMenu.appendChild(b);
+  });
+}
+/* Zurückgeholt wird **undo-fähig** (D53): Ein Griff daneben kostet ein Strg+Z,
+   keine Rückfrage. Der aktuelle Stand wird vorher weggelegt, falls er noch
+   nicht drin ist — sonst wäre er das Einzige, was der Griff verlöre. */
+function loadSnapshot(s){
+  if(src.readOnly) return;
+  snapshotNow();
+  closeSnapMenu();
+  if(!replaceTextUndoable(s.text)) render();
+  snapBase = src.value;
+}
+function openSnapMenu(){
+  renderSnapMenu();
+  snapMenu.hidden = false;
+  snapBtn.setAttribute('aria-expanded', 'true');
+}
+function closeSnapMenu(){
+  snapMenu.hidden = true;
+  snapBtn.setAttribute('aria-expanded', 'false');
+}
+function updateSnapBtn(){ snapBtn.hidden = src.readOnly; if(src.readOnly) closeSnapMenu(); }
+snapBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  snapMenu.hidden ? openSnapMenu() : closeSnapMenu();
+});
+document.addEventListener('click', e => {
+  if(!snapMenu.hidden && !snapMenu.contains(e.target) && !snapBtn.contains(e.target)) closeSnapMenu();
+});
+
 /* ---------- „Was ist neu?" (D28) ----------
    Verglichen wird gegen die zuletzt **gesehene** Fassung eines Dokuments von
    außen (mitgeliefert oder ?sourceUrl=), nicht gegen die letzte Auslieferung:
@@ -2918,7 +3070,11 @@ function updateFreshBtn(){
 }
 freshBtn.addEventListener('click', acknowledgeFresh);
 
-function loadActiveIntoEditor(){ const d = activeDoc(); src.value = d ? d.text : ''; render(); updateDocName(); updateFreshBtn(); }
+function loadActiveIntoEditor(){ const d = activeDoc(); src.value = d ? d.text : '';
+  /* Vergleichsstand für den nächsten Snapshot (D54): Ohne ihn legte der
+     erste Takt nach dem Öffnen auch ein unverändertes Dokument weg. */
+  snapBase = src.value; closeSnapMenu(); updateSnapBtn();
+  render(); updateDocName(); updateFreshBtn(); }
 function switchDoc(id){
   if(id === activeId) return;
   flushActive();
@@ -2977,6 +3133,7 @@ function deleteDoc(){
   if(!window.confirm(t('docDeleteConfirm', {name: d.name}))) return;
   if(padSource && padSource.id === d.id) stopPad();   /* danach gibt es nichts mehr zu holen (D31) */
   docs = docs.filter(x => x.id !== d.id);
+  if(snaps[d.id]){ delete snaps[d.id]; persistSnaps(); }   /* mit dem Dokument gehen seine Stände (D54) */
   if(!docs.length) docs = [{ id: EXAMPLE_ID, name: EXAMPLE_NAME, text: INITIAL }];
   activeId = docs[0].id;
   foldOverrides.clear();
@@ -2988,9 +3145,12 @@ function deleteDoc(){
 function initDocs(){
   restoring = true;
   loadDocs();
+  loadSnaps();
   const d = activeDoc();
   src.value = d ? d.text : '';
+  snapBase = src.value;
   restoring = false;
+  updateSnapBtn();
   persistDocs();   /* migrierte/geladene Liste festschreiben (stabil über Reload) */
   updateDocName();
   render();
@@ -3268,6 +3428,7 @@ function updatePadLink(){
   const d = activeDoc();
   const isPad = !!(d && padSource && d.id === padSource.id);
   src.readOnly = isPad;
+  updateSnapBtn();          /* Pad-Dokumente sammeln keine Stände (D54) */
   src.classList.toggle('readonly', isPad);
   if(srcWrap) srcWrap.classList.toggle('readonly', isPad);   /* Streifen mit abtönen */
   if(isPad) src.title = t('padReadonly'); else src.removeAttribute('title');
