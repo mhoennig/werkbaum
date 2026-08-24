@@ -1906,6 +1906,7 @@ const I18N = {
     freshTooltip:"Neu in Produktion seit dem letzten Ansehen: {n}.",
     newsTooltip:"Neuigkeiten",
     newsTitle:"Neuigkeiten",
+    newsEnglish:"Diese Übersicht wird leider nur auf Englisch gepflegt.",
     newsEmpty:"Keine Einträge.",
     newsUnseen:"Neuigkeiten aus {n} Tagen, die du noch nicht angesehen hast.",
     newsSince:"Seit deinem letzten Besuch: {n} neu in Produktion.",
@@ -2005,6 +2006,7 @@ const I18N = {
     freshTooltip:"New in production since you last looked: {n}.",
     newsTooltip:"What's new",
     newsTitle:"What's new",
+    newsEnglish:"This overview is only maintained in English.",
     newsEmpty:"Nothing recorded.",
     newsUnseen:"News from {n} days you haven't looked at yet.",
     newsSince:"Since your last visit: {n} new in production.",
@@ -2104,6 +2106,7 @@ const I18N = {
     freshTooltip:"Nuevo en producción desde la última vez: {n}.",
     newsTooltip:"Novedades",
     newsTitle:"Novedades",
+    newsEnglish:"Lamentablemente, este resumen solo se mantiene en inglés.",
     newsEmpty:"Sin entradas.",
     newsUnseen:"Novedades de {n} días que aún no has visto.",
     newsSince:"Desde tu última visita: {n} nuevo en producción.",
@@ -2203,6 +2206,7 @@ const I18N = {
     freshTooltip:"Nouveau en production depuis votre dernière visite : {n}.",
     newsTooltip:"Nouveautés",
     newsTitle:"Nouveautés",
+    newsEnglish:"Cet aperçu n'est malheureusement tenu à jour qu'en anglais.",
     newsEmpty:"Aucune entrée.",
     newsUnseen:"Nouveautés de {n} jours que vous n'avez pas encore consultées.",
     newsSince:"Depuis votre dernière visite : {n} nouveau en production.",
@@ -2302,6 +2306,7 @@ const I18N = {
     freshTooltip:"Nowe na produkcji od ostatniego razu: {n}.",
     newsTooltip:"Nowości",
     newsTitle:"Nowości",
+    newsEnglish:"Niestety to zestawienie jest prowadzone tylko po angielsku.",
     newsEmpty:"Brak wpisów.",
     newsUnseen:"Nowości z {n} dni, których jeszcze nie oglądałeś.",
     newsSince:"Od twojej ostatniej wizyty: {n} nowe na produkcji.",
@@ -2401,6 +2406,7 @@ const I18N = {
     freshTooltip:"Новое в продакшене с прошлого раза: {n}.",
     newsTooltip:"Новости",
     newsTitle:"Новости",
+    newsEnglish:"К сожалению, этот обзор ведётся только на английском языке.",
     newsEmpty:"Записей нет.",
     newsUnseen:"Новости за {n} дней, которые вы ещё не просматривали.",
     newsSince:"С вашего последнего визита: {n} новых в продакшене.",
@@ -2500,6 +2506,7 @@ const I18N = {
     freshTooltip:"पिछली बार से उत्पादन में नया: {n}।",
     newsTooltip:"नया क्या है",
     newsTitle:"नया क्या है",
+    newsEnglish:"खेद है, यह विवरण केवल अंग्रेज़ी में ही रखा जाता है।",
     newsEmpty:"कोई प्रविष्टि नहीं।",
     newsUnseen:"{n} दिनों की खबरें, जो आपने अभी तक नहीं देखीं।",
     newsSince:"आपकी पिछली यात्रा से: {n} उत्पादन में नए।",
@@ -2599,6 +2606,7 @@ const I18N = {
     freshTooltip:"自上次查看以来新上线：{n}。",
     newsTooltip:"最新动态",
     newsTitle:"最新动态",
+    newsEnglish:"很抱歉，此更新列表仅以英文维护。",
     newsEmpty:"暂无记录。",
     newsUnseen:"有 {n} 天的动态你还没有看过。",
     newsSince:"自你上次访问以来：{n} 项新上线。",
@@ -2698,6 +2706,7 @@ const I18N = {
     freshTooltip:"前回以降に本番化されたもの：{n} 件。",
     newsTooltip:"更新情報",
     newsTitle:"更新情報",
+    newsEnglish:"申し訳ありませんが、この一覧は英語でのみ更新されます。",
     newsEmpty:"項目はありません。",
     newsUnseen:"まだ見ていない {n} 日分の更新があります。",
     newsSince:"前回の訪問以降：{n} 件が本番化されました。",
@@ -3333,6 +3342,12 @@ function updateFreshBtn(){
 }
 
 function renderNewsMenu(){
+  /* Die Notizen sind englisch (D58) — wer die Oberfläche auf Japanisch stehen
+     hat, soll wissen, dass das Absicht ist und kein Fehler. Nicht für
+     englische Oberflächen: Dort wäre es eine Auskunft über nichts. Und optisch
+     zurückgenommen — es ist eine Fußnote zum Inhalt, nicht der Inhalt. */
+  const hinweis = (lang !== 'en' && NEWS.length)
+    ? `<div class="newsnote">${esc(t('newsEnglish'))}</div>` : '';
   const seit = (!newsKeySet && freshDocId === activeId && freshSet.size)
     ? `<div class="newssince"><span>${esc(t('newsSince', {n: freshSet.size}))}</span>`
       + `<button type="button" class="newsseen" id="newsSeenBtn">${esc(t('newsSeen'))}</button></div>`
@@ -3358,7 +3373,7 @@ function renderNewsMenu(){
   newsMenu.innerHTML = `<div class="newshead"><span>${esc(t('newsTitle'))}</span>`
     + `<button type="button" class="newsclose" id="newsCloseBtn"`
     + ` title="${esc(t('tipClose'))}" aria-label="${esc(t('tipClose'))}">×</button></div>`
-    + seit + (tage || `<div class="newsempty">${esc(t('newsEmpty'))}</div>`);
+    + hinweis + seit + (tage || `<div class="newsempty">${esc(t('newsEmpty'))}</div>`);
 }
 function openNewsMenu(){
   renderNewsMenu();

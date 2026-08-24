@@ -4185,3 +4185,20 @@ vollständig im Bild und wird an beiden Kanten getroffen (`elementFromPoint`),
 die Kopfzeile bleibt einreihig. 20 neue Tests in `frontend/tests/news.test.js`,
 darunter einer, der die **ausgelieferte** `docs/CHANGELOG.md` liest — ist sie
 unlesbar, stünde das Popup sonst leer da, ohne dass es jemand merkt.
+
+**Nachtrag — ein übersetzter Hinweis sagt, dass die Notizen englisch sind.**
+Der Haupttext oben begründet die englischen Notizen und lässt den Betrachter
+damit allein: Wer die Oberfläche auf Japanisch stehen hat, sieht einen
+japanischen Rahmen um englische Sätze und kann das für einen Fehler halten —
+für eine fehlende Übersetzung oder einen kaputten Sprachwechsel. Ein Satz
+oben im Popup nimmt dem die Spitze: „Diese Übersicht wird leider nur auf
+Englisch gepflegt", in allen neun Sprachen.
+
+**Er tritt optisch zurück** (klein, grau, ohne Rahmen und ohne Fläche): Es ist
+eine Fußnote zum Inhalt, nicht der Inhalt. Der bernsteinfarbene
+Besuchsvergleich darunter bleibt damit das erste, worauf der Blick fällt.
+
+**Bei englischer Oberfläche entfällt er** — dort wäre es eine Auskunft über
+nichts. Der Schlüssel ist trotzdem in allen neun Sprachen angelegt, auch auf
+Englisch: Ein Loch in der Tabelle lädt dazu ein, beim nächsten Durchsehen für
+einen Fehler gehalten und „repariert" zu werden.

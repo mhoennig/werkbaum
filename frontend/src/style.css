@@ -115,6 +115,10 @@
     color:var(--muted);font-size:1rem;line-height:1;padding:2px 4px;border-radius:6px;
   }
   .newshead .newsclose:hover{color:var(--ink);background:rgba(36,52,71,.07)}
+  /* Fußnote zur Sprache der Notizen (D58-Nachtrag): klein, grau, ohne Rahmen
+     und ohne Fläche — sie soll gelesen werden können, aber hinter dem Inhalt
+     zurückstehen, zu dem sie gehört. */
+  .newsnote{margin-top:7px;color:var(--muted);font-size:.73rem;line-height:1.45}
   /* „Seit deinem letzten Besuch" (D28) — die persönliche Hälfte, deshalb
      bernstein abgesetzt und oben, vor der allgemeinen Chronik. */
   .newssince{

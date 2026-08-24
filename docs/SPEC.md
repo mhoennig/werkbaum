@@ -690,7 +690,11 @@ gemerkt.
 Die **Notizen sind englisch**, auch wenn die Oberfläche in einer anderen Sprache
 steht: `docs/CHANGELOG.md` ist ein ausgeliefertes Artefakt mit weltweitem
 Publikum, wie der mitgelieferte Plan und `llms.md` (§13). Übersetzt ist alles
-übrige — Titel, Knöpfe und die Datumsangaben. Siehe D58.
+übrige — Titel, Knöpfe und die Datumsangaben. Damit das nicht wie ein Fehler
+aussieht, steht **oben im Popup ein übersetzter Hinweis**, dass diese Übersicht
+nur auf Englisch gepflegt wird; er ist klein und grau gehalten und tritt hinter
+den Inhalt zurück, zu dem er gehört. Bei englischer Oberfläche entfällt er.
+Siehe D58.
 
 ### Sprung zwischen Diagramm und Text
 Jeder Knoten kennt seine Zeilennummer im Notationstext; beide Richtungen sind
