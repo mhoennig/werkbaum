@@ -2183,7 +2183,7 @@ const I18N = {
     hint_root:"Zeile ohne Zeichen = Wurzelknoten. |, = und - / + nicht mischen.",
     hint_status:"Status als Kästchen nach dem Zeichen, z. B.",
     hint_size:"Aufwand als T-Shirt-Größe in Klammern, Link einfach als URL anhängen:",
-    hint_break:"Ab (M) gilt: weiter untergliedern — fehlt die Untergliederung, erscheint ein Platzhalter im Diagramm.",
+    hint_break:"Ab (M) gilt: weiter untergliedern — fehlt die Untergliederung, erscheint ein Platzhalter im Diagramm. Übersteigen die Teilpakete die angegebene Größe, warnt das Badge.",
     hint_comment:"Kommentare mit %% — als ganze Zeile oder am Zeilenende.",
     hint_cont:"Leerzeichen und \\ am Zeilenende — die nächste Zeile gehört noch dazu.",
     hint_people:"Personen mit @name — erscheinen unten rechts am Knoten.",
@@ -2287,7 +2287,7 @@ const I18N = {
     hint_root:"Line without a marker = root node. Do not mix |, = and - / +.",
     hint_status:"Status as a checkbox after the marker, e.g.",
     hint_size:"Effort as a T-shirt size in parentheses; add a link simply as a URL:",
-    hint_break:"From (M) on: break it down further — if the breakdown is missing, a placeholder appears in the diagram.",
+    hint_break:"From (M) on: break it down further — if the breakdown is missing, a placeholder appears in the diagram. If the sub-tasks exceed the given size, the badge warns.",
     hint_comment:"Comments with %% — whole line or at the end of a line.",
     hint_cont:"A space and \\ at the end of a line — the next line still belongs to it.",
     hint_people:"People with @name — shown at the bottom-right of the node.",
@@ -2391,7 +2391,7 @@ const I18N = {
     hint_root:"Línea sin marcador = nodo raíz. No mezcles |, = y - / +.",
     hint_status:"Estado como casilla tras el marcador, p. ej.",
     hint_size:"Esfuerzo como talla de camiseta entre paréntesis; añade un enlace simplemente como URL:",
-    hint_break:"A partir de (M): sigue desglosando — si falta el desglose, aparece un marcador de posición en el diagrama.",
+    hint_break:"A partir de (M): sigue desglosando — si falta el desglose, aparece un marcador de posición en el diagrama. Si las subtareas exceden el tamaño indicado, la insignia avisa.",
     hint_comment:"Comentarios con %% — línea completa o al final de la línea.",
     hint_cont:"Un espacio y \\ al final de una línea — la línea siguiente sigue perteneciendo a ella.",
     hint_people:"Personas con @nombre — aparecen abajo a la derecha del nodo.",
@@ -2495,7 +2495,7 @@ const I18N = {
     hint_root:"Ligne sans marqueur = nœud racine. Ne mélangez pas |, = et - / +.",
     hint_status:"Statut sous forme de case après le marqueur, p. ex.",
     hint_size:"Effort en taille de T-shirt entre parenthèses ; ajoutez un lien simplement comme URL :",
-    hint_break:"À partir de (M) : décomposer davantage — si la décomposition manque, un espace réservé apparaît dans le diagramme.",
+    hint_break:"À partir de (M) : décomposer davantage — si la décomposition manque, un espace réservé apparaît dans le diagramme. Si les sous-tâches dépassent la taille indiquée, le badge avertit.",
     hint_comment:"Commentaires avec %% — ligne entière ou en fin de ligne.",
     hint_cont:"Une espace et \\ en fin de ligne — la ligne suivante en fait encore partie.",
     hint_people:"Personnes avec @nom — affichées en bas à droite du nœud.",
@@ -2599,7 +2599,7 @@ const I18N = {
     hint_root:"Wiersz bez znacznika = węzeł główny. Nie mieszaj |, = i - / +.",
     hint_status:"Status jako pole wyboru po znaczniku, np.",
     hint_size:"Nakład jako rozmiar koszulki w nawiasach; link dodaj po prostu jako URL:",
-    hint_break:"Od (M): dziel dalej — gdy brakuje podziału, w diagramie pojawia się symbol zastępczy.",
+    hint_break:"Od (M): dziel dalej — gdy brakuje podziału, w diagramie pojawia się symbol zastępczy. Gdy podzadania przekraczają podany rozmiar, plakietka ostrzega.",
     hint_comment:"Komentarze z %% — cały wiersz lub na końcu wiersza.",
     hint_cont:"Spacja i \\ na końcu wiersza — następny wiersz nadal do niego należy.",
     hint_people:"Osoby z @nazwa — pokazywane w prawym dolnym rogu węzła.",
@@ -2703,7 +2703,7 @@ const I18N = {
     hint_root:"Строка без маркера = корневой узел. Не смешивайте |, = и - / +.",
     hint_status:"Статус в виде флажка после маркера, напр.",
     hint_size:"Трудоёмкость как размер футболки в скобках; ссылку добавьте просто как URL:",
-    hint_break:"С (M): дробите дальше — если декомпозиции нет, в диаграмме появляется заполнитель.",
+    hint_break:"С (M): дробите дальше — если декомпозиции нет, в диаграмме появляется заполнитель. Если подзадачи превышают указанный размер, значок предупреждает.",
     hint_comment:"Комментарии через %% — вся строка или в конце строки.",
     hint_cont:"Пробел и \\ в конце строки — следующая строка всё ещё относится к ней.",
     hint_people:"Люди через @имя — показываются справа внизу узла.",
@@ -2807,7 +2807,7 @@ const I18N = {
     hint_root:"बिना मार्कर वाली पंक्ति = मूल नोड। |, = और - / + को आपस में न मिलाएँ।",
     hint_status:"मार्कर के बाद चेकबॉक्स के रूप में स्थिति, जैसे",
     hint_size:"प्रयास कोष्ठक में टी-शर्ट आकार के रूप में; लिंक बस URL के रूप में जोड़ें:",
-    hint_break:"(M) से आगे: और विभाजित करें — विभाजन न होने पर आरेख में प्लेसहोल्डर दिखता है।",
+    hint_break:"(M) से आगे: और विभाजित करें — विभाजन न होने पर आरेख में प्लेसहोल्डर दिखता है। यदि उप-कार्य दी गई साइज़ से बड़े हों, तो बैज चेतावनी देता है।",
     hint_comment:"%% से टिप्पणियाँ — पूरी पंक्ति या पंक्ति के अंत में।",
     hint_cont:"पंक्ति के अंत में स्पेस और \\ — अगली पंक्ति उसी की बनी रहती है।",
     hint_people:"@नाम से व्यक्ति — नोड के नीचे-दाएँ दिखते हैं।",
@@ -2911,7 +2911,7 @@ const I18N = {
     hint_root:"无标记的行 = 根节点。请勿混用 |、= 与 - / +。",
     hint_status:"在标记后用方框表示状态，例如",
     hint_size:"用括号中的 T 恤尺码表示工作量；链接直接作为 URL 附加：",
-    hint_break:"从 (M) 起：继续细分——若缺少细分，图表中会出现占位符。",
+    hint_break:"从 (M) 起：继续细分——若缺少细分，图表中会出现占位符。若子任务超出所标注的大小，徽章会发出警告。",
     hint_comment:"用 %% 注释——整行或行尾。",
     hint_cont:"行尾的空格加 \\ —— 下一行仍属于这一行。",
     hint_people:"用 @姓名 表示人员——显示在节点右下角。",
@@ -3015,7 +3015,7 @@ const I18N = {
     hint_root:"マーカーのない行 = ルートノード。|・=・- / + を混在させないでください。",
     hint_status:"マーカーの後にチェックボックスで状態、例：",
     hint_size:"工数は括弧内の T シャツサイズで；リンクは URL としてそのまま追加：",
-    hint_break:"(M) 以上：さらに分解 — 分解がないと図にプレースホルダーが表示されます。",
+    hint_break:"(M) 以上：さらに分解 — 分解がないと図にプレースホルダーが表示されます。サブタスクが指定サイズを超えるとバッジが警告します。",
     hint_comment:"%% でコメント — 行全体または行末。",
     hint_cont:"行末の空白と \\ — 次の行も同じ行に属します。",
     hint_people:"@名前 で担当者 — ノードの右下に表示されます。",
@@ -3050,6 +3050,7 @@ function buildHint(){
       ${chip('fertig','[x]')}
       ${chip('prod','[^]')}
       ${chip('verworfen','[-]')}
+      ${chip('highrisk','[!]')}
     </div>
     ${esc(t('hint_size'))}<br>
     <code>- [ ] Backend (L) https://…</code><br>

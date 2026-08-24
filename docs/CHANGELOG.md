@@ -19,6 +19,8 @@ reverse.
 
 ## 2026-08-24
 
+- The legend shows the high-risk status `[!]` and mentions the size check
+- `llms.md` tabulates the size ranges and aligns its table columns
 - Long node titles wrap into evenly balanced lines of at most forty characters
 - With ids shown, the id sits on its own line above the title
 - The fold sign is a framed chip now — a click target you can actually hit

@@ -48,7 +48,7 @@ One node per line. Everything except the label is optional.
 ### Gate (first character after the indent)
 
 | char | meaning           | semantics                                         |
-|------|-------------------|---------------------------------------------------|
+|:-----|:------------------|:--------------------------------------------------|
 | `-`  | all of            | required part — all `-` siblings are needed       |
 | `+`  | optional          | a nice-to-have on the same and-group, dispensable |
 | `\|` | any of            | alternatives — at least one will be chosen        |
@@ -81,7 +81,7 @@ One node per line. Everything except the label is optional.
 ### Status box
 
 | box   | key              | meaning                                  |
-|-------|------------------|------------------------------------------|
+|:------|:-----------------|:-----------------------------------------|
 | `[?]` | idea             | vague idea                               |
 | `[ ]` | planned          | decided, nothing invested                |
 | `[~]` | in progress      | costs invested, risk high                |
@@ -109,15 +109,20 @@ One node per line. Everything except the label is optional.
 - From `(M)` upward a node **should be decomposed further**; a node ≥ M
   without children gets a placeholder hint in the diagram.
 - For cost estimation a missing size counts as `M`.
-- **Size conflict check:** a given size must fit the direct children. Each
-  size is read as a range (lower bounds double: XS=1, S=2, M=4, L=8, XL=16,
-  XXL=32; the upper bound is the next lower bound, XXL is open-ended). It is
-  a conflict — warning `sizeConflict` at the parent's line — only when the sum
-  of the children's lower bounds reaches the parent's upper bound, i.e. when
-  it is wrong under *every* reading. Only sized, non-optional, non-discarded
-  direct children count; in an `|`/`=` group only the smallest alternative.
-  An XXL parent never warns; nothing is corrected automatically. When you
-  write plans, pick parent sizes that pass this check.
+- **Size conflict check:** a given size must fit the direct children. For
+  this one check each size is read as a range (lower bounds double, XXL is
+  open-ended):
+
+  | size  | XS     | S      | M      | L       | XL       | XXL     |
+  |:------|:-------|:-------|:-------|:--------|:---------|:--------|
+  | range | [1, 2) | [2, 4) | [4, 8) | [8, 16) | [16, 32) | [32, ∞) |
+
+  It is a conflict — warning `sizeConflict` at the parent's line — only when
+  the sum of the children's lower bounds reaches the parent's upper bound,
+  i.e. when it is wrong under *every* reading. Only sized, non-optional,
+  non-discarded direct children count; in an `|`/`=` group only the smallest
+  alternative. An XXL parent never warns; nothing is corrected automatically.
+  When you write plans, pick parent sizes that pass this check.
 
 ### Token extraction order (why nothing collides)
 
