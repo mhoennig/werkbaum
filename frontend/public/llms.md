@@ -28,12 +28,12 @@ One node per line. Everything except the label is optional.
 
 ### Gate (first character after the indent)
 
-| char | meaning | semantics |
-|---|---|---|
-| `-` | all of | required part — all `-` siblings are needed |
-| `+` | optional | a nice-to-have on the same and-group, dispensable |
-| `\|` | any of | alternatives — at least one will be chosen |
-| `=` | exactly one (xor) | alternatives — exactly one may be realized |
+| char | meaning           | semantics                                         |
+|------|-------------------|---------------------------------------------------|
+| `-`  | all of            | required part — all `-` siblings are needed       |
+| `+`  | optional          | a nice-to-have on the same and-group, dispensable |
+| `\|` | any of            | alternatives — at least one will be chosen        |
+| `=`  | exactly one (xor) | alternatives — exactly one may be realized        |
 
 - `-` and `+` may be mixed within one sibling group (conjunctive group).
   `|` groups and `=` groups must be **uniform** — any other mixture is
@@ -60,16 +60,16 @@ One node per line. Everything except the label is optional.
 
 ### Status box
 
-| box | key | meaning |
-|---|---|---|
-| `[?]` | idea | vague idea |
-| `[ ]` | planned | decided, nothing invested |
-| `[~]` | in progress | costs invested, risk high |
-| `[/]` | walking skeleton | works end to end, polish missing |
-| `[x]` | done | complete |
-| `[^]` | in production | deployed / live |
-| `[-]` | discarded | deliberately dropped (hidden by default) |
-| `[!]` | high risk | effort still unclear |
+| box   | key              | meaning                                  |
+|-------|------------------|------------------------------------------|
+| `[?]` | idea             | vague idea                               |
+| `[ ]` | planned          | decided, nothing invested                |
+| `[~]` | in progress      | costs invested, risk high                |
+| `[/]` | walking skeleton | works end to end, polish missing         |
+| `[x]` | done             | complete                                 |
+| `[^]` | in production    | deployed / live                          |
+| `[-]` | discarded        | deliberately dropped (hidden by default) |
+| `[!]` | high risk        | effort still unclear                     |
 
 - No box = neutral node. `x` may also be uppercase `X`.
 - Unknown codes are tolerated: the node renders neutral, with a warning —
