@@ -4319,3 +4319,100 @@ Knoten.
 `#`-Umschalter bekommt er **keine** `nid`-Spanne, der Nachbar `#auth: Backend`
 schon. 337 Tests, davon 6 neue; der eine alte, der die frühere Regel festhielt,
 ist umgeschrieben und benennt jetzt diese.
+
+## D61 — Angefangenes liegt auf dem Pfad: Zugaben und Alternativen
+Gemeldet an einem kleinen Baum:
+
+```
+- [ ] #fe
+  + [~] #fe.rel: Relations bearbeitbar (S)
+  + [?] #fe.more: weitere Features …
+```
+
+Erwartet war, dass der Pfad durch `#fe.rel` läuft — „auch wenn es optional
+ist, weil das ja nun schon begonnen wurde". Er lief stattdessen durch `#fe`,
+und die einzige Station war der Elternknoten.
+
+**Die Regel dahinter stand seit D29 ohne Ausnahme da:** Optionale Knoten sind
+*nie* nötig. Sie ist aus einem echten Fehler entstanden — der Pfad rechnete
+jede Zugabe ins Minimum und **überschätzte** sich systematisch. Der umgekehrte
+Fehler war dabei nie bedacht: angefangene Arbeit zu **unterschlagen**. Seit
+D46 beantwortet der Pfad ohnehin nicht mehr „was hätte der Plan von vorn
+gekostet?", sondern „was ist als Nächstes dran?" — und `[~]` ist das
+Vorderste, was es gibt. Praktisch heißt das, dass der
+Von-Station-zu-Station-Knopf (D47) einen nie dorthin führt, wo gerade
+tatsächlich gearbeitet wird.
+
+`+` ist eine Aussage über den **Plan** („entbehrlich"), der Status eine über
+die **Tatsachen** („daran wird gearbeitet"). Die beiden Achsen bleiben
+unabhängig (§3) — der Pfad ist ein Drittes und darf beide lesen.
+
+**Entschieden: Eine Zugabe liegt auf dem Pfad, sobald sie realisiert (§3),
+aber noch nicht erledigt (D46) ist** — also bei `[~]` und `[/]`.
+
+**Die Formulierung ist der eigentliche Fund.** Mein erster Vorschlag war die
+volle Schwelle „realisiert" (`[~] [/] [x] [^]`), begründet damit, dass §3 das
+Wort schon führt und keine dritte Schwelle dazukommt. Der Nutzer hat
+widersprochen: *„Eigentlich sollen fertige oder gar deployed Knoten gar nicht
+auf den Lean-Path, da gibt es ja nichts mehr zu tun."* Das ist richtig, und
+mein Argument gegen die engere Fassung fällt weg, sobald man sie aus den
+**vorhandenen** Begriffen zusammensetzt: *realisiert, aber nicht erledigt*.
+`isStarted = isRealized && !isDone` — kein neues Vokabular.
+
+**Was dabei zu klären war: „auf dem Pfad" ist nicht „Station".** Seit D46
+bekommt ein erledigter Knoten auf dem Pfad **keinen** Stationspunkt, **keine**
+Pfadlinie und geht mit **0** in die Kosten; übrig bleibt allein, dass er nicht
+zurücktritt — und das tut er per D46-Nachtrag ohnehin nie. Für den fertigen
+Knoten **selbst** war der Unterschied zwischen beiden Schwellen also exakt
+null. Er lag einzig darin, ob der Pfad **in eine fertige Zugabe hineinschaut**
+und dort liegen gebliebene offene Kinder als Station zeigt. Auch das entfällt
+jetzt, und zwar mit einem eigenen Argument aus §3: Wer unter einem `+`-Knoten
+hängt, ist mit ihm zusammen entbehrlich — der Autor hat `[x]` geschrieben, ein
+offener Rest darunter ist Buchhaltung, keine offene Front.
+
+**Ehrlich zu benennen ist der Einwand gegen die ganze Regel:** Streng „am
+günstigsten" wäre es, die angefangene Zugabe **abzubrechen** — Restkosten
+gespart. Der Pfad zeigt seit D46 aber die offene Front, nicht das theoretische
+Optimum. Und der Rückweg steht in der Notation schon: Wer die Zugabe wirklich
+fallen lässt, schreibt `[-]`, und Verworfenes zählt nie.
+
+**Dabei gefunden: dieselbe Lücke bei Alternativen — und die SPEC hatte recht,
+der Code nicht.** §9 sagt seit D46 wörtlich: „Eine bereits realisierte
+Alternative gewinnt, auch wenn eine unangetastete nominell billiger wäre — die
+Wahl ist getroffen und bezahlt." Umgesetzt war das aber nur **über die
+Kosten**, und die sind allein bei `[x]`/`[^]` null. Nachgemessen an
+`= [~] A (L)` / `= [ ] B (S)`: Der Pfad wählte **B** und blasste das
+angefangene A aus — das Bild widersprach damit der XOR-Regel des Plans, die
+gerade sagt, dass A die realisierte Alternative ist. Also kein neues Feature,
+sondern die fehlende Hälfte der Umsetzung: `chosenPool(kids)` schränkt die
+Wahlmenge auf die realisierten Alternativen ein, sobald es welche gibt; die
+Kostenregel (kleinste rekursive Kosten, Gleichstand ⇒ erste) gilt darin
+unverändert.
+
+**Mehrere realisierte Alternativen** sind in einer `=`-Gruppe schon per
+`xorConflict` gemeldet, in einer `|`-Gruppe („mindestens eine") aber zulässig.
+Dort entscheiden unter ihnen wieder die Kosten. Erwogen und **aufgeschoben**:
+alle realisierten gemeinsam auf den Pfad zu nehmen. Das wäre ein größerer
+Eingriff — eine any-of-Gruppe trüge dann nicht mehr genau eine Alternative —,
+und die gewählte Lesart ist für sich verteidigbar: `|` erlaubt das Fallenlassen,
+also ist „die billigere der begonnenen fertigstellen" ein gültiger günstigster
+Weg.
+
+**Nebengewinn bei der Suche (D42):** Eine Gruppe mit genau einer realisierten
+Alternative ist entschieden und damit **keine freie Variable** mehr — sie
+koppelt nicht und geht nicht in den Odometer ein. Die erschöpfende Suche wird
+dadurch kleiner, nie größer.
+
+**Nachgemessen.** Der gemeldete Baum: `#fe.rel` ist jetzt die Station, `#fe`
+liegt auf dem Pfad ohne Punkt, `#fe.more` bleibt blass. Eine fertige Zugabe
+mit offenem Kind bleibt samt Kind draußen. `= [~] A (L)` schlägt
+`= [ ] B (S)`. Der **mitgelieferte Plan ändert sich nicht** (131 Pfadknoten,
+27 Stationen, vorher wie nachher) — er hat keine angefangene Zugabe, und seine
+einzige Gruppe mit realisierten Alternativen trägt zwei `[^]`, die schon
+vorher beide 0 kosteten.
+
+346 Tests, davon 10 neue. Gegenprobe: Nimmt man die Zugaben-Ausnahme wieder
+heraus, fallen genau die fünf danach benannten Zusicherungen; nimmt man
+`chosenPool` heraus, genau die zwei zu den Alternativen. Die Tests, die das
+**unveränderte** Verhalten festhalten (unangetastete und erledigte Zugaben
+bleiben draußen), bleiben in beiden Fällen grün.

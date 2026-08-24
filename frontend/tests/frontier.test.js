@@ -80,10 +80,22 @@ describe('Auswahl — die getroffene Wahl gewinnt', () => {
   | [ ] Billig (XS)`)).toEqual(['Gemacht', 'Wahl']);
   });
 
-  it('eine erst angefangene Alternative gewinnt dadurch NICHT', () => {
+  /* Bis D61 gewann hier „Billig": Die Wahl lief allein über die Kosten, und
+     die sind nur bei `[x]`/`[^]` null. Angefangenes kostet voll und verlor
+     damit — obwohl SPEC §9 die Regel schon so formuliert hatte. */
+  it('gilt auch für eine erst angefangene Alternative', () => {
     expect(cheapLabels(`[ ] Wahl (XS)
   | [~] Angefangen (L)
-  | [ ] Billig (XS)`)).toEqual(['Billig', 'Wahl']);
+  | [ ] Billig (XS)`)).toEqual(['Angefangen', 'Wahl']);
+  });
+
+  /* Die unangetastete ist hier die billigste von allen — gewählt wird
+     trotzdem unter den realisierten, und dort entscheiden die Kosten. */
+  it('lässt unter mehreren realisierten wieder die Kosten entscheiden', () => {
+    expect(cheapLabels(`[ ] Wahl (XS)
+  | [~] Teuer (L)
+  | [/] Günstig (S)
+  | [ ] Unangetastet (XS)`)).toEqual(['Günstig', 'Wahl']);
   });
 
   it('gilt auch in einer XOR-Gruppe', () => {

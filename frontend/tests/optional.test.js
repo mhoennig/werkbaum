@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/parser.js';
-import { computeCheapSet, cheapestCost, visibleChildren } from '../src/model.js';
+import { computeCheapSet, cheapestCost, cheapCls, visibleChildren } from '../src/model.js';
 import { renderTreeHtml } from '../src/render.js';
 
 const t = key => key;
@@ -38,7 +38,7 @@ describe('Parser — `+` setzt optional, nicht das Gate', () => {
   });
 });
 
-describe('Günstigster Pfad — optionale Knoten sind nie nötig', () => {
+describe('Günstigster Pfad — unangetastete Zugaben sind nicht nötig', () => {
   const BAUM = `[ ] Wurzel (S)
   - [ ] Pflicht (S)
   + [ ] Zugabe (XXL)
@@ -66,6 +66,59 @@ describe('Günstigster Pfad — optionale Knoten sind nie nötig', () => {
     const [wurzel] = roots(BAUM);
     expect(visibleChildren(wurzel, false).map(k => k.label))
       .toEqual(['Pflicht', 'Zugabe']);
+  });
+});
+
+/* Die Ausnahme (D61): Wird an der Zugabe gearbeitet, ist sie offene Arbeit —
+   und der Pfad zeigt seit D46 die offene Front. Erledigte bleiben draußen. */
+describe('Günstigster Pfad — an einer angefangenen Zugabe wird gearbeitet', () => {
+  it('nimmt eine `[~]`-Zugabe auf den Pfad', () => {
+    expect(cheapLabels(`[ ] Wurzel (S)\n  - [ ] Pflicht (S)\n  + [~] Zugabe (S)`))
+      .toEqual(['Pflicht', 'Wurzel', 'Zugabe']);
+  });
+
+  it('nimmt eine `[/]`-Zugabe ebenso', () => {
+    expect(cheapLabels(`[ ] Wurzel (S)\n  + [/] Zugabe (S)`))
+      .toEqual(['Wurzel', 'Zugabe']);
+  });
+
+  it('lässt `[?]`, `[ ]`, `[!]` und ohne Status weiterhin draußen', () => {
+    expect(cheapLabels(`[ ] Wurzel (S)
+  + [?] Idee (S)
+  + [ ] Geplant (S)
+  + [!] Riskant (S)
+  + Neutral (S)`)).toEqual(['Wurzel']);
+  });
+
+  /* Genau der Punkt, an dem die Empfehlung korrigiert wurde: Fertiges gehört
+     nicht auf die offene Front — und was darunter offen blieb, ist mit der
+     Zugabe zusammen entbehrlich (§3). */
+  it('lässt eine erledigte Zugabe samt offenem Rest draußen', () => {
+    expect(cheapLabels(`[ ] Wurzel (S)
+  + [x] Fertige Zugabe (S)
+    - [ ] Rest (M)
+  + [^] Live (S)`)).toEqual(['Wurzel']);
+  });
+
+  it('nimmt den Teilbaum der angefangenen Zugabe mit', () => {
+    expect(cheapLabels(`[ ] Wurzel (S)\n  + [~] Zugabe (S)\n    - [ ] Teil (S)`))
+      .toEqual(['Teil', 'Wurzel', 'Zugabe']);
+  });
+
+  it('rechnet sie damit auch in die Kosten des Elternknotens', () => {
+    /* Wurzel (S=2) + Zugabe (S=2) = 4; unangetastet wären es 2. */
+    expect(cheapestCost(roots(`[ ] Wurzel (S)\n  + [~] Zugabe (S)`)[0])).toBe(4);
+  });
+
+  it('macht sie zur Station statt des Elternknotens', () => {
+    const [wurzel] = roots(`[ ] Wurzel (S)\n  + [~] Zugabe (S)`);
+    const set = computeCheapSet([wurzel]);
+    expect(cheapCls(wurzel, set, false)).toBe('cheap');
+    expect(cheapCls(wurzel.children[0], set, false)).toBe('cheap cheap-leaf');
+  });
+
+  it('lässt eine verworfene Zugabe auch angefangen draußen', () => {
+    expect(cheapLabels(`[ ] Wurzel (S)\n  + [-] Abgebrochen (S)`)).toEqual(['Wurzel']);
   });
 });
 

@@ -63,7 +63,8 @@ One node per line. Everything except the label is optional.
   `[~]`, `[/]`, `[x]` or `[^]`); each additional realized one warns
   (`xorConflict`).
 - Optionality (`+`) is orthogonal to status: an optional node can be long
-  `[^]`. Optional nodes never count toward the cheapest path.
+  `[^]`. An optional node counts toward the cheapest path **only while it is
+  being worked on** — `[~]` or `[/]`; untouched and finished ones stay out.
 
 ### Fold mark (immediately before the label, i.e. after the status box)
 
@@ -96,10 +97,11 @@ One node per line. Everything except the label is optional.
 - **`[x]` and `[^]` cost nothing any more.** The cheapest path prices the
   work that is *left*, so a done node adds zero regardless of its size and
   carries no station on the path line; started work (`[~]`, `[/]`) still
-  counts in full. A realized alternative therefore wins its `|`/`=` group
-  even when a cheaper unstarted one sits next to it. The *intrinsic* status
-  decides — dependencies may hold a node back effectively, but the work on
-  it is paid for.
+  counts in full. **A realized alternative wins its `|`/`=` group** even when
+  a cheaper unstarted one sits next to it — the choice has been made; among
+  several realized ones cost decides again. The *intrinsic* status decides —
+  dependencies may hold a node back effectively, but the work on it is paid
+  for.
 
 ### Size (effort)
 

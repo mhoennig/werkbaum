@@ -40,14 +40,18 @@ export function visibleChildren(n, showDiscarded){
    any-of und XOR ⇒ nur die günstigste Alternative. „Günstig" = kleinste rekursive
    Kosten (eigene Größe + Kinder; any-of das Minimum). Verworfene zählen nie
    mit (unabhängig vom Einblenden-Toggle). Gleichstand ⇒ erste. Fehlende
-   Größe = M.
+   Größe = M. Ist in einer disjunktiven Gruppe etwas realisiert, wird nur noch
+   unter den realisierten gewählt (`chosenPool`, D61).
    Optionale Kinder (`+`, SPEC §3/D29) fallen hier ebenfalls heraus — sie sind
-   per Definition entbehrlich, also weder Kostenanteil noch Pfadknoten. Da beide
-   Nutzer (`cheapestCost`, `markCheapest`) über diese Funktion gehen, gilt das
-   samt Teilbaum. */
+   per Definition entbehrlich, also weder Kostenanteil noch Pfadknoten. Da alle
+   Nutzer über diese Funktion gehen, gilt das samt Teilbaum.
+   AUSNAHME (D61): Wird an der Zugabe gerade gearbeitet (`isStarted`), liegt
+   sie auf dem Pfad — angefangene Arbeit IST die offene Front. Erledigte
+   Zugaben bleiben draußen: Dort ist nichts mehr zu tun, und was darunter
+   offen blieb, ist mit ihnen zusammen entbehrlich (§3). */
 export function pathChildren(n){
   return n.children.filter(k =>
-    !k.optional && (!k.status || k.status.key !== 'verworfen'));
+    (!k.optional || isStarted(k)) && (!k.status || k.status.key !== 'verworfen'));
 }
 /* ---------- Erledigt: was nichts mehr kostet (SPEC §9, D46) ----------
    `[x]` fertig und `[^]` in Produktion. Die Beförderung auf Prod ist keine
@@ -60,13 +64,29 @@ export function pathChildren(n){
 export function isDone(n){
   return !!n.status && (n.status.key === 'fertig' || n.status.key === 'prod');
 }
+/* „realisiert" (SPEC §3, D35): Kosten investiert oder mehr. Trägt die
+   XOR-Regel und — seit D61 — die Wahl in Alternativgruppen. */
+export function isRealized(n){
+  return !!n.status && ['arbeit', 'durchstich', 'fertig', 'prod'].includes(n.status.key);
+}
+/* Angefangen und noch offen: realisiert, aber nicht erledigt (D61). Aus zwei
+   vorhandenen Begriffen zusammengesetzt statt einer dritten Schwelle. */
+export function isStarted(n){ return isRealized(n) && !isDone(n); }
+/* Wahlmenge einer disjunktiven Gruppe (SPEC §9, D61): Ist etwas realisiert,
+   ist die Wahl getroffen — dann wird nur noch unter den realisierten gewählt.
+   Sonst stehen alle zur Wahl. Die Kostenregel (kleinste rekursive Kosten,
+   Gleichstand ⇒ erste) gilt innerhalb der Menge unverändert. */
+export function chosenPool(kids){
+  const real = kids.filter(isRealized);
+  return real.length ? real : kids;
+}
 /* fehlende Größe wird als M interpretiert; Erledigtes kostet nichts mehr */
 export function ownCost(n){ return isDone(n) ? 0 : SIZE_RANK[n.size || 'M'] + 1; }
 export function cheapestCost(n){
   const kids = pathChildren(n);
   let c = ownCost(n);
   if(kids.length){
-    if(gateOf(kids) !== 'and') c += Math.min(...kids.map(cheapestCost));
+    if(gateOf(kids) !== 'and') c += Math.min(...chosenPool(kids).map(cheapestCost));
     else c += kids.reduce((s, k) => s + cheapestCost(k), 0);
   }
   return c;
@@ -129,10 +149,14 @@ export function computeCheapPlan(roots){
     }
   })(roots);
   for(const kids of groups){
-    let best = kids[0], bc = cheapestCost(kids[0]);
-    for(const k of kids.slice(1)){ const c = cheapestCost(k); if(c < bc){ bc = c; best = k; } }
+    const pool = chosenPool(kids);
+    let best = pool[0], bc = cheapestCost(pool[0]);
+    for(const k of pool.slice(1)){ const c = cheapestCost(k); if(c < bc){ bc = c; best = k; } }
     localChoice.set(kids[0], best);   /* Schlüssel: erstes Kind der Gruppe */
-    if(anyDeps && kids.some(k => touches.get(k))) coupled.push(kids);
+    /* Eine entschiedene Gruppe (genau eine realisierte Alternative, D61) ist
+       keine freie Variable mehr — sie koppelt nicht und verkleinert die Suche. */
+    if(anyDeps && pool.length > 1 && pool.some(k => touches.get(k)))
+      coupled.push({key: kids[0], pool});
   }
 
   /* Nötige Menge für eine Belegung der gekoppelten Gruppen. */
@@ -159,7 +183,7 @@ export function computeCheapPlan(roots){
   const costOf = set => { let c = 0; set.forEach(n => c += ownCost(n)); return c; };
 
   let product = 1;
-  for(const kids of coupled){ product *= kids.length; if(product > EXACT_LIMIT) break; }
+  for(const grp of coupled){ product *= grp.pool.length; if(product > EXACT_LIMIT) break; }
   if(product > EXACT_LIMIT){
     /* Gierig, aber benannt (D42): lokale Wahl überall, Hülle trotzdem. */
     return {set: needed(new Map()), exact: false};
@@ -171,12 +195,12 @@ export function computeCheapPlan(roots){
   let best = null, bc = Infinity;
   for(;;){
     const choice = new Map();
-    coupled.forEach((kids, g) => choice.set(kids[0], kids[idx[g]]));
+    coupled.forEach((grp, i) => choice.set(grp.key, grp.pool[idx[i]]));
     const set = needed(choice);
     const c = costOf(set);
     if(c < bc){ bc = c; best = set; }
     let g = coupled.length - 1;
-    while(g >= 0 && ++idx[g] >= coupled[g].length){ idx[g] = 0; g--; }
+    while(g >= 0 && ++idx[g] >= coupled[g].pool.length){ idx[g] = 0; g--; }
     if(g < 0) break;
   }
   return {set: best, exact: true};

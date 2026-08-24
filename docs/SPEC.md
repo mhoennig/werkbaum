@@ -545,10 +545,21 @@ werden die für die günstigste Realisierung **nötigen** Knoten:
 - **any of:** nur die **günstigste** Alternative ist nötig. „Günstig" =
   kleinste rekursive Kosten (eigene T-Shirt-Größe plus — je Gate — Summe bzw.
   Minimum der Kinder). Bei Gleichstand gewinnt die **erste** Alternative.
-- **Optionale Knoten (`+`, §3) sind nie nötig** — sie zählen weder zu den
-  Kosten ihres Elternknotens noch liegen sie auf dem Pfad, und der Teilbaum
-  unter ihnen ebenso wenig. Genau dafür gibt es das Zeichen: Ohne `+` rechnet
-  der günstigste Pfad jede Zugabe ins Minimum ein und überschätzt es.
+  **Ist in der Gruppe etwas realisiert** (§3: `[~]`, `[/]`, `[x]`, `[^]`), ist
+  die Wahl damit getroffen — gewählt wird nur noch unter den realisierten
+  Alternativen, auch wenn eine unangetastete nominell billiger wäre. Sind es
+  mehrere (in einer `=`-Gruppe schon per `xorConflict` gemeldet, in einer
+  `|`-Gruppe zulässig), entscheidet unter ihnen wieder die Kostenregel.
+- **Optionale Knoten (`+`, §3) sind nur nötig, solange an ihnen gearbeitet
+  wird** — also wenn sie realisiert (§3), aber noch nicht erledigt sind:
+  `[~]` und `[/]`. Sonst zählen sie weder zu den Kosten ihres Elternknotens
+  noch liegen sie auf dem Pfad, und der Teilbaum unter ihnen ebenso wenig.
+  Genau dafür gibt es das Zeichen: Ohne `+` rechnet der günstigste Pfad jede
+  Zugabe ins Minimum ein und überschätzt es. Die Ausnahme hält den umgekehrten
+  Fehler heraus — eine angefangene Zugabe ist offene Arbeit, und der Pfad
+  zeigt die offene Front. **Erledigte Zugaben bleiben draußen:** Dort ist
+  nichts mehr zu tun, und was darunter offen blieb, ist mit ihnen zusammen
+  entbehrlich (§3). Siehe D61.
 - Verworfene Knoten zählen nie mit (unabhängig vom „verworfene einblenden"-
   Filter).
 - **Fehlende Größe wird als `M` gewertet** (nur für diese Kostenschätzung; die

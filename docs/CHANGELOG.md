@@ -19,6 +19,8 @@ reverse.
 
 ## 2026-08-24
 
+- An optional node (`+`) joins the cheapest path while it is being worked on — started work is the open front
+- Fix: a started alternative lost its `|`/`=` group to an untouched cheaper one, although the choice was already made
 - A node written as an id alone (`- #US-123`) is now titled by that id, instead of being ignored
 - A line ending in a space and `\` continues on the next line, so a long node no longer has to fit into one
 - A star in the header opens What's new: the changes of the last few days, and a link per day that shows the nodes it touched in the diagram

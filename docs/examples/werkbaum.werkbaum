@@ -43,6 +43,7 @@
     - [^] #ed.path: Cheapest path (M)
       - [^] #ed.path.cost: Cost model, missing size counts as M (S)
       - [^] #ed.path.front: Only the open front: what is done costs nothing (S)  %% see D46
+      - [x] #ed.path.started: Started work is on the path, extras included (S)  %% see D61
       - [^] #ed.path.line: Metro-map line through the leaves (S)
       - [^] #ed.path.step: Step from station to station, one button (S)  %% see D47
       - [^] #ed.closure: Count the whole dependency closure (M)
@@ -384,6 +385,11 @@
   Done costs nothing any more, so the path prices what is left rather than
   what the plan would have cost from scratch. An alternative already built
   therefore wins its group even against a cheaper untouched one.
+
+#ed.path.started
+  An extra (`+`) joins the path while it is being worked on, and a started
+  alternative wins its group. Optionality says the plan can do without it;
+  the status says work has begun, and the front is made of exactly that.
 
 #ed.path.line
   A dashed curve threads through the open leaves of the path, with a pale
