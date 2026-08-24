@@ -38,7 +38,7 @@
         - [^] #ed.render.horiz: Horizontal fan (S)
         - [^] #ed.render.vert: Vertical, transposed (S)
         - [^] #ed.render.comp: Compact (S)
-        - [x] #ed.render.wrap: Long titles wrap into balanced lines (S)  %% max ~40 chars, see D64
+        - [^] #ed.render.wrap: Long titles wrap into balanced lines (S)  %% max ~40 chars, see D64
       - [^] #ed.deplink: Cross links for dependencies (M)
         - [^] #ed.deplink.calm: Visually secondary — the tree carries the message (S)
         - [^] #ed.deplink.focus: Highlight what a selected node needs and feeds (S)
@@ -73,7 +73,7 @@
     - [^] #ed.jump: Jump between diagram and text (S)
     - [^] #ed.lineno: Line numbers in the text editor (XS)  %% the warnings name them
     - [^] #ed.shortid: Type #.kc under #prod-stage, get #prod-stage.kc (XS)  %% an input aid, not notation
-    - [x] #ed.depcomplete: Typing :# suggests the known ids (S)  %% arrows choose, Enter inserts
+    - [^] #ed.depcomplete: Typing :# suggests the known ids (S)  %% arrows choose, Enter inserts
     - [^] #ed.showids: A # button shows the ids before the titles (XS)  %% written as in the text, with a colon
       - [^] #ed.lineno.tip: The warning is the tooltip of its number (XS)  %% no hunting in the list
     - [^] #ed.fold: Collapsible subtrees (L)
