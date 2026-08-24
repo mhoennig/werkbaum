@@ -42,8 +42,9 @@
       - [^] #ed.deplink: Cross links for dependencies (M)
         - [^] #ed.deplink.calm: Visually secondary — the tree carries the message (S)
         - [^] #ed.deplink.focus: Highlight what a selected node needs and feeds (S)
-    - [^] #ed.path: Cheapest path (L)
-      - [^] #ed.path.cost: Cost model, missing size counts as M (S)
+    - [^] #ed.path: Cheapest path (XL)
+      - [^] #ed.path.cost: Cost model, sizes summed and minimized (S)
+      - [x] #ed.path.est: Missing size estimated from the sub-packages (S)  %% see D66
       - [^] #ed.path.front: Only the open front: what is done costs nothing (S)  %% see D46
       - [^] #ed.path.started: Started work is on the path, extras included (S)  %% see D61
       - [^] #ed.path.line: Metro-map line through the leaves (S)
@@ -392,8 +393,12 @@
 
 #ed.path.cost
   Cost is the T-shirt size, summed along and-groups and minimized along
-  or-groups. A missing size counts as M — the smallest size that already
-  demands a breakdown, so the guess errs upward.
+  or-groups.
+
+#ed.path.est
+  A node without a size is estimated from its sub-packages: at least the
+  largest child size, one step more when three or more children carry that
+  size. Only a leaf without children still falls back to M.
 
 #ed.path.front
   Done costs nothing any more, so the path prices what is left rather than
