@@ -1021,13 +1021,32 @@
     border-top:2px solid var(--line);height:16px;
   }
   ul.and>li::after{left:var(--stem-x, 50%);right:0;border-left:2px solid var(--line)}
-  ul.and>li:only-child{padding-top:14px}
-  ul.and>li:only-child::before,ul.and>li:only-child::after{border-top:none}
-  ul.and>li:only-child::after{border-left:2px solid var(--line);height:14px}
   ul.and>li:first-child::before,
   ul.and>li:last-child::after{border:0 none}
   ul.and>li:last-child::before{border-right:2px solid var(--line);border-radius:0 6px 0 0}
   ul.and>li:first-child::after{border-radius:6px 0 0 0}
+  /* Einziges Kind: Normalerweise fallen der Stiel aus dem Elternknoten
+     (`ul.and::before`, 50 % der Gruppe) und der Stiel zum Kind (`--stem-x`)
+     zusammen — eine gerade Linie, keine Leiste nötig. Steht der Knoten aber
+     nicht mittig in seiner Zelle (`li.has-or`, Treppe — dort misst
+     `alignStems()` die Knotenmitte, D29-Nachtrag 2), liegen die beiden
+     auseinander, und ohne Geschwister gibt es keine Sammelleiste, die sie
+     verbände: die Linie riss ab (gemessen: 8,5 px). Deshalb hier ein kurzes
+     Leiterstück genau zwischen den beiden — dieselbe L-Form, mit der ein
+     äußeres Kind einer größeren Gruppe angeschlossen ist. Ohne `--stem-x` ist
+     es null Pixel breit und damit unsichtbar. Diese Regeln müssen NACH den
+     first/last-Regeln stehen: `li:only-child` ist beides, und bei gleicher
+     Spezifität gewinnt die spätere. */
+  ul.and>li:only-child{padding-top:14px}
+  ul.and>li:only-child::before{
+    border:0 none;border-top:2px solid var(--line);border-radius:0;height:14px;
+    left:min(50%, var(--stem-x, 50%));
+    right:calc(100% - max(50%, var(--stem-x, 50%)));
+  }
+  ul.and>li:only-child::after{
+    border:0 none;border-left:2px solid var(--line);border-radius:0;height:14px;
+    left:var(--stem-x, 50%);right:0;
+  }
 
   /* --- ANY OF: durchgehend gestrichelte graue Linien (Haupt- + Abzweige) --- */
   li.has-or{align-items:flex-start}

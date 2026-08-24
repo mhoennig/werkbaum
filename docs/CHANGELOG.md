@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-24
 
+- Fix: the line to an only child was torn where the child does not sit centred in its cell
 - An optional node (`+`) joins the cheapest path while it is being worked on — started work is the open front
 - Fix: a started alternative lost its `|`/`=` group to an untouched cheaper one, although the choice was already made
 - A node written as an id alone (`- #US-123`) is now titled by that id, instead of being ignored

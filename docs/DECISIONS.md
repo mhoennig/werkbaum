@@ -1304,6 +1304,57 @@ Geprüft wurde im Browser — auch der Moduswechsel hin und zurück, mehrfach: D
 Gruppe entsteht und löst sich rückstandsfrei auf, Knotenzahl und Dokumentordnung
 bleiben in allen drei Modi gleich.
 
+**Nachtrag 4 — beim einzigen Kind riss die Linie ab: `--stem-x` ohne
+Sammelleiste.** Gemeldet als „die Linie zwischen `#fe` und `#fe.rel` ist
+abgerissen" an einem Baum mit genau einem Zerlegungsknoten und einer Treppe
+darunter. Nachgemessen sind es zwei Stiele an **verschiedenen** Stellen:
+
+- `ul.and::before` — der Stiel aus dem Elternknoten — sitzt bei **50 % der
+  Gruppe** (gemessen `left: 136,2px`);
+- der Stiel zum Kind sitzt bei **`--stem-x`** (gemessen `127,7px`), also auf der
+  Knotenmitte, die Nachtrag 2 eigens misst.
+
+Dazwischen lag nichts: Für `li:only-child` wird die waagerechte Sammelleiste
+ausdrücklich abgeschaltet (`border-top:none`) — richtig, solange beide Stiele
+zusammenfallen, und das tun sie, solange der Knoten in seiner Zelle **zentriert**
+steht. Genau diese Voraussetzung hebt Nachtrag 2 auf, und der `:only-child`-Fall
+ist dabei übersehen worden: Er stammt aus der Zeit, als es `--stem-x` noch nicht
+gab.
+
+**Es ist nicht auf die Treppe beschränkt** — an einem `li.has-or` als einzigem
+Kind (Knoten linksbündig, Zelle so breit wie der any-of-Teilbaum) sind es
+gemessen **41,8 px** Versatz. Dass es bisher niemandem auffiel, liegt daran,
+dass der Fall selten ist: Ein Elternknoten hat meist mehrere Kinder, und dann
+trägt die Leiste. Aufgefallen ist er jetzt, weil eine angefangene Zugabe seit
+D61 in voller Farbe dasteht statt blass.
+
+**Behoben mit einem kurzen Leiterstück genau zwischen den beiden** —
+`left:min(50%, var(--stem-x))` bis `right:calc(100% - max(50%, var(--stem-x)))`,
+darunter der Abgang bei `--stem-x`. Also dieselbe L-Form, mit der ein äußeres
+Kind einer größeren Gruppe angeschlossen ist; ohne `--stem-x` ist das Stück null
+Pixel breit und damit unsichtbar (nachgemessen: `0.0`, gerade Linie wie bisher).
+
+Erwogen und verworfen: **den Stiel des Elternknotens auf `--stem-x` zu ziehen.**
+Eine Zeile weniger, aber er träte dann nicht mehr aus der Mitte des
+Elternknotens aus — bei 8 px unauffällig, bei den gemessenen 42 px nicht mehr,
+und bei einem schmalen Elternknoten käme er neben ihm heraus.
+
+**Dabei aufgefallen: `ul.and>li:only-child::after{border-left:…}` war seit jeher
+wirkungslos.** Die Regel stand **vor** `ul.and>li:last-child::after{border:0
+none}`, und bei gleicher Spezifität gewinnt die spätere — ein einziges Kind ist
+auch das letzte. Gezeichnet wurde der Abgang stattdessen von der
+`border-right`-Kante des `::before` (aus `:last-child::before`), 16 px lang bei
+14 px Innenabstand, also 2 px über den Knoten hinaus. Der ganze `:only-child`-
+Block steht jetzt **hinter** den first/last-Regeln, und die Absicht der Zeile
+gilt endlich.
+
+**Der Grafikexport hatte den Fehler nie:** `diagramToSvg()` spannt die
+Sammelleiste über `kids.map(cx).concat(p.cx)` — die Elternmitte ist immer
+Teil der Strecke. Betroffen war allein das CSS. Nicht durch Tests gedeckt (wie
+der Rest dieser Geometrie), geprüft im Browser an allen drei Fällen: einziges
+Kind mit Versatz (Stück 41,8 px breit, Linie durchgehend), gewöhnliches
+einziges Kind (0 px, gerade), zwei Kinder (unverändert).
+
 ## D30 — `[x]` → `[^]` per Beförderungs-Commit vor dem Deploy
 Der mitgelieferte Werkbaum-Plan (D27) behauptete `[^]` („in Produktion") für
 Funktionen, die nur auf der automatisch deployten Pages-Instanz lagen, nicht auf

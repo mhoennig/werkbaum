@@ -458,6 +458,13 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   der any-of-Teilbaum. `alignStems()` misst deshalb nach jedem `render()` (und
   in `applyLayout`) die Knotenmitte und setzt `--stem-x`; Fallback im CSS ist
   `50%`. Messwerte durch `zoom` zurückrechnen, sonst stimmt es nur bei 100 %.
+  **Beim einzigen Kind trägt keine Sammelleiste** (`:only-child` schaltet sie
+  ab): Der Stiel aus dem Elternknoten sitzt bei 50 % der Gruppe, der zum Kind
+  bei `--stem-x` — fallen die auseinander, riss die Linie ab (D29-Nachtrag 4).
+  Die `:only-child`-Regeln ziehen deshalb ein Leiterstück zwischen beide und
+  müssen **hinter** den first/last-Regeln stehen: Ein einziges Kind ist auch
+  das letzte, und bei gleicher Spezifität gewinnt die spätere Regel — genau
+  daran war `:only-child::after` jahrelang wirkungslos.
 - Kleiner Bildschirm: `body.mobile` (per `matchMedia`, ≤ 640 px) zeigt **genau
   einen** Bereich — `body.pane-diagram` bzw. `body.pane-text`, umgeschaltet über
   je einen festen Knopf pro Titelzeile (`#paneToText`/`#paneToDiagram`,
