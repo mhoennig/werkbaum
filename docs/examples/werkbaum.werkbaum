@@ -67,6 +67,7 @@
       - [^] #ed.docs.restore: Restore a shipped document from the menu (XS)
     - [^] #ed.jump: Jump between diagram and text (S)
     - [^] #ed.lineno: Line numbers in the text editor (XS)  %% the warnings name them
+    - [x] #ed.shortid: Type #.kc under #prod-stage, get #prod-stage.kc (XS)  %% an input aid, not notation
       - [^] #ed.lineno.tip: The warning is the tooltip of its number (XS)  %% no hunting in the list
     - [^] #ed.fold: Collapsible subtrees (M)
       - [^] #ed.fold.marks: Initial state from the text: > collapses, < re-opens (S)
@@ -491,6 +492,11 @@
   An amber number says that a line has a warning; its tooltip says which one,
   word for word as it stands below the diagram. Otherwise you read the number,
   then hunt for it in the list.
+
+#ed.shortid
+  The dotted prefix repeats what the indentation already says. Resolved while
+  typing, not while parsing: the file keeps the full id, so it stays greppable
+  and survives re-ordering, which is what the :#... references rely on.
 
 #ed.fold
   A large plan is unreadable unless parts of it can be put away. Folding is

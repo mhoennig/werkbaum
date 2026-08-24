@@ -3842,3 +3842,83 @@ als der Fehler längst weg war. Auseinandergehalten hat es der `?t=`-Stempel
 im Stacktrace gegen den der geladenen Datei (`performance.getEntriesByType`):
 `…961240` gegen `…049984`. Dieselbe Sorte Lehre wie D25 und D17-Nachtrag 4 —
 die Meldung des Werkzeugs ist noch kein Befund.
+
+## D55 — ID-Kurzschreibweise: Eingabehilfe statt Notation
+Gefragt war, ob man unter `#prod-stage` einfach `#.kc` schreiben könnte, das
+dann `#prod-stage.kc` bedeutet. Die Beobachtung dahinter stimmt: Die
+D48-Konvention `#bereich.task` wiederholt das Präfix auf jeder Zeile, und die
+Einrückung sagt dasselbe noch einmal.
+
+**Als Notation wäre es trotzdem falsch — das zeigt der eigene Plan.** Gemessen
+an `docs/examples/werkbaum.werkbaum`: 181 IDs im Baumteil, davon **50 (28 %),
+deren gepunktetes Präfix gar nicht die Eltern-ID ist** — `#ed.parser` hängt
+unter `#ed.live`, `#not.status` unter `#not.line`. Das ist kein Schlendrian,
+sondern D48 wörtlich („dritte Stufe nur, wo es sonst kryptisch würde"): Die
+Punkte benennen den **Bereich**, nicht den Pfad. Eine Kurzform, die gegen den
+Elternknoten auflöst, wäre also für über ein Viertel der IDs des Dokuments
+falsch, das die Konvention erfunden hat. Der Gewinn wäre klein: 802 Zeichen in
+einer 40-kB-Datei, rund 2 %.
+
+Drei weitere Kosten, jede für sich schwerer als das Tippen:
+
+- **Der Beschreibungsteil hat keinen Baum.** Hinter `---` steht der Block-Kopf
+  uneingerückt und ohne Vorfahren; dort müsste weiterhin die volle ID stehen.
+  Eine ID, zwei Schreibweisen — je nachdem, wo man sie hinschreibt.
+- **Die ID wäre keine Adresse mehr.** Heute überlebt sie das Umsortieren, und
+  genau darauf bauen die Abhängigkeiten `:#…`, die bewusst quer zum Baum zeigen
+  (D34). Mit Kurzform ändert **Einrücken** die Identität, und Verweise zeigen
+  still ins Leere. Dieselbe Zerbrechlichkeit, wegen der D34 den Verweis auf den
+  *Titel* verworfen hat.
+- **Aus einer Konvention würde Grammatik.** Der Punkt ist heute ein gewöhnliches
+  Zeichen der ID-Zeichenmenge (SPEC §1); dass `#ed.closure` unter `#ed` hängt,
+  prüft niemand. Machte man ihn strukturell, wären die 50 Fälle oben
+  Regelverstöße.
+
+**Entschieden (Nutzer): die Kurzform als Eingabehilfe.** Getippt wird `#.kc`,
+und beim **Verlassen der Zeile** steht `#prod-stage.kc` im Text. Der
+Präzedenzfall liegt im Haus: Umklappen im Diagramm schreibt seine Faltmarke
+ebenso zurück (D38-Nachtrag 2). Damit bleibt die Datei eindeutig, durchsuchbar
+und umsortierbar — die Ersparnis beim Tippen gibt es trotzdem, und keine der
+drei Kosten oben fällt an. Dass die Auflösung den **Baum**-Vorfahren nimmt und
+nicht das Bereichs-Präfix, ist dabei kein Mangel: Man sieht das Ergebnis sofort
+im Text und kann es hinschreiben, wie man es will.
+
+**Aufgelöst wird gegen den nächsten Vorfahren MIT ID**, nicht gegen den
+direkten Elternknoten — der kann selbst keine haben. Findet sich keiner
+(Wurzelzeile) oder trägt er selbst noch eine Kurzform, bleibt die Zeile
+unangetastet: lieber `#.kc` stehen lassen als etwas Falsches hineinschreiben.
+Das ist auch deshalb ungefährlich, weil `#.kc` schon heute eine **gültige** ID
+ist (der Punkt gehört zur Zeichenmenge) — es geht also nichts verloren, es ist
+nur nicht aufgelöst. `#..x` wird nicht angefasst: zwei Punkte haben keine
+vereinbarte Bedeutung.
+
+**Angefasst wird nur die eine Zeile, in der auch getippt wurde.** Beides ist
+nötig: Wer ein fremdes Dokument bloß durchklickt, darf es nicht umgeschrieben
+bekommen — es fiele sonst aus dem Nachziehen mitgelieferter Fassungen (D27)
+und würde als bearbeitet geführt. Nachgemessen: Ein per Dokumentwechsel
+geladener Text mit zwei Kurzformen bleibt beim Durchklicken zeichengenau
+stehen.
+
+**Die Falle beim Bauen, zum zweiten Mal dieselbe:** Der Zeilenwechsel kommt oft
+aus dem `input`-Ereignis der Enter-Taste, und `execCommand` verweigert den
+Dienst, wenn es **re-entrant** darin aufgerufen wird. `replaceTextUndoable`
+fällt dann auf `src.value =` zurück — und das löscht die Undo-Historie
+(D38-Nachtrag 2, D53). Gemessen: erstes Rückgängig ohne Wirkung, jedes weitere
+`false`. Geschrieben wird deshalb einen Zug später (`setTimeout(…, 0)`), und
+nur, solange der Fokus im Textfeld steht: Wer die Zeile per Klick ins Diagramm
+verlässt, soll nicht zurückgerissen werden (`replaceTextUndoable` fokussiert
+selbst). Danach nimmt ein Rückgängig genau die Auflösung zurück
+(`#stage.kc` → `#.kc`), und der Stapel lebt weiter.
+
+**Abhängigkeiten bleiben außen vor.** `:#.kc` wäre eine eigene Entscheidung —
+relativ wozu, zum verweisenden Knoten? Das ist selten nützlich und mehrdeutig;
+die Regel bleibt vorerst auf die Knoten-ID beschränkt.
+
+**Getestet ist die Regel, nicht die Verdrahtung** — `expandShortIds()` liegt
+als Text→Text-Funktion in `parser.js` neben `setFoldMark` und hat 17
+Zusicherungen (Auflösen über mehrere Ebenen, Vorfahren ohne ID überspringen,
+Kommentar/Beschreibungsteil/`"`-Zeilen/Abhängigkeiten unangetastet, nur das
+erste `#`-Token, zeichengenaue Erhaltung von Einrückung, Zeichen, Statusbox
+und Faltmarke, und dass das Ergebnis denselben Baum ergibt wie die von Hand
+ausgeschriebene Fassung). Das Zusammenspiel mit dem Textfeld bleibt
+Browser-Sache — die Lehre aus D54-Nachtrag 3.

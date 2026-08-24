@@ -703,6 +703,21 @@ verknüpft (siehe D25):
 - Die Hervorhebung ist eine reine Editierhilfe: nicht im Grafikexport, nicht im
   Druck.
 
+### Kurzschreibweise der Knoten-ID beim Tippen (`#.name`)
+Eine **Eingabehilfe**, keine Notation: Wer `#.kc` unter einem Knoten mit der ID
+`#prod-stage` schreibt, findet beim **Verlassen der Zeile** `#prod-stage.kc` im
+Text. Aufgelöst wird gegen den nächsten Vorfahren **mit** ID; gibt es keinen
+oder trägt er selbst noch eine Kurzform, bleibt die Zeile stehen (`#.kc` ist
+ohnehin eine gültige ID — der Punkt gehört zur Zeichenmenge, §1). `#..x` wird
+nicht angefasst.
+
+Die Datei enthält danach immer die volle ID: Sie bleibt durchsuchbar und
+überlebt das Umsortieren, worauf die Abhängigkeiten `:#…` bauen. **An der
+Notation ändert sich dadurch nichts** — der Parser sieht nie eine Kurzform,
+und `llms.md` (§13) bleibt unberührt. Angefasst wird nur die Zeile, in der auch
+getippt wurde; Abhängigkeiten (`:#…`) und der Beschreibungsteil hinter `---`
+bleiben außen vor. Siehe D55.
+
 ### Zeilennummern im Texteditor
 Links neben dem Textfeld steht ein schmaler Streifen mit den **Zeilennummern** —
 dieselben, die die Warnungen nennen („Zeile 12: …", §4). Ohne ihn muss man sie

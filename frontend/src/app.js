@@ -1,5 +1,5 @@
 import './style.css';
-import { parse, setFoldMark } from './parser.js';
+import { parse, setFoldMark, expandShortIds } from './parser.js';
 import { computeCheapPlan, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, atMostM } from './model.js';
 import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning, warningText } from './warnings.js';
@@ -1348,10 +1348,47 @@ function caretLineOf(){
 function syncCaret(){
   const line = caretLineOf();
   const moved = line !== caretLine;
-  caretLine = line;
+  if(moved) resolveShortId(caretLine);
+  caretLine = caretLineOf();   /* neu lesen: das Auflösen kann den Text ändern */
   highlightCurrentNode(moved);
 }
 for(const ev of ['click','keyup','input','focus']) src.addEventListener(ev, syncCaret);
+
+/* Kurzschreibweise der ID auflösen (D55): `#.kc` wird beim **Verlassen der
+   Zeile** zu `#prod-stage.kc`. Eingabehilfe, keine Notation — in der Datei
+   steht danach die volle ID, sie bleibt also durchsuchbar und überlebt das
+   Umsortieren.
+
+   Angefasst wird nur die **eine** Zeile, in der auch getippt wurde. Beides ist
+   nötig: `#.foo` ist schon heute eine gültige ID, und wer ein fremdes Dokument
+   bloß durchklickt, darf es nicht umgeschrieben bekommen (und damit aus dem
+   Nachziehen mitgelieferter Fassungen fallen, D27). Geschrieben wird
+   undo-fähig — ein Griff daneben kostet ein Strg+Z (D53). */
+let touchedLine = null;
+src.addEventListener('input', () => { touchedLine = caretLineOf(); });
+function resolveShortId(line){
+  if(src.readOnly || line == null || line !== touchedLine) return;
+  touchedLine = null;
+  /* **Nicht** sofort schreiben: Der Zeilenwechsel kommt oft aus dem
+     `input`-Ereignis der Enter-Taste, und `execCommand` verweigert den Dienst,
+     wenn es re-entrant darin aufgerufen wird. `replaceTextUndoable` fiele dann
+     auf `src.value =` zurück — und das löscht die Undo-Historie (D38-Nachtrag
+     2). Gemessen: erstes Rückgängig ohne Wirkung, jedes weitere `false`.
+     Deshalb ein Zug später, wenn das Ereignis zugestellt ist.
+
+     Nur mit Fokus im Textfeld: Wer die Zeile per Klick ins Diagramm verlässt,
+     soll nicht zurückgerissen werden (`replaceTextUndoable` fokussiert selbst).
+     Die Kurzform bleibt dann stehen — sie ist eine gültige ID, es geht nichts
+     verloren, und beim nächsten Bearbeiten der Zeile wird sie aufgelöst. */
+  setTimeout(() => {
+    if(document.activeElement !== src) return;
+    const lines = src.value.split('\n');
+    const neu = expandShortIds(src.value).split('\n');
+    if(line > lines.length || neu[line-1] === lines[line-1]) return;
+    lines[line-1] = neu[line-1];
+    replaceTextUndoable(lines.join('\n'));
+  }, 0);
+}
 
 /* Gegenstück zum Alt+Klick am Knoten (D25, Nachtrag): Alt+Klick im Textfeld —
    Tastatur Alt+Enter — holt den Knoten der Cursor-Zeile in die **Mitte** des

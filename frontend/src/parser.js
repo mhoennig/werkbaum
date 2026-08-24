@@ -36,6 +36,59 @@ export function setFoldMark(line, mark){
   return m[1] + m[2] + (mark ? mark + ' ' : '') + line.slice(m[0].length);
 }
 
+const RE_LINE = /^([ \t]*)([-|+]|=(?=[ \t]))?\s*(?:([><])(?=[ \t])\s*)?(?:\[([^\]])\]\s*)?(?:([><])(?=[ \t])\s*)?(.*)$/;
+const RE_ID_TOKEN = /(^|\s)#([\p{L}\p{N}._-]+)/u;
+
+/* Kurzschreibweise der Knoten-ID auflösen: `#.kc` unter `#prod-stage` wird zu
+   `#prod-stage.kc` (D55). Das ist eine **Eingabehilfe**, keine Notation — die
+   Datei enthält am Ende immer die volle ID. Deshalb steht sie hier als
+   Text→Text-Funktion neben `setFoldMark`: Der Editor ruft sie beim Verlassen
+   der Zeile auf und schreibt das Ergebnis zurück, wie das Umklappen im
+   Diagramm seine Faltmarke zurückschreibt (D38-Nachtrag 2).
+
+   Aufgelöst wird gegen den **nächsten Vorfahren mit ID** — nicht zwingend den
+   direkten Elternknoten, der kann selbst ohne ID sein. Findet sich keiner
+   (Wurzelzeile) oder trägt er selbst noch eine Kurzform, bleibt die Zeile
+   unangetastet: Lieber `#.kc` stehen lassen, als etwas Falsches hineinschreiben.
+   Der Beschreibungsteil hinter `---` hat keinen Baum und wird nicht angefasst. */
+export function expandShortIds(text){
+  const lines = text.split('\n');
+  const stack = [];        /* {width, id} — auch Knoten OHNE ID stehen drin */
+  let changed = false;
+  for(let i = 0; i < lines.length; i++){
+    const raw = lines[i];
+    if(/^\s*-{3,}\s*$/.test(raw)) break;
+    const k = raw.indexOf('%%');
+    const head = k === -1 ? raw : raw.slice(0, k);
+    const tail = k === -1 ? '' : raw.slice(k);
+    const m = head.match(RE_LINE);
+    if(!m) continue;
+    const body = m[6];
+    if(!body.trim()) continue;              /* leer oder nur Kommentar */
+    if(/^"(\s|$)/.test(body)) continue;     /* Beschreibungszeile, kein Knoten */
+    const width = m[1].replace(/\t/g, '  ').length;
+    while(stack.length && stack[stack.length - 1].width >= width) stack.pop();
+    const t = body.match(RE_ID_TOKEN);
+    let id = t ? t[2] : null;
+    /* `.kc` ja, `..kc` nein — zwei Punkte sind keine vereinbarte Bedeutung. */
+    if(id && /^\.[^.]/.test(id)){
+      let anc = null;
+      for(let j = stack.length - 1; j >= 0; j--){
+        if(stack[j].id && stack[j].id[0] !== '.'){ anc = stack[j].id; break; }
+      }
+      if(anc){
+        id = anc + id;
+        lines[i] = head.slice(0, head.length - body.length)
+                 + body.replace(RE_ID_TOKEN, (s, pre) => pre + '#' + id)
+                 + tail;
+        changed = true;
+      }
+    }
+    stack.push({width, id});
+  }
+  return changed ? lines.join('\n') : text;
+}
+
 /* Status, die als „realisiert" zählen (XOR-Regel, SPEC §3/D35): Kosten sind
    investiert oder mehr. Absicht (`[?]`, `[ ]`, `[!]`), Ablehnung (`[-]`) und
    neutrale Knoten zählen nicht. */
