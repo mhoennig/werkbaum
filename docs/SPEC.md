@@ -751,6 +751,9 @@ im Text abzählen.
   Für Screenreader ist die Live-Region des Warnungsbereichs die Quelle, der
   Tooltip erspart nur den Weg dorthin. Ohne Zeiger gibt es ihn nicht (wie
   überall) — die Meldung steht dort ohnehin vollständig. Siehe D33-Nachtrag.
+- Über einer Warn-Zeile trägt der **Zeiger ein Warndreieck** — dasselbe ⚠, das
+  im Warnungsbereich vor jeder Meldung steht. Der Pfeil bleibt daneben stehen,
+  damit der Zeiger weiter zeigt. Siehe D33-Nachtrag 2.
 - Reine Lesehilfe: kein Bestandteil des Notationstexts, nicht im Grafikexport
   und nicht im Druck (dort ist ohnehin nur das Diagramm zu sehen).
 

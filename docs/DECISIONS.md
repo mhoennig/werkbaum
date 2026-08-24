@@ -1895,6 +1895,38 @@ untereinander, `&` und `"` unverfälscht; keine Zahl ohne Warnung trägt einen
 mit (Zeile 3 ganz, Zeile 2 von zwei Meldungen auf eine). Im mitgelieferten
 Werkbaum-Plan (941 Zeilen, 155 Knoten, 0 Warnungen): 0 Tooltips.
 
+**Nachtrag 2 — der Zeiger trägt ein Warndreieck, kein Fragezeichen.** Der
+Nachtrag oben begründete `cursor:help` damit, es sage, „dass es hier etwas zu
+lesen gibt" — richtig, aber zu unbestimmt: Das `?` des Systemzeigers heißt
+„Hilfe", und Hilfe ist etwas anderes als eine Warnung. Über der orange
+gefärbten Zahl einer fehlerhaften Zeile steht jetzt ⚠ — **dasselbe Zeichen,
+das im Warnungsbereich vor jeder Meldung steht**. Der Zeiger sagt damit
+dieselbe Sache wie das Ziel, auf das er zeigt, und niemand lernt ein neues
+Symbol; dieselbe Sparsamkeit wie bei der Diskrepanz-Marke, die die Statusbox
+der Notation spiegelt (D39), und bei der ”-Marke der Beschreibungen (D40).
+
+**Der Pfeil bleibt.** Ein Zeiger, der nur aus einem Dreieck besteht, zeigt auf
+nichts — man wüsste nicht mehr, welche Zeile getroffen ist, und das Ziel ist
+hier keine 18 px hoch. Gebaut ist er deshalb wie der `help`-Zeiger selbst:
+Pfeil plus Abzeichen, nur mit dem Dreieck statt dem `?`. Die Spitze liegt auf
+dem Brennpunkt (`1 1`), der Pfeil trägt eine weiße Kontur — der Streifen ist
+hell, das Diagramm dahinter nicht überall.
+
+**Ein Bild-Zeiger, und `help` als Rückfall.** `cursor:url(…) 1 1, help` — wo
+ein Browser das Bild ablehnt (Größenbeschränkungen, restriktive Umgebungen),
+gilt wieder das Bisherige, ohne Sonderfall. Als `data:`-URI im Stylesheet, wie
+alles andere auch: kein externer Request (D20), und der Build muss nichts
+zusätzlich einbetten. 32 × 32 px, weil größere Zeiger auf manchen Plattformen
+stillschweigend verworfen werden.
+
+**Nachgemessen** am echten Selektor (`.lineno-inner span.warn` im laufenden
+Streifen): Der berechnete Wert endet auf `1 1, help`, das Bild lädt als
+32 × 32. Zur Beurteilung der Lesbarkeit auf ein 32-px-`canvas` gezeichnet und
+erst **danach** hochskaliert — ein `<img>` mit SVG-Quelle rastert in seiner
+Anzeigegröße, die erste Prüfung zeigte deshalb eine glatte Vorschau statt der
+Wahrheit. Bei echter 32-px-Rasterung war das Ausrufezeichen zu dünn (1,8 px)
+und ging unter; es steht jetzt auf 2,2 px.
+
 ## D34 — Abhängigkeiten, IDs, XOR, Falten, Beschreibungen: erst reserviert, dann gebaut
 Fünf Erweiterungen auf einmal — Knoten-**IDs** (`#auth`), **Abhängigkeiten**
 (`:#auth,#api`) samt effektivem Status, **XOR** (`x`), ein- und ausklappbare
