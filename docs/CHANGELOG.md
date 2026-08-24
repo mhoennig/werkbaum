@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-24
 
+- When the caret's node is folded away, the nearest visible ancestor takes the highlight — also on Alt+click from the text
 - A size that cannot hold its sub-packages turns its badge amber and gets a warning — sizes are read as ranges, so only sure conflicts are reported
 - Fix: the exported SVG drew the assumed-M badge filled like a real size instead of inverted
 - Dependency links now run behind every node, highlighted ones included — no more lines struck through node titles

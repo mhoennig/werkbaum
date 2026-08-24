@@ -327,6 +327,31 @@ export function nodeKeys(roots){
   return map;
 }
 
+/* Textzeile -> Zeile des Knotens, der sie im Diagramm VERTRITT (SPEC §9,
+   D38-Nachtrag 4): der Knoten selbst, solange er sichtbar ist; liegt er in
+   einem eingeklappten Teilbaum, der nächste sichtbare Vorfahr — der
+   eingeklappte Knoten vertritt seinen Teilbaum, auch für die
+   Cursor-Hervorhebung und den Alt+Klick aus dem Text. Beschreibungs- und
+   Fortsetzungszeilen (`descLines`) zählen zu ihrem Knoten. Ausgeblendete
+   verworfene Elemente fehlen in der Map (visibleChildren) und heben damit
+   weiterhin nichts hervor — die SPEC-§9-Regel bleibt. */
+export function lineTargets(roots, collapsed, showDiscarded){
+  const map = new Map();
+  /* `anchor` ist null, solange wir im Sichtbaren sind; darunter die Zeile des
+     äußersten eingeklappten Knotens — tiefere Faltungen ändern sie nicht. */
+  const walk = (ns, anchor) => {
+    for(const n of ns){
+      const target = anchor ?? n.line;
+      if(n.line != null) map.set(n.line, target);
+      if(n.descLines) n.descLines.forEach(l => map.set(l, target));
+      const next = anchor ?? (collapsed.has(n) ? n.line : null);
+      walk(visibleChildren(n, showDiscarded), next);
+    }
+  };
+  walk(roots, null);
+  return map;
+}
+
 /* ---------- Faltmarken (SPEC §1/§9, D38) ----------
    Anfangszustand der Faltung aus den Textmarken: `>` klappt den Knoten ein.
    `<` (und mit `rescueFocus` auch die Fokusmarke `!!!`) holt den eigenen

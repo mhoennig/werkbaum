@@ -2619,6 +2619,41 @@ dasselbe. Jetzt meldet die Funktion „nichts geschrieben“, und der Aufrufer
 zeichnet selbst neu. Nachgemessen: 144 Knoten/69 Punkte → 1/1 → 144/69 → 1/1
 über mehrere Klicks.
 
+**Nachtrag 4 — der eingeklappte Knoten vertritt seine Zeilen auch für den
+Cursor.** Gemeldet als Wunsch: Steht der Cursor im Text auf einer Zeile, deren
+Knoten im Diagramm eingeklappt ist, soll der nächste sichtbare Elternknoten
+fokussiert werden — auch beim Alt+Klick. Bisher hob so eine Zeile schlicht
+**nichts** hervor: `nodeOfLine()` sucht per `data-line` im DOM, und der
+Renderer lässt eingeklappte Kinder weg (oben) — die Zeile lief ins Leere,
+ausgerechnet dort, wo man ohne Hervorhebung am wenigsten sieht.
+
+Die Regel gibt es schon, sie galt nur noch nicht hier: **Der eingeklappte
+Knoten vertritt seinen Teilbaum** — für die Pfad-Station (Nachtrag oben) wie
+für den „▸ n"-Zähler. Jetzt auch für die Zeilenauflösung: Liegt die Zeile in
+einem eingeklappten Teilbaum, ist ihr Vertreter der **nächste sichtbare
+Vorfahr** (bei verschachtelter Faltung der äußerste eingeklappte — nur der
+steht im DOM). Beschreibungs- und Fortsetzungszeilen wandern mit ihrem Knoten
+mit (D40-Nachtrag 2/D59). Beide Richtungen bekommen es über die **eine**
+Auflösungsstelle `nodeOfLine()` (D25-Regel: wer eine neue Zeilensuche
+schreibt, nimmt sie) — Cursor-Mitlaufen, Alt+Klick, Alt+Enter und der
+Mobil-Umschalter sind damit automatisch abgedeckt.
+
+**Die Grenze bleibt gezogen: ausgeblendete verworfene Elemente heben weiter
+nichts hervor.** SPEC §9 nennt sie ausdrücklich neben Kommentar und
+Leerzeile — Faltung ist Ansicht („hier, aber zusammengelegt"), der
+Verworfen-Filter ist Aussage („nicht Teil des Plans"). Umgesetzt fällt die
+Unterscheidung von selbst: Die Zeilen-Map (`lineTargets()` in model.js,
+headless getestet) läuft über `visibleChildren()` — ausgefilterte Teilbäume
+stehen gar nicht erst darin. Die Map wird in `render()` aus **denselben**
+Mengen gebildet wie das DOM (`collapsedSet`, `showDiscarded`) — dieselbe
+Identitäts-Regel wie bei `freshSet` (D28).
+
+**Nachgemessen** im Browser: Cursor auf einem verborgenen Kind → der
+eingeklappte Elternknoten trägt Ring und Puls; Alt+Klick fokussiert ihn
+(`document.activeElement` ist der „▸ 2"-Knoten); Cursor auf einer
+ausgeblendeten verworfenen Zeile und ihrem Kind → weiterhin keine
+Hervorhebung. 377 Tests, davon 5 neue in `tests/fold.test.js`.
+
 ## D39 — Effektiver Status: die Farbe sagt die Wahrheit, die Marke die Box
 Mit den Abhängigkeiten (D37) gibt es zwei Aussagen je Knoten: was in der
 Statusbox steht (intrinsisch) und wie weit er wirklich ist (effektiv, §4).

@@ -1,6 +1,6 @@
 import './style.css';
 import { parse, setFoldMark, expandShortIds, shortIdClosed } from './parser.js';
-import { computeCheapPlan, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, atMostM } from './model.js';
+import { computeCheapPlan, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, atMostM, lineTargets } from './model.js';
 import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning, warningText } from './warnings.js';
 import { padUrls } from './remote.js';
@@ -92,6 +92,10 @@ let newsDay = null, newsKeySet = null;
    Textmarken, gelten nur für die Sitzung und fallen beim Dokumentwechsel weg.
    `foldByLine` ist der Zustand des letzten Renders für Klick/Tastatur. */
 let foldOverrides = new Map(), foldByLine = new Map();
+/* Zeile -> Zeile des sichtbaren Vertreters (D38-Nachtrag 4): Für Zeilen in
+   eingeklappten Teilbäumen zeigt sie auf den nächsten sichtbaren Vorfahren;
+   `nodeOfLine()` greift darauf zurück, wenn die Zeile keinen DOM-Knoten hat. */
+let lineTargetMap = new Map();
 
 /* ---------- Renderer (Anbindung an den DOM) ----------
    parse -> Wurzeln filtern (verworfene) -> günstigen Pfad markieren ->
@@ -117,6 +121,7 @@ function render(){
     out.innerHTML = `<div class="empty">${esc(t('empty'))}</div>`;
     freshSet = new Set();
     foldByLine = new Map();
+    lineTargetMap = new Map();
   } else {
     /* Günstigster Pfad auf der Dependency Closure (D42): scheitert die exakte
        Suche an zu vielen gekoppelten Gruppen, wird die gierige Schätzung
@@ -168,6 +173,9 @@ function render(){
        „alles offen" derselbe Zustand — der Knopf säße dann gedrückt da, ohne
        dass etwas zugeklappt ist. */
     foldSmallBtn.setAttribute('aria-pressed', foldSmallExact && foldSmallAny ? 'true' : 'false');
+    /* Aus DENSELBEN Mengen wie das Rendern — die Map muss dieselbe Faltung
+       beschreiben, die gleich im DOM steht (dieselbe Regel wie bei freshSet). */
+    lineTargetMap = lineTargets(roots, collapsedSet, showDiscarded);
     const r = renderTreeHtml(roots, {t, showDiscarded, cheapPath: cheapPathOn, cheapSet, showIds,
                                      freshSet, collapsedSet,
                                      effStatus: effectiveStatus(roots)});
@@ -1399,8 +1407,18 @@ document.querySelector('.diagram').addEventListener('scroll', closeNodeTip, {pas
    `data-desc-lines` (vom Renderer, gefüllt aus `node.descLines`). */
 function nodeOfLine(line){
   if(line == null) return null;
-  return out.querySelector('.node[data-line="' + line + '"]')
+  const el = out.querySelector('.node[data-line="' + line + '"]')
       || out.querySelector('.node[data-desc-lines~="' + line + '"]');
+  if(el) return el;
+  /* Kein DOM-Knoten: Die Zeile liegt in einem eingeklappten Teilbaum — dann
+     vertritt der nächste sichtbare Vorfahr sie (SPEC §9, D38-Nachtrag 4),
+     für die Cursor-Hervorhebung wie für den Alt+Klick. Ausgeblendete
+     verworfene Elemente stehen nicht in der Map und heben weiter nichts
+     hervor. */
+  const target = lineTargetMap.get(line);
+  return target != null && target !== line
+    ? out.querySelector('.node[data-line="' + target + '"]')
+    : null;
 }
 
 /* Text -> Diagramm: Knoten der Cursor-Zeile hervorheben (`caretLine` steht oben). */

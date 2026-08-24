@@ -282,3 +282,55 @@ describe('atMostM — Auswahl für „Größe M und kleiner zuklappen"', () => {
     expect(atMostM(w.children[0].children[0])).toBe(true);
   });
 });
+
+/* Zeile -> sichtbarer Vertreter (SPEC §9, D38-Nachtrag 4): Liegt der Knoten
+   der Cursor-Zeile in einem eingeklappten Teilbaum, vertritt ihn der nächste
+   sichtbare Vorfahr — für die Hervorhebung wie für den Alt+Klick. */
+import { lineTargets } from '../src/model.js';
+
+describe('lineTargets — der eingeklappte Knoten vertritt seine Zeilen', () => {
+  const byLabel = (ns, label) => {
+    for(const n of ns){
+      if(n.label === label) return n;
+      const hit = byLabel(n.children, label);
+      if(hit) return hit;
+    }
+    return null;
+  };
+  const txt = 'A\n  - B\n    - C\n      - D\n  - [-] E\n    - F';
+
+  it('sichtbare Knoten zeigen auf sich selbst', () => {
+    const r = roots(txt);
+    const map = lineTargets(r, new Set(), true);
+    expect(map.get(1)).toBe(1);
+    expect(map.get(3)).toBe(3);
+  });
+
+  it('Zeilen unter einem eingeklappten Knoten zeigen auf ihn', () => {
+    const r = roots(txt);
+    const map = lineTargets(r, new Set([byLabel(r, 'B')]), true);
+    expect(map.get(2)).toBe(2);   /* der eingeklappte selbst ist sichtbar */
+    expect(map.get(3)).toBe(2);
+    expect(map.get(4)).toBe(2);
+  });
+
+  it('bei verschachtelter Faltung gilt der ÄUSSERSTE eingeklappte Vorfahr', () => {
+    const r = roots(txt);
+    const map = lineTargets(r, new Set([byLabel(r, 'B'), byLabel(r, 'C')]), true);
+    expect(map.get(4)).toBe(2);
+  });
+
+  it('Beschreibungs- und Fortsetzungszeilen wandern mit ihrem Knoten', () => {
+    const t2 = 'A\n  - B mit einem \\\n    langen Titel\n    " Notiz';
+    const r = roots(t2);
+    const map = lineTargets(r, new Set([byLabel(r, 'A')]), true);
+    expect(map.get(3)).toBe(1);   /* Fortsetzung */
+    expect(map.get(4)).toBe(1);   /* "-Zeile */
+  });
+
+  it('ausgeblendete verworfene Elemente fehlen — sie heben weiter nichts hervor', () => {
+    const r = roots(txt);
+    expect(lineTargets(r, new Set(), false).has(6)).toBe(false);
+    expect(lineTargets(r, new Set(), true).get(6)).toBe(6);
+  });
+});

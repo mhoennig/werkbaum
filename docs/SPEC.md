@@ -804,7 +804,11 @@ verknüpft (siehe D25):
   Knoten, gehören aber zu einem, und wer darin schreibt, arbeitet an genau
   diesem Knoten. Das gilt für beide Richtungen der Geste (also auch für den
   ausdrücklichen Alt+Klick unten) und für die Hervorhebung der
-  Abhängigkeits-Kanten (§9). Zeilen ohne Knoten (Kommentar, Leerzeile, der
+  Abhängigkeits-Kanten (§9). **Liegt der Knoten der Cursor-Zeile in einem
+  eingeklappten Teilbaum** (§9, Falten), wird stattdessen sein **nächster
+  sichtbarer Vorfahr** hervorgehoben — der eingeklappte Knoten vertritt seinen
+  Teilbaum (D38), auch hier; das gilt ebenso für den ausdrücklichen Alt+Klick
+  unten. Zeilen ohne Knoten (Kommentar, Leerzeile, der
   `---`-Trenner selbst, ausgeblendetes verworfenes Element) heben nichts
   hervor. Die Hervorhebung arbeitet auf einer **eigenen Achse — Tiefe**: weißer
   Halo + Ring in Tinte, dazu ein Schlagschatten und eine leichte Vergrößerung,
