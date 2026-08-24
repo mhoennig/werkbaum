@@ -74,6 +74,7 @@
       - [^] #ed.fold.write: Folding writes the mark back into the text (S)  %% one undo step
       - [^] #ed.fold.preset: One switch folds everything from size M downward (S)  %% see D44
     - [^] #ed.snaps: Earlier states of a document, every ten minutes (S)  %% only when something changed
+      - [x] #ed.snaps.manual: Save a state by hand, before a larger change (XS)  %% ten minutes is the wrong beat for that moment
     - [ ] #ed.files: Open and save .werkbaum files (S)
     + [^] #ed.fresh: Show what is new since your last visit (S)
     + [?] #ed.percolor: A pastel colour per person (S)
@@ -520,6 +521,12 @@
   only when it differs from the last one kept, and the last twenty are offered
   beside the document picker. Loading one is a single undo step, so a wrong
   pick costs nothing.
+
+#ed.snaps.manual
+  Ten minutes is the wrong beat for the one moment a state is really wanted:
+  right before a larger change. The button promises that the current state is
+  kept, not that an entry was added, so it confirms even when the text is
+  unchanged and already at the top of the list.
 
 #ed.files
   Open a .werkbaum file and save one. Today the leading data format is the one

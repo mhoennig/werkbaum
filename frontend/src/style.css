@@ -362,7 +362,9 @@
   .copybtn:hover,.copybtn.done{border-color:var(--or);color:var(--or)}
   .copybtn svg{display:block;width:15px;height:15px}
   .copybtn .ic-done{display:none}
-  .copybtn.done .ic-copy{display:none}
+  /* `.ic-main` ist die neutrale Form von `.ic-copy` für Knöpfe, die nichts
+     kopieren, aber dieselbe Erfolgs-Rückmeldung geben (Stand sichern, D54). */
+  .copybtn.done .ic-copy,.copybtn.done .ic-main{display:none}
   .copybtn.done .ic-done{display:block}
   /* „im Pad bearbeiten" (D31) — nur bei einem ?etherpad=-Dokument sichtbar.
      Das [hidden] braucht die eigene Regel, weil .copybtn ein display setzt. */

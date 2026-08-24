@@ -3690,3 +3690,51 @@ schließt das Menü, das Diagramm zeichnet neu (30 Knoten) — und ein `undo` ho
 den vorherigen Stand zeichengenau zurück. Der **Pad-Fall** ist durch die
 `readOnly`-Wächter im Code abgedeckt, aber nicht live durchgespielt (er
 bräuchte ein echtes Pad).
+
+**Nachtrag — ein Knopf, der von Hand sichert.** Zehn Minuten sind der falsche
+Takt für den einen Moment, in dem man einen Stand wirklich will: unmittelbar
+**vor** einer größeren Änderung. Genau dann ist der letzte selbsttätige Stand
+im Zweifel neun Minuten alt und enthält die Arbeit nicht, die man gleich
+aufs Spiel setzt. Der Knopf steht rechts neben dem Verlaufs-Knopf, in
+derselben Gruppe wie der Dokument-Wähler.
+
+**Kamera, nicht Plus.** Ein `+` unmittelbar neben dem Dokument-Namen liest
+sich als „neues Dokument" — das gibt es schon, im Menü daneben. Ein
+Lesezeichen läse sich als „Favorit". Die Kamera ist gegen beide Nachbarn
+eindeutig (Uhr mit Pfeil = Verlauf, Caret = Dokumentwahl) und trifft die
+Vorstellung, die der Nutzer selbst benannt hat („einen Snapshot manuell
+anfertigen"). Die UI-Texte bleiben bei „Stand", weil das Menü daneben so
+heißt.
+
+**Die Rückmeldung kommt immer — auch wenn nichts angelegt wurde.** Ein Knopf,
+der bei unverändertem Text stumm bleibt, wirkt kaputt; genau das passiert,
+denn `snapshotNow()` legt keinen doppelten Eintrag an. Der Ausweg ist keine
+zweite Meldung, sondern eine genauere Zusage: Der Knopf verspricht **„dein
+aktueller Stand ist gesichert"**, nicht „ein Eintrag wurde erzeugt". Bei
+unverändertem Text steht er bereits oben in der Liste — die Zusage stimmt
+also in beiden Fällen, und es braucht weder eine Fallunterscheidung noch
+einen zehnten i18n-Text. Einen Eintrag zu erzwingen wäre die schlechtere
+Wahl: Er kostete einen der zwanzig Plätze für Text, der schon da ist.
+
+Gezeigt wird das mit dem **vorhandenen** Haus-Idiom: `flashBtn()` setzt für
+1,5 s die Klasse `done`, die Petrol färbt und das Icon gegen einen Haken
+tauscht — dieselbe Rückmeldung wie bei „kopieren" und „herunterladen". Dafür
+musste nur die CSS-Regel `.copybtn.done .ic-copy` um `.ic-main` erweitert
+werden: die neutrale Form desselben Platzes für Knöpfe, die nichts kopieren.
+
+Ein **offenes Menü bleibt offen** und zeichnet neu — dort sieht man den
+Eintrag entstehen. Der Pad-Fall folgt von selbst: Beide Knöpfe werden in
+**einer** Zuweisung versteckt (`snapBtn.hidden = snapAddBtn.hidden =
+src.readOnly`), sie können also nicht auseinanderlaufen.
+
+Der Leer-Text des Menüs nennt jetzt beide Wege („auf Knopfdruck und alle 10
+Minuten") — er ist die Stelle, an der jemand fragt, wie man überhaupt zu
+einem Stand kommt.
+
+**Nachgemessen** (Werkbaum-Plan, Stände zuvor leer): 0 → Klick → **1**,
+Haken sichtbar (`ic-done` block, `ic-main` none), nach 1,7 s wieder das
+Kamera-Icon. Zweiter Klick **ohne** Änderung → weiterhin 1, Rückmeldung
+trotzdem. Text geändert, Klick → **2**; Menü zeigt beide, neueste zuoberst,
+und liegt vollständig im Panel. Im schmalen Layout kostet der Knopf nichts:
+Kopfhöhe 44 px und Zeilenzahl sind mit und ohne ihn identisch, die Breite des
+Dokument-Namens bleibt bei 54 px.

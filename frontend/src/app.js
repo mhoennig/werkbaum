@@ -1761,7 +1761,8 @@ const I18N = {
     docSwitchTooltip:"Dokument wählen oder verwalten", docMenuAria:"Dokumente",
     /* Frühere Stände (D54) — alle 10 Minuten, nur bei Änderung. */
     snapTooltip:"Frühere Stände dieses Dokuments", snapMenuAria:"Frühere Stände",
-    snapNone:"Noch keine früheren Stände – gesichert wird alle 10 Minuten, sobald sich etwas geändert hat.",
+    snapNone:"Noch keine früheren Stände – gesichert wird auf Knopfdruck und alle 10 Minuten, sobald sich etwas geändert hat.",
+    snapAddTooltip:"Aktuellen Stand jetzt sichern",
     snapLines:"{n} Zeilen",
     docNew:"Neues Dokument", docRename:"Umbenennen", docDelete:"Löschen",
     docNewName:"Unbenannt",
@@ -1849,7 +1850,8 @@ const I18N = {
     editorTitle:"Structure (text)", diagramTitle:"Diagram",
     docSwitchTooltip:"Choose or manage document", docMenuAria:"Documents",
     snapTooltip:"Earlier states of this document", snapMenuAria:"Earlier states",
-    snapNone:"No earlier states yet – one is kept every 10 minutes, once something has changed.",
+    snapNone:"No earlier states yet – one is kept on demand and every 10 minutes, once something has changed.",
+    snapAddTooltip:"Save the current state now",
     snapLines:"{n} lines",
     docNew:"New document", docRename:"Rename", docDelete:"Delete",
     docNewName:"Untitled",
@@ -1937,7 +1939,8 @@ const I18N = {
     editorTitle:"Estructura (texto)", diagramTitle:"Diagrama",
     docSwitchTooltip:"Elegir o gestionar documento", docMenuAria:"Documentos",
     snapTooltip:"Estados anteriores de este documento", snapMenuAria:"Estados anteriores",
-    snapNone:"Aún no hay estados anteriores: se guarda uno cada 10 minutos, cuando algo ha cambiado.",
+    snapNone:"Aún no hay estados anteriores: se guarda uno al pulsar el botón y cada 10 minutos, cuando algo ha cambiado.",
+    snapAddTooltip:"Guardar ahora el estado actual",
     snapLines:"{n} líneas",
     docNew:"Nuevo documento", docRename:"Renombrar", docDelete:"Eliminar",
     docNewName:"Sin título",
@@ -2025,7 +2028,8 @@ const I18N = {
     editorTitle:"Structure (texte)", diagramTitle:"Diagramme",
     docSwitchTooltip:"Choisir ou gérer le document", docMenuAria:"Documents",
     snapTooltip:"États antérieurs de ce document", snapMenuAria:"États antérieurs",
-    snapNone:"Pas encore d’état antérieur : un état est conservé toutes les 10 minutes, dès que quelque chose a changé.",
+    snapNone:"Pas encore d’état antérieur : un état est conservé sur demande et toutes les 10 minutes, dès que quelque chose a changé.",
+    snapAddTooltip:"Enregistrer l’état actuel maintenant",
     snapLines:"{n} lignes",
     docNew:"Nouveau document", docRename:"Renommer", docDelete:"Supprimer",
     docNewName:"Sans titre",
@@ -2113,7 +2117,8 @@ const I18N = {
     editorTitle:"Struktura (tekst)", diagramTitle:"Diagram",
     docSwitchTooltip:"Wybierz lub zarządzaj dokumentem", docMenuAria:"Dokumenty",
     snapTooltip:"Wcześniejsze stany tego dokumentu", snapMenuAria:"Wcześniejsze stany",
-    snapNone:"Brak wcześniejszych stanów – zapisywany jest co 10 minut, gdy coś się zmieni.",
+    snapNone:"Brak wcześniejszych stanów – zapisywany jest na żądanie i co 10 minut, gdy coś się zmieni.",
+    snapAddTooltip:"Zapisz bieżący stan teraz",
     snapLines:"wierszy: {n}",
     docNew:"Nowy dokument", docRename:"Zmień nazwę", docDelete:"Usuń",
     docNewName:"Bez nazwy",
@@ -2201,7 +2206,8 @@ const I18N = {
     editorTitle:"Структура (текст)", diagramTitle:"Диаграмма",
     docSwitchTooltip:"Выбрать документ или управлять им", docMenuAria:"Документы",
     snapTooltip:"Прежние состояния этого документа", snapMenuAria:"Прежние состояния",
-    snapNone:"Прежних состояний пока нет — они сохраняются каждые 10 минут, если что-то изменилось.",
+    snapNone:"Прежних состояний пока нет — они сохраняются по нажатию кнопки и каждые 10 минут, если что-то изменилось.",
+    snapAddTooltip:"Сохранить текущее состояние сейчас",
     snapLines:"строк: {n}",
     docNew:"Новый документ", docRename:"Переименовать", docDelete:"Удалить",
     docNewName:"Без названия",
@@ -2289,7 +2295,8 @@ const I18N = {
     editorTitle:"संरचना (टेक्स्ट)", diagramTitle:"आरेख",
     docSwitchTooltip:"दस्तावेज़ चुनें या प्रबंधित करें", docMenuAria:"दस्तावेज़",
     snapTooltip:"इस दस्तावेज़ की पिछली स्थितियाँ", snapMenuAria:"पिछली स्थितियाँ",
-    snapNone:"अभी कोई पिछली स्थिति नहीं — कुछ बदलने पर हर 10 मिनट में एक सहेजी जाती है।",
+    snapNone:"अभी कोई पिछली स्थिति नहीं — बटन दबाने पर और कुछ बदलने पर हर 10 मिनट में एक सहेजी जाती है।",
+    snapAddTooltip:"मौजूदा स्थिति अभी सहेजें",
     snapLines:"{n} पंक्तियाँ",
     docNew:"नया दस्तावेज़", docRename:"नाम बदलें", docDelete:"हटाएँ",
     docNewName:"बिना शीर्षक",
@@ -2377,7 +2384,8 @@ const I18N = {
     editorTitle:"结构（文本）", diagramTitle:"图表",
     docSwitchTooltip:"选择或管理文档", docMenuAria:"文档",
     snapTooltip:"此文档的早期状态", snapMenuAria:"早期状态",
-    snapNone:"暂无早期状态——内容有变动时，每 10 分钟保存一次。",
+    snapNone:"暂无早期状态——可随时手动保存；内容有变动时，也会每 10 分钟保存一次。",
+    snapAddTooltip:"立即保存当前状态",
     snapLines:"{n} 行",
     docNew:"新建文档", docRename:"重命名", docDelete:"删除",
     docNewName:"未命名",
@@ -2465,7 +2473,8 @@ const I18N = {
     editorTitle:"構造（テキスト）", diagramTitle:"ダイアグラム",
     docSwitchTooltip:"ドキュメントを選択・管理", docMenuAria:"ドキュメント",
     snapTooltip:"このドキュメントの以前の状態", snapMenuAria:"以前の状態",
-    snapNone:"以前の状態はまだありません — 変更があれば 10 分ごとに保存されます。",
+    snapNone:"以前の状態はまだありません — ボタンを押したとき、および変更があれば 10 分ごとに保存されます。",
+    snapAddTooltip:"現在の状態を今すぐ保存",
     snapLines:"{n} 行",
     docNew:"新規ドキュメント", docRename:"名前を変更", docDelete:"削除",
     docNewName:"無題",
@@ -2972,6 +2981,7 @@ function snapshotNow(){
 setInterval(snapshotNow, SNAP_EVERY);
 
 const snapBtn = document.getElementById('snapBtn');
+const snapAddBtn = document.getElementById('snapAddBtn');
 const snapMenu = document.getElementById('snapMenu');
 
 function snapLabel(ms){
@@ -3027,10 +3037,25 @@ function closeSnapMenu(){
   snapMenu.hidden = true;
   snapBtn.setAttribute('aria-expanded', 'false');
 }
-function updateSnapBtn(){ snapBtn.hidden = src.readOnly; if(src.readOnly) closeSnapMenu(); }
+function updateSnapBtn(){
+  snapBtn.hidden = snapAddBtn.hidden = src.readOnly;
+  if(src.readOnly) closeSnapMenu();
+}
 snapBtn.addEventListener('click', e => {
   e.stopPropagation();
   snapMenu.hidden ? openSnapMenu() : closeSnapMenu();
+});
+/* Von Hand sichern — der Fall „gleich ändere ich viel“, für den zehn Minuten
+   zu lang sind. Die Rückmeldung kommt **immer**, auch wenn `snapshotNow()`
+   nichts angelegt hat: Der Knopf verspricht „dein Stand ist gesichert“, nicht
+   „ein Eintrag wurde erzeugt“ — bei unverändertem Text steht er schon oben in
+   der Liste. Einen doppelten Eintrag zu erzwingen kostete nur einen der 20
+   Plätze (D54-Nachtrag). Ein offenes Menü bleibt offen und zeichnet neu, dort
+   sieht man den neuen Eintrag entstehen. */
+snapAddBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  snapshotNow();
+  flashBtn(snapAddBtn);
 });
 document.addEventListener('click', e => {
   if(!snapMenu.hidden && !snapMenu.contains(e.target) && !snapBtn.contains(e.target)) closeSnapMenu();
