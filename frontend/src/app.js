@@ -4,6 +4,7 @@ import { computeCheapPlan, freshProdSet, initialCollapsed, nodeKeys, effectiveSt
 import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning, warningText } from './warnings.js';
 import { padUrls } from './remote.js';
+import { depFragment, collectIds, matchIds } from './autocomplete.js';
 import { LS_SNAPS, SNAP_EVERY, parseSnaps, addSnapshot, persistSnaps, snapLabel }
   from './snapshots.js';
 /* Neuigkeiten (D58): die git-Historie, zur BAUZEIT eingelesen (Vite-Plugin in
@@ -97,6 +98,11 @@ let foldOverrides = new Map(), foldByLine = new Map();
    `nodeOfLine()` greift darauf zurück, wenn die Zeile keinen DOM-Knoten hat. */
 let lineTargetMap = new Map();
 
+/* Der zuletzt geparste Baum, UNGEFILTERT — die ID-Vorschläge (D63) lesen
+   daraus die vergebenen IDs, und eine Abhängigkeit darf auch auf Verworfenes
+   zeigen. */
+let acRoots = [];
+
 /* ---------- Renderer (Anbindung an den DOM) ----------
    parse -> Wurzeln filtern (verworfene) -> günstigen Pfad markieren ->
    render.js baut den HTML-String -> in #out schreiben -> Pfadlinie zeichnen. */
@@ -105,6 +111,7 @@ function render(){
      und seine Position ist ohnehin gemessen, also gleich hinfällig. */
   closeNodeTip();
   const parsed = parse(src.value);
+  acRoots = parsed.roots;
   let roots = parsed.roots;
   const showDiscarded = discardedShown();
   if(!showDiscarded){
@@ -847,15 +854,21 @@ function syncMirror(){
   return mirrorEl;
 }
 const ZWSP = '​';
-function offsetTopInEditor(offset){
+/* Position eines Zeichenoffsets im Spiegel — `top` im Koordinatensystem von
+   `src.scrollTop`, `left` in dem von `src.scrollLeft` (Innenabstände stecken
+   je drin). Das `left` braucht nur die Vorschlagsliste (D63). */
+function caretPosInEditor(offset){
   const m = syncMirror();
   m.textContent = src.value.slice(0, offset);
   const marker = document.createElement('span');
   marker.textContent = ZWSP;
   m.appendChild(marker);
-  const top = marker.offsetTop;
+  const pos = {top: marker.offsetTop, left: marker.offsetLeft};
   m.textContent = '';
-  return top;
+  return pos;
+}
+function offsetTopInEditor(offset){
+  return caretPosInEditor(offset).top;
 }
 
 /* Oberkante jeder **logischen** Zeile, im selben Koordinatensystem wie
@@ -1456,6 +1469,7 @@ function syncCaret(){
   if(moved) resolveShortId(caretLine);
   caretLine = caretLineOf();   /* neu lesen: das Auflösen kann den Text ändern */
   highlightCurrentNode(moved);
+  updateAc();                  /* ID-Vorschläge folgen der Schreibmarke (D63) */
 }
 for(const ev of ['click','keyup','input','focus']) src.addEventListener(ev, syncCaret);
 
@@ -1560,6 +1574,137 @@ function setAltMode(on){ out.classList.toggle('alt', on); }
 window.addEventListener('keydown', e => { if(e.key === 'Alt') setAltMode(true); });
 window.addEventListener('keyup',   e => { if(e.key === 'Alt' || !e.altKey) setAltMode(false); });
 window.addEventListener('blur',    () => setAltMode(false));
+
+/* ---------- ID-Vorschläge beim Tippen von Abhängigkeiten (D63) ----------
+   Wer `:#` tippt, bekommt die vergebenen IDs als Liste an der Schreibmarke.
+   Die Regeln (wann ein Kontext vorliegt, welche IDs passen) stehen headless
+   in autocomplete.js; hier hängen nur Popup, Tasten und das Einfügen. Eine
+   Eingabehilfe wie die ID-Kurzform (D55): Der Parser sieht nie etwas davon,
+   und wer die Liste ignoriert, tippt einfach weiter. */
+let acEl = null, acLiveEl = null, acItems = [], acIndex = 0, acCtx = null;
+/* Nach Übernahme oder Esc bleibt DERSELBE Kontext zu — sonst öffnete ihn das
+   nächste keyup sofort wieder. Weitertippen ändert das Fragment und löst ihn. */
+let acSuppress = null;
+function acBox(){
+  if(!acEl){
+    acEl = document.createElement('div');
+    acEl.className = 'aclist';
+    /* aria-hidden wie das Knoten-Fenster (D57): Das saubere Combobox-Muster
+       passt nicht auf ein <textarea>; die Live-Region unten sagt, was es gibt,
+       und normales Tippen bleibt von der Liste unberührt. */
+    acEl.setAttribute('aria-hidden', 'true');
+    acEl.hidden = true;
+    /* pointerdown statt click: läuft VOR dem Fokuswechsel, und preventDefault
+       lässt den Fokus im Textfeld — auch auf Touch. */
+    acEl.addEventListener('pointerdown', e => {
+      const it = e.target.closest('.acitem');
+      if(!it) return;
+      e.preventDefault();
+      acIndex = Number(it.dataset.i);
+      acAccept();
+    });
+    document.body.appendChild(acEl);
+    acLiveEl = document.createElement('div');
+    acLiveEl.className = 'vh';
+    acLiveEl.setAttribute('role', 'status');
+    document.body.appendChild(acLiveEl);
+  }
+  return acEl;
+}
+function acIsOpen(){ return !!acEl && !acEl.hidden; }
+function closeAc(){
+  if(acEl) acEl.hidden = true;
+  if(acLiveEl) acLiveEl.textContent = '';
+  acCtx = null;
+}
+function updateAc(){
+  if(src.readOnly || document.activeElement !== src ||
+     src.selectionStart !== src.selectionEnd){ closeAc(); return; }
+  const ctx = depFragment(src.value, src.selectionStart);
+  if(!ctx){ acSuppress = null; closeAc(); return; }
+  if(acSuppress && acSuppress.start === ctx.start && acSuppress.fragment === ctx.fragment){
+    closeAc(); return;
+  }
+  acSuppress = null;
+  /* Pfeiltasten ändern nur die Auswahl, nicht den Kontext — Liste und
+     gewählter Eintrag bleiben dann stehen. */
+  if(acIsOpen() && acCtx && acCtx.start === ctx.start && acCtx.fragment === ctx.fragment) return;
+  const cands = matchIds(collectIds(acRoots), ctx.fragment, ctx.exclude);
+  /* Nichts zu zeigen — oder der eine exakte Treffer wäre nur ein Echo dessen,
+     was schon vollständig dasteht. */
+  if(!cands.length ||
+     (cands.length === 1 && cands[0].id === ctx.fragment && ctx.end === src.selectionStart)){
+    closeAc(); return;
+  }
+  acCtx = ctx; acItems = cands; acIndex = 0;
+  renderAc();
+  acLiveEl.textContent = t('acHint', {n: acItems.length});
+}
+function renderAc(){
+  const box = acBox();
+  box.innerHTML = acItems.map((c, i) =>
+    `<div class="acitem${i === acIndex ? ' sel' : ''}" data-i="${i}">` +
+    `<span class="acid">#${esc(c.id)}</span>` +
+    (c.label ? `<span class="aclabel">${esc(c.label)}</span>` : '') +
+    `</div>`).join('');
+  box.hidden = false;
+  placeAc();
+  const sel = box.children[acIndex];
+  if(sel) sel.scrollIntoView({block: 'nearest'});
+}
+/* Unter dem `#` des Fragments; nach oben ausweichend, wenn unten kein Platz
+   ist. Wie das Knoten-Fenster (D52) `position:fixed` auf <body> — in einem
+   Vorfahren mit `overflow` würde die Liste geklippt (D50). */
+function placeAc(){
+  const rect = src.getBoundingClientRect();
+  const pos = caretPosInEditor(Math.max(0, acCtx.start - 1));
+  const lh = parseFloat(getComputedStyle(src).lineHeight) || 18;
+  let x = rect.left + pos.left - src.scrollLeft;
+  let y = rect.top + pos.top - src.scrollTop + lh;
+  x = Math.max(8, Math.min(x, window.innerWidth - acEl.offsetWidth - 8));
+  if(y + acEl.offsetHeight > window.innerHeight - 8){
+    y = Math.max(8, rect.top + pos.top - src.scrollTop - acEl.offsetHeight - 4);
+  }
+  acEl.style.left = x + 'px';
+  acEl.style.top = y + 'px';
+}
+function acMove(d){
+  acIndex = (acIndex + d + acItems.length) % acItems.length;
+  renderAc();
+  acLiveEl.textContent = '#' + acItems[acIndex].id;   /* der gewählte Eintrag */
+}
+function acAccept(){
+  const c = acItems[acIndex], ctx = acCtx;
+  closeAc();
+  if(!c || !ctx) return;
+  acSuppress = {start: ctx.start, fragment: c.id};
+  const p = ctx.start + c.id.length;
+  /* writeAt (D53) ersetzt undo-fähig — hier läuft es aus keydown/pointerdown,
+     nicht re-entrant aus `input`, execCommand greift also (anders als D55). */
+  writeAt(ctx.start, ctx.end, c.id, p, p);
+}
+/* Auf `document` in der Capture-Phase: Die Handler am Textfeld (Tab rückt ein,
+   Esc löst die Tab-Falle, D53) sind früher registriert und kämen sonst zuerst.
+   stopPropagation hält sie heraus, solange die Liste offen ist. */
+document.addEventListener('keydown', e => {
+  if(!acIsOpen() || e.target !== src) return;
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault();
+    acMove(e.key === 'ArrowDown' ? 1 : -1);
+  } else if(e.key === 'Enter' || e.key === 'Tab'){
+    e.preventDefault();
+    e.stopPropagation();
+    acAccept();
+  } else if(e.key === 'Escape'){
+    e.stopPropagation();
+    acSuppress = {start: acCtx.start, fragment: acCtx.fragment};
+    closeAc();
+  }
+}, true);
+/* Zu, wenn die Position nicht mehr stimmt oder niemand mehr tippt. */
+src.addEventListener('blur', closeAc);
+src.addEventListener('scroll', closeAc);
+window.addEventListener('resize', closeAc);
 
 const app = document.getElementById('app');
 function applyLayout(mode){
@@ -1917,6 +2062,7 @@ const I18N = {
     jumpHint:"Alt+Klick: zur Zeile im Text",
     /* Auf Touch nennt das Knoten-Fenster (D52) den langen Druck — Alt gibt es dort nicht. */
     jumpHintTouch:"Langer Druck: zur Zeile im Text",
+    acHint:"{n} ID-Vorschläge – ↑/↓ wählt, Enter übernimmt",
     tipClose:"Schließen",
     tipOpenLink:"Link öffnen",
     padReadonly:"Wird im Pad bearbeitet — hier nur lesen.",
@@ -2021,6 +2167,7 @@ const I18N = {
     ghostTooltip:"From size M upward, an item should be broken down further.",
     jumpHint:"Alt+click: jump to the line in the text",
     jumpHintTouch:"Long press: jump to the line in the text",
+    acHint:"{n} id suggestions – ↑/↓ to choose, Enter to insert",
     tipClose:"Close",
     tipOpenLink:"Open link",
     padReadonly:"Edited in the pad — read-only here.",
@@ -2124,6 +2271,7 @@ const I18N = {
     ghostTooltip:"A partir de la talla M, un elemento debería desglosarse más.",
     jumpHint:"Alt+clic: ir a la línea en el texto",
     jumpHintTouch:"Pulsación larga: ir a la línea en el texto",
+    acHint:"{n} sugerencias de ID – ↑/↓ elige, Intro inserta",
     tipClose:"Cerrar",
     tipOpenLink:"Abrir enlace",
     padReadonly:"Se edita en el pad — aquí solo lectura.",
@@ -2227,6 +2375,7 @@ const I18N = {
     ghostTooltip:"À partir de la taille M, un élément devrait être décomposé davantage.",
     jumpHint:"Alt+clic : aller à la ligne dans le texte",
     jumpHintTouch:"Appui long : aller à la ligne dans le texte",
+    acHint:"{n} suggestions d'ID – ↑/↓ pour choisir, Entrée pour insérer",
     tipClose:"Fermer",
     tipOpenLink:"Ouvrir le lien",
     padReadonly:"Modifié dans le pad — lecture seule ici.",
@@ -2330,6 +2479,7 @@ const I18N = {
     ghostTooltip:"Od rozmiaru M element powinien być dalej podzielony.",
     jumpHint:"Alt+kliknięcie: przejdź do wiersza w tekście",
     jumpHintTouch:"Długie przytrzymanie: przejdź do wiersza w tekście",
+    acHint:"{n} podpowiedzi ID – ↑/↓ wybiera, Enter wstawia",
     tipClose:"Zamknij",
     tipOpenLink:"Otwórz link",
     padReadonly:"Edytowane w padzie — tu tylko do czytania.",
@@ -2433,6 +2583,7 @@ const I18N = {
     ghostTooltip:"Начиная с размера M элемент следует далее декомпозировать.",
     jumpHint:"Alt+клик: перейти к строке в тексте",
     jumpHintTouch:"Долгое нажатие: перейти к строке в тексте",
+    acHint:"{n} подсказок ID – ↑/↓ выбирает, Enter вставляет",
     tipClose:"Закрыть",
     tipOpenLink:"Открыть ссылку",
     padReadonly:"Редактируется в паде — здесь только чтение.",
@@ -2536,6 +2687,7 @@ const I18N = {
     ghostTooltip:"आकार M से ऊपर किसी तत्व को और अधिक उप-विभाजित करना चाहिए।",
     jumpHint:"Alt+क्लिक: टेक्स्ट में उस पंक्ति पर जाएँ",
     jumpHintTouch:"देर तक दबाएँ: टेक्स्ट में उस पंक्ति पर जाएँ",
+    acHint:"{n} आईडी सुझाव – ↑/↓ से चुनें, Enter से डालें",
     tipClose:"बंद करें",
     tipOpenLink:"लिंक खोलें",
     padReadonly:"पैड में संपादित होता है — यहाँ केवल पढ़ें।",
@@ -2646,6 +2798,7 @@ const I18N = {
     ghostTooltip:"从 M 号起，元素应进一步细分。",
     jumpHint:"Alt+点击：跳转到文本中的该行",
     jumpHintTouch:"长按：跳转到文本中的该行",
+    acHint:"{n} 个 ID 建议 – ↑/↓ 选择，Enter 插入",
     tipClose:"关闭",
     tipOpenLink:"打开链接",
     padReadonly:"在 Pad 中编辑 — 此处只读。",
@@ -2749,6 +2902,7 @@ const I18N = {
     ghostTooltip:"サイズ M 以上の要素はさらに分解すべきです。",
     jumpHint:"Alt+クリック：テキストの該当行へ移動",
     jumpHintTouch:"長押し：テキストの該当行へ移動",
+    acHint:"ID候補 {n} 件 – ↑/↓で選択、Enterで挿入",
     tipClose:"閉じる",
     tipOpenLink:"リンクを開く",
     padReadonly:"パッドで編集します — ここでは読み取り専用です。",

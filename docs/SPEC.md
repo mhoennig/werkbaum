@@ -869,6 +869,30 @@ und `llms.md` (§13) bleibt unberührt. Angefasst wird nur die Zeile, in der auc
 bloßes Durchklicken ein fremdes Dokument um; Abhängigkeiten (`:#…`) und der
 Beschreibungsteil hinter `---` bleiben außen vor. Siehe D55.
 
+### ID-Vorschläge beim Tippen von Abhängigkeiten (`:#`)
+Ebenfalls eine **Eingabehilfe**, keine Notation: Wer im Baumteil ein
+Abhängigkeits-Token beginnt (`:#`, auch in der Fortsetzung `,#` und in der
+Kopf-Form `#auth:#…`), bekommt an der Schreibmarke eine **Liste der vergebenen
+IDs** — gefiltert nach dem schon getippten Fragment (Präfix-Treffer zuerst,
+dann Teilstring-Treffer, je in Dokumentreihenfolge), mit dem Knotentitel als
+Kontext daneben. Angeboten werden **alle** IDs des Dokuments, auch die
+verworfener oder eingeklappter Knoten — eine Abhängigkeit darf überallhin
+zeigen (§1); nicht angeboten werden die im Token schon gelisteten IDs und die
+eigene ID der Zeile.
+
+- **Bedienung:** ↑/↓ wählt, Enter oder Tab übernimmt (undo-fähig, ein
+  Schritt), Esc schließt — Weitertippen öffnet wieder. Klick bzw. Tipp auf
+  einen Eintrag übernimmt ebenso. Wer die Liste ignoriert, tippt einfach
+  weiter: Sie fängt keine Taste ab, solange sie nichts anzeigt, und Tab rückt
+  bei geschlossener Liste unverändert ein.
+- **Kein Vorschlag** bei bloßem `#` (das *definiert* eine ID), im Kommentar
+  (`%%`), im Beschreibungsteil hinter `---` und in schreibgeschützten
+  Pad-Dokumenten (§9).
+- Der Parser sieht nie etwas davon; `llms.md` (§13) bleibt unberührt. Für
+  Screenreader meldet eine höfliche Live-Region die Trefferzahl und den
+  gewählten Eintrag; das Popup selbst ist `aria-hidden`, normales Tippen
+  bleibt unberührt. Siehe D63.
+
 ### Zeilennummern im Texteditor
 Links neben dem Textfeld steht ein schmaler Streifen mit den **Zeilennummern** —
 dieselben, die die Warnungen nennen („Zeile 12: …", §4). Ohne ihn muss man sie

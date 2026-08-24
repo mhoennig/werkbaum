@@ -4688,3 +4688,84 @@ disjunktive Gruppen summiert statt Minimum: genau zwei. Im Browser: Badge
 den Grund; im exportierten SVG das Konflikt-Badge bernstein und das implizite
 M weiß mit Petrol-Rand. Kanonisches Beispiel §10 und der mitgelieferte Plan:
 0 Warnungen.
+
+## D63 — ID-Vorschläge beim Tippen von Abhängigkeiten (`:#`)
+Wer eine Abhängigkeit tippt, muss die Ziel-ID auswendig wissen oder im Text
+suchen — bei 180 IDs im mitgelieferten Plan keine Kleinigkeit. Jetzt öffnet
+`:#` eine Vorschlagsliste an der Schreibmarke: die vergebenen IDs, gefiltert
+nach dem getippten Fragment, mit dem Knotentitel als Kontext.
+
+**Dieselbe Kategorie wie die ID-Kurzform (D55): Eingabehilfe, keine
+Notation.** Der Parser sieht nie etwas davon, SPEC-Syntax und `llms.md`
+bleiben unberührt; übernommen wird undo-fähig über das vorhandene `writeAt()`
+(D53). Die drei schwierigen Zutaten lagen schon im Haus: Die **Kandidaten**
+kommen aus dem Parse-Baum, der bei jedem Tastendruck ohnehin frisch ist; die
+**Pixel-Position der Schreibmarke** misst der Spiegel-`div` aus D25/D33 (ein
+Marker-Span, `offsetTop`/`offsetLeft` — seit `wrap="off"` (D49) trivial); das
+**Einfügen ohne Undo-Verlust** ist die D53-Lehre. Kein CodeMirror/Monaco —
+das wäre eine Laufzeit-Abhängigkeit (D11/D19) für etwas, das drei vorhandene
+Mechanismen zusammensetzen.
+
+**Ausgelöst nur im Abhängigkeits-Kontext, nicht bei jedem `#`.** Ein
+alleinstehendes `#` *definiert* meist eine neue ID — dort wäre die Liste im
+Weg. Erkannt wird dieselbe Form, die der Parser liest: `(^|\s):#…` (§1) und
+die Kopf-Form `#auth:#…` (D36); `(:#a` bleibt Zitat, `Regel: #x` bleibt
+Label, im Kommentar und hinter `---` gibt es keinen Kontext. Die Erkennung
+(`depFragment`) und die Kandidaten-Auswahl (`collectIds`/`matchIds`) stehen
+headless in **`autocomplete.js`** — die Hausregel aus D54-Nachtrag 3; app.js
+verdrahtet nur Popup, Tasten und Einfügen.
+
+**Angeboten wird alles, ausgenommen das Sinnlose.** Auch IDs verworfener und
+eingeklappter Knoten stehen in der Liste — eine Abhängigkeit darf dorthin
+zeigen (§1), und die Faltung ist nur Ansicht (D38). Ausgenommen sind die im
+Token **schon gelisteten** IDs und die **eigene ID der Zeile** (die
+Selbst-Abhängigkeit ist zulässig, aber nie das, was man tippen will).
+Sortierung: Präfix-Treffer vor Teilstring-Treffern, je in
+Dokumentreihenfolge, Groß-/Kleinschreibung egal — die IDs selbst bleiben, wie
+sie geschrieben sind. Ersetzt wird bis ans **Ende der ID-Zeichen** hinter der
+Schreibmarke, sonst ergäbe eine Übernahme mitten im Wort `#authth`.
+
+**Die Tasten-Arbitrierung ist der heikle Teil, nicht das Popup.** ↑/↓, Enter,
+Tab und Esc gehören sonst dem Textfeld — abgefangen werden sie **nur bei
+offener Liste**, über einen Capture-Handler auf `document`: Die
+Textfeld-Handler (Tab rückt ein, Esc löst die Tab-Falle — beide D53) sind
+früher registriert und kämen sonst zuerst; `stopPropagation` hält sie heraus.
+Zwei Folgen, beide gemessen: Tab übernimmt bei offener Liste, **ohne**
+zusätzlich einzurücken, und rückt bei geschlossener unverändert ein; Esc
+schließt die Liste, ohne die Tab-Falle zu lösen. **Nach Esc und nach einer
+Übernahme bleibt derselbe Kontext zu** (`acSuppress`) — sonst öffnete ihn das
+nächste keyup sofort wieder; Weitertippen ändert das Fragment und hebt die
+Sperre.
+
+**Ein Echo wird nicht angeboten:** Steht die ID schon vollständig da (der
+eine exakte Treffer, Schreibmarke am Token-Ende), bleibt die Liste zu — so
+schließt sie nach der Übernahme von selbst und meldet sich nicht bei jedem
+Cursor-Besuch einer fertigen Zeile.
+
+**Barrierefreiheit als benannte Grenze, nicht als Behauptung.** Das saubere
+ARIA-Combobox-Muster passt nicht auf ein `<textarea>` (kein
+`aria-activedescendant` über Elementgrenzen). Das Popup ist deshalb
+`aria-hidden` wie das Knoten-Fenster (D57); eine höfliche **Live-Region**
+meldet die Trefferzahl beim Öffnen und die gewählte ID beim Blättern. Die
+Liste blockiert nie normales Tippen — wer sie nicht wahrnimmt, verliert
+nichts.
+
+**Position wie das Knoten-Fenster:** `position:fixed` auf `<body>` — in
+einem Vorfahren mit `overflow` würde die Liste geklippt (D50), und `#out`s
+`zoom` geht sie nichts an. Verankert unter dem `#` des Fragments, nach oben
+ausweichend, wenn unten kein Platz ist; zu geht sie bei Blur, Scrollen des
+Textfelds, Fenstergröße — allem, was ihre Position hinfällig macht (die
+D52-Liste). In Pad-Dokumenten (schreibgeschützt, D31) öffnet sie nie.
+
+**Nachgemessen** im Browser mit echten Ereignisfolgen: `:` allein öffnet
+nichts, `:#` zeigt alle vier IDs des Testbaums (verworfene eingeschlossen),
+`a` filtert auf drei, ↑/↓ wandert (Live-Region nennt die gewählte ID), Enter
+übernimmt (`- Frontend :#api`), `,#` öffnet ohne das schon gelistete `api`,
+Esc schließt und bleibt bei Cursorbewegung zu, `d` öffnet wieder, Klick
+übernimmt, und **jede** Übernahme ist ein einzelner Undo-Schritt. Tab: bei
+offener Liste übernehmen ohne Einrücken, danach einrücken wie immer. 20 neue
+Tests in `tests/autocomplete.test.js` (397 gesamt): Kontext-Erkennung
+(Kopf-Form, Zitier-Klammer, Kommentar, Beschreibungsteil, Fortsetzungszeile
+D59, Ersetzen über die Schreibmarke hinaus), Sammeln (Dokumentreihenfolge,
+verworfene, D60-Knoten ohne Titel) und Sortierung (Präfix vor Teilstring,
+case-insensitiv, exclude).

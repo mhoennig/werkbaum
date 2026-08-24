@@ -72,6 +72,7 @@
     - [^] #ed.jump: Jump between diagram and text (S)
     - [^] #ed.lineno: Line numbers in the text editor (XS)  %% the warnings name them
     - [^] #ed.shortid: Type #.kc under #prod-stage, get #prod-stage.kc (XS)  %% an input aid, not notation
+    - [x] #ed.depcomplete: Typing :# suggests the known ids (S)  %% arrows choose, Enter inserts
     - [^] #ed.showids: A # button shows the ids before the titles (XS)  %% written as in the text, with a colon
       - [^] #ed.lineno.tip: The warning is the tooltip of its number (XS)  %% no hunting in the list
     - [^] #ed.fold: Collapsible subtrees (L)
@@ -525,6 +526,11 @@
   The dotted prefix repeats what the indentation already says. Resolved while
   typing, not while parsing: the file keeps the full id, so it stays greppable
   and survives re-ordering, which is what the :#... references rely on.
+
+#ed.depcomplete
+  A dependency needs its target's id, and nobody remembers 180 of them. The
+  list at the caret offers the document's ids filtered by what is typed, with
+  the node title as context; an input aid like the shorthand, not notation.
 
 #ed.showids
   The id is the address of a node, but the diagram only carried it in the

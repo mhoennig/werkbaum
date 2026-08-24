@@ -587,6 +587,15 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `src.value =` ist nur beim **Laden eines anderen** Dokuments richtig
   (`loadActiveIntoEditor`, Dokumentwechsel, Pad-Abruf) — dorthin gibt es nichts
   zurückzunehmen.
+- **ID-Vorschläge `:#` (D63):** Die Regeln stehen headless in `autocomplete.js`
+  (`depFragment`/`collectIds`/`matchIds`, Tests); app.js verdrahtet nur Popup,
+  Tasten, Einfügen (`writeAt`, undo-fähig). Der Tasten-Handler hängt an
+  `document` in der **Capture-Phase** — die Textfeld-Handler (Tab rückt ein,
+  Esc löst die Tab-Falle, D53) sind früher registriert und kämen sonst zuerst;
+  `stopPropagation` hält sie nur bei **offener** Liste heraus. `acSuppress`
+  hält denselben Kontext nach Übernahme/Esc geschlossen — ohne das öffnet ihn
+  das nächste keyup sofort wieder. Popup auf `<body>` mit `position:fixed`
+  (Klipp-Falle D50, wie das Knoten-Fenster).
 - **Undo lässt sich hier nicht per Tastendruck prüfen.** Ein synthetisches
   `ctrl+z` aus der Automatisierung löst **kein** natives Undo aus (gemessen:
   Text unverändert), während `document.execCommand('undo')` im selben Moment

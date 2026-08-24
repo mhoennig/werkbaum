@@ -1006,6 +1006,33 @@
      `ul.or .node{box-shadow:none}` spezifischer ist. */
   #out .node.tipped{box-shadow:0 0 0 3px rgba(15,118,110,.55)}
 
+  /* ---------- ID-Vorschläge beim Tippen von Abhängigkeiten (D63) ----------
+     `position:fixed` auf <body> wie das Knoten-Fenster: In einem Vorfahren
+     mit `overflow` würde die Liste geklippt (D50). Die IDs in der
+     Mono-Schrift des Textfelds, der Titel als gedämpfter Kontext daneben. */
+  .aclist{
+    position:fixed;z-index:70;min-width:160px;max-width:min(24rem, calc(100vw - 16px));
+    max-height:12.5rem;overflow-y:auto;
+    background:var(--card);border:1px solid rgba(36,52,71,.15);border-radius:8px;
+    box-shadow:0 8px 24px rgba(36,52,71,.25);padding:4px;
+  }
+  .aclist[hidden]{display:none}
+  .acitem{
+    display:flex;align-items:baseline;gap:8px;padding:4px 8px;border-radius:5px;
+    cursor:pointer;white-space:nowrap;
+  }
+  .acitem.sel,.acitem:hover{background:rgba(15,118,110,.12)}
+  .acid{font-family:'IBM Plex Mono',monospace;font-size:.74rem;color:var(--ink)}
+  .aclabel{
+    font-size:.7rem;color:var(--muted);
+    overflow:hidden;text-overflow:ellipsis;max-width:14rem;
+  }
+  /* Visuell versteckt, für Screenreader da — die Live-Region der Vorschläge. */
+  .vh{
+    position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;
+    clip-path:inset(50%);white-space:nowrap;
+  }
+
   /* --- ALL OF: Kinder nebeneinander, durchgezogener Verteiler --- */
   ul.and{display:flex;align-items:flex-start;position:relative;padding-top:14px}
   ul.and::before{
@@ -1431,7 +1458,7 @@
   @media print{
     html,body{height:auto!important;overflow:visible!important;background:#fff!important}
     header,.panel.editor,.gutter,.panel.right .panel-head,
-    .warnings,.zoomctl,.site-footer,.nodetip{display:none!important}
+    .warnings,.zoomctl,.site-footer,.nodetip,.aclist{display:none!important}
     .app,.app.side{display:block!important;max-width:none!important;width:auto!important;
       height:auto!important;margin:0!important;gap:0!important}
     .panel.right{grid-area:auto!important;background:#fff!important;border:0!important;
