@@ -82,6 +82,10 @@
     - [^] #bld.tests: Unit tests (S)
     - [^] #bld.pages: Published on every push (S)
     - [^] #bld.update: Says when a new build is out (S)  %% compares against the running one, see D45
+    - [ ] #bld.pwa: Installable as a progressive web app (M)
+      - [ ] #bld.pwa.manifest: A manifest with name, icons and standalone display (XS)
+      - [ ] #bld.pwa.sw: A service worker that serves the app offline (S)  %% one file to cache
+      - [ ] #bld.pwa.update: The reload notice moves into the worker (S)  %% see D45
     - [-] #bld.ghpages: Deploy through a gh-pages branch (S)  %% GitHub Actions instead
     - [-] #bld.gfonts: Fonts from Google (XS)  %% self-hosted, no third-party request
   - [ ] #be: Backend (XL)
@@ -545,6 +549,27 @@
   The running page compares its own build with the one the server delivers and
   offers a reload. It compares against itself, not against a remembered
   fetch — a remembered one survives the very reload that resolves it.
+
+#bld.pwa
+  Installable from the browser and startable like an app, in its own window
+  and with its own icon. Everything it needs is already in one file, so what
+  is missing is mostly the declaration that says so.
+
+#bld.pwa.manifest
+  Name, icons, theme colour and a standalone display mode — the declaration a
+  browser reads before it offers to install anything. The brand mark exists
+  and needs the raster sizes an installer asks for.
+
+#bld.pwa.sw
+  A worker answering from the cache lets the editor start without a network.
+  There is exactly one object to cache, because the build inlines fonts,
+  styles and modules; documents live in the browser anyway. Texts pulled from
+  a URL or a pad stay online by their nature.
+
+#bld.pwa.update
+  With a worker in front of the page, the reload notice has to come from it:
+  it decides what gets served, so "the running build against the one the
+  server sends" is no longer the same comparison.
 
 #bld.ghpages
   Rejected: the official Actions route needs no extra branch and no deploy

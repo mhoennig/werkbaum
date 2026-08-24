@@ -103,6 +103,17 @@ Tastendruck ein Commit); und wer bei einem Backend eigentlich was darf
   Ausbaustufe weiterspringen (Regel: erst die Kette auf `fertig`, dann die
   nächste Stufe). Das braucht erst Nutzen + Aufwands-Rollup (oben).
 - Attribut-Syntax für Termine/Meilensteine.
+- **Installierbar als Progressive Web App:** Manifest (Name, Icons,
+  `display: standalone`) plus ein Service Worker, der die Seite aus dem Cache
+  beantwortet — dann startet der Editor ohne Netz und bekommt ein eigenes
+  Fenster samt Symbol. Die Vorarbeit ist getan: Der Build liefert **eine**
+  Datei mit inlinten Schriften, Stilen und Modulen (D19/D20), es gibt also
+  genau ein Objekt zu cachen, und die Dokumente liegen ohnehin lokal (D22).
+  Zu klären ist das Zusammenspiel mit der Update-Anzeige (D45): Sitzt ein
+  Worker vor der Seite, entscheidet **er**, was ausgeliefert wird — „der
+  laufende Build gegen den, den der Server schickt" ist dann nicht mehr
+  dasselbe. Dokumente aus `?sourceUrl=`/`?etherpad=` bleiben naturgemäß
+  online. Im Plan: `#bld.pwa`.
 - Schlagworte `&tag` mit einer Filter-/Hervorheben-Linse im Diagramm: Der Baum
   ist genau eine Zerlegung — ein Tag benennt eine Menge von Knoten quer dazu
   (z. B. `&frontend` in feature-geschnittenen Slices). Schreibweise reserviert
