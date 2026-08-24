@@ -25,7 +25,7 @@
     - [-] #not.store: A separate storage format for the structure (L)  %% the text is the format
     - [ ] #not.ticket: Ticket references (#123,#US-123) (S)  %% Taiga writes #US-123 for a user story
     - [^] #not.llms: llms.md, the notation explained to AI agents (S)
-      - [x] #not.llms.index: llms.txt, the signpost that points at it (XS)  %% the convention wants an index, not the content
+      - [^] #not.llms.index: llms.txt, the signpost that points at it (XS)  %% the convention wants an index, not the content
     - [?] #not.benefit: Benefit per node, not only cost (M)
       | [?] #not.benefit.sigil: Another sigil next to the size (S)
       | [?] #not.benefit.points: Story points behind the T-shirt sizes (M)
@@ -67,7 +67,7 @@
       - [^] #ed.docs.restore: Restore a shipped document from the menu (XS)
     - [^] #ed.jump: Jump between diagram and text (S)
     - [^] #ed.lineno: Line numbers in the text editor (XS)  %% the warnings name them
-      - [x] #ed.lineno.tip: The warning is the tooltip of its number (XS)  %% no hunting in the list
+      - [^] #ed.lineno.tip: The warning is the tooltip of its number (XS)  %% no hunting in the list
     - [^] #ed.fold: Collapsible subtrees (M)
       - [^] #ed.fold.marks: Initial state from the text: > collapses, < re-opens (S)
       - [^] #ed.fold.click: Fold and unfold in the diagram (S)
