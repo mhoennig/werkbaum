@@ -3449,3 +3449,76 @@ folgerichtig auf nichts. Ein Finger kann das nicht.
 **Nicht im Druck** (`.nodetip` und der `.tipped`-Ring ausgeblendet) und nicht
 im Grafikexport — Bedienung, keine Aussage über den Plan; der Export liest
 ohnehin nur `#out`.
+
+## D53 — Tab rückt Zeilen ein, statt die Auswahl zu ersetzen — und zerstört kein Undo mehr
+Zwei gemeldete Fehler, eine Zeile. Der Tab-Handler schrieb:
+
+```js
+src.value = value.slice(0, s) + '  ' + value.slice(eEnd);
+```
+
+**Fehler 1: Mehrere markierte Zeilen wurden durch zwei Leerzeichen ersetzt.**
+Der Ausdruck schneidet den Bereich zwischen Auswahlanfang und -ende heraus.
+Ohne Auswahl (`s === eEnd`) fügt er nur ein — deshalb ist es nie aufgefallen,
+solange niemand mehrere Zeilen auf einmal einrücken wollte. In einer Notation,
+in der die Einrückung die **Hierarchie** ist (SPEC §2), ist das die
+naheliegendste Geste überhaupt.
+
+**Fehler 2: Undo war danach tot.** `src.value = …` löscht die Undo-Historie
+eines Textfelds vollständig — das steht seit D38-Nachtrag 2 im Projekt
+(„nachgemessen: `value =` und `setRangeText` machen Strg+Z wirkungslos"), war
+aber nur für das Zurückschreiben der Faltung beherzigt worden. Hier erneut
+gemessen, mit der alten Zeile nachgestellt: Nach dem Schreiben ändert das
+erste `undo` **nichts** (Text unverändert), das zweite liefert **`false`** —
+der Stapel ist leer. Betroffen ist damit nicht nur das Einrücken selbst,
+sondern **alles davor Getippte**. Das ist die Antwort auf „wann geht Undo
+kaputt": bei **jedem** Tab-Druck, und sonst nirgends im laufenden Bearbeiten.
+Die übrigen drei `src.value =` im Code laden ein **anderes** Dokument
+(Dokumentwechsel, Wiederherstellen, Pad-Abruf) — dorthin gibt es nichts
+zurückzunehmen, dort ist es richtig.
+
+**Die neue Regel, bewusst einfach:**
+
+- **Ohne Auswahl** zwei Leerzeichen an der Schreibmarke (Tab zählt in dieser
+  Notation als zwei, SPEC §2); **Shift+Tab** nimmt der Zeile den Einzug wieder
+  und zieht die Schreibmarke um dasselbe Stück mit, damit sie am selben
+  Zeichen stehen bleibt.
+- **Mit Auswahl** wird **jede berührte Zeile** ein- bzw. ausgerückt.
+
+Erwogen war die Editor-übliche Feinregel „nur bei mehrzeiliger Auswahl
+einrücken, sonst die Auswahl ersetzen" (so macht es VS Code). Verworfen: Wer
+**eine** ganze Zeile markiert und Tab drückt, meint auch dann Einrücken — und
+die einfache Regel hat die bessere Eigenschaft, dass Tab **niemals Text
+löschen kann**. Der Preis ist, dass ein markiertes Wort nicht mehr durch
+Leerzeichen ersetzt wird; in einem Notationseditor ist das kein Verlust.
+
+Nach dem Zug ist der **ganze Zeilenblock** ausgewählt, sodass wiederholtes Tab
+weiter einrückt. Endet die Auswahl genau auf einem Zeilenanfang, gehört diese
+Zeile **nicht** mehr dazu — sonst rückte ein Zug bis zum nächsten Zeilenbeginn
+eine Zeile zu viel ein. **Leerzeilen** bekommen keinen Einzug (er wäre
+unsichtbarer Weißraum), und beim Ausrücken fällt wahlweise die
+Zwei-Leerzeichen-Stufe, ein Tabulator oder ein einzelnes Leerzeichen — sonst
+bliebe eine ungerade Einrückung hängen.
+
+**Nebenbefund, mitbehoben: Tab war eine Tastenfalle.** Der Handler nahm die
+Taste bedingungslos; wer nur mit der Tastatur arbeitet, kam aus dem Textfeld
+nicht mehr heraus (WCAG 2.1.2 „No Keyboard Trap"). **Esc** hebt sie jetzt für
+den nächsten Tastendruck auf — der übliche Ausweg. Das kollidiert nicht mit
+dem Esc, das das Knoten-Fenster schließt (D52): Das hängt an `document` und
+läuft weiter.
+
+**Nachgemessen** an einem Wegwerf-Dokument, mit **echten** Tastendrücken:
+Drei markierte Zeilen, Tab → alle drei von 2 auf 4 Leerzeichen, **nichts
+gelöscht**, Block bleibt ausgewählt, Fokus bleibt im Feld, Diagramm weiter
+4 Knoten. Shift+Tab → zurück auf 2. Undo-Kette: tippen `(XL)`, dann Tab, dann
+zweimal `undo` → erst der Einzug zurück, dann das Getippte; beide Zustände
+zeichengenau wie zuvor.
+
+**Werkzeuggrenze, die dabei fast zu einem Fehlschluss geführt hätte:** Ein
+synthetisches `ctrl+z` aus der Automatisierung löst **kein** natives Undo aus
+— der Text blieb stehen, was zunächst wie „Undo weiterhin kaputt" aussah. Im
+selben Moment griff `document.execCommand('undo')` einwandfrei. Geprüft wird
+Undo deshalb über `execCommand('undo')`; das steht jetzt auch in
+`frontend/CLAUDE.md`. Dieselbe Lehre wie D25 (synthetische `TouchEvent`s) und
+D17-Nachtrag 4 (Bildschirmtastatur): Was die Umgebung stellt, stellt der
+Emulator nicht.

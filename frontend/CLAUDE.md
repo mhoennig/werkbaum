@@ -545,3 +545,17 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Es schließt bei allem, was seine Aussage hinfällig macht — Tipp daneben,
   zweiter Tipp, Esc, ×, Diagramm-Scroll, Bereichswechsel, Sprung in den Text,
   `render()`. Die letzten drei sind beim Bauen zuerst vergessen worden.
+- **Nie `src.value = …` während des Bearbeitens (D53).** Es löscht die
+  Undo-Historie des Textfelds **komplett** — nicht nur den eigenen Schritt,
+  sondern alles davor Getippte. Gemessen: nach so einem Schreiben ändert das
+  erste `undo` nichts und das zweite liefert `false`. Jede Änderung am Text des
+  **aktuellen** Dokuments geht deshalb über `execCommand('insertText')`
+  (`replaceTextUndoable()` für ganze Texte, `writeAt()` für Bereiche).
+  `src.value =` ist nur beim **Laden eines anderen** Dokuments richtig
+  (`loadActiveIntoEditor`, Dokumentwechsel, Pad-Abruf) — dorthin gibt es nichts
+  zurückzunehmen.
+- **Undo lässt sich hier nicht per Tastendruck prüfen.** Ein synthetisches
+  `ctrl+z` aus der Automatisierung löst **kein** natives Undo aus (gemessen:
+  Text unverändert), während `document.execCommand('undo')` im selben Moment
+  greift. Wer Undo prüft, nimmt `execCommand('undo')` — sonst hält man eine
+  Werkzeuggrenze für einen Befund. Dieselbe Lehre wie D25 und D17-Nachtrag 4.

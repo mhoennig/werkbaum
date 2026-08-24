@@ -673,16 +673,80 @@ async function downloadDiagramPng(){
   if(png && png.blob) saveBlob(png.blob, 'werkbaum-diagramm.png');
 }
 
-/* Tab-Taste rückt ein statt den Fokus zu wechseln */
-src.addEventListener('keydown', e => {
-  if(e.key === 'Tab'){
-    e.preventDefault();
-    const {selectionStart:s, selectionEnd:eEnd, value} = src;
-    src.value = value.slice(0, s) + '  ' + value.slice(eEnd);
-    src.selectionStart = src.selectionEnd = s + 2;
-    render();
-    saveSrc();
+/* ---------- Tab rückt ein (D53) ----------
+   Einrückung IST hier die Hierarchie (SPEC §2), Tab also die häufigste Taste
+   nach den Buchstaben. Zwei Regeln:
+
+   - **Ohne Auswahl** zwei Leerzeichen an der Schreibmarke (Tab zählt in dieser
+     Notation als zwei, SPEC §2); Shift+Tab nimmt sie der Zeile wieder weg.
+   - **Mit Auswahl** wird jede berührte ZEILE ein-/ausgerückt, nie die Auswahl
+     ersetzt. In einem Notationstext ist Einrücken praktisch immer gemeint, und
+     diese Regel kann nichts löschen. Danach ist der ganze Zeilenblock
+     ausgewählt, sodass wiederholtes Tab weiter einrückt.
+
+   Geschrieben wird über `execCommand('insertText')` — die einzige Art, ein
+   Textfeld zu ändern, ohne die Rückgängig-Historie zu zerstören (D38-Nachtrag
+   2, hier erneut gemessen). Das alte `src.value = …` hat sie bei JEDEM
+   Tastendruck gelöscht, also auch das davor Getippte. */
+const IND = '  ';
+function outdentLine(l){
+  if(l.startsWith(IND)) return l.slice(IND.length);
+  if(l.startsWith('\t') || l.startsWith(' ')) return l.slice(1);
+  return l;
+}
+function indentSelection(out){
+  const v = src.value, s = src.selectionStart, e = src.selectionEnd;
+  const von = v.lastIndexOf('\n', s - 1) + 1;
+  if(s === e){
+    if(!out) return writeAt(s, e, IND, s + IND.length, s + IND.length);
+    /* Ausrücken ohne Auswahl: der Zeile den Einzug nehmen, die Schreibmarke um
+       dasselbe Stück mitziehen — sie soll am selben Zeichen stehen bleiben. */
+    let bisZ = v.indexOf('\n', s);
+    if(bisZ === -1) bisZ = v.length;
+    const zeile = v.slice(von, bisZ), kurz = outdentLine(zeile);
+    if(kurz === zeile) return false;
+    const weg = zeile.length - kurz.length;
+    const p = Math.max(von, s - weg);
+    return writeAt(von, bisZ, kurz, p, p);
   }
+  /* Endet die Auswahl genau auf einem Zeilenanfang, gehört diese Zeile nicht
+     mehr dazu — sonst rückte ein Zug bis zum nächsten Zeilenbeginn eine Zeile
+     zu viel ein. */
+  const eAdj = e > s && e > von && v[e-1] === '\n' ? e - 1 : e;
+  let bis = v.indexOf('\n', eAdj);
+  if(bis === -1) bis = v.length;
+  const alt = v.slice(von, bis);
+  const neu = alt.split('\n')
+    .map(l => out ? outdentLine(l) : (l ? IND + l : l))   /* Leerzeilen bleiben leer */
+    .join('\n');
+  if(neu === alt) return false;
+  return writeAt(von, bis, neu, von, von + neu.length);
+}
+/* Ersetzt [von,bis) durch `ein` und setzt danach die Auswahl — undo-fähig.
+   `input` feuert dabei von selbst, render() und saveSrc() hängen daran. */
+function writeAt(von, bis, ein, selA, selB){
+  src.setSelectionRange(von, bis);
+  let ok = false;
+  try{ ok = document.execCommand('insertText', false, ein); }catch(_){}
+  if(!ok){
+    /* Rückfall: der richtige Text geht vor der Historie (wie D38-Nachtrag 2). */
+    src.value = src.value.slice(0, von) + ein + src.value.slice(bis);
+    src.dispatchEvent(new Event('input', {bubbles: true}));
+  }
+  src.setSelectionRange(selA, selB);
+  return true;
+}
+
+/* Tab im Textfeld ist eine Tastenfalle (WCAG 2.1.2): Wer nur die Tastatur
+   benutzt, käme sonst nicht mehr heraus. Esc hebt sie für den NÄCHSTEN
+   Tastendruck auf — der übliche Ausweg. */
+let tabEscapes = false;
+src.addEventListener('keydown', e => {
+  if(e.key === 'Escape'){ tabEscapes = true; return; }
+  if(e.key !== 'Tab'){ tabEscapes = false; return; }
+  if(tabEscapes){ tabEscapes = false; return; }      /* Fokus darf weiterwandern */
+  e.preventDefault();
+  indentSelection(e.shiftKey);
 });
 
 src.addEventListener('input', render);
