@@ -499,7 +499,7 @@ Siehe D29.
   deterministisch auf Knotenmitte liegen (Offset 23 px = 5 px Listenabstand
   + halbe Knotenhöhe). Abzweige zielen auf den **Knoten**, nie auf die Mitte
   des Teilbaums.
-- **Lange Labels brechen um** (D64): höchstens ~40 Zeichen je Zeile, die
+- **Lange Labels brechen um** (D64): höchstens ~32 Zeichen je Zeile, die
   Zeichen **gleichmäßig** auf die Zeilen verteilt (nicht gierig — sonst stünde
   unter einer vollen Zeile ein einsames Wort). Die Umbrüche setzt der
   **Renderer**, deterministisch und nur an Leerzeichen; der Kasten schrumpft

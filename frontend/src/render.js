@@ -55,7 +55,8 @@ function attr(s){ return esc(String(s)).replace(/"/g,'&quot;'); }
    Beschreibung als data-Attribut wäre der einzige andere Weg gewesen. */
 export const TIP_RULE = '─'.repeat(24);
 
-/* Lange Labels umbrechen (SPEC §9/D64): höchstens ~40 Zeichen je Zeile, und
+/* Lange Labels umbrechen (SPEC §9/D64): höchstens ~32 Zeichen je Zeile (D64,
+   verengt per D64-Nachtrag 3 — 40 zog das Diagramm zu breit), und
    die Zeichen GLEICHMÄSSIG auf die Zeilen verteilt — der gierige CSS-Umbruch
    machte aus 44 Zeichen eine volle Zeile plus ein einsames Wort. Bewusst im
    Renderer statt per `text-wrap:balance`: So schrumpft der Knotenkasten auf
@@ -64,7 +65,7 @@ export const TIP_RULE = '─'.repeat(24);
    Regel ist headless testbar. Gebrochen wird nur an Leerzeichen; ein
    einzelnes Wort über der Grenze bleibt stehen (das CSS fängt es mit
    `max-width` + `overflow-wrap` ab). */
-export function wrapLabel(label, max = 40){
+export function wrapLabel(label, max = 32){
   const text = String(label);
   if(text.length <= max) return [text];
   const words = text.split(' ');

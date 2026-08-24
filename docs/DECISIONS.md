@@ -4916,3 +4916,15 @@ Stub oben an (kein Zentrieren). Beides nachgemessen (Scanner: 0 Befunde in
 ist zoom-invariant, wie `--stem-x`). 405 Tests grün — die Regeln sind
 DOM-Geometrie und damit Browser-geprüft, nicht unit-testbar (dieselbe Grenze
 wie `alignStems()`, D29).
+
+**Nachtrag 3 zu D64 — die Umbruchgrenze sinkt von 40 auf 32 Zeichen.**
+Nutzerwunsch nach dem Leben mit der 40er-Grenze: „einige Titel ziehen das
+Diagramm doch arg in die Breite". Die 40 waren eine gesetzte Zahl, keine
+hergeleitete — 32 ist es ebenso, nur mit Erfahrung dahinter. Die Änderung ist
+genau der eine Parameter, für den `wrapLabel()` gebaut wurde: Default in
+render.js, der `max-width`-Rückhalt im CSS (40ch → 32ch) und die
+SPEC-§9-Zahl ziehen mit; Balance-Regel, Erste-Zeile-Verankerung und Export
+bleiben unberührt. Sichtbare Folge: mehr Knoten brechen um (rund 100 Zeichen
+ergeben jetzt vier statt drei Zeilen), dafür wird der breiteste Fächer
+schmaler. Testerwartungen mit dem echten Algorithmus nachgerechnet statt
+geschätzt.
