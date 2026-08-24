@@ -34,10 +34,11 @@
   - [~] #ed: Editor (XXL) https://werkbaum.javagil.de
     - [^] #ed.live: Live diagram from text (L)
       - [^] #ed.parser: Parser (S)
-      - [^] #ed.render: Renderer, three layout modes (M)
+      - [^] #ed.render: Renderer, three layout modes (L)
         - [^] #ed.render.horiz: Horizontal fan (S)
         - [^] #ed.render.vert: Vertical, transposed (S)
         - [^] #ed.render.comp: Compact (S)
+        - [x] #ed.render.wrap: Long titles wrap into balanced lines (S)  %% max ~40 chars, see D64
       - [^] #ed.deplink: Cross links for dependencies (M)
         - [^] #ed.deplink.calm: Visually secondary — the tree carries the message (S)
         - [^] #ed.deplink.focus: Highlight what a selected node needs and feeds (S)
@@ -367,6 +368,11 @@
 #ed.render.comp
   Everything runs downward, so the tree stays narrow. Here the line style
   alone carries the gate: solid for and, dashed for or.
+
+#ed.render.wrap
+  A single long title used to cost a whole column of width. Titles beyond
+  forty characters now break into evenly balanced lines, set by the renderer
+  so the box shrinks to the longest line; connectors anchor on the first line.
 
 #ed.deplink
   Dependencies drawn as curved dotted edges on their own layer behind the

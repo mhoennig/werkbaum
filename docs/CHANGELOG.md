@@ -19,6 +19,9 @@ reverse.
 
 ## 2026-08-24
 
+- Long node titles wrap into evenly balanced lines of at most forty characters
+- With ids shown, the id sits on its own line above the title
+- The fold sign is a framed chip now — a click target you can actually hit
 - Typing `:#` suggests the document's ids — arrows choose, Enter inserts
 - When the caret's node is folded away, the nearest visible ancestor takes the highlight — also on Alt+click from the text
 - A size that cannot hold its sub-packages turns its badge amber and gets a warning — sizes are read as ranges, so only sure conflicts are reported

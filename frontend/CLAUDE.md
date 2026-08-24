@@ -41,6 +41,15 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
 - Abzweig-Linien zielen auf die **Knotenmitte** (fester 23-px-Offset,
   `line-height: 1.3`), nicht auf die Mitte des Teilbaums — bei Layout-
   Änderungen alle drei Modi (horizontal/vertikal/kompakt) prüfen.
+  **Seit D64 brechen lange Labels um** (`wrapLabel()` in render.js setzt `\n`,
+  `white-space:pre-line` macht sie sichtbar): Bei mehrzeiligen Knoten trifft
+  der 23-px-Abzweig die Mitte der **ersten Zeile**; der Optional-Kreis sitzt
+  deshalb fest bei `top:18px` (= Abzweighöhe), nicht bei 50 % (Ausnahme:
+  vertikal zentrierte all-of-Zwischenknoten). Nichts in den Knoten darf die
+  Zeilenbox über die festen ~18,3 px heben — der Falt-Chip hat darum
+  `line-height:14px` ohne vertikales Padding (mit 15 px wuchs der Knoten
+  gemessen um 0,7 px). Der Export zeichnet je gerenderter Zeile ein `<text>`
+  (`labelLines()`, misst zeichenweise per Range am Live-Knoten).
   Vertikal + kompakt teilen die transponierte Basis-CSS; nur vertikal
   bekommt den Rechts-Ausgang für „all of“, kompakt führt auch „all of“
   nach unten. Any-of ist in allen Modi grau: Linien gestrichelt grau und

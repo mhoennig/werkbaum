@@ -4769,3 +4769,76 @@ Tests in `tests/autocomplete.test.js` (397 gesamt): Kontext-Erkennung
 D59, Ersetzen über die Schreibmarke hinaus), Sammeln (Dokumentreihenfolge,
 verworfene, D60-Knoten ohne Titel) und Sortierung (Präfix vor Teilstring,
 case-insensitiv, exclude).
+
+## D64 — Lange Labels brechen um: balanciert, ~40 Zeichen, erste Zeile als Anker
+Breite Knotenkästen trieben den Baum in die Breite — ein einziger langer Titel
+kostete eine ganze Spalte davon. Jetzt brechen Labels um: höchstens ~40
+Zeichen je Zeile (Nutzer-Vorgabe), zentriert, und die Zeichen **gleichmäßig
+auf die Zeilen verteilt** (ausdrücklicher Nutzer-Nachtrag): Der gierige
+Umbruch machte aus 44 Zeichen eine volle Zeile plus ein einsames Wort.
+
+**Die Umbrüche setzt der Renderer, nicht CSS.** `text-wrap:balance` wäre eine
+Zeile gewesen und ist verworfen: Es balanciert nur **innerhalb** der einmal
+bestimmten Kastenbreite — der Kasten bliebe auf `max-width` stehen, mit
+Leerraum um zwei kurze Zeilen. `wrapLabel()` in render.js bricht selbst
+(Zeilenzahl = ⌈Länge/40⌉, Ziel = gleichmäßig, gebrochen wird an der Stelle,
+die dem Ziel am nächsten kommt, nie mitten im Wort) und schreibt echte `\n`
+ins Markup; `white-space:pre-line` macht sie sichtbar, und der Kasten
+schrumpft auf die längste **balancierte** Zeile. Nebengewinn: Die Regel ist
+headless testbar (Hausregel D54-Nachtrag 3) und in jedem Browser gleich.
+`max-width:40ch` + `overflow-wrap` bleiben als Rückhalt für das einzelne Wort
+über der Grenze. Bewusst `\n` statt `<br>`: Der `textContent` behielte sonst
+keine Wortgrenze, und alles, was den Knotentext liest (Export,
+Fokusmarken-Schlüssel), bekäme zusammengeklebte Wörter.
+
+**Die Geometrie ankert an der ersten Zeile.** Der 23-px-Abzweig der
+gestapelten Anordnungen (§9: 5 px Listenabstand + halbe einzeilige
+Knotenhöhe) bleibt fest — bei mehrzeiligen Knoten trifft er damit die Mitte
+der **ersten Zeile**, das gewohnte Idiom jeder Baumansicht. Eine gemessene
+„wahre Mitte" hätte die 23-px-Konstante an einem Dutzend CSS-Stellen dynamisch
+gemacht — für einen Unterschied, den das Auge als falsch gar nicht liest. Zwei
+Stellen mussten mitziehen:
+
+- Der **Optional-Kreis** (D29) saß bei `top:50%` der Knotenhöhe — für
+  einzeilige Knoten dasselbe wie die Abzweighöhe, für mehrzeilige nicht mehr.
+  Er sitzt jetzt fest bei 18 px (= Abzweighöhe), **auf dem Abzweig statt auf
+  der Knotenmitte**; die eine Ausnahme sind die vertikal zentrierten
+  all-of-Zwischenknoten, deren Abzweig wirklich die Mitte trifft (dort bleibt
+  50 %). Nachgemessen am dreizeiligen Optional-Knoten im vertikalen Modus:
+  Kreismitte = Abzweighöhe, 0 px Abweichung.
+- Der **Grafikexport** zeichnete das Label als ein `<text>` — ein SVG-`<text>`
+  bricht nicht von selbst. `labelLines()` misst die gerenderten Zeilen am
+  Live-Knoten (zeichenweise per Range: neue Zeilen-Oberkante = neue Zeile —
+  das deckt auch den `overflow-wrap`-Bruch mitten im langen Wort ab, den eine
+  Nachbildung der Wortlogik verfehlte) und gibt je Zeile ein `<text>` an der
+  gemessenen Position aus. Die Linienführung des Exports zielte schon immer
+  auf die gemessene Knotenmitte und blieb unberührt.
+
+**Zwei Nachträge aus derselben Runde, beide Nutzer-Wünsche:**
+
+- **Die eingeblendete ID steht in einer eigenen Zeile ÜBER dem Titel**
+  (ändert D56). Vorher stand sie inline davor (`#some.id: Titel`) und machte
+  gerade die Knoten am breitesten, die ohnehin lange Titel tragen. Der
+  Trenn-Doppelpunkt entfällt: Er trennte ID und Titel in **derselben** Zeile —
+  hier trennt der Umbruch, und `#auth:` allein auf einer Zeile läse sich wie
+  ein Block-Kopf (§1). Der Export folgt von selbst (er misst Zeilen).
+- **Das Falt-Zeichen ist jetzt ein gerahmter Chip** (ändert die D38-Optik):
+  Das nackte ▾ war ~10 px klein und schwer zu treffen. Der Chip (19×16 px,
+  Rahmen, dezente Füllung) ist das Klickziel, das er immer sein sollte. Seine
+  Höhe ist gedeckelt (`line-height:14px`, kein vertikales Padding), denn ein
+  Inline-Block, der höher ist als die Zeilenbox, höbe die feste Zeilenhöhe an,
+  an der die 23-px-Geometrie hängt — mit 15 px Zeilenhöhe wuchs der Knoten
+  nachgemessen von 34,3 auf 35,0 px, mit 14 px bleibt er exakt bei 34,3.
+
+**Nachgemessen** am mitgelieferten Plan (horizontal, Pfad an): 166 Knoten,
+0 Warnungen, 27 Stationen (unverändert), `--stem-x` weiterhin punktgenau auf
+der Knotenmitte (130,8 = 130,8 px) — und am Testbaum: 79 Zeichen ergeben zwei
+Zeilen zu ~40/39 statt 40+Rest, drei Zeilen bei ~100; im exportierten SVG
+stehen die zwei Zeilen des langen Titels 18,3 px auseinander vollständig im
+52,6-px-Kasten, die ID-Zeile als eigene Textzeile. Falten am Chip klappt
+weiter um (166 → 140 → 166 Knoten). 405 Tests, davon 8 neue in
+`tests/wrap.test.js` (Balance, keine Zeile über 40, kein Zeichenverlust, nie
+mitten im Wort, `\n` im Knotentext); die showIds-Tests sind auf die eigene
+Zeile umgeschrieben. Der neue Plan-Knoten `#ed.render.wrap (S)` kippte prompt
+die Größenprüfung des eigenen Plans (`#ed.render (M)` mit nun 4×S, D62) —
+ehrlich nachgezogen auf `(L)`, danach wieder 0 Warnungen.

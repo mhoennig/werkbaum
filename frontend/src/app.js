@@ -470,6 +470,42 @@ out.addEventListener('focusout', () => setTimeout(drawDepLinks, 0));
    der Geister-Knoten werden übernommen; Verbindungslinien werden je Gate
    (und = durchgezogen Tinte, oder = gestrichelt Grau) neu gezogen und treffen
    so garantiert die Knoten — unabhängig vom Darstellungsmodus. */
+/* Die gerenderten Textzeilen eines Knotens, gemessen am LIVE-Element: je
+   Zeile der (whitespace-normalisierte) Text und die Box in Viewport-Pixeln.
+   Zeichenweise per Range — eine neue Zeilen-Oberkante beginnt eine neue Zeile;
+   das deckt auch den Umbruch INNERHALB eines langen Worts (overflow-wrap) ab,
+   den eine Nachbildung der Wort-Umbruchlogik verfehlte. Kollabierter Leerraum
+   (etwa das Leerzeichen, an dem umbrochen wurde) hat eine Null-Box und fällt
+   heraus. `excludeSel` sind die Elemente, die der Export nicht ins Label
+   nimmt (Badges, ↗, ”-Marke, je nach Faltzustand das Falt-Zeichen). */
+function labelLines(node, excludeSel){
+  const range = document.createRange();
+  const lines = [];
+  const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, {
+    acceptNode: tn => tn.parentElement.closest(excludeSel)
+      ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+  });
+  for(let tn = walker.nextNode(); tn; tn = walker.nextNode()){
+    const s = tn.nodeValue;
+    for(let i = 0; i < s.length; i++){
+      range.setStart(tn, i); range.setEnd(tn, i + 1);
+      const r = range.getBoundingClientRect();
+      if(!r.width && !r.height) continue;
+      const last = lines[lines.length - 1];
+      if(last && Math.abs(r.top - last.top) < 2){
+        last.text += s[i];
+        last.left = Math.min(last.left, r.left);
+        last.right = Math.max(last.right, r.right);
+        last.bottom = Math.max(last.bottom, r.bottom);
+      } else {
+        lines.push({text: s[i], top: r.top, bottom: r.bottom, left: r.left, right: r.right});
+      }
+    }
+  }
+  for(const l of lines) l.text = l.text.replace(/\s+/g, ' ').trim();
+  return lines.filter(l => l.text);
+}
+
 function diagramToSvg(){
   /* Der Export misst die **Live-Geometrie**. Den Ring der Cursor-Zeile liest er
      nie aus (`box-shadow` steht nicht in der Liste), ihre Erhebung
@@ -608,15 +644,17 @@ function diagramToSvg(){
     const b = R(node), cs = getComputedStyle(node);
     const dashed = cs.borderTopStyle === 'dashed';
     parts.push(`<rect x="${b.x.toFixed(1)}" y="${b.y.toFixed(1)}" width="${b.w.toFixed(1)}" height="${b.h.toFixed(1)}" rx="8" fill="${cs.backgroundColor}" stroke="${cs.borderTopColor}" stroke-width="${parseFloat(cs.borderTopWidth)||1.5}"${dashed?' stroke-dasharray="4 3"':''}/>`);
-    const clone = node.cloneNode(true);
     /* Das „▸ n"-Kennzeichen eingeklappter Knoten gehört in den Export (SPEC
        §9/D38 — das Bild darf keine Vollständigkeit behaupten); das ▾ offener
        Knoten ist Bedienelement und fällt weg. */
     const stripFold = node.classList.contains('folded') ? '' : ',.fold';
-    clone.querySelectorAll('.size,.tags,.ext,.risk,.ownst,.desc-mark' + stripFold).forEach(e => e.remove());
-    const label = clone.textContent.replace(/\s+/g,' ').trim();
     const deco = cs.textDecorationLine.includes('line-through') ? ' text-decoration="line-through"' : '';
-    parts.push(`<text x="${b.cx.toFixed(1)}" y="${(b.cy+5).toFixed(1)}" text-anchor="middle" fill="${cs.color}" font-size="14" font-weight="${cs.fontWeight}"${deco}>${esc(label)}</text>`);
+    /* Seit Knoten umbrechen (D64), belegt ein Label mehrere Zeilenboxen — ein
+       SVG-<text> bricht nicht von selbst; je gemessene Zeile ein Element. */
+    for(const ln of labelLines(node, '.size,.tags,.ext,.risk,.ownst,.desc-mark' + stripFold)){
+      const cx = (ln.left + ln.right) / 2 + ox, cy = (ln.top + ln.bottom) / 2 + oy;
+      parts.push(`<text x="${cx.toFixed(1)}" y="${(cy+5).toFixed(1)}" text-anchor="middle" fill="${cs.color}" font-size="14" font-weight="${cs.fontWeight}"${deco}>${esc(ln.text)}</text>`);
+    }
     const riskEl = node.querySelector('.risk');
     if(riskEl){
       const rb = R(riskEl);

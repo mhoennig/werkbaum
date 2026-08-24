@@ -499,6 +499,15 @@ Siehe D29.
   deterministisch auf Knotenmitte liegen (Offset 23 px = 5 px Listenabstand
   + halbe Knotenhöhe). Abzweige zielen auf den **Knoten**, nie auf die Mitte
   des Teilbaums.
+- **Lange Labels brechen um** (D64): höchstens ~40 Zeichen je Zeile, die
+  Zeichen **gleichmäßig** auf die Zeilen verteilt (nicht gierig — sonst stünde
+  unter einer vollen Zeile ein einsames Wort). Die Umbrüche setzt der
+  **Renderer**, deterministisch und nur an Leerzeichen; der Kasten schrumpft
+  auf die längste Zeile, der Text steht zentriert. Bei **mehrzeiligen** Knoten
+  trifft der 23-px-Abzweig die Mitte der **ersten Zeile** (die Zeilenhöhe
+  bleibt fest); der Optional-Kreis (§9) sitzt auf dem Abzweig, nicht auf der
+  Knotenmitte. Der Grafikexport misst die gerenderten Zeilen und gibt sie als
+  einzelne Textzeilen aus.
 - Dasselbe gilt **waagerecht**: Im horizontalen Fächer trifft der Stiel die
   **Knotenmitte**, nicht die Mitte der Zelle. Beides fällt nur zusammen, solange
   der Knoten in seiner Zelle zentriert steht — ein Knoten mit any-of-Kindern
@@ -837,10 +846,11 @@ verknüpft (siehe D25):
   Druck.
 
 ### Knoten-IDs im Diagramm einblenden (`#`)
-Ein Umschalter im Diagramm-Kopf stellt die Knoten-ID **vor den Titel**, in
-derselben Schreibweise wie im Text (§1/D36): `#some.id: Titel`. Dargestellt in
-der Mono-Schrift des Textfelds und zurückgenommen gefärbt — die ID ist die
-Adresse, der Titel führt die Zeile weiter an. Der Zustand wird gemerkt.
+Ein Umschalter im Diagramm-Kopf stellt die Knoten-ID in eine **eigene Zeile
+über den Titel** (`#some.id`, ohne den Trenn-Doppelpunkt — der trennt ID und
+Titel in derselben Zeile, hier trennt der Umbruch; D56, geändert mit D64).
+Dargestellt in der Mono-Schrift des Textfelds und zurückgenommen gefärbt — die
+ID ist die Adresse, der Titel bleibt die Hauptzeile. Der Zustand wird gemerkt.
 
 **Grafikexport und Druck folgen dem Umschalter** (wie beim „verworfene
 einblenden"-Filter und der Faltung): Ist er an, stehen die IDs auch im
@@ -942,9 +952,11 @@ gehört und lesbar bleibt. Kein Blinken.
   Grafikexport: Sie sagt „schau jetzt hierhin", nicht „so ist der Plan".
 
 ### Ein- und ausklappbare Teilbäume (`>` / `<`, §1)
-Jeder Knoten mit sichtbaren Kindern trägt ein kleines **Falt-Zeichen** vor dem
-Label: **▾** offen, **„▸ n“** eingeklappt (n = Zahl der verborgenen Knoten).
-Klick auf das Zeichen klappt um — der einfache Klick auf den Knoten selbst
+Jeder Knoten mit sichtbaren Kindern trägt ein **Falt-Zeichen** vor dem
+Label: **▾** offen, **„▸ n“** eingeklappt (n = Zahl der verborgenen Knoten) —
+als kleiner **gerahmter Chip**, damit das Klickziel zu treffen ist (D64; das
+nackte Glyph war zu klein). Klick auf das Zeichen klappt um — der einfache
+Klick auf den Knoten selbst
 bleibt der Link (§6); Tastatur: **←** klappt zu, **→** klappt auf am
 fokussierten Knoten (WAI-ARIA-Baum-Idiom).
 

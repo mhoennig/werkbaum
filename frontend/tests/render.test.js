@@ -143,8 +143,10 @@ describe('renderTreeHtml — data-line je Knoten (D25)', () => {
 });
 
 /* Knoten-IDs im Diagramm (D56). Als Renderer-Option gebaut und nicht per CSS
-   versteckt — nur so folgt der Grafikexport, der den Knotentext ausliest. */
-describe('showIds — die ID vor dem Titel, geschrieben wie im Text', () => {
+   versteckt — nur so folgt der Grafikexport, der den Knotentext ausliest.
+   Seit D64 steht die ID in einer eigenen Zeile ÜBER dem Titel (Trenner ist
+   der Umbruch, nicht mehr der Doppelpunkt). */
+describe('showIds — die ID in einer eigenen Zeile über dem Titel', () => {
   const ids = (text, showIds) => renderTreeHtml(parse(text).roots,
     {t, showDiscarded: false, cheapPath: false, cheapSet: new Set(), showIds}).html;
 
@@ -154,9 +156,9 @@ describe('showIds — die ID vor dem Titel, geschrieben wie im Text', () => {
     expect(html).not.toContain('nid');
   });
 
-  it('stellt die ID mit Doppelpunkt und Leerzeichen davor', () => {
+  it('stellt die ID in eine eigene Zeile über den Titel', () => {
     expect(ids('#auth: Backend', true))
-      .toContain('<span class="nid" aria-hidden="true">#auth:</span> Backend');
+      .toContain('<span class="nid" aria-hidden="true">#auth</span>\nBackend');
   });
 
   it('lässt Knoten ohne ID unangetastet', () => {
@@ -176,7 +178,7 @@ describe('showIds — die ID vor dem Titel, geschrieben wie im Text', () => {
      genau das: `#a<b` ergibt die ID `a`, der Rest bleibt (escaped) im Label. */
   it('endet an einem Zeichen außerhalb der ID-Zeichenmenge', () => {
     const html = ids('#a<b: X', true);
-    expect(html).toContain('<span class="nid" aria-hidden="true">#a:</span>');
+    expect(html).toContain('<span class="nid" aria-hidden="true">#a</span>');
     expect(html).toContain('&lt;b: X');
   });
 });

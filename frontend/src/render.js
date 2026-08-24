@@ -55,6 +55,40 @@ function attr(s){ return esc(String(s)).replace(/"/g,'&quot;'); }
    Beschreibung als data-Attribut wäre der einzige andere Weg gewesen. */
 export const TIP_RULE = '─'.repeat(24);
 
+/* Lange Labels umbrechen (SPEC §9/D64): höchstens ~40 Zeichen je Zeile, und
+   die Zeichen GLEICHMÄSSIG auf die Zeilen verteilt — der gierige CSS-Umbruch
+   machte aus 44 Zeichen eine volle Zeile plus ein einsames Wort. Bewusst im
+   Renderer statt per `text-wrap:balance`: So schrumpft der Knotenkasten auf
+   die längste BALANCIERTE Zeile (CSS balanciert nur innerhalb der einmal
+   bestimmten Kastenbreite und ließe ihn auf `max-width` stehen), und die
+   Regel ist headless testbar. Gebrochen wird nur an Leerzeichen; ein
+   einzelnes Wort über der Grenze bleibt stehen (das CSS fängt es mit
+   `max-width` + `overflow-wrap` ab). */
+export function wrapLabel(label, max = 40){
+  const text = String(label);
+  if(text.length <= max) return [text];
+  const words = text.split(' ');
+  const n = Math.ceil(text.length / max);      /* so viele Zeilen braucht es */
+  const target = Math.ceil(text.length / n);   /* … und so voll wird jede */
+  const lines = [];
+  let cur = '';
+  for(const w of words){
+    if(!cur){ cur = w; continue; }
+    const withW = cur.length + 1 + w.length;
+    /* Gebrochen wird an der Stelle, die dem Ziel am nächsten kommt: wenn das
+       Wort die Zeile weiter über das Ziel höbe, als sie jetzt darunter liegt —
+       oder wenn es die harte Grenze risse. */
+    if(withW > max || (withW > target && withW - target >= target - cur.length)){
+      lines.push(cur);
+      cur = w;
+    } else {
+      cur = cur + ' ' + w;
+    }
+  }
+  lines.push(cur);
+  return lines;
+}
+
 /* Barrierefreier Name eines Knotens: Label + Status + Aufwand + Zuständige +
    Link. Die visuellen Badges (Größe, Tags, ↗) sind aria-hidden — ihre
    Information steckt hier, sonst würde der Screenreader Kryptisches („M",
@@ -184,19 +218,27 @@ function nodeHtml(n, extra, opts, fold){
   const ownChip = effKey
     ? `<span class="chip ownst st-${n.status.key}" aria-hidden="true">[${n.status.code}]</span>`
     : '';
-  /* ID vor dem Titel, mit `: ` abgetrennt — dieselbe Schreibweise wie im Text
-     (SPEC §1/D36), damit man beides nebeneinander lesen kann. Umschaltbar im
-     Diagramm-Kopf; als Renderer-Option und nicht per CSS versteckt, damit der
-     Grafikexport (er liest den Knotentext) von selbst folgt. `aria-hidden`:
-     Der Screenreader bekommt die ID schon über `a11yId` (D56). */
+  /* ID in einer eigenen Zeile ÜBER dem Titel (D56, geändert mit D64): Das
+     `\n` trennt sie, `white-space:pre-line` macht es sichtbar. Ohne den
+     Trenn-Doppelpunkt — der trennte ID und Titel in DERSELBEN Zeile, hier
+     trennt der Umbruch; mit Doppelpunkt läse sich die Zeile wie ein
+     Block-Kopf (`#auth:`). Umschaltbar im Diagramm-Kopf; als Renderer-Option
+     und nicht per CSS versteckt, damit der Grafikexport (er misst die
+     gerenderten Zeilen) von selbst folgt. `aria-hidden`: Der Screenreader
+     bekommt die ID schon über `a11yId` (D56). */
   /* Nicht bei einem Knoten, dessen Label die ID selbst IST (SPEC §1) — sonst
-     stünde dort `#US-123: #US-123`. */
+     stünde dort `#US-123` zweimal untereinander. */
   const idHtml = showIds && n.id && !n.labelFromId
-    ? `<span class="nid" aria-hidden="true">#${esc(n.id)}:</span> `
+    ? `<span class="nid" aria-hidden="true">#${esc(n.id)}</span>\n`
     : '';
   const inner = foldHtml +
                 idHtml +
-                esc(n.label) +
+                /* Die Umbrüche kommen als echte `\n` ins Markup, das CSS macht
+                   sie mit `white-space:pre-line` sichtbar (D64). Kein `<br>`:
+                   Der `textContent` behielte sonst keine Wortgrenze, und alles,
+                   was den Knotentext liest (Export, Fokusmarken-Schlüssel),
+                   bekäme zusammengeklebte Wörter. */
+                esc(wrapLabel(n.label).join('\n')) +
                 /* ”-Marke (D40): macht die sonst unsichtbare Beschreibung
                    auffindbar (Lehre aus D25) — spiegelt das "-Zeichen der
                    Notation. Nicht im Export: Der Text selbst kann dort nicht
