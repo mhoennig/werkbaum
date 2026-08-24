@@ -3974,3 +3974,74 @@ Rechnung wie D17-Nachtrag 5.** Nachgemessen statt geschätzt:
 
 Ein `overflow` an der Kopfzeile bleibt weiterhin ausgeschlossen — es klippt die
 beiden Aufklapp-Menüs (D50).
+
+## D57 — Das Knoten-Fenster löst den nativen Tooltip überall ab
+Das Fenster aus D52 war für Touch gebaut: Ohne Zeiger gibt es keinen `title`,
+und die Beschreibungen (D40) wären dort gar nicht zu sehen gewesen. Damit
+standen zwei Darstellungen desselben Inhalts nebeneinander — und ausgerechnet
+die schlechtere bekam der Zeiger. Jetzt zeigt das Fenster überall: am Zeiger
+nach kurzer Verzögerung beim Überfahren, bei **Tastaturfokus** sofort, auf
+Touch unverändert beim einfachen Tipp.
+
+**Was der `title` nicht konnte, und zwar prinzipiell:**
+
+- **Keine Absätze.** Die Beschreibungen im mitgelieferten Plan sind bei ~76
+  Zeichen umgebrochen; ein `title` zeigt genau diese harten Umbrüche, in einem
+  schmalen Fenster sah der Text ausgefranst aus. Das Fenster bricht um, wie es
+  die Breite hergibt (D52 hatte das für Touch schon gelöst).
+- **Keine Linie.** Der Trennstrich zwischen Beschreibung und Kurz-Fakten musste
+  aus 24 `─`-Zeichen **gemalt** werden (D40-Nachtrag) — im Fenster ist er eine
+  echte Kante, und ohne Beschreibung entfällt er ganz.
+- **Nichts bei Tastaturfokus.** Kein Browser zeigt einen `title`, wenn man mit
+  Tab auf ein Element springt. Wer das Diagramm mit der Tastatur durchgeht, sah
+  bisher keine Beschreibung. Das ist der eigentliche Zugewinn und kein Beiwerk —
+  nachgemessen mit einem **echten** Tastendruck: Fokus wandert von `#not.line`
+  auf `#not.status`, das Fenster folgt mit dessen Text, 10 px unter dem Knoten,
+  Petrol-Ring am fokussierten Knoten.
+
+**Der Inhalt zieht von `title` nach `data-tip` um.** Bliebe er im `title`,
+zeigte der Browser seinen eigenen Tooltip **zusätzlich** — unterdrücken lässt er
+sich nicht. Es ist kein zweites Attribut, sondern dasselbe unter anderem Namen;
+die Sorge aus D52 („keine 20 kB DOM-Text verdoppeln") bleibt gewahrt.
+
+**Dabei mussten die letzten drei nativen Tooltips *innerhalb* der Knoten
+weichen** — sonst wären sie neben dem Fenster ein zweites Mal erschienen:
+
+- Das **Warndreieck** (`[!]`) trug „High Risk – Aufwand unklar". Das ist der
+  Statusname und steht ohnehin in der Faktenzeile — der `title` war redundant
+  und ist ersatzlos weg.
+- Das **implizite M-Badge** trug die Kostenannahme „Größe fehlt, gilt als M"
+  (D18). Die ist nicht redundant, also wandert sie in die Faktenzeile und der
+  `title` entfällt. Nachgemessen: `data-tip="st_geplant · implicitSizeTooltip ·
+  jumpHint"`, Badge ohne Attribut.
+
+Damit trägt im ganzen Diagramm kein Element mehr einen nativen Tooltip
+(nachgemessen: 0 von 160 Knoten, 0 Kinder) — außer dem Geister-Knoten, der kein
+`.node` ist.
+
+**Absicht-Erkennung statt sofortigem Aufpoppen.** Über einen dichten Baum fährt
+man hinweg, ohne etwas wissen zu wollen: 350 ms Verzögerung. Steht schon ein
+Fenster offen, zeigt der nächste Knoten **ohne** Warten — wer liest, wartet
+nicht noch einmal. Beim Verlassen wird 120 ms gewartet, bevor zugemacht wird:
+Der Weg vom Knoten ins Fenster führt über einen Zwischenraum, in dem der Zeiger
+über keinem von beiden steht. Wer im Fenster ist, hält es offen (Text lässt
+sich markieren).
+
+**Der ↗-Knopf bleibt Touch vorbehalten.** Am Zeiger ist der ganze Knoten der
+Link (§6) — ein Knopf im Fenster wäre ein zweiter Weg zum selben Ziel. Ebenso
+nennt die Faktenzeile nur auf Touch den langen Druck statt Alt+Klick.
+
+**Für Screenreader ändert sich nichts, und das ist Absicht.** Das Fenster ist
+`aria-hidden`: Sein ganzer Inhalt steht bereits im `aria-label` des Knotens
+(SPEC §9), er würde sonst doppelt vorgelesen. Damit dürfen darin keine
+fokussierbaren Elemente liegen — × und ↗ tragen deshalb `tabindex="-1"`;
+erreichbar bleibt beides über den Knoten selbst und über Esc.
+
+**Werkzeuggrenze, wieder dieselbe Sorte:** `element.focus()` setzt in einem
+nicht fokussierten Automatisierungsfenster zwar `document.activeElement`, feuert
+aber **keine** Fokus-Ereignisse (`document.hasFocus() === false`). Der erste
+Prüflauf zeigte deshalb „Tastaturfokus öffnet nichts", obwohl die Logik stimmte;
+mit synthetischem `focusin` öffnete es sofort. Erst das Fronten des Tabs samt
+echtem Klick und echter Tab-Taste hat es bewiesen. Wie D25 (synthetische
+`TouchEvent`s), D17-Nachtrag 4 (Bildschirmtastatur) und D53 (synthetisches
+Strg+Z): Was die Umgebung stellt, stellt der Emulator nicht.

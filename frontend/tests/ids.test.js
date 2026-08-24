@@ -115,13 +115,13 @@ describe('Doppelte IDs — Warnung an der späteren Zeile', () => {
 describe('Darstellung — Tooltip und aria, kein Badge', () => {
   it('zeigt die ID im Tooltip und im aria-label', () => {
     const {html} = render(`[ ] Auth #auth`);
-    expect(html).toContain('title="#auth · st_geplant · jumpHint"');
+    expect(html).toContain('data-tip="#auth · st_geplant · jumpHint"');
     expect(html).toContain('aria-label="Auth, a11yStatus, a11yId"');
   });
 
   it('ändert Knoten ohne ID nicht', () => {
     const {html} = render(`[ ] Ohne`);
     expect(html).not.toContain('a11yId');
-    expect(html).toContain('title="st_geplant · jumpHint"');
+    expect(html).toContain('data-tip="st_geplant · jumpHint"');
   });
 });

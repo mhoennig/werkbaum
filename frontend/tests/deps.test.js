@@ -70,7 +70,7 @@ describe('Unbekannte IDs warnen — Zyklen nie', () => {
 describe('Darstellung — Tooltip und aria, kein eigenes Zeichen', () => {
   it('zeigt die Abhängigkeiten als → im Tooltip und als a11yDeps', () => {
     const {html} = render(`[ ] A #a\n[ ] B #b\n[ ] C :#a,#b`);
-    expect(html).toContain('title="→ #a, #b · st_geplant · jumpHint"');
+    expect(html).toContain('data-tip="→ #a, #b · st_geplant · jumpHint"');
     expect(html).toContain('aria-label="C, a11yStatus, a11yDeps"');
   });
 

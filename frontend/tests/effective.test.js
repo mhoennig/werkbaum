@@ -82,7 +82,7 @@ describe('Darstellung — Farbe effektiv, Marke intrinsisch', () => {
 
   it('benennt beide Status in Tooltip und aria-label', () => {
     const {html} = render(TXT);
-    expect(html).toContain('title="→ #api · heldTooltip · jumpHint"');
+    expect(html).toContain('data-tip="→ #api · heldTooltip · jumpHint"');
     expect(html).toContain('aria-label="Deploy, a11yStatus, a11yEffective, a11yDeps"');
   });
 

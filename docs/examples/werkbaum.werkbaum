@@ -61,6 +61,7 @@
     - [^] #ed.a11y: Accessibility: aria labels, focus order (S)
     - [^] #ed.mobile: Works on a phone (S)
       - [^] #ed.mobile.tip: A tap on a node opens its tooltip as a window (XS)  %% no pointer, no tooltip
+    - [x] #ed.tipwindow: The same window at the pointer and on keyboard focus (XS)  %% a title has no paragraphs and never shows on focus
     - [^] #ed.docs: Several documents in one editor (M)
       - [^] #ed.docs.picker: Switcher in the editor title bar (S)
       - [^] #ed.docs.url: Load a document from ?sourceUrl= (S)
@@ -461,6 +462,11 @@
   A tooltip needs a pointer, so without one the description could not be seen
   at all. A tap opens the same content as a window instead; on a linked node
   the link becomes a button inside it, because one tap cannot do both.
+
+#ed.tipwindow
+  A native title has no paragraphs, cannot draw a line, and never appears on
+  keyboard focus. The window built for touch can do all three, so it now shows
+  everywhere and the title is gone.
 
 #ed.docs
   Several notation texts side by side, kept in the browser. Each is only text

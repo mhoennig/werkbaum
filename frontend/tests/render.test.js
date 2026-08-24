@@ -71,7 +71,7 @@ describe('renderTreeHtml — „Untergliederung fehlt" (Geister-Knoten, SPEC §5
     const {html} = renderTreeHtml(roots, {t, showDiscarded: false, cheapPath: false, cheapSet: new Set()});
     expect(count(html, 'ghost-node')).toBe(1);
     expect(html).toContain('title="ghostTooltip"');
-    expect(html).toMatchInlineSnapshot(`"<li><div class="node root-node st-geplant" tabindex="0" data-line="1" aria-label="Großes Paket, a11yStatus, a11ySize" title="st_geplant · jumpHint">Großes Paket<span class="size" aria-hidden="true">L</span></div><div class="ghost-node" aria-label="ghostTooltip" title="ghostTooltip">ghost</div></li>"`);
+    expect(html).toMatchInlineSnapshot(`"<li><div class="node root-node st-geplant" tabindex="0" data-line="1" aria-label="Großes Paket, a11yStatus, a11ySize" data-tip="st_geplant · jumpHint">Großes Paket<span class="size" aria-hidden="true">L</span></div><div class="ghost-node" aria-label="ghostTooltip" title="ghostTooltip">ghost</div></li>"`);
   });
 
   it('verworfenes M+ löst die Regel nicht aus', () => {

@@ -1246,15 +1246,21 @@ function closeNodeTip(){
 
 function toggleNodeTip(el){
   if(tipNode === el){ closeNodeTip(); return; }   /* zweiter Tipp schließt */
+  showNodeTip(el, true);
+}
+
+/* `touch` unterscheidet die beiden Anlässe: Am Zeiger ist der ganze Knoten der
+   Link (§6), ein ↗-Knopf wäre dort ein zweiter Weg zum selben Ziel; und der
+   Sprung-Hinweis nennt Alt+Klick, den es auf dem Telefon nicht gibt. */
+function showNodeTip(el, touch){
   closeNodeTip();
-  const title = el.getAttribute('title') || '';
+  const title = el.getAttribute('data-tip') || '';
   const sep = '\n\n' + TIP_RULE + '\n';
   const i = title.indexOf(sep);
   const desc = i >= 0 ? title.slice(0, i) : '';
-  /* Der Sprung-Hinweis nennt im Tooltip Alt+Klick; hier gibt es kein Alt. */
-  const facts = (i >= 0 ? title.slice(i + sep.length) : title)
-    .replace(t('jumpHint'), t('jumpHintTouch'));
-  const href = el.tagName === 'A' ? el.getAttribute('href') : null;
+  const roh = i >= 0 ? title.slice(i + sep.length) : title;
+  const facts = touch ? roh.replace(t('jumpHint'), t('jumpHintTouch')) : roh;
+  const href = touch && el.tagName === 'A' ? el.getAttribute('href') : null;
   /* Absätze: Leerzeilen trennen (SPEC §1), einzelne Zeilenumbrüche sind bloß
      der Umbruch der Quelldatei und werden zu Leerzeichen. Der `title` kann das
      nicht — er zeigt die harten Umbrüche und sah im schmalen Fenster
@@ -1265,7 +1271,7 @@ function toggleNodeTip(el){
   nodeTipBody.innerHTML =
     (paras.length ? `<div class="nodetip-desc">${paras.map(p => `<p>${esc(p)}</p>`).join('')}</div>` : '') +
     (facts ? `<div class="nodetip-facts">${esc(facts)}</div>` : '') +
-    (href ? `<a class="nodetip-link" href="${esc(href)}" target="_blank" rel="noopener">↗ ${esc(t('tipOpenLink'))}</a>` : '');
+    (href ? `<a class="nodetip-link" tabindex="-1" href="${esc(href)}" target="_blank" rel="noopener">↗ ${esc(t('tipOpenLink'))}</a>` : '');
   tipNode = el;
   el.classList.add('tipped');
   nodeTip.hidden = false;
@@ -1292,6 +1298,53 @@ function placeNodeTip(el){
   nodeTip.style.setProperty('--tipx',
     Math.max(12, Math.min(anchorX - left, w - 12)).toFixed(1) + 'px');
 }
+
+/* ---------- Dasselbe Fenster am Zeiger und an der Tastatur (D57) ----------
+   Es löst den nativen `title` ab: Der konnte weder Absätze noch eine Linie
+   (der Trennstrich war aus 24 `─` gemalt, D40-Nachtrag) und erschien nie beim
+   Tastaturfokus. Beides kann das Fenster ohnehin schon — es wurde nur für
+   Touch gebaut (D52).
+
+   Die Verzögerung ist Absicht-Erkennung: Über einen dichten Baum fährt man
+   hinweg, ohne etwas wissen zu wollen. Beim Wechsel von Knoten zu Knoten
+   zeigt es sofort weiter — wer schon liest, wartet nicht noch einmal. */
+const TIP_DELAY = 350;
+let tipTimer = null, tipLeave = null;
+const finePointer = () => window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+function cancelTipTimers(){
+  clearTimeout(tipTimer); clearTimeout(tipLeave);
+  tipTimer = tipLeave = null;
+}
+out.addEventListener('pointerover', e => {
+  if(e.pointerType === 'touch' || !finePointer()) return;
+  const el = e.target.closest && e.target.closest('.node');
+  if(!el || el === tipNode) return;
+  cancelTipTimers();
+  /* Steht schon eines offen, ist die Absicht erwiesen — dann ohne Warten. */
+  tipTimer = setTimeout(() => showNodeTip(el, false), tipNode ? 0 : TIP_DELAY);
+});
+out.addEventListener('pointerout', e => {
+  if(e.pointerType === 'touch' || !finePointer()) return;
+  clearTimeout(tipTimer);
+  /* Nicht sofort zumachen: Der Weg ins Fenster führt über den Zwischenraum,
+     und dort ist der Zeiger kurz über keinem von beiden. */
+  clearTimeout(tipLeave);
+  tipLeave = setTimeout(() => {
+    if(!nodeTip.matches(':hover')) closeNodeTip();
+  }, 120);
+});
+nodeTip.addEventListener('pointerenter', cancelTipTimers);
+nodeTip.addEventListener('pointerleave', () => { closeNodeTip(); });
+/* Tastaturfokus: ohne Verzögerung — er ist bereits die ausdrückliche Absicht,
+   und ein `title` hat hier noch nie etwas gezeigt. */
+out.addEventListener('focusin', e => {
+  const el = e.target.closest && e.target.closest('.node');
+  if(el && el !== tipNode) showNodeTip(el, false);
+});
+out.addEventListener('focusout', e => {
+  const el = e.target.closest && e.target.closest('.node');
+  if(el && el === tipNode) closeNodeTip();
+});
 
 document.getElementById('nodeTipClose').addEventListener('click', closeNodeTip);
 /* Tipp/Klick daneben schließt — der Link-Knopf im Fenster aber nicht. */

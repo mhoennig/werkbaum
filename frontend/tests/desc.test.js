@@ -102,7 +102,7 @@ describe('Langform — ID-Blöcke hinter `---`', () => {
 describe('Darstellung — Tooltip, ”-Marke, aria', () => {
   it('stellt die Beschreibung an den Anfang des Tooltips und setzt die Marke', () => {
     const {html} = render(`[ ] Auth #auth\n  " Kapselt Login.`);
-    expect(html).toContain('title="Kapselt Login.\n\n' + '─'.repeat(24)
+    expect(html).toContain('data-tip="Kapselt Login.\n\n' + '─'.repeat(24)
                            + '\n#auth · st_geplant · jumpHint"');
     expect(html).toContain('<span class="desc-mark" aria-hidden="true">”</span>');
     expect(html).toContain('aria-label="Auth, a11yStatus, a11yId, Kapselt Login."');
@@ -112,7 +112,7 @@ describe('Darstellung — Tooltip, ”-Marke, aria', () => {
      der Übergang unter. Getrennt wird nur, wenn es etwas zu trennen gibt. */
   it('trennt Beschreibung und Kurz-Fakten durch Leerzeile und Strich', () => {
     const {html} = render(`[ ] Auth #auth\n  " Erste Zeile.\n  " Zweite Zeile.`);
-    const tip = html.match(/title="([^"]*)"/)[1];
+    const tip = html.match(/data-tip="([^"]*)"/)[1];
     const [text, rest] = tip.split('\n\n');
     expect(text).toBe('Erste Zeile.\nZweite Zeile.');   /* Fließtext bleibt zusammen */
     expect(rest.split('\n')[0]).toMatch(/^─+$/);         /* Trennstrich als eigene Zeile */
@@ -121,7 +121,7 @@ describe('Darstellung — Tooltip, ”-Marke, aria', () => {
 
   it('setzt keinen Trennstrich, wenn es keine Beschreibung gibt', () => {
     const {html} = render(`[ ] Ohne #auth`);
-    expect(html.match(/title="([^"]*)"/)[1]).not.toContain('─');
+    expect(html.match(/data-tip="([^"]*)"/)[1]).not.toContain('─');
   });
 });
 

@@ -335,11 +335,12 @@ spiegelt das `"`-Zeichen der Notation. Die Marke erscheint **nicht** im
 Grafikexport: Der Text selbst kann dort nicht angezeigt werden, eine Marke
 ohne Ziel wäre Rauschen. Siehe D40.
 
-**Auf Touch-Geräten zeigt der einfache Tipp auf einen Knoten dasselbe als
-Fenster** — ohne Zeiger gibt es keinen Tooltip, die Beschreibung wäre dort sonst
-gar nicht zu sehen. Es ist derselbe Inhalt, nur mit dem, was ein `title` nicht
-kann: Die Beschreibung steht als Absatz, die Kurz-Fakten dahinter durch eine
-echte Linie abgesetzt.
+**Gezeigt wird das immer im eigenen Knoten-Fenster**, nicht im Tooltip des
+Browsers: am Zeiger nach kurzer Verzögerung beim Überfahren, bei Tastaturfokus
+sofort, auf Touch beim einfachen Tipp (§6). Ein `title` kann weder Absätze noch
+eine Linie und erscheint nie beim Tastaturfokus; das Fenster kann beides. Der
+Inhalt ist derselbe — die Beschreibung als Absatz, die Kurz-Fakten dahinter
+durch eine echte Linie abgesetzt. Siehe D57.
 
 - Das Fenster hängt am angetippten Knoten (kleine Spitze zu ihm hin) und weicht
   nach oben aus, wenn unten kein Platz ist. Der Knoten trägt, solange es offen

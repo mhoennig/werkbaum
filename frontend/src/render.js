@@ -131,25 +131,36 @@ function nodeHtml(n, extra, opts, fold){
                  effKey
                    ? t('heldTooltip', {eff: t('st_' + effKey), own: t('st_' + n.status.key)})
                    : (n.status ? t('st_' + n.status.key) : ''),
-                 n.optional ? t('a11yOptional') : '', t('jumpHint')]
+                 n.optional ? t('a11yOptional') : '',
+                 /* Die Kostenannahme „Größe fehlt, gilt als M" (D18) hatte einen
+                    eigenen `title` am Badge — der erschiene neben dem Fenster
+                    ein zweites Mal. Sie gehört ohnehin zu den Kurz-Fakten. */
+                 (!n.size && cheapPath && !isDone(n)) ? t('implicitSizeTooltip') : '',
+                 t('jumpHint')]
     .filter(Boolean).join(' · ');
   const tip = n.desc && facts ? n.desc + '\n\n' + TIP_RULE + '\n' + facts
             : (n.desc || facts);
-  const title = ` title="${attr(tip)}"`;
+  /* `data-tip` statt `title`: Der Inhalt wird vom eigenen Knoten-Fenster
+     dargestellt (D57), und ein `title` daneben zeigte der Browser zusätzlich
+     als zweiten, dürftigeren Tooltip. Kein zweites Attribut mit demselben Text
+     — es ist dasselbe, nur unter anderem Namen. */
+  const title = ` data-tip="${attr(tip)}"`;
   const tagsHtml = n.tags && n.tags.length
     ? `<span class="tags" aria-hidden="true">${n.tags.map(tag => `<span class="tag">${esc(tag)}</span>`).join('')}</span>`
     : '';
   /* Das implizite M-Badge macht eine KOSTENANNAHME sichtbar (D18). An einem
      erledigten Knoten wird keine getroffen — er kostet nichts mehr (D46) —,
      dort bleibt es deshalb weg. */
-  const implicitTip = attr(t('implicitSizeTooltip'));
+  const implicitSize = !n.size && cheapPath && !isDone(n);
   const sizeBadge = n.size
     ? `<span class="size" aria-hidden="true">${n.size}</span>`
-    : (cheapPath && !isDone(n) ? `<span class="size implicit" aria-hidden="true" title="${implicitTip}">M</span>` : '');
+    : (implicitSize ? `<span class="size implicit" aria-hidden="true">M</span>` : '');
   /* High-Risk: Warndreieck (⚠, Textpräsentation via VS15) an der oberen linken
      Ecke. aria-hidden — die Information steckt bereits im Status des aria-label. */
+  /* Kein eigener `title` mehr: Er zeigte sonst zusätzlich zum Knoten-Fenster
+     (D57), und seine Aussage — „High Risk" — steht dort ohnehin als Status. */
   const riskMark = n.status && n.status.key === 'highrisk'
-    ? `<span class="risk" aria-hidden="true" title="${attr(t('riskTooltip'))}">⚠︎</span>`
+    ? `<span class="risk" aria-hidden="true">⚠︎</span>`
     : '';
   /* Falt-Zeichen (SPEC §9/D38): ▾ offen, „▸ n" eingeklappt — das Klickziel
      fürs Umklappen (der einfache Klick auf den Knoten bleibt der Link, §6).

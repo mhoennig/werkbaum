@@ -256,8 +256,13 @@
      Es liegt auf <body> und ist `position:fixed` — in `#out` hinein würde es
      dessen CSS-`zoom` erben (der Text skalierte mit) und von dessen `overflow`
      beschnitten (die Falle aus D50). Inhalt wird bei jedem Öffnen ersetzt. -->
-<div id="nodeTip" class="nodetip" role="dialog" aria-modal="false" hidden>
-  <button type="button" class="nodetip-x" id="nodeTipClose" data-i18n-title="tipClose" data-i18n-aria="tipClose" title="Schließen" aria-label="Schließen">×</button>
+<!-- `aria-hidden`: Das Fenster ist eine rein visuelle Hilfe — sein ganzer Inhalt
+     steht bereits im `aria-label` des Knotens (SPEC §9), ein Screenreader läse
+     ihn sonst doppelt. Die Knöpfe darin tragen deshalb `tabindex="-1"`
+     (fokussierbare Elemente in einem `aria-hidden`-Bereich wären ein Fehler);
+     erreichbar bleibt beides über den Knoten selbst und über Esc. Siehe D57. -->
+<div id="nodeTip" class="nodetip" aria-hidden="true" hidden>
+  <button type="button" class="nodetip-x" id="nodeTipClose" tabindex="-1" data-i18n-title="tipClose" title="Schließen">×</button>
   <div class="nodetip-body" id="nodeTipBody"></div>
   <span class="nodetip-arrow" aria-hidden="true"></span>
 </div>
