@@ -134,6 +134,13 @@ sed "${SED_ARGS[@]}" frontend/dist/index.html > "$STAGE/index.html"
 cp LICENSE "$STAGE/LICENSE"
 # Agenten-Fassung der Notation (D43) — liegt per Vite-public/ in dist/
 cp frontend/dist/llms.md "$STAGE/llms.md"
+# Der Wegweiser der llms.txt-Konvention (D43-Nachtrag 2): kurzer Index, der auf
+# llms.md, SPEC und Repo zeigt. Nur er liegt an der Adresse, die Agenten von
+# selbst probieren.
+cp frontend/dist/llms.txt "$STAGE/llms.txt"
+# Ohne diese Zuordnung liefert Apache `.md` ohne Content-Type aus und der
+# Browser rät windows-1252 (D43-Nachtrag 2). Pages braucht sie nicht.
+cp scripts/prod.htaccess "$STAGE/.htaccess"
 
 # ---- 3) Spiegeln (--delete: nichts Altes bleibt am Ziel) ----
 # --chmod=D755,F644 erzwingt web-taugliche Rechte am Ziel, unabhängig von den

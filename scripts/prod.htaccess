@@ -1,0 +1,23 @@
+# Werkbaum — Apache-Konfiguration der produktiven Instanz (D43-Nachtrag 2).
+# Wird von scripts/deploy-prod.sh als `.htaccess` in die Site-Wurzel gespiegelt.
+# GitHub Pages ignoriert `.htaccess` (kein Apache) und braucht es auch nicht —
+# dort ist die Zuordnung schon richtig; die Datei liegt deshalb NICHT in
+# frontend/public/, sonst landete sie im Pages-Artefakt.
+#
+# Warum es sie gibt: Apache kennt die Endung `.md` nicht und sendet dann GAR
+# KEINEN Content-Type. Der Browser rät daraufhin windows-1252 und macht aus
+# jedem `—` ein `â€"` — gemessen am 24.08.2026 auf werkbaum.javagil.de, 31
+# betroffene Zeilen in llms.md. Dieselbe Datei kommt von GitHub Pages als
+# `text/markdown; charset=utf-8` korrekt an.
+#
+# `.werkbaum` bekommt `text/plain` aus dem in SPEC §12/D24 genannten Grund:
+# dann zeigt der Browser die Datei an, statt sie herunterzuladen.
+#
+# Sollte der Server nach einem Deploy 500 antworten, verbietet seine
+# `AllowOverride`-Einstellung `AddType` (Klasse FileInfo) — dann gehören die
+# drei Zeilen in die vhost-Konfiguration und diese Datei entfällt.
+<IfModule mod_mime.c>
+  AddType text/markdown;charset=utf-8 .md
+  AddType text/plain;charset=utf-8 .txt
+  AddType text/plain;charset=utf-8 .werkbaum
+</IfModule>

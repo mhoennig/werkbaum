@@ -990,6 +990,13 @@ Eine **englische Kurzfassung dieser Spezifikation für KI-Agenten** (lesen
 **und** schreiben) liegt als Markdown in `frontend/public/llms.md` und wird
 von jeder Instanz unter der Site-Wurzel ausgeliefert
 (`https://werkbaum.javagil.de/llms.md`); der Footer verlinkt sie neben der
-Versionsnummer. Angelehnt an die llms.txt-Konvention, mit `.md` als der zum
-Inhalt ehrlichen Endung. **Diese SPEC bleibt normativ**: Bei Syntaxänderungen
+Versionsnummer. **Diese SPEC bleibt normativ**: Bei Syntaxänderungen
 wird die Agenten-Fassung im selben Zug nachgezogen (CLAUDE.md). Siehe D43.
+
+Daneben liegt `llms.txt` — der **Wegweiser** der llms.txt-Konvention
+(llmstxt.org): Name, ein Satz zur Sache und Links auf die Kurzfassung, diese
+SPEC, den Editor und das Repo. Er ist bewusst kurz und **rein ASCII**, damit
+er auch dort ankommt, wo ein Server die Kodierung nicht mitschickt. Die
+Konvention meint mit `llms.txt` genau so einen Index, **nicht** den Inhalt
+selbst — die Kurzfassung ist eine der „markdown files providing more detailed
+information“, auf die er zeigt. Siehe D43-Nachtrag 2.

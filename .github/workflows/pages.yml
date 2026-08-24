@@ -86,6 +86,8 @@ jobs:
           cp LICENSE site/LICENSE
           # Agenten-Fassung der Notation (D43) — liegt per Vite-public/ in dist/
           cp frontend/dist/llms.md site/llms.md
+          # Wegweiser der llms.txt-Konvention (D43-Nachtrag 2)
+          cp frontend/dist/llms.txt site/llms.txt
 
       - name: Pages-Konfiguration
         uses: actions/configure-pages@v6

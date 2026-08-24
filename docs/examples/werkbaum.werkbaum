@@ -25,6 +25,7 @@
     - [-] #not.store: A separate storage format for the structure (L)  %% the text is the format
     - [ ] #not.ticket: Ticket references (#123,#US-123) (S)  %% Taiga writes #US-123 for a user story
     - [^] #not.llms: llms.md, the notation explained to AI agents (S)
+      - [x] #not.llms.index: llms.txt, the signpost that points at it (XS)  %% the convention wants an index, not the content
     - [?] #not.benefit: Benefit per node, not only cost (M)
       | [?] #not.benefit.sigil: Another sigil next to the size (S)
       | [?] #not.benefit.points: Story points behind the T-shirt sizes (M)
@@ -295,6 +296,11 @@
   An English short form of the specification, served at the site root, so an
   AI agent can read and write Werkbaum without working through the German
   SPEC. It is not normative: the SPEC changes first and this follows.
+
+#not.llms.index
+  The llms.txt convention asks for a short index that links to the detailed
+  files, not for the detailed file itself. This is that index, and it sits at
+  the one address an agent tries on its own.
 
 #not.benefit
   Sizes say what something costs; nothing yet says what it is worth. With both

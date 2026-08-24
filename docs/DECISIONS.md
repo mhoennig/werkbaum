@@ -2805,7 +2805,63 @@ und der Footer-Link rückt zwischen Versionsnummer und Copyright — zur
 Werkzeug-Ecke des Footers statt ans Ende hinter die Rechtstexte. Der
 Dateiname bleibt als Linktext (übersetzungsfrei), die Wurzel-Lage bleibt.
 
-## D44 — Falt-Umschalter: „ab M abwärts“ statt einer Tiefenzahl
+**Nachtrag 2 — `llms.txt` ist ein Wegweiser, keine Referenz; er fehlte, und
+die Auslieferung von `llms.md` war kaputt.** Anlass war die Frage, ob
+`llms.md` überhaupt ein guter Name sei. Beim Nachsehen kamen zwei Dinge
+heraus, und das erste ist eine **Richtigstellung dieses Eintrags**.
+
+**Der Zweck der Konvention ist ein anderer, als D43 annahm.** Der Haupttext
+oben beschreibt `llms.txt` als „eine Markdown-Datei an der Site-Wurzel, die
+die Site für Sprachmodelle beschreibt — genau der Zweck“. Das ist zu weit
+gefasst. llmstxt.org sagt über die eigene Datei wörtlich: *„a markdown file
+that provides brief background information and guidance, along with **links to
+markdown files providing more detailed information**“* — also ein **Index**,
+kein Inhalt. Werkbaums 211-Zeilen-Leitfaden ist genau eine jener
+„markdown files providing more detailed information“, auf die so ein Index
+zeigt; als `llms.txt` wäre er zweckentfremdet gewesen.
+
+**Damit ist `llms.md` nicht bloß geduldet, sondern richtig** — und der erste
+Nachtrag hat aus dem falschen Grund das Richtige getan: Er begründete die
+Endung mit Format-Ehrlichkeit und gab dafür die Auffindbarkeit auf, die den
+Namen in D43 überhaupt begründet hatte. Tatsächlich musste die Kurzfassung
+diesen Namen tragen; gefehlt hat nicht die richtige Endung, sondern der
+Wegweiser davor. Der liegt jetzt als `frontend/public/llms.txt` daneben und
+wird von beiden Deploy-Wegen mitkopiert.
+
+**Zweiter Befund: `llms.md` kam auf der stabilen Instanz falsch kodiert an.**
+Apache kennt die Endung nicht und sendet dann **gar keinen** `Content-Type` —
+ohne Charset rät der Browser windows-1252. Gemessen am 24.08.2026 auf
+`werkbaum.javagil.de`: `document.characterSet` = `windows-1252`, und aus
+`# Werkbaum notation — guide for AI agents` wurde `… notation â€" guide …`;
+31 Zeilen enthalten `–`, `—`, `…` oder `≥`. Dieselbe Datei von GitHub Pages:
+`text/markdown; charset=utf-8`, fehlerfrei. Es ist also **kein** Argument
+gegen die Endung, sondern ein Konfigurationsfehler auf genau einer Instanz —
+und dieselbe Falle, die D24 für `.werkbaum` längst benannt hatte („wer selbst
+ausliefert, nimmt `text/plain; charset=utf-8`“).
+
+Behoben mit `scripts/prod.htaccess`, das `deploy-prod.sh` als `.htaccess` in
+die Site-Wurzel spiegelt (`.md` → `text/markdown;charset=utf-8`, dazu `.txt`
+und `.werkbaum` als `text/plain`). Bewusst **nicht** in `frontend/public/`:
+Von dort landete es über `dist/` auch im Pages-Artefakt, wo es wirkungslos
+wäre — Pages ist kein Apache und macht es ohnehin richtig. Der Rückweg steht
+in der Datei selbst: Antwortet der Server nach einem Deploy mit 500, verbietet
+seine `AllowOverride`-Einstellung `AddType`, und die drei Zeilen gehören in
+die vhost-Konfiguration.
+
+**Der Wegweiser ist rein ASCII** — er ist die eine Datei, die ein fremder
+Agent ungefragt abruft, und er soll auch dann ankommen, wenn ein Server die
+Kodierung verschweigt. Das ist keine Vorsichtsmaßnahme ins Blaue: Genau dieser
+Fall ist oben gemessen. Aufbau nach der Konvention: `#`-Titel, Blockquote mit
+einem Satz, ein Absatz Notation in Kurzform, dann `## Docs` mit den Links, die
+man wirklich braucht, und `## Optional` für DECISIONS und Repo — die Konvention
+erlaubt ausdrücklich, den Optional-Abschnitt wegzulassen, wenn der Kontext
+knapp ist.
+
+**Der Footer verlinkt weiterhin `llms.md`, nicht den Index.** Für einen
+Menschen ist der Leitfaden das nützliche Dokument; der Wegweiser besteht aus
+zehn Zeilen Links. Und Agenten finden ihn nicht über den Footer, sondern weil
+er an der konventionellen Adresse liegt — wie `robots.txt`, das auch niemand
+in eine Fußzeile schreibt. Falt-Umschalter: „ab M abwärts“ statt einer Tiefenzahl
 Einzeln zu falten (D38) reicht für einen Plan mit 167 Knoten nicht — man will
 den Baum am Stück auf eine Arbeitshöhe bringen. Der Diagramm-Kopf bekommt
 dafür einen **Umschalter** neben „verworfene einblenden“ und „günstigster

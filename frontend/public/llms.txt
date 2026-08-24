@@ -1,0 +1,33 @@
+# Werkbaum
+
+> A plain-text notation for work breakdown structures (WBS) with and/or
+> decomposition, plus a browser editor that renders it as a diagram. This file
+> is an index; the notation itself is explained in the guide linked below.
+
+A Werkbaum plan is ordinary UTF-8 text, one node per line. Indentation carries
+the hierarchy, and the leading character says how the children relate: `-` all
+required, `+` an optional extra, `|` alternatives, `=` exactly one of them. A
+checkbox such as `[x]` gives the status, `(M)` the T-shirt size. Nothing else
+is needed to store, share or version a plan.
+
+## Docs
+
+- [Notation guide](https://werkbaum.javagil.de/llms.md): Everything needed to
+  read and write the notation, in English: line format and extraction order,
+  gates, status codes and progress ranks, sizes, node ids, dependencies,
+  folding marks, descriptions, plus a complete example. Self-contained; start
+  here.
+- [Specification](https://github.com/mhoennig/werkbaum/blob/main/docs/SPEC.md):
+  The normative language definition (German). Where it and the guide disagree,
+  it wins.
+- [Editor](https://werkbaum.javagil.de/): Renders a plan as a diagram.
+  `?sourceUrl=<url>` loads any CORS-readable http(s) text file, and
+  `?etherpad=<pad-url>` follows a live Etherpad.
+
+## Optional
+
+- [Design decisions](https://github.com/mhoennig/werkbaum/blob/main/docs/DECISIONS.md):
+  Why the notation looks the way it does, at length (German). Background only,
+  not needed to read or write plans.
+- [Repository](https://github.com/mhoennig/werkbaum): Source and example plans
+  under `docs/examples/*.werkbaum`.
