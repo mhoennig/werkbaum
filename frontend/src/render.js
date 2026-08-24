@@ -72,6 +72,9 @@ function nodeAria(n, opts, fold){
   if(effKey) parts.push(t('a11yEffective', {status: t('st_' + effKey)}));
   if(n.size) parts.push(t('a11ySize', {size: n.size}));
   else if(cheapPath && !isDone(n)) parts.push(t('a11ySizeImplicit'));
+  /* Größen-Konflikt (SPEC §5/D62): die Warnfärbung des Badges kommt beim
+     Screenreader sonst nicht an. */
+  if(n.sizeConflict) parts.push(t('sizeConflictTooltip'));
   if(n.tags && n.tags.length) parts.push(t('a11yTags', {names: n.tags.join(', ')}));
   /* Knoten-ID und Abhängigkeiten (SPEC §1, D36/D37): keine eigene Darstellung
      im Diagramm — sichtbar nur im Tooltip und hier. */
@@ -138,6 +141,9 @@ function nodeHtml(n, extra, opts, fold){
                     eigenen `title` am Badge — der erschiene neben dem Fenster
                     ein zweites Mal. Sie gehört ohnehin zu den Kurz-Fakten. */
                  (!n.size && cheapPath && !isDone(n)) ? t('implicitSizeTooltip') : '',
+                 /* Größen-Konflikt (SPEC §5/D62): das warnfarbene Badge braucht
+                    seine Begründung dort, wo man nachsieht. */
+                 n.sizeConflict ? t('sizeConflictTooltip') : '',
                  t('jumpHint')]
     .filter(Boolean).join(' · ');
   const tip = n.desc && facts ? n.desc + '\n\n' + TIP_RULE + '\n' + facts
@@ -154,8 +160,10 @@ function nodeHtml(n, extra, opts, fold){
      erledigten Knoten wird keine getroffen — er kostet nichts mehr (D46) —,
      dort bleibt es deshalb weg. */
   const implicitSize = !n.size && cheapPath && !isDone(n);
+  /* Größen-Konflikt (SPEC §5/D62): das Badge wechselt auf die Warnfarbe —
+     die Größe selbst bleibt stehen, korrigiert wird nichts. */
   const sizeBadge = n.size
-    ? `<span class="size" aria-hidden="true">${n.size}</span>`
+    ? `<span class="size${n.sizeConflict ? ' conflict' : ''}" aria-hidden="true">${n.size}</span>`
     : (implicitSize ? `<span class="size implicit" aria-hidden="true">M</span>` : '');
   /* High-Risk: Warndreieck (⚠, Textpräsentation via VS15) an der oberen linken
      Ecke. aria-hidden — die Information steckt bereits im Status des aria-label. */

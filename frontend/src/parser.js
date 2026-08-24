@@ -6,6 +6,13 @@
 /* T-Shirt-Größen (SPEC §5), aufsteigend geordnet. */
 export const SIZE_RANK = { XS: 0, S: 1, M: 2, L: 3, XL: 4, XXL: 5 };
 
+/* Größen als BEREICHE für die Konflikt-Prüfung (SPEC §5/D62): Untergrenze
+   2^Rang, Obergrenze die Untergrenze der nächsten Größe — XXL ist nach oben
+   offen, ein XXL-Element warnt also nie. Die Skala bleibt ansonsten ordinal
+   (D46: „S+S ≠ M" gilt weiter für alles außer dieser einen Prüfung). */
+export const sizeMin = size => 2 ** SIZE_RANK[size];
+export const sizeMax = size => size === 'XXL' ? Infinity : 2 ** (SIZE_RANK[size] + 1);
+
 /* Status-Vokabular (SPEC §4): Checkbox-Code -> {code, key, name}.
    `name` ist der deutsche Anzeigename (Quellsprache); `code` das kanonische
    Box-Zeichen (für die Diskrepanz-Marke des effektiven Status, D39). */
@@ -382,6 +389,34 @@ export function parse(text){
       }
     }
     kids.forEach(checkXor);
+  })(virtualRoot);
+
+  /* Größen-Konflikt (SPEC §5/D62): Die angegebene Größe muss zu den direkten
+     Kindern passen. Jede Größe zählt als BEREICH (sizeMin/sizeMax); Konflikt
+     erst, wenn selbst die günstigste Lesart der Kinder die großzügigste des
+     Elternknotens erreicht — gemeldet wird nur, was unter jeder Lesart falsch
+     ist. Es zählen nur Kinder MIT Größe (fehlende Größe ist keine Aussage —
+     anders als bei den Pfadkosten wird hier kein M angenommen, D44-Linie),
+     ohne verworfene und ohne optionale; in einer disjunktiven Gruppe wird nur
+     eine Alternative realisiert, dort zählt die kleinste. Nichts wird
+     korrigiert — Warnung an der Elternzeile plus Flag für das Badge. */
+  (function checkSizes(node){
+    const kids = node.children;
+    if(node.size && kids.length && sizeMax(node.size) !== Infinity){
+      const counted = kids.filter(k =>
+        k.size && !k.optional && !(k.status && k.status.key === 'verworfen'));
+      if(counted.length){
+        const mins = counted.map(k => sizeMin(k.size));
+        const need = kids[0].type !== 'and'
+          ? Math.min(...mins)
+          : mins.reduce((a, b) => a + b, 0);
+        if(need >= sizeMax(node.size)){
+          node.sizeConflict = true;
+          warnings.push({type:'sizeConflict', line: node.line, size: node.size});
+        }
+      }
+    }
+    kids.forEach(checkSizes);
   })(virtualRoot);
 
   return {roots: virtualRoot.children, warnings};

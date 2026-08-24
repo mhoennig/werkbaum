@@ -4582,3 +4582,74 @@ heraus, fallen genau die fünf danach benannten Zusicherungen; nimmt man
 `chosenPool` heraus, genau die zwei zu den Alternativen. Die Tests, die das
 **unveränderte** Verhalten festhalten (unangetastete und erledigte Zugaben
 bleiben draußen), bleiben in beiden Fällen grün.
+
+## D62 — Größen-Konflikt: Bereiche statt Punkt-Zahlen, XXL nach oben offen
+Gewünscht war eine Anzeige, „wenn die angegebenen T-Shirt-Größen mit den
+Unterknoten nicht zusammenpassen" — ohne automatische Korrektur. Die Skala
+dafür gab es schon (`SIZE_RANK`, D18 nutzt Rang+1 als Kosten); die eigentliche
+Entscheidung war, **wann** „passt nicht" gilt.
+
+**Eine Punkt-Zahl je Größe trägt nicht — egal wie steil die Skala steigt.**
+Der erste Vorschlag war eine additive Verdopplungsskala (XS=1 … XXL=32):
+Summe der Kinder > Elternwert ⇒ Konflikt. Der Nutzer wandte ein, dass damit
+bei jedem größeren Baum die oberen Knoten selbst mit XXL nicht auskommen —
+und die Prüfung der Steilheit führte auf einen härteren Befund: Schon das
+**kanonische Beispiel aus SPEC §10** warnte. `Website-Relaunch (XL)` mit
+Kindern `(M) + (XL) + (M)` ergibt bei Faktor 2 wie bei Faktor 3 eine Summe
+über dem Elternwert — sobald ein Kind die Elterngröße teilt, sprengt jedes
+Geschwister die Summe. Das widerspricht der gelebten Praxis, dass „XL =
+XL-Kind plus etwas Kleinkram" eine völlig normale Schätzung ist. Der Fehler
+liegt nicht im Faktor, sondern darin, dass eine Punkt-Zahl so tut, als wäre
+`(M)` exakt.
+
+**Entschieden: Größen sind Bereiche.** XS=[1,2), S=[2,4), M=[4,8), L=[8,16),
+XL=[16,32), **XXL=[32,∞)**. Konflikt erst, wenn die Summe der **Untergrenzen**
+der Kinder die **Obergrenze** des Elternknotens erreicht — also erst, wenn es
+unter *jeder* Lesart falsch ist. Das hält das kanonische Beispiel sauber
+(24 < 32), meldet vier `(S)` unter `(M)` (8 ≥ 8), enthält den Ordinal-Fall
+(ein strikt größeres Kind warnt immer) und beantwortet den Einwand direkt:
+**XXL hat keine Obergrenze**, ein XXL-Knoten warnt nie — für die großen
+Sammelknoten behauptet die Skala schlicht keine Schranke mehr. Das ist
+dieselbe Haltung wie bei `unknownStatus` und `descStray`: lieber laut, aber
+nur, wo es sicher ist. D46 („die Größen sind ordinal, nicht additiv") bleibt
+für alles andere unangetastet — die Bereichs-Lesart gilt genau dieser einen
+Prüfung.
+
+**Was zählt:** nur die direkten Kinder (je Ebene eine eigene Prüfung, die
+Warnung zeigt auf die Elternzeile), davon nur die mit **angegebener** Größe —
+fehlende Größe ist keine Autoren-Aussage (D44-Linie; anders als bei den
+Pfadkosten wird kein M angenommen). Verworfene und optionale (`+`) Kinder
+zählen nicht; in einer disjunktiven Gruppe (`|`/`=`) zählt die **kleinste**
+Alternative, denn nur eine wird realisiert. Die Gegenrichtung (Eltern größer
+als die Kindersumme) warnt nicht — sie heißt nur unvollständige Zerlegung,
+und dafür gibt es den Geister-Knoten (D8). Ein Elternknoten ohne Größe wird
+nie geprüft.
+
+**Darstellung: das Badge wechselt auf `--warn`, nicht auf Rot.** Der Nutzer
+hatte Rot vorgeschlagen und sich für die Warnfarbe entschieden: „Der Plan
+widerspricht sich" hat mit `#B45309` schon eine Farbe (Geister-Knoten,
+Warnzeilen), und Rot bliebe unvergeben (D34). Dazu die Warnung `sizeConflict`
+mit Zeilennummer (eine Stelle: `build()` in warnings.js), der Grund im
+Tooltip und im `aria-label`. **Nichts wird automatisch korrigiert.**
+
+**Nebenbefund: Der Grafikexport zeichnete das Größen-Badge mit festen
+Farben** (`drawBadge(sizeEl, '#0F766E', '#ffffff')`) — das invertierte
+implizite M (D18) stand damit seit jeher gefüllt im exportierten Bild. Jetzt
+liest der Export die gemessenen Farben wie bei Tags und Diskrepanz-Marke;
+damit folgt auch das Konflikt-Badge von selbst.
+
+**Der eigene Plan hatte acht solcher Konflikte** — alle berechtigt, die
+Größen stammten aus der Zeit ohne Prüfung. Nachgezogen (`#not` L→XL, `#ed`
+XL→XXL, `#ed.live`/`#ed.path`/`#ed.fold`/`#bld`/`#col.own` M→L, `#col.pad`
+S→L, und als Kaskade davon `#col` XL→XXL): 0 Warnungen. Dass die erste
+Anwendung der Regel den eigenen Plan korrigiert, ist kein schlechtes Zeichen —
+genau dafür ist sie da.
+
+**Nachgemessen:** 372 Tests (16 neue in `tests/sizes.test.js`); Gegenprobe
+per Mutation — XXL-Obergrenze wieder eingeführt: genau die zwei danach
+benannten Zusicherungen fallen; optionale Kinder mitgezählt: genau eine;
+disjunktive Gruppen summiert statt Minimum: genau zwei. Im Browser: Badge
+`rgb(180, 83, 9)`, Warnung „Zeile 1: …", Tooltip und `aria-label` benennen
+den Grund; im exportierten SVG das Konflikt-Badge bernstein und das implizite
+M weiß mit Petrol-Rand. Kanonisches Beispiel §10 und der mitgelieferte Plan:
+0 Warnungen.

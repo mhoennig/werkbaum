@@ -325,6 +325,38 @@ effektiv nicht weiter sein als das, was er braucht.
 - Anzeige: petrolfarbenes Badge (`--or`, `#0F766E`) mit weißer Schrift oben
   rechts an der Knoten-Ecke.
 
+**Größen-Konflikt** — die angegebene Größe eines Elements muss zu seinen
+Teilpaketen passen. Die Skala ist ordinal; für diese eine Prüfung wird jede
+Größe als **Bereich** gelesen (Untergrenzen verdoppeln sich):
+
+| | XS | S | M | L | XL | XXL |
+|---|---|---|---|---|---|---|
+| Bereich | [1, 2) | [2, 4) | [4, 8) | [8, 16) | [16, 32) | [32, ∞) |
+
+- **Konflikt** ist, wenn selbst die **günstigste Lesart der Kinder** die
+  **großzügigste Lesart des Elternknotens** erreicht: Summe der Untergrenzen
+  der zählenden Kinder ≥ Obergrenze der Elterngröße. Gemeldet wird also nur,
+  was unter *jeder* Lesart falsch ist — `(XL) = XL-Kind + 2 × M` (16+4+4 = 24
+  < 32) ist deshalb kein Konflikt, vier `(S)` unter einem `(M)` (8 ≥ 8) schon.
+  Ein Kind, das **größer** ist als sein Elternknoten, ist immer ein Konflikt
+  (Teilmenge der Regel).
+- **XXL hat keine Obergrenze** — ein XXL-Element warnt nie: Für die großen
+  Sammelknoten eines Plans behauptet die Skala schlicht keine Schranke mehr.
+- **Es zählen nur die direkten Kinder**, und davon nur die mit **angegebener**
+  Größe (fehlende Größe ist keine Aussage; anders als beim günstigsten Pfad
+  wird hier kein `M` angenommen). Verworfene und optionale (`+`) Kinder zählen
+  nicht. In einer disjunktiven Gruppe (`|`/`=`) wird nur eine Alternative
+  realisiert — dort zählt die **kleinste**.
+- Ein Elternknoten **ohne** Größe macht keine Aussage und wird nie geprüft;
+  die Gegenrichtung (Eltern größer als die Kindersumme) warnt nicht — sie
+  heißt nur, dass die Zerlegung unvollständig ist (dafür gibt es den
+  Geister-Knoten).
+- **Meldung und Anzeige:** Warnung `sizeConflict` mit der Zeilennummer des
+  Elternknotens; sein Größen-Badge wechselt auf die Warnfarbe (`--warn`,
+  `#B45309`, weiße Schrift), Tooltip und `aria-label` benennen den Grund.
+  Badge-Färbung auch im Grafikexport und im Druck. **Nichts wird automatisch
+  korrigiert** — die Größen bleiben, wie sie geschrieben sind. Siehe D62.
+
 ## 6. Links
 
 - Ein nacktes `https://…`-Token macht den ganzen Knoten klickbar

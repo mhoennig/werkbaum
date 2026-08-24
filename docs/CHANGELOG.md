@@ -19,6 +19,8 @@ reverse.
 
 ## 2026-08-24
 
+- A size that cannot hold its sub-packages turns its badge amber and gets a warning — sizes are read as ranges, so only sure conflicts are reported
+- Fix: the exported SVG drew the assumed-M badge filled like a real size instead of inverted
 - Dependency links now run behind every node, highlighted ones included — no more lines struck through node titles
 - Fix: the line to an only child was torn where the child does not sit centred in its cell
 - An optional node (`+`) joins the cheapest path while it is being worked on — started work is the open front

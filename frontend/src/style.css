@@ -910,6 +910,10 @@
   .cheap-on .node:not(.cheap).done{opacity:1;filter:none}
   /* implizit als M angenommene Größe: invertiertes Badge (weiß statt petrol) */
   .size.implicit{background:var(--card);color:var(--or);border-color:var(--or)}
+  /* Größen-Konflikt (SPEC §5/D62): die Teilpakete übersteigen zusammen die
+     angegebene Größe — das Badge wechselt auf die Warnfarbe, der weiße
+     Trennrand zur Knotenkante bleibt. */
+  .size.conflict{background:var(--warn)}
   /* Günstigster-Pfad-Linie: gestrichelt, geschwungen, petrol — fädelt durch
      die Endknoten (Blätter) des Pfads. Zwei Overlays in #out (erben dessen
      zoom): die kräftige Linie liegt HINTER den Knoten (nur in den Lücken

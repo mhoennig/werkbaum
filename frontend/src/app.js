@@ -608,8 +608,17 @@ function diagramToSvg(){
       parts.push(`<circle cx="${rb.cx.toFixed(1)}" cy="${rb.cy.toFixed(1)}" r="${(Math.min(rb.w,rb.h)/2).toFixed(1)}" fill="#ffffff" stroke="#F97316" stroke-width="1.5"/>`);
       parts.push(`<text x="${rb.cx.toFixed(1)}" y="${(rb.cy+3.5).toFixed(1)}" text-anchor="middle" fill="#F97316" font-size="10">⚠︎</text>`);
     }
+    /* Gemessene Farben statt festem Petrol: Das invertierte implizite M (D18)
+       und das warnfarbene Konflikt-Badge (SPEC §5/D62) kämen sonst als
+       gewöhnliches gefülltes Badge ins Bild — beim impliziten M war genau das
+       seit jeher der Fall (Nebenbefund D62). */
     const sizeEl = node.querySelector('.size');
-    if(sizeEl) drawBadge(sizeEl, '#0F766E', '#ffffff');
+    if(sizeEl){
+      const s = getComputedStyle(sizeEl);
+      /* Der Rand gehört mit: beim invertierten Badge ist er die einzige Kontur
+         (weiße Füllung auf weißer Karte). */
+      drawBadge(sizeEl, s.backgroundColor, s.color, s.borderTopColor);
+    }
     node.querySelectorAll('.tag').forEach(tg => {
       const t = getComputedStyle(tg);
       drawBadge(tg, t.backgroundColor, t.color, t.borderTopColor);
@@ -1955,6 +1964,8 @@ const I18N = {
     unknownDepWarn:"Zeile {line}: Abhängigkeit #{id} — es gibt keinen Knoten mit dieser ID.",
     unknownDescWarn:"Zeile {line}: Beschreibung für #{id} — es gibt keinen Knoten mit dieser ID.",
     descStrayWarn:"Zeile {line}: Beschreibungszeile ohne Bezug — ihr fehlt der Knoten bzw. der #id-Block davor.",
+    sizeConflictWarn:"Zeile {line}: Die Teilpakete übersteigen zusammen die angegebene Größe ({size}) — selbst in der günstigsten Lesart.",
+    sizeConflictTooltip:"Die Teilpakete übersteigen zusammen die angegebene Größe",
     cheapApproxWarn:"Zu viele gekoppelte Alternativgruppen für die exakte Suche — der günstigste Pfad ist gierig geschätzt (je Gruppe lokal gewählt).",
     st_idee:"Idee", st_geplant:"geplant", st_arbeit:"in Arbeit", st_durchstich:"Durchstich",
     st_fertig:"fertig", st_prod:"in Produktion", st_highrisk:"High Risk", st_verworfen:"verworfen",
@@ -2056,6 +2067,8 @@ const I18N = {
     unknownDepWarn:"Line {line}: dependency #{id} — no node has this ID.",
     unknownDescWarn:"Line {line}: description for #{id} — no node has this ID.",
     descStrayWarn:"Line {line}: description line with nothing to attach to — it needs a node or an #id block before it.",
+    sizeConflictWarn:"Line {line}: the sub-packages together exceed the given size ({size}) — even in the most optimistic reading.",
+    sizeConflictTooltip:"The sub-packages together exceed the given size",
     cheapApproxWarn:"Too many coupled alternative groups for the exact search — the cheapest path is a greedy estimate (chosen locally per group).",
     st_idee:"idea", st_geplant:"planned", st_arbeit:"in progress", st_durchstich:"walking skeleton",
     st_fertig:"done", st_prod:"in production", st_highrisk:"high risk", st_verworfen:"discarded",
@@ -2157,6 +2170,8 @@ const I18N = {
     unknownDepWarn:"Línea {line}: dependencia #{id} — ningún nodo tiene esta ID.",
     unknownDescWarn:"Línea {line}: descripción para #{id} — ningún nodo tiene esta ID.",
     descStrayWarn:"Línea {line}: línea de descripción sin referencia — le falta un nodo o un bloque #id delante.",
+    sizeConflictWarn:"Línea {line}: los subpaquetes juntos superan el tamaño indicado ({size}), incluso en la lectura más optimista.",
+    sizeConflictTooltip:"Los subpaquetes juntos superan el tamaño indicado",
     cheapApproxWarn:"Demasiados grupos de alternativas acoplados para la búsqueda exacta — el camino más barato es una estimación voraz (elección local por grupo).",
     st_idee:"idea", st_geplant:"planificado", st_arbeit:"en curso", st_durchstich:"prototipo funcional",
     st_fertig:"terminado", st_prod:"en producción", st_highrisk:"alto riesgo", st_verworfen:"descartado",
@@ -2258,6 +2273,8 @@ const I18N = {
     unknownDepWarn:"Ligne {line} : dépendance #{id} — aucun nœud ne porte cet ID.",
     unknownDescWarn:"Ligne {line} : description pour #{id} — aucun nœud ne porte cet ID.",
     descStrayWarn:"Ligne {line} : ligne de description sans rattachement — il lui manque un nœud ou un bloc #id avant.",
+    sizeConflictWarn:"Ligne {line} : les sous-lots dépassent ensemble la taille indiquée ({size}), même dans la lecture la plus optimiste.",
+    sizeConflictTooltip:"Les sous-lots dépassent ensemble la taille indiquée",
     cheapApproxWarn:"Trop de groupes d’alternatives couplés pour la recherche exacte — le chemin le moins cher est une estimation gloutonne (choix local par groupe).",
     st_idee:"idée", st_geplant:"planifié", st_arbeit:"en cours", st_durchstich:"squelette fonctionnel",
     st_fertig:"terminé", st_prod:"en production", st_highrisk:"risque élevé", st_verworfen:"abandonné",
@@ -2359,6 +2376,8 @@ const I18N = {
     unknownDepWarn:"Wiersz {line}: zależność #{id} — żaden węzeł nie ma tego ID.",
     unknownDescWarn:"Wiersz {line}: opis dla #{id} — żaden węzeł nie ma tego ID.",
     descStrayWarn:"Wiersz {line}: wiersz opisu bez odniesienia — brakuje węzła lub bloku #id przed nim.",
+    sizeConflictWarn:"Wiersz {line}: podzadania razem przekraczają podany rozmiar ({size}) — nawet w najkorzystniejszym odczycie.",
+    sizeConflictTooltip:"Podzadania razem przekraczają podany rozmiar",
     cheapApproxWarn:"Zbyt wiele sprzężonych grup alternatyw dla dokładnego wyszukiwania — najtańsza ścieżka jest oszacowana zachłannie (wybór lokalny w każdej grupie).",
     st_idee:"pomysł", st_geplant:"zaplanowane", st_arbeit:"w toku", st_durchstich:"działający szkielet",
     st_fertig:"gotowe", st_prod:"w produkcji", st_highrisk:"wysokie ryzyko", st_verworfen:"odrzucone",
@@ -2460,6 +2479,8 @@ const I18N = {
     unknownDepWarn:"Строка {line}: зависимость #{id} — узла с таким ID нет.",
     unknownDescWarn:"Строка {line}: описание для #{id} — узла с таким ID нет.",
     descStrayWarn:"Строка {line}: строка описания без привязки — перед ней нет узла или блока #id.",
+    sizeConflictWarn:"Строка {line}: подзадачи вместе превышают указанный размер ({size}) — даже при самой оптимистичной оценке.",
+    sizeConflictTooltip:"Подзадачи вместе превышают указанный размер",
     cheapApproxWarn:"Слишком много связанных групп альтернатив для точного поиска — самый дешёвый путь оценён жадно (локальный выбор в каждой группе).",
     st_idee:"идея", st_geplant:"запланировано", st_arbeit:"в работе", st_durchstich:"сквозной прототип",
     st_fertig:"готово", st_prod:"в эксплуатации", st_highrisk:"высокий риск", st_verworfen:"отклонено",
@@ -2561,6 +2582,8 @@ const I18N = {
     unknownDepWarn:"पंक्ति {line}: निर्भरता #{id} — इस आईडी वाला कोई नोड नहीं है।",
     unknownDescWarn:"पंक्ति {line}: #{id} के लिए विवरण — इस आईडी वाला कोई नोड नहीं है।",
     descStrayWarn:"पंक्ति {line}: विवरण पंक्ति बिना संदर्भ — इससे पहले कोई नोड या #id ब्लॉक नहीं है।",
+    sizeConflictWarn:"पंक्ति {line}: उप-पैकेज मिलकर दिए गए आकार ({size}) से बड़े हैं — सबसे आशावादी आकलन में भी।",
+    sizeConflictTooltip:"उप-पैकेज मिलकर दिए गए आकार से बड़े हैं",
     cheapApproxWarn:"सटीक खोज के लिए बहुत सारे युग्मित विकल्प-समूह — सबसे सस्ता पथ लालची अनुमान है (प्रति समूह स्थानीय चयन)।",
     st_idee:"विचार", st_geplant:"नियोजित", st_arbeit:"प्रगति पर", st_durchstich:"कार्यशील ढाँचा",
     st_fertig:"पूर्ण", st_prod:"उत्पादन में", st_highrisk:"उच्च जोखिम", st_verworfen:"अस्वीकृत",
@@ -2662,6 +2685,8 @@ const I18N = {
     unknownDepWarn:"第 {line} 行：依赖 #{id}——没有节点使用此 ID。",
     unknownDescWarn:"第 {line} 行：#{id} 的描述——没有节点使用此 ID。",
     descStrayWarn:"第 {line} 行：描述行没有归属——前面缺少节点或 #id 块。",
+    sizeConflictWarn:"第 {line} 行：子项合计超出所标注的尺寸（{size}）——即使按最乐观的估算也是如此。",
+    sizeConflictTooltip:"子项合计超出所标注的尺寸",
     cheapApproxWarn:"耦合的备选组过多，无法精确搜索——最便宜路径为贪心估计（每组就地选择）。",
     st_idee:"想法", st_geplant:"已计划", st_arbeit:"进行中", st_durchstich:"可运行骨架",
     st_fertig:"已完成", st_prod:"已上线", st_highrisk:"高风险", st_verworfen:"已放弃",
@@ -2763,6 +2788,8 @@ const I18N = {
     unknownDepWarn:"{line} 行目：依存 #{id} — この ID を持つノードはありません。",
     unknownDescWarn:"{line} 行目：#{id} の説明 — この ID を持つノードはありません。",
     descStrayWarn:"{line} 行目：説明行の帰属先がありません — 直前にノードまたは #id ブロックが必要です。",
+    sizeConflictWarn:"{line} 行目：サブパッケージの合計が指定サイズ（{size}）を超えています — 最も楽観的な見積もりでも。",
+    sizeConflictTooltip:"サブパッケージの合計が指定サイズを超えています",
     cheapApproxWarn:"結合された選択肢グループが多すぎるため厳密探索は不可 — 最安パスは貪欲法による推定です（グループごとに局所選択）。",
     st_idee:"アイデア", st_geplant:"計画済み", st_arbeit:"作業中", st_durchstich:"ウォーキングスケルトン",
     st_fertig:"完了", st_prod:"本番稼働", st_highrisk:"高リスク", st_verworfen:"破棄",

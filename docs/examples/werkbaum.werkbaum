@@ -3,7 +3,7 @@
 %% Every node carries an id; the block behind --- explains it. Hover a node.
 
 [~] #wb: Werkbaum (XXL) https://github.com/mhoennig/werkbaum
-  - [^] #not: Notation (L)
+  - [^] #not: Notation (XL)
     - [^] #not.line: Line format (M)
       - [^] #not.status: Status box, eight states (S)
       - [^] #not.size: T-shirt size and the "decompose from M" rule (S)
@@ -23,6 +23,7 @@
     - [^] #not.desc: Node descriptions, shown as a tooltip (M)
       - [^] #not.desc.short: A short text right at the node (S)  %% a " line below the node
       - [^] #not.desc.long: A long block at the end, addressed by its id (S)  %% behind a --- separator
+    - [x] #not.sizes: Size conflict — sub-packages must fit the given size (S)  %% ranges, XXL open-ended, see D62
     - [-] #not.store: A separate storage format for the structure (L)  %% the text is the format
     - [ ] #not.ticket: Ticket references (#123,#US-123) (S)  %% Taiga writes #US-123 for a user story
     - [^] #not.llms: llms.md, the notation explained to AI agents (S)
@@ -30,8 +31,8 @@
     - [?] #not.benefit: Benefit per node, not only cost (M)
       | [?] #not.benefit.sigil: Another sigil next to the size (S)
       | [?] #not.benefit.points: Story points behind the T-shirt sizes (M)
-  - [~] #ed: Editor (XL) https://werkbaum.javagil.de
-    - [^] #ed.live: Live diagram from text (M)
+  - [~] #ed: Editor (XXL) https://werkbaum.javagil.de
+    - [^] #ed.live: Live diagram from text (L)
       - [^] #ed.parser: Parser (S)
       - [^] #ed.render: Renderer, three layout modes (M)
         - [^] #ed.render.horiz: Horizontal fan (S)
@@ -40,7 +41,7 @@
       - [^] #ed.deplink: Cross links for dependencies (M)
         - [^] #ed.deplink.calm: Visually secondary — the tree carries the message (S)
         - [^] #ed.deplink.focus: Highlight what a selected node needs and feeds (S)
-    - [^] #ed.path: Cheapest path (M)
+    - [^] #ed.path: Cheapest path (L)
       - [^] #ed.path.cost: Cost model, missing size counts as M (S)
       - [^] #ed.path.front: Only the open front: what is done costs nothing (S)  %% see D46
       - [^] #ed.path.started: Started work is on the path, extras included (S)  %% see D61
@@ -73,7 +74,7 @@
     - [^] #ed.shortid: Type #.kc under #prod-stage, get #prod-stage.kc (XS)  %% an input aid, not notation
     - [^] #ed.showids: A # button shows the ids before the titles (XS)  %% written as in the text, with a colon
       - [^] #ed.lineno.tip: The warning is the tooltip of its number (XS)  %% no hunting in the list
-    - [^] #ed.fold: Collapsible subtrees (M)
+    - [^] #ed.fold: Collapsible subtrees (L)
       - [^] #ed.fold.marks: Initial state from the text: > collapses, < re-opens (S)
       - [^] #ed.fold.click: Fold and unfold in the diagram (S)
       - [^] #ed.fold.write: Folding writes the mark back into the text (S)  %% one undo step
@@ -87,7 +88,7 @@
     - [?] #ed.dates: Dates and milestones (M)
       | [?] #ed.dates.attr: An attribute in the line (S)
       | [?] #ed.dates.view: A separate timeline view (L)
-  - [^] #bld: Build and delivery (M)
+  - [^] #bld: Build and delivery (L)
     - [^] #bld.bundle: One self-contained file, bundled by Vite (S)
     - [^] #bld.tests: Unit tests (S)
     - [^] #bld.pages: Published on every push (S)
@@ -110,9 +111,9 @@
     - [?] #be.auth: Accounts and permissions (L) :#be.docs
       | [?] #be.auth.token: Single user, one token (S)
       | [?] #be.auth.oidc: Log in with OIDC (L)
-  - [~] #col: Collaborating on a Diagram (XL)
+  - [~] #col: Collaborating on a Diagram (XXL)
     " The pad merges concurrent edits, Werkbaum renders the plan.
-    - [^] #col.pad: Watch a shared Etherpad — it merges, we render (S)
+    - [^] #col.pad: Watch a shared Etherpad — it merges, we render (L)
       - [^] #col.pad.export: Load the pad's plain-text export (XS)
       - [^] #col.pad.reload: Reload on demand (XS)  %% a timer only trips Etherpad's rate limit
       - [^] #col.pad.embed: Embed the pad, keep the text mirror beside it (M)
@@ -123,7 +124,7 @@
           | [ ] #col.pad.owntab: Live with it: edit in the pad's own tab (XS)
       - [^] #col.pad.point: A shared pointer: !!! focuses a node for everyone (XS)
       - [?] > #col.auto: Update by itself, within about 2 s (M)
-        | [?] #col.own: Our own Etherpad beside Werkbaum (M)  %% then every setting below is ours
+        | [?] #col.own: Our own Etherpad beside Werkbaum (L)  %% then every setting below is ours
           - [ ] #col.own.db: Node and a real database in userland (S)  %% the flatfile store is not for production
           - [ ] #col.own.ram: Book the RAM quota for an own daemon (XS)
           - [ ] #col.own.proxy: Reverse proxy in .htaccess, websockets included (S)  %% Mattermost does it, wiki shows how
@@ -294,6 +295,12 @@
   Behind a --- separator an id opens a block, and the indented lines under it
   are its text. There is no closing fence, so there is none to forget — this
   section is its own example.
+
+#not.sizes
+  Every size is read as a range whose lower bounds double, XXL open-ended. A
+  warning appears only when even the most optimistic reading of the children
+  exceeds the most generous reading of the parent — nothing is corrected
+  automatically, the badge just turns amber.
 
 #not.store
   Rejected on purpose: the text is the format. A second representation of the

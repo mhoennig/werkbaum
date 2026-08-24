@@ -25,6 +25,10 @@
                                       Beschreibungsteil ohne #id-Block; meldet
                                       auch die von einem versehentlichen
                                       `---` verschluckten Knotenzeilen
+   - sizeConflict  { line, size }   — Teilpakete übersteigen zusammen die
+                                      angegebene Größe des Elternknotens, selbst
+                                      in der günstigsten Bereichs-Lesart
+                                      (SPEC §5/D62); Zeile = Elternknoten
    - cheapApprox   { }              — günstigster Pfad nur gierig geschätzt:
                                       zu viele gekoppelte Gruppen für die
                                       exakte Suche (D42); zeilenlos
@@ -72,6 +76,8 @@ function build(w, t, esc){
       return t('unknownDescWarn', {line: w.line, id: esc(w.id)});
     case 'descStray':
       return t('descStrayWarn', {line: w.line});
+    case 'sizeConflict':
+      return t('sizeConflictWarn', {line: w.line, size: esc(w.size)});
     case 'cheapApprox':
       return t('cheapApproxWarn');
     case 'sourceLoad':
