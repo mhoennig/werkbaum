@@ -61,15 +61,15 @@
     - [^] #ed.a11y: Accessibility: aria labels, focus order (S)
     - [^] #ed.mobile: Works on a phone (S)
       - [^] #ed.mobile.tip: A tap on a node opens its tooltip as a window (XS)  %% no pointer, no tooltip
-    - [x] #ed.tipwindow: The same window at the pointer and on keyboard focus (XS)  %% a title has no paragraphs and never shows on focus
+    - [^] #ed.tipwindow: The same window at the pointer and on keyboard focus (XS)  %% a title has no paragraphs and never shows on focus
     - [^] #ed.docs: Several documents in one editor (M)
       - [^] #ed.docs.picker: Switcher in the editor title bar (S)
       - [^] #ed.docs.url: Load a document from ?sourceUrl= (S)
       - [^] #ed.docs.restore: Restore a shipped document from the menu (XS)
     - [^] #ed.jump: Jump between diagram and text (S)
     - [^] #ed.lineno: Line numbers in the text editor (XS)  %% the warnings name them
-    - [x] #ed.shortid: Type #.kc under #prod-stage, get #prod-stage.kc (XS)  %% an input aid, not notation
-    - [x] #ed.showids: A # button shows the ids before the titles (XS)  %% written as in the text, with a colon
+    - [^] #ed.shortid: Type #.kc under #prod-stage, get #prod-stage.kc (XS)  %% an input aid, not notation
+    - [^] #ed.showids: A # button shows the ids before the titles (XS)  %% written as in the text, with a colon
       - [^] #ed.lineno.tip: The warning is the tooltip of its number (XS)  %% no hunting in the list
     - [^] #ed.fold: Collapsible subtrees (M)
       - [^] #ed.fold.marks: Initial state from the text: > collapses, < re-opens (S)
@@ -80,7 +80,7 @@
       - [^] #ed.snaps.manual: Save a state by hand, before a larger change (XS)  %% ten minutes is the wrong beat for that moment
     - [ ] #ed.files: Open and save .werkbaum files (S)
     + [^] #ed.fresh: Show what is new since your last visit (S)
-      - [x] #ed.fresh.news: A star in the header, with the last few days (S)  %% see D58
+      - [^] #ed.fresh.news: A star in the header, with the last few days (S)  %% see D58
     + [?] #ed.percolor: A pastel colour per person (S)
     - [?] #ed.dates: Dates and milestones (M)
       | [?] #ed.dates.attr: An attribute in the line (S)
