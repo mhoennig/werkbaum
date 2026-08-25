@@ -99,11 +99,11 @@
     - [^] #bld.tests: Unit tests (S)
     - [^] #bld.pages: Published on every push (S)
     - [^] #bld.update: Says when a new build is out (S)  %% compares against the running one, see D45
-    - [x] #bld.pwa: Installable as a progressive web app (M)
-      - [x] #bld.pwa.manifest: A manifest with name, icons and standalone display (XS)
-      - [x] #bld.pwa.sw: A service worker that serves the app offline (S)  %% network-first, cache as fallback
-      - [x] #bld.pwa.update: The reload notice stays truthful under the worker (S)  %% see D45/D73
-      - [x] #bld.pwa.files: Double-click a .werkbaum file, save without any dialog (S) :#ed.files.inplace  %% file_handlers + launchQueue
+    - [^] #bld.pwa: Installable as a progressive web app (M)
+      - [^] #bld.pwa.manifest: A manifest with name, icons and standalone display (XS)
+      - [^] #bld.pwa.sw: A service worker that serves the app offline (S)  %% network-first, cache as fallback
+      - [^] #bld.pwa.update: The reload notice stays truthful under the worker (S)  %% see D45/D73
+      - [^] #bld.pwa.files: Double-click a .werkbaum file, save without any dialog (S) :#ed.files.inplace  %% file_handlers + launchQueue
     - [-] #bld.ghpages: Deploy through a gh-pages branch (S)  %% GitHub Actions instead
     - [-] #bld.gfonts: Fonts from Google (XS)  %% self-hosted, no third-party request
   - [ ] #be: Backend (XL)
