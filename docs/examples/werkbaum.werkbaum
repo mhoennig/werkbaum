@@ -49,7 +49,7 @@
       - [^] #ed.path.started: Started work is on the path, extras included (S)  %% see D61
       - [^] #ed.path.line: Metro-map line through the leaves (S)
       - [^] #ed.path.step: Step from station to station, one button (S)  %% see D47
-      - [x] #ed.path.load: Warn when one person is the bottleneck (S)  %% see D71
+      - [^] #ed.path.load: Warn when one person is the bottleneck (S)  %% see D71
       - [^] #ed.closure: Count the whole dependency closure (M)
         - [^] #ed.closure.once: Shared dependencies counted only once (S)
         - [^] #ed.closure.nonlocal: The cheapest alternative is no longer the local one (M)  %% see D34, D42
