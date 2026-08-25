@@ -4843,6 +4843,16 @@ Zeile umgeschrieben. Der neue Plan-Knoten `#ed.render.wrap (S)` kippte prompt
 die Größenprüfung des eigenen Plans (`#ed.render (M)` mit nun 4×S, D62) —
 ehrlich nachgezogen auf `(L)`, danach wieder 0 Warnungen.
 
+**Nachtrag — der Falt-Chip bekommt deckendes Weiß.** Gemeldet: „teilweise
+schwierig zu erkennen (z. B. weiß auf heller Farbe)". Die erste Fassung
+füllte den Chip fast transparent (`rgba(36,52,71,.04)`) mit mattgrauer
+Glyphe — auf den acht Pastell-Statusfarben (§4) verschwand er. Jetzt:
+deckendes Weiß, Glyphe in Tinte (`--line`, ~7,6:1 auf Weiß), satter Rand in
+`--muted`; auf dem weißen Neutral-Knoten trägt der Rand allein, der dunkle
+Wurzelknoten bekommt die helle Umkehrung (weiße Glyphe, Rand 0,7). Nur
+Farben — Innenabstand und `line-height:14px` bleiben unangetastet, die
+23-px-Geometrie (oben) hängt daran.
+
 ## D65 — Abgerissene Linien im vertikalen Modus: Geometrie-Fehler, kein Rendering-Problem
 Gemeldet: „Es geschieht immer wieder, dass die Verbindungslinien zu Sub-Knoten
 nicht durchgängig sind, sondern Lücken haben — meistens fehlen in der

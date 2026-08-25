@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-25
 
+- The fold chip is solid white with an ink glyph now — the translucent box vanished on the pastel node colours
 - A size prices its whole subtree on the cheapest path — sub-packages no longer add on top, so a carefully decomposed `(S)` beats a coarse `(L)`
 - The size is now the last free-standing `(L)`-style token of the line — earlier ones stay in the title, and `"(L)"` or `((L))` mention a size literally
 - Fix: Ctrl+click on a dependency preceded by a non-breaking space did nothing, although the parser reads it as a dependency

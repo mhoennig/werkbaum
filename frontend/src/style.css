@@ -709,17 +709,21 @@
      über die festen 18,3px heben, sonst wandert die 23-px-Abzweig-Geometrie
      (§9) um Halbpixel. */
   .node .fold{
-    cursor:pointer;color:var(--muted);
+    cursor:pointer;color:var(--line);
     font-size:.75em;margin-right:6px;
     display:inline-block;padding:0 6px;line-height:14px;
-    border:1px solid rgba(36,52,71,.28);border-radius:5px;
-    background:rgba(36,52,71,.04);
+    border:1px solid var(--muted);border-radius:5px;
+    background:#fff;
     user-select:none;-webkit-user-select:none;
   }
-  .node .fold:hover{color:var(--line);border-color:var(--line);background:rgba(36,52,71,.09)}
-  /* Der dunkle Wurzelknoten braucht ein helleres Zeichen als das Grau. */
-  .root-node .fold{color:rgba(255,255,255,.85);border-color:rgba(255,255,255,.45);background:rgba(255,255,255,.08)}
-  .root-node .fold:hover{color:#fff;border-color:#fff}
+  /* Deckendes Weiß plus Tinte-Glyphe: Die halbtransparente Füllung der ersten
+     Fassung verschwand auf den Pastell-Statusfarben („weiß auf hell") — der
+     Chip muss sich auf ALLEN acht Füllungen abheben, und Weiß mit sattem Rand
+     tut das; auf dem weißen Neutral-Knoten trägt der Rand allein. */
+  .node .fold:hover{color:var(--ink);border-color:var(--line);background:#fff}
+  /* Der dunkle Wurzelknoten braucht die helle Umkehrung. */
+  .root-node .fold{color:#fff;border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.16)}
+  .root-node .fold:hover{color:#fff;border-color:#fff;background:rgba(255,255,255,.26)}
   /* ”-Marke (SPEC §9, D40): der Knoten trägt eine Beschreibung — im Tooltip
      nachlesbar. Spiegelt das "-Zeichen der Notation; gedeckt, kein Klickziel. */
   .node .desc-mark{color:var(--muted);margin-left:4px;font-weight:600}
