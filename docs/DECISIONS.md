@@ -5644,3 +5644,19 @@ haben die API, Brave nicht, und Brave-Nutzer können sie über
 Stufe 2 dort unverändert, die Erkennung ist ja Feature-basiert).
 Code-Kommentare dürfen weiter „Chromium" sagen — sie reden mit Entwicklern,
 und dort ist die Kurzform tragbar.
+
+**Nachtrag 4 — in Brave nennt der Hinweis die Flag-Adresse.** Gewünscht vom
+Nutzer als Ergänzung zu Nachtrag 3: Wenn der Browser Brave ist, soll der
+Hinweis sagen, wie man die Schnittstelle dort selbst einschaltet
+(`brave://flags/#file-system-access-api`) — und nur dann; allen anderen
+sagt die Adresse nichts. Erkannt wird Brave an `navigator.brave`, das
+ausschließlich dort existiert (die Prüfung ist synchron auf die Existenz —
+das Promise von `isBrave()` braucht es dafür nicht). Die Adresse steht als
+kopierbarer Code-Text in einer zweiten Zeile: `brave://`-Links lassen sich
+aus einer Webseite nicht öffnen (interne Schemata sind gesperrt), ein
+toter Link wäre schlimmer als kein Link. Neuer i18n-Schlüssel
+`fsNoticeBrave` in neun Sprachen; die Adresse selbst steht im Code, nicht
+in den Übersetzungen — eine Stelle statt neun, an denen sie vertippt sein
+kann. **Nachgemessen** im Dev-Server (Stufe-1-Pfad erzwungen, Brave per
+`navigator.brave`-Stub zur Laufzeit): mit Stub trägt das Banner die zweite
+Zeile samt Mono-Code der Adresse, ohne Stub fehlt beides.

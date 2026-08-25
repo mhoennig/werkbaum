@@ -2193,7 +2193,7 @@ const I18N = {
     docRestore:"Original wiederherstellen",
     docRestoreConfirm:"„{name}“ auf den mitgelieferten Stand zurücksetzen? Eigene Änderungen gehen verloren.",
     docOpenFile:"Datei öffnen…", docSaveFile:"Als Datei speichern",
-    fsNotice:"Dieser Browser kann lokale Dateien nicht direkt beschreiben: Eine geöffnete Datei wird als Kopie geladen, und Speichern legt eine neue Datei in den Downloads ab. Browser mit der File-System-Access-Schnittstelle (z. B. Chrome oder Edge) schreiben direkt in die geöffnete Datei zurück.", fsNoticeOk:"Verstanden",
+    fsNotice:"Dieser Browser kann lokale Dateien nicht direkt beschreiben: Eine geöffnete Datei wird als Kopie geladen, und Speichern legt eine neue Datei in den Downloads ab. Browser mit der File-System-Access-Schnittstelle (z. B. Chrome oder Edge) schreiben direkt in die geöffnete Datei zurück.", fsNoticeOk:"Verstanden", fsNoticeBrave:"In Brave lässt sich die Schnittstelle von Hand einschalten:",
     copy:"kopieren", copyDone:"kopiert ✓", copyTooltip:"Text in die Zwischenablage kopieren",
     copyDiagramTooltip:"Diagramm als PNG-Bild in die Zwischenablage kopieren",
     downloadDiagramTooltip:"Diagramm als SVG-Datei herunterladen (z. B. für LibreOffice: Einfügen → Bild)",
@@ -2301,7 +2301,7 @@ const I18N = {
     docRestore:"Restore original",
     docRestoreConfirm:"Reset “{name}” to the shipped version? Your changes will be lost.",
     docOpenFile:"Open file…", docSaveFile:"Save as file",
-    fsNotice:"This browser cannot write to local files directly: an opened file is loaded as a copy, and saving puts a new file into your downloads. Browsers with the File System Access API (such as Chrome or Edge) write straight back into the opened file.", fsNoticeOk:"Got it",
+    fsNotice:"This browser cannot write to local files directly: an opened file is loaded as a copy, and saving puts a new file into your downloads. Browsers with the File System Access API (such as Chrome or Edge) write straight back into the opened file.", fsNoticeOk:"Got it", fsNoticeBrave:"In Brave you can enable the API yourself:",
     copy:"copy", copyDone:"copied ✓", copyTooltip:"Copy text to clipboard",
     copyDiagramTooltip:"Copy diagram as a PNG image to the clipboard",
     downloadDiagramTooltip:"Download diagram as an SVG file (e.g. for LibreOffice: Insert → Image)",
@@ -2409,7 +2409,7 @@ const I18N = {
     docRestore:"Restaurar original",
     docRestoreConfirm:"¿Restablecer «{name}» a la versión incluida? Tus cambios se perderán.",
     docOpenFile:"Abrir archivo…", docSaveFile:"Guardar como archivo",
-    fsNotice:"Este navegador no puede escribir directamente en archivos locales: un archivo abierto se carga como copia, y al guardar se crea un archivo nuevo en las descargas. Los navegadores con la API File System Access (como Chrome o Edge) escriben directamente en el archivo abierto.", fsNoticeOk:"Entendido",
+    fsNotice:"Este navegador no puede escribir directamente en archivos locales: un archivo abierto se carga como copia, y al guardar se crea un archivo nuevo en las descargas. Los navegadores con la API File System Access (como Chrome o Edge) escriben directamente en el archivo abierto.", fsNoticeOk:"Entendido", fsNoticeBrave:"En Brave puedes activar la API manualmente:",
     copy:"copiar", copyDone:"copiado ✓", copyTooltip:"Copiar el texto al portapapeles",
     copyDiagramTooltip:"Copiar el diagrama como imagen PNG al portapapeles",
     downloadDiagramTooltip:"Descargar el diagrama como archivo SVG (p. ej. para LibreOffice: Insertar → Imagen)",
@@ -2517,7 +2517,7 @@ const I18N = {
     docRestore:"Restaurer l’original",
     docRestoreConfirm:"Réinitialiser « {name} » à la version livrée ? Vos modifications seront perdues.",
     docOpenFile:"Ouvrir un fichier…", docSaveFile:"Enregistrer comme fichier",
-    fsNotice:"Ce navigateur ne peut pas écrire directement dans les fichiers locaux : un fichier ouvert est chargé comme copie, et l’enregistrement dépose un nouveau fichier dans les téléchargements. Les navigateurs dotés de l’API File System Access (comme Chrome ou Edge) réécrivent directement dans le fichier ouvert.", fsNoticeOk:"Compris",
+    fsNotice:"Ce navigateur ne peut pas écrire directement dans les fichiers locaux : un fichier ouvert est chargé comme copie, et l’enregistrement dépose un nouveau fichier dans les téléchargements. Les navigateurs dotés de l’API File System Access (comme Chrome ou Edge) réécrivent directement dans le fichier ouvert.", fsNoticeOk:"Compris", fsNoticeBrave:"Dans Brave, l’API peut être activée manuellement :",
     copy:"copier", copyDone:"copié ✓", copyTooltip:"Copier le texte dans le presse-papiers",
     copyDiagramTooltip:"Copier le diagramme comme image PNG dans le presse-papiers",
     downloadDiagramTooltip:"Télécharger le diagramme en fichier SVG (p. ex. pour LibreOffice : Insertion → Image)",
@@ -2625,7 +2625,7 @@ const I18N = {
     docRestore:"Przywróć oryginał",
     docRestoreConfirm:"Przywrócić „{name}” do dostarczonej wersji? Twoje zmiany zostaną utracone.",
     docOpenFile:"Otwórz plik…", docSaveFile:"Zapisz jako plik",
-    fsNotice:"Ta przeglądarka nie może bezpośrednio zapisywać plików lokalnych: otwarty plik jest wczytywany jako kopia, a zapis tworzy nowy plik w pobranych. Przeglądarki z interfejsem File System Access (np. Chrome lub Edge) zapisują bezpośrednio do otwartego pliku.", fsNoticeOk:"Rozumiem",
+    fsNotice:"Ta przeglądarka nie może bezpośrednio zapisywać plików lokalnych: otwarty plik jest wczytywany jako kopia, a zapis tworzy nowy plik w pobranych. Przeglądarki z interfejsem File System Access (np. Chrome lub Edge) zapisują bezpośrednio do otwartego pliku.", fsNoticeOk:"Rozumiem", fsNoticeBrave:"W Brave interfejs można włączyć ręcznie:",
     copy:"kopiuj", copyDone:"skopiowano ✓", copyTooltip:"Kopiuj tekst do schowka",
     copyDiagramTooltip:"Kopiuj diagram jako obraz PNG do schowka",
     downloadDiagramTooltip:"Pobierz diagram jako plik SVG (np. dla LibreOffice: Wstaw → Obraz)",
@@ -2733,7 +2733,7 @@ const I18N = {
     docRestore:"Восстановить оригинал",
     docRestoreConfirm:"Вернуть «{name}» к поставляемой версии? Ваши изменения будут потеряны.",
     docOpenFile:"Открыть файл…", docSaveFile:"Сохранить как файл",
-    fsNotice:"Этот браузер не может напрямую записывать локальные файлы: открытый файл загружается как копия, а сохранение создаёт новый файл в загрузках. Браузеры с API File System Access (например, Chrome или Edge) записывают прямо в открытый файл.", fsNoticeOk:"Понятно",
+    fsNotice:"Этот браузер не может напрямую записывать локальные файлы: открытый файл загружается как копия, а сохранение создаёт новый файл в загрузках. Браузеры с API File System Access (например, Chrome или Edge) записывают прямо в открытый файл.", fsNoticeOk:"Понятно", fsNoticeBrave:"В Brave интерфейс можно включить вручную:",
     copy:"копировать", copyDone:"скопировано ✓", copyTooltip:"Скопировать текст в буфер обмена",
     copyDiagramTooltip:"Скопировать диаграмму как изображение PNG в буфер обмена",
     downloadDiagramTooltip:"Скачать диаграмму как файл SVG (напр. для LibreOffice: Вставка → Изображение)",
@@ -2841,7 +2841,7 @@ const I18N = {
     docRestore:"मूल पुनर्स्थापित करें",
     docRestoreConfirm:"„{name}“ को मूल संस्करण पर लौटाएँ? आपके परिवर्तन खो जाएँगे।",
     docOpenFile:"फ़ाइल खोलें…", docSaveFile:"फ़ाइल के रूप में सहेजें",
-    fsNotice:"यह ब्राउज़र स्थानीय फ़ाइलों में सीधे नहीं लिख सकता: खोली गई फ़ाइल एक प्रति के रूप में लोड होती है, और सहेजने पर डाउनलोड में एक नई फ़ाइल बनती है। File System Access API वाले ब्राउज़र (जैसे Chrome या Edge) सीधे खोली गई फ़ाइल में लिखते हैं।", fsNoticeOk:"समझ गया",
+    fsNotice:"यह ब्राउज़र स्थानीय फ़ाइलों में सीधे नहीं लिख सकता: खोली गई फ़ाइल एक प्रति के रूप में लोड होती है, और सहेजने पर डाउनलोड में एक नई फ़ाइल बनती है। File System Access API वाले ब्राउज़र (जैसे Chrome या Edge) सीधे खोली गई फ़ाइल में लिखते हैं।", fsNoticeOk:"समझ गया", fsNoticeBrave:"Brave में आप API को स्वयं चालू कर सकते हैं:",
     copy:"कॉपी करें", copyDone:"कॉपी हो गया ✓", copyTooltip:"टेक्स्ट को क्लिपबोर्ड पर कॉपी करें",
     copyDiagramTooltip:"आरेख को PNG छवि के रूप में क्लिपबोर्ड पर कॉपी करें",
     downloadDiagramTooltip:"आरेख को SVG फ़ाइल के रूप में डाउनलोड करें (जैसे LibreOffice: सम्मिलित करें → छवि)",
@@ -2949,7 +2949,7 @@ const I18N = {
     docRestore:"恢复原始版本",
     docRestoreConfirm:"将“{name}”重置为随附版本？您的更改将丢失。",
     docOpenFile:"打开文件…", docSaveFile:"另存为文件",
-    fsNotice:"此浏览器无法直接写入本地文件：打开的文件会作为副本载入，保存时会在下载目录生成一个新文件。支持 File System Access API 的浏览器（如 Chrome、Edge）则会直接写回打开的文件。", fsNoticeOk:"知道了",
+    fsNotice:"此浏览器无法直接写入本地文件：打开的文件会作为副本载入，保存时会在下载目录生成一个新文件。支持 File System Access API 的浏览器（如 Chrome、Edge）则会直接写回打开的文件。", fsNoticeOk:"知道了", fsNoticeBrave:"在 Brave 中可以手动启用该接口：",
     copy:"复制", copyDone:"已复制 ✓", copyTooltip:"将文本复制到剪贴板",
     copyDiagramTooltip:"将图表作为 PNG 图片复制到剪贴板",
     downloadDiagramTooltip:"将图表下载为 SVG 文件（例如用于 LibreOffice：插入 → 图像）",
@@ -3057,7 +3057,7 @@ const I18N = {
     docRestore:"オリジナルを復元",
     docRestoreConfirm:"「{name}」を同梱版に戻しますか？変更内容は失われます。",
     docOpenFile:"ファイルを開く…", docSaveFile:"ファイルとして保存",
-    fsNotice:"このブラウザーはローカルファイルへ直接書き込めません。開いたファイルはコピーとして読み込まれ、保存するとダウンロードに新しいファイルが作られます。File System Access API に対応したブラウザー（Chrome や Edge など）は、開いたファイルへ直接書き戻します。", fsNoticeOk:"わかりました",
+    fsNotice:"このブラウザーはローカルファイルへ直接書き込めません。開いたファイルはコピーとして読み込まれ、保存するとダウンロードに新しいファイルが作られます。File System Access API に対応したブラウザー（Chrome や Edge など）は、開いたファイルへ直接書き戻します。", fsNoticeOk:"わかりました", fsNoticeBrave:"Brave では、この API を手動で有効にできます：",
     copy:"コピー", copyDone:"コピーしました ✓", copyTooltip:"テキストをクリップボードにコピー",
     copyDiagramTooltip:"ダイアグラムを PNG 画像としてクリップボードにコピー",
     downloadDiagramTooltip:"ダイアグラムを SVG ファイルとしてダウンロード（例：LibreOffice の 挿入 → 画像）",
@@ -4011,8 +4011,25 @@ function maybeShowFsNotice(){
   n.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#243447;color:#fff;'
     + 'padding:12px 16px;display:flex;align-items:center;justify-content:space-between;'
     + "gap:16px;z-index:1000;font-size:14px;font-family:'IBM Plex Sans',system-ui,sans-serif;";
-  const span = document.createElement('span');
-  span.textContent = t('fsNotice');
+  const txt = document.createElement('div');
+  const main = document.createElement('div');
+  main.textContent = t('fsNotice');
+  txt.appendChild(main);
+  /* Brave ist Chromium OHNE die API (D72-Nachtrag 3) — dort ist sie per
+     Flag von Hand einschaltbar. Das sagt nur Brave-Nutzern etwas, also nur
+     dort: navigator.brave existiert ausschließlich in Brave. Eine
+     brave://-Adresse lässt sich aus einer Seite nicht verlinken (interne
+     Schemata sind gesperrt) — sie steht als kopierbarer Code-Text da. */
+  if(navigator.brave && typeof navigator.brave.isBrave === 'function'){
+    const br = document.createElement('div');
+    br.style.marginTop = '5px';
+    const code = document.createElement('code');
+    code.textContent = 'brave://flags/#file-system-access-api';
+    code.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:12px;"
+      + 'background:rgba(255,255,255,.16);padding:1px 6px;border-radius:4px;';
+    br.append(document.createTextNode(t('fsNoticeBrave') + ' '), code);
+    txt.appendChild(br);
+  }
   const btn = document.createElement('button');
   btn.textContent = t('fsNoticeOk');
   btn.style.cssText = 'background:#fff;color:#243447;border:none;padding:4px 10px;'
@@ -4021,7 +4038,7 @@ function maybeShowFsNotice(){
     try{ localStorage.setItem(LS_FS_NOTICE, '1'); }catch(_){}
     n.remove();
   });
-  n.append(span, btn);
+  n.append(txt, btn);
   document.body.insertBefore(n, document.body.firstChild);
 }
 function openLocalFile(){
