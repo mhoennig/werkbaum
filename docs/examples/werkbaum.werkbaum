@@ -72,7 +72,7 @@
       - [^] #ed.docs.url: Load a document from ?sourceUrl= (S)
       - [^] #ed.docs.restore: Restore a shipped document from the menu (XS)
     - [^] #ed.jump: Jump between diagram and text (S)
-      - [x] #ed.jump.dep: Ctrl+click follows a dependency to its id (XS)
+      - [^] #ed.jump.dep: Ctrl+click follows a dependency to its id (XS)
     - [^] #ed.lineno: Line numbers in the text editor (XS)  %% the warnings name them
     - [^] #ed.shortid: Type #.kc under #prod-stage, get #prod-stage.kc (XS)  %% an input aid, not notation
     - [^] #ed.depcomplete: Typing :# suggests the known ids (S)  %% arrows choose, Enter inserts
