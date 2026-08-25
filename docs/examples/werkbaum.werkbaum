@@ -227,7 +227,8 @@
 #not.size
   T-shirt sizes in parentheses, plus the rule that anything M or larger ought
   to be broken down further. A node that breaks the rule grows a dashed
-  placeholder child — shown, not just reported.
+  placeholder child — shown, not just reported. The last free-standing token
+  of the line is the size, so parentheses in the title stay text.
 
 #not.people
   Three conveniences that need no syntax of their own: @name for who is on it,
