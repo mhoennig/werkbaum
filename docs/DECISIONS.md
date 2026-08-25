@@ -5170,3 +5170,52 @@ fallen; Vereinigungs-Maß auf schlichte Summe zurück → genau der eine
 Marginal-Test (dessen erste Fassung nicht unterschied, weil Wurzeln immer
 nötig sind — der Testbaum musste die Ziele unter einen unangetasteten
 `+`-Zweig legen).
+
+## D70 — Die geschätzte Größe bepreist den Rest: Erledigtes fällt aus der Schätzung
+Nachgefragt vom Nutzer zum benannten D69-Verlust (erledigte Teilpakete
+senken den Preis eines offenen Knotens nicht mehr): „Wenn der Überknoten
+keine explizite, sondern nur eine implizit berechnete Größe hat, dann ist
+das doch kein Problem?" Die Prüfung ergab: **Es war eines** — die
+D66-Schätzung war status-blind. Ein größenloses Paket mit `[x] (L)` und
+`[ ] (S)` wurde als L geschätzt (Preis 4), obwohl nur noch S offen ist.
+
+**Die Unterscheidung des Nutzers ist genau die tragfähige Linie:** Eine
+**angegebene** Größe ist die Aussage des Autors — D69 erklärt sie für
+maßgeblich, dort bleibt der Verlust bewusst bestehen (anteilige Restkosten
+hat D46 verworfen). Die **geschätzte** Größe ist dagegen eine Kostenannahme
+des Werkzeugs, und der Pfad fragt seit D46 „was ist noch offen?" — eine
+Annahme, die Erledigtes einpreist, beantwortet die falsche Frage.
+
+Die Regeln:
+
+- **Erledigte Kinder (`[x]`/`[^]`, intrinsisch) fallen aus der Schätzung**
+  wie verworfene — geschätzt wird die noch offene Arbeit, auch für die
+  Stufe-ab-drei-Regel zählen nur die offenen.
+- **Disjunktiv stellt eine erledigte realisierte Alternative die Gruppe
+  fertig.** Kein eigener Sonderfall, sondern die Wahl des Pfads
+  nachvollzogen: Unter mehreren realisierten entscheidet die Kostenregel
+  (D61), und die erledigte kostet 0 — sie würde gewählt, die Gruppe trägt
+  nichts mehr bei. Das gilt auch neben einer angefangenen zweiten
+  Alternative.
+- **Alles Benannte erledigt, der Knoten selbst offen → `XS`**, nicht der
+  M-Rückfall. Die Restarbeit ist dann seine eigene Abschlussarbeit (er ist
+  die Station, D46) — und der M-Rückfall erzeugte eine Absurdität: Das
+  Fertigstellen des letzten S-Kindes *erhöbe* den Preis von S auf M. Die
+  Schätzung muss beim Fertigwerden monoton sinken; XS ist der Boden der
+  Skala. Nur der echte Blattknoten ohne Kinder bleibt beim M-Rückfall —
+  dort gibt es keine Information.
+
+**Sichtbare Nebenwirkung, gewollt:** Das invertierte Größen-Badge zeigt an
+solchen Knoten die **Rest**-Schätzung. Der Tooltip sagt ohnehin „für die
+Kostenschätzung mindestens {size} angenommen" — die Aussage bleibt wahr.
+Größen-Konflikt (D62) und Falt-Voreinstellung (D44) arbeiten nur mit
+angegebenen Größen und bleiben unberührt.
+
+**Nachgemessen:** 457 Tests, davon 7 neue in `tests/assumed.test.js`
+(darunter die Monotonie und die Zusicherung, dass eine ANGEGEBENE Größe
+trotz erledigter Kinder stehen bleibt). Gegenproben per Mutation:
+Done-Filter entfernt → genau die drei danach benannten Zusicherungen
+fallen; XS-Boden auf M zurück → genau die drei XS-Tests; „Gruppe fertig"
+entfernt → genau die zwei disjunktiven. Der mitgelieferte Plan ist
+unberührt (sein einziger größenloser Knoten ist ein Blatt): weiterhin
+0 Warnungen, 137 Pfadknoten, 57 Stationen, exakt gerechnet.

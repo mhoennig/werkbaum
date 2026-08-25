@@ -115,6 +115,60 @@ describe('assumedSize — Schätzung aus den Teilpaketen (D66)', () => {
   });
 });
 
+describe('die Schätzung zählt nur offene Kinder (D70)', () => {
+  it('erledigte Kinder fallen heraus — geschätzt wird der Rest', () => {
+    const [n] = roots(`[ ] Paket
+  - [x] Großteil (L)
+  - [ ] Rest (S)`);
+    expect(assumedSize(n)).toBe('S');
+  });
+
+  it('die Stufe ab drei zählt nur die offenen', () => {
+    const [n] = roots(`[ ] Paket
+  - [x] A (S)
+  - [x] B (S)
+  - [ ] C (S)
+  - [ ] D (S)`);
+    expect(assumedSize(n)).toBe('S');
+  });
+
+  it('alles Benannte erledigt: XS — der eigene Rest, nicht der M-Rückfall', () => {
+    /* Mit M-Rückfall ERHÖHTE das Fertigstellen des letzten Kindes den
+       Preis von S auf M — die Schätzung muss monoton sinken. */
+    const [n] = roots(`[ ] Paket
+  - [x] A (S)
+  - [x] B (S)`);
+    expect(assumedSize(n)).toBe('XS');
+    expect(ownCost(n)).toBe(1);
+  });
+
+  it('ein echtes Blatt ohne Kinder bleibt beim M-Rückfall', () => {
+    expect(assumedSize(roots('[ ] Blatt')[0])).toBe('M');
+  });
+
+  it('disjunktiv: eine erledigte realisierte Alternative stellt die Gruppe fertig', () => {
+    const [n] = roots(`[ ] Paket
+  | [x] Gemacht (S)
+  | [ ] Teuer (M)`);
+    expect(assumedSize(n)).toBe('XS');
+  });
+
+  it('disjunktiv: erledigt neben angefangen — die Gruppe trägt nichts mehr bei', () => {
+    /* Der Pfad wählte unter den realisierten die erledigte (Kosten 0, D61) —
+       die Schätzung folgt derselben Wahl. */
+    const [n] = roots(`[ ] Paket
+  | [x] Fertig (L)
+  | [~] Angefangen (S)`);
+    expect(assumedSize(n)).toBe('XS');
+  });
+
+  it('eine ANGEGEBENE Größe bleibt trotz erledigter Kinder stehen (D69)', () => {
+    const [n] = roots(`[ ] Paket (L)
+  - [x] Großteil (L)`);
+    expect(assumedSize(n)).toBe('L');
+  });
+});
+
 describe('ownCost und Pfad rechnen mit der Schätzung', () => {
   it('ownCost eines größenlosen Elternknotens folgt der Schätzung', () => {
     const [n] = roots(`[ ] Eltern

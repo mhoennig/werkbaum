@@ -648,6 +648,16 @@ werden die für die günstigste Realisierung **nötigen** Knoten:
   Größe zählen hier mit, ihre Größe wird nach derselben Regel **rekursiv**
   mitgeschätzt — geschätzt wird ohnehin. Ein Knoten ohne Größe und ohne
   zählende Kinder wird weiterhin als `M` gewertet.
+  **Erledigte Kinder zählen nicht mit** (D70): Die Schätzung ist eine
+  Kostenannahme des Werkzeugs, keine Autoren-Aussage — anders als eine
+  angegebene Größe (die bleibt, wie sie geschrieben ist) schätzt sie die
+  noch **offene** Arbeit. Kinder mit `[x]`/`[^]` (intrinsisch) fallen
+  heraus wie verworfene; in einer disjunktiven Gruppe stellt eine
+  **erledigte** realisierte Alternative die Gruppe fertig — sie trägt
+  nichts mehr bei. Gibt es zählende Kinder, sind aber **alle** erledigt,
+  wird **`XS`** angenommen: Die Restarbeit ist dann die eigene des
+  Elternknotens (er ist die Station, oben) — ein `M`-Rückfall hieße, dass
+  das Fertigstellen des letzten Kindes den Preis *erhöht*.
 
 **Mit Abhängigkeiten (§1) zählt die Dependency Closure.** Jeder nötige Knoten
 zieht seine `:#…`-Ziele samt deren Realisierung in die nötige Menge; gemeinsam

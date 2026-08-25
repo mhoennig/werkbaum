@@ -120,6 +120,10 @@ One node per line. Everything except the label is optional.
   the conflict check below, except unsized children count too — estimated
   recursively); three or more children at that largest size raise it by one
   step, capped at `XXL`. Without counting children it stays `M`.
+  The estimate prices the **remaining** work: done children (`[x]`/`[^]`)
+  drop out, and a done realized alternative completes its `|`/`=` group.
+  When counting children exist but all are done, `XS` is assumed — the rest
+  is the parent's own wrap-up. A stated size is never adjusted this way.
 - **Size conflict check:** a given size must fit the direct children. For
   this one check each size is read as a range (lower bounds double, XXL is
   open-ended):

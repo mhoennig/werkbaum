@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-25
 
+- The estimated size of an unsized node now prices the remaining work — done sub-packages drop out, and a subtree with everything named done counts as XS
 - The fold chip is solid white with an ink glyph now — the translucent box vanished on the pastel node colours
 - A size prices its whole subtree on the cheapest path — sub-packages no longer add on top, so a carefully decomposed `(S)` beats a coarse `(L)`
 - The size is now the last free-standing `(L)`-style token of the line — earlier ones stay in the title, and `"(L)"` or `((L))` mention a size literally

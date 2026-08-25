@@ -99,19 +99,38 @@ export function assumedSize(n){
   if(n.size) return n.size;
   const memo = ASSUMED.get(n);
   if(memo) return memo;
-  const kids = n.children.filter(k =>
+  const counting = n.children.filter(k =>
     !k.optional && (!k.status || k.status.key !== 'verworfen'));
+  /* Erledigte Kinder zählen nicht mit (D70): Die Schätzung ist eine
+     Kostenannahme, keine Autoren-Aussage — sie schätzt die noch OFFENE
+     Arbeit (D46). Eine ANGEGEBENE Größe bleibt dagegen, wie sie geschrieben
+     ist (D69). In einer disjunktiven Gruppe stellt eine erledigte
+     realisierte Alternative die Gruppe fertig — genau die würde der Pfad
+     wählen (Kosten 0), die Gruppe trägt also nichts mehr bei. */
+  let kids;
+  if(counting.length && gateOf(counting) !== 'and'){
+    const pool = chosenPool(counting);
+    kids = pool.some(isDone) ? [] : pool;
+  } else {
+    kids = counting.filter(k => !isDone(k));
+  }
   let size = 'M';
   if(kids.length){
-    if(gateOf(kids) !== 'and'){
+    if(gateOf(counting) !== 'and'){
       /* nur eine Alternative wird realisiert — die kleinste ist der Boden */
-      size = SIZE_BY_RANK[Math.min(...chosenPool(kids).map(k => SIZE_RANK[assumedSize(k)]))];
+      size = SIZE_BY_RANK[Math.min(...kids.map(k => SIZE_RANK[assumedSize(k)]))];
     } else {
       const ranks = kids.map(k => SIZE_RANK[assumedSize(k)]);
       const max = Math.max(...ranks);
       const atMax = ranks.filter(r => r === max).length;
       size = SIZE_BY_RANK[Math.min(max + (atMax >= 3 ? 1 : 0), SIZE_RANK.XXL)];
     }
+  } else if(counting.length){
+    /* Alles Benannte ist erledigt, der Knoten selbst nicht: Der Rest ist
+       seine eigene Abschlussarbeit (er ist die Station, D46) — XS statt des
+       M-Rückfalls, sonst ERHÖHTE das Fertigstellen des letzten Kindes den
+       Preis. Nur der echte Blattknoten ohne Kinder bleibt bei M. */
+    size = 'XS';
   }
   ASSUMED.set(n, size);
   return size;
