@@ -5339,3 +5339,53 @@ Input ist geleert (dieselbe Datei bleibt erneut wählbar); Speichern liefert
 `tests/localfile.test.js`. Werkzeuggrenze wie in D25/D53: Der echte
 Dateidialog und der echte Download lassen sich nicht automatisiert auslösen —
 geprüft ist alles bis an diese Kante.
+
+**Nachtrag — Stufe 2: die File System Access API macht aus „Speichern unter"
+ein „Speichern".** Wo die Picker existieren (`showOpenFilePicker` als
+Feature-Detection — Chromium; Firefox und Safari haben sie bewusst nicht),
+ändert sich hinter denselben zwei Menü-Einträgen das Verhalten:
+
+- **Öffnen** liefert ein `FileSystemFileHandle`. Damit gibt es die
+  Datei-Identität, die Stufe 1 nicht hatte: `isSameEntry` prüft gegen die
+  gemerkten Handles, **dieselbe Datei öffnet wieder in dasselbe Dokument**
+  (aktualisiert den Text), eine andere Datei gleichen Namens bleibt ein
+  eigenes. `adoptFile()` trägt beide Wege — der Stufe-1-Input ruft es ohne
+  Handle, dann entsteht immer ein neues Dokument wie bisher.
+- **Speichern** schreibt mit gemerktem Handle **in dieselbe Datei zurück**
+  (`createWritable`), ohne Dialog. Ohne Handle fragt `showSaveFilePicker`
+  (mit `saveFileName()` als Vorschlag) und merkt sich das Ergebnis — der
+  Komfort greift ab dem zweiten Speichern. Ein **Abbruch** des Dialogs tut
+  nichts — bewusst auch kein Download hinterher: Wer abbricht, will nicht
+  woandershin speichern. Der Menü-Eintrag trägt den Dateinamen des Handles
+  als Tooltip (Dateinamen sind Daten, kein i18n).
+- **Handles überleben den Neustart in IndexedDB** — localStorage kann sie
+  nicht halten (nicht JSON-serialisierbar), IndexedDB kann es (structured
+  clone). Beim Start werden sie zurückgeholt; verwaiste Einträge (Dokument
+  gelöscht) und Fremdes ohne `createWritable` räumen sich dabei weg. Nach dem
+  Neustart steht die Berechtigung auf `prompt` — der Browser fragt beim
+  ersten Speichern einmal nach (der Menü-Klick ist die nötige Nutzergeste);
+  verweigert er, entscheidet der Dialog neu. **Alles daran ist Komfort, keine
+  Pflicht**: Jeder IndexedDB-Fehler wird geschluckt, Speichern funktioniert
+  dann eben wieder über den Dialog.
+- `deleteDoc()` nimmt das Handle mit (Map und IndexedDB) — wie die Stände
+  (D54): Mit dem Dokument geht, was an ihm hängt.
+
+**Kein Strg+S** — erwogen und zurückgestellt: Der Browser-Default (Seite
+speichern) müsste abgefangen werden, und ohne Handle öffnete die Geste
+unvermittelt einen Dialog; wenn, dann als eigene Entscheidung mit
+Legenden-Zeile.
+
+**Nachgemessen** im Browser (echtes Chromium, `hasFsAccess === true`; die
+Picker gestubbt — den nativen Dialog kann die Automatisierung nicht bedienen,
+die Logik dahinter schon; Werkzeuggrenze wie D52): Öffnen legt das Dokument
+mit Handle an, der Speichern-Eintrag trägt den Dateinamen als Tooltip,
+Speichern schreibt in place (**0** Dialog-Aufrufe), dieselbe Datei erneut
+geöffnet aktualisiert **dasselbe** Dokument (Anzahl unverändert, Text auf
+Version 2, Diagramm folgt); ein Dokument ohne Handle bekommt beim ersten
+Speichern den Dialog (`suggestedName` korrekt) und beim zweiten nicht mehr
+(1 Aufruf, 2 Schreibvorgänge); Abbruch bzw. verweigerte Berechtigung
+schreiben nichts und laden nichts herunter. **Nicht messbar** blieb die
+IndexedDB-Rundreise über einen Neustart: Stub-Handles überleben den
+Structured Clone nicht (`DataCloneError`, planmäßig geschluckt) — echte
+Handles sind gerade dafür klonbar; dieser eine Pfad ist Code-Review statt
+Messung. 480 Tests.

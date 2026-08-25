@@ -22,3 +22,9 @@ export function saveFileName(docName){
   if(/\.(werkbaum|txt)$/i.test(base)) return base;
   return base + '.werkbaum';
 }
+
+/* Dialog-Typen der File System Access API (Stufe 2): derselbe Filter wie
+   FILE_ACCEPT, in der Form von showOpenFilePicker/showSaveFilePicker. */
+export const FILE_TYPES = [
+  {description: 'Werkbaum', accept: {'text/plain': ['.werkbaum', '.txt']}},
+];

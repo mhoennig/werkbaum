@@ -7,7 +7,7 @@ import { padUrls } from './remote.js';
 import { depFragment, collectIds, matchIds, depIdAt, idLine } from './autocomplete.js';
 import { LS_SNAPS, SNAP_EVERY, parseSnaps, addSnapshot, persistSnaps, snapLabel }
   from './snapshots.js';
-import { FILE_ACCEPT, saveFileName } from './localfile.js';
+import { FILE_ACCEPT, FILE_TYPES, saveFileName } from './localfile.js';
 /* Neuigkeiten (D58): die git-Historie, zur BAUZEIT eingelesen (Vite-Plugin in
    vite.config.js). Zur Laufzeit gibt es kein git — und keinen Server, der
    nachliefern könnte (D11/D19). Leer, wo git nicht erreichbar war. */
@@ -3499,7 +3499,14 @@ function restoreDoc(){
   persistDocs();
   closeDocMenu();
 }
-function openDocMenu(){ renderDocMenu(); updateRestoreBtn(); docMenu.hidden = false; docTrigger.setAttribute('aria-expanded', 'true'); }
+function openDocMenu(){
+  renderDocMenu(); updateRestoreBtn();
+  /* Wohin „Als Datei speichern" schreiben würde: der Dateiname des gemerkten
+     Handles als Tooltip (D72, Stufe 2) — Dateinamen sind Daten, kein i18n. */
+  const h = fileHandles.get(activeId);
+  document.getElementById('docSaveFile').title = h ? h.name : '';
+  docMenu.hidden = false; docTrigger.setAttribute('aria-expanded', 'true');
+}
 function closeDocMenu(){ renamingId = null; renameIsNew = false; docMenu.hidden = true; docTrigger.setAttribute('aria-expanded', 'false'); }
 function toggleDocMenu(){ docMenu.hidden ? openDocMenu() : closeDocMenu(); }
 /* Beim Wechseln/Anlegen/Löschen zuerst den aktuellen Editortext ins aktive
@@ -3846,6 +3853,7 @@ function deleteDoc(){
   if(!d) return;
   if(!window.confirm(t('docDeleteConfirm', {name: d.name}))) return;
   if(padSource && padSource.id === d.id) stopPad();   /* danach gibt es nichts mehr zu holen (D31) */
+  if(fileHandles.has(d.id)){ fileHandles.delete(d.id); idbDeleteHandle(d.id); }   /* mit dem Dokument geht sein Datei-Handle (D72) */
   docs = docs.filter(x => x.id !== d.id);
   if(snaps[d.id]){ delete snaps[d.id]; persistSnaps(snaps, localStorage); }   /* mit dem Dokument gehen seine Stände (D54) */
   if(!docs.length) docs = [{ id: EXAMPLE_ID, name: EXAMPLE_NAME, text: INITIAL }];
@@ -3873,23 +3881,138 @@ fileOpenInput.addEventListener('change', async () => {
   if(!f) return;
   let text;
   try{ text = await f.text(); }catch(_){ return; }
+  adoptFile(null, f.name, text);
+});
+/* ---------- Stufe 2 (D72-Nachtrag): File System Access API ----------
+   Wo die Picker existieren (Chromium), liefert das Öffnen ein
+   FileSystemFileHandle: Speichern schreibt in DIESELBE Datei zurück, und
+   dieselbe Datei öffnet wieder in dasselbe Dokument (isSameEntry) — die
+   Datei-Identität, die Stufe 1 nicht hatte. Firefox/Safari behalten den
+   Stufe-1-Weg; die Bedienung ist in beiden Fällen dieselbe. */
+const hasFsAccess = typeof window.showOpenFilePicker === 'function';
+const fileHandles = new Map();   /* docId → FileSystemFileHandle */
+/* Handles überleben den Neustart nur in IndexedDB (localStorage kann sie
+   nicht halten — sie sind nicht JSON-serialisierbar). Alles hier ist Komfort,
+   keine Pflicht: Scheitert IndexedDB, funktioniert Speichern weiter über den
+   Dialog — deshalb schlucken die Helfer ihre Fehler. */
+const IDB_STORE = 'fileHandles';
+function idbOpen(){
+  return new Promise((res, rej) => {
+    const rq = indexedDB.open('werkbaum', 1);
+    rq.onupgradeneeded = () => rq.result.createObjectStore(IDB_STORE);
+    rq.onsuccess = () => res(rq.result);
+    rq.onerror = () => rej(rq.error);
+  });
+}
+async function idbHandleOp(mode, fn){
+  try{
+    const db = await idbOpen();
+    const out = await new Promise((res, rej) => {
+      const tx = db.transaction(IDB_STORE, mode);
+      const r = fn(tx.objectStore(IDB_STORE));
+      tx.oncomplete = () => res(r);
+      tx.onerror = () => rej(tx.error);
+    });
+    db.close();
+    return out;
+  }catch(_){ return null; }
+}
+function idbPutHandle(docId, handle){ return idbHandleOp('readwrite', s => { s.put(handle, docId); }); }
+function idbDeleteHandle(docId){ return idbHandleOp('readwrite', s => { s.delete(docId); }); }
+/* Beim Start die gemerkten Handles zurückholen — nur für Dokumente, die es
+   noch gibt (verwaiste Einträge räumen sich dabei weg), und nur, was sich wie
+   ein Handle verhält (defensiv gegen fremden Speicherinhalt). */
+async function idbLoadHandles(){
+  const pair = await idbHandleOp('readonly', s => [s.getAllKeys(), s.getAll()]);
+  if(!pair) return;
+  const keys = pair[0].result || [], vals = pair[1].result || [];
+  keys.forEach((k, i) => {
+    const h = vals[i];
+    if(h && typeof h.createWritable === 'function' && docs.some(d => d.id === k)){
+      fileHandles.set(k, h);
+    } else {
+      idbDeleteHandle(k);
+    }
+  });
+}
+/* Text übernehmen: dieselbe Datei (Handle-Identität) aktualisiert ihr
+   Dokument, sonst entsteht ein neues — dieselbe Zweiteilung wie adoptRemote(). */
+async function adoptFile(handle, name, text){
   flushActive();
-  const d = { id: uid(), name: uniqueName(f.name), text };
-  docs.push(d);
-  activeId = d.id;
+  let targetId = null;
+  if(handle){
+    for(const [id, h] of fileHandles){
+      try{ if(await handle.isSameEntry(h) && docs.some(d => d.id === id)){ targetId = id; break; } }
+      catch(_){}
+    }
+  }
+  if(targetId){
+    docs.find(d => d.id === targetId).text = text;
+    activeId = targetId;
+  } else {
+    const d = { id: uid(), name: uniqueName(name), text };
+    docs.push(d);
+    activeId = d.id;
+  }
+  if(handle){ fileHandles.set(activeId, handle); idbPutHandle(activeId, handle); }
   foldOverrides.clear();
   loadActiveIntoEditor();
   persistDocs();
   closeDocMenu();
-});
-function openLocalFile(){ fileOpenInput.click(); }
-/* Speichern über den vorhandenen Blob-Download (saveBlob, Grafikexport):
-   UTF-8, LF — das Textfeld normalisiert Zeilenenden ohnehin auf \n (D24). */
-function saveLocalFile(){
+}
+async function openWithPicker(){
+  let handle;
+  try{ [handle] = await window.showOpenFilePicker({types: FILE_TYPES}); }
+  catch(_){ return; }   /* Abbruch des Dialogs */
+  let text;
+  try{ text = await (await handle.getFile()).text(); }catch(_){ return; }
+  await adoptFile(handle, handle.name, text);
+}
+function openLocalFile(){
+  if(hasFsAccess) openWithPicker();
+  else fileOpenInput.click();
+}
+async function writeToHandle(handle, text){
+  const w = await handle.createWritable();
+  await w.write(text);
+  await w.close();
+}
+/* In das gemerkte Handle zurückschreiben. Nach einem Neustart steht die
+   Berechtigung auf 'prompt' — requestPermission fragt einmal nach (der
+   Menü-Klick ist die nötige Nutzergeste). false heißt: kein Handle oder
+   nicht (mehr) beschreibbar — dann entscheidet der Dialog neu. */
+async function saveToKnownFile(d){
+  const h = fileHandles.get(d.id);
+  if(!h) return false;
+  try{
+    let perm = await h.queryPermission({mode: 'readwrite'});
+    if(perm === 'prompt') perm = await h.requestPermission({mode: 'readwrite'});
+    if(perm !== 'granted') return false;
+    await writeToHandle(h, d.text);
+    return true;
+  }catch(_){ return false; }
+}
+async function saveWithPicker(d){
+  let handle;
+  try{
+    handle = await window.showSaveFilePicker({suggestedName: saveFileName(d.name), types: FILE_TYPES});
+  }catch(_){ return; }   /* Abbruch: bewusst kein Download hinterher */
+  try{ await writeToHandle(handle, d.text); }catch(_){ return; }
+  fileHandles.set(d.id, handle);
+  idbPutHandle(d.id, handle);
+}
+/* Speichern: mit Handle in dieselbe Datei, sonst Dialog (Stufe 2) bzw.
+   Blob-Download (Stufe 1). UTF-8, LF — das Textfeld normalisiert Zeilenenden
+   ohnehin auf \n (D24). */
+async function saveLocalFile(){
   flushActive();
   const d = activeDoc();
   if(!d) return;
-  saveBlob(new Blob([d.text], {type:'text/plain;charset=utf-8'}), saveFileName(d.name));
+  if(hasFsAccess){
+    if(!(await saveToKnownFile(d))) await saveWithPicker(d);
+  } else {
+    saveBlob(new Blob([d.text], {type:'text/plain;charset=utf-8'}), saveFileName(d.name));
+  }
   closeDocMenu();
 }
 /* Dokumente laden + aktiven Text in den Editor holen (nach applyLang). */
@@ -4444,6 +4567,7 @@ let startLang = 'de';
 try{ startLang = localStorage.getItem('werkbaum-lang') || detectLang(); }catch(_){ startLang = detectLang(); }
 applyLang(I18N[startLang] ? startLang : 'de');   /* setzt Texte + rendert */
 initDocs();      /* Dokumente laden + aktiven Text in den Editor (nach Sprache) */
+if(hasFsAccess) idbLoadHandles();   /* gemerkte Datei-Handles zurückholen (D72, Stufe 2) */
 applyMobile();   /* Mobil-Verhalten (nach Sprache/Restore) anwenden */
 loadRemoteSource();    /* ?sourceUrl= / ?etherpad= nachladen (asynchron, D23/D31) */
 

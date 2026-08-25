@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { saveFileName, FILE_ACCEPT } from '../src/localfile.js';
+import { saveFileName, FILE_ACCEPT, FILE_TYPES } from '../src/localfile.js';
 
 /* Öffnen/Speichern lokaler Dateien (D72): der Dateiname beim Speichern wird
    aus dem Dokumentnamen abgeleitet — Endung .werkbaum (D24), verbotene
@@ -47,5 +47,13 @@ describe('FILE_ACCEPT', () => {
   it('nennt die Endung der Notation und lässt .txt zu (D24)', () => {
     expect(FILE_ACCEPT).toContain('.werkbaum');
     expect(FILE_ACCEPT).toContain('.txt');
+  });
+});
+
+describe('FILE_TYPES (Stufe 2, Picker-Filter)', () => {
+  it('führt dieselben Endungen wie FILE_ACCEPT', () => {
+    const exts = FILE_TYPES[0].accept['text/plain'];
+    expect(exts).toContain('.werkbaum');
+    expect(exts).toContain('.txt');
   });
 });

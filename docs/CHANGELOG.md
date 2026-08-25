@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-25
 
+- In Chromium browsers, saving writes back to the opened file, and the same file reopens into the same document
 - Open a local `.werkbaum` file and save the document back as a file, from the document menu
 - An AI integration recorded as an idea in the plan — edit the tree in a dialogue, with your own API key and `llms.md` as the model's guide
 - A warning flags the bottleneck when one `@name` carries more than half of the open work on the cheapest path — their tag pills turn amber on the open nodes

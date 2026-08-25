@@ -87,6 +87,7 @@
     - [^] #ed.snaps: Earlier states of a document, every ten minutes (S)  %% only when something changed
       - [^] #ed.snaps.manual: Save a state by hand, before a larger change (XS)  %% ten minutes is the wrong beat for that moment
     - [x] #ed.files: Open and save .werkbaum files (S)
+      - [x] #ed.files.inplace: Saving writes back into the opened file (S)  %% File System Access, Chromium
     + [^] #ed.fresh: Show what is new since your last visit (S)
       - [^] #ed.fresh.news: A star in the header, with the last few days (S)  %% see D58
     + [?] #ed.percolor: A pastel colour per person (S)
@@ -607,6 +608,11 @@
   Open a .werkbaum file and save one, from the document menu. The leading data
   format was the one thing that could not leave the browser as a file, while
   the diagram always could.
+
+#ed.files.inplace
+  Where the File System Access API exists (Chromium), opening keeps a file
+  handle: saving writes back into the same file, and the same file reopens
+  into the same document. Firefox and Safari keep the plain download.
 
 #ed.fresh
   For documents that come from outside, nodes that went to production since
