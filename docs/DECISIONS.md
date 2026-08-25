@@ -5098,3 +5098,65 @@ selben Zug (Schritt-3-Regel, Größen-Abschnitt, Zitier-Faustregel).
 per Mutation: erster statt letzter Treffer → genau der Letztes-gewinnt-Test
 fällt; Anker entfernt → genau die zwei Alleinstehend-/Zitier-Tests. Alle
 Snapshots (kanonisches Beispiel §10) unverändert.
+
+## D69 — Die Größe bepreist den ganzen Teilbaum: Kinder kommen nicht obendrauf
+Gemeldet am eigenen Beispiel: Eine `|`-Gruppe mit `Manuell mit Downtime (S)`
+(zerlegt in XS + S + eine Zugabe) verlor gegen `Failover (L)` — der Pfad
+rechnete S(2) + XS(1) + S(2) = 5 gegen L(4). Der Einwand des Nutzers trifft
+das Modell im Kern: **„Manuell mit Downtime" ist mit (S) bepreist — dann ist
+egal, wie teuer die Summe der Teilpakete ist.** Ob die Zerlegung in die
+Größe passt, prüft seit D62 der Größen-Konflikt; die Pfadrechnung hat die
+Bewertung nicht anzuzweifeln. Das alte Modell (D18: „eigene Größe plus
+Summe/Minimum der Kinder") zählte doppelt und bestrafte damit systematisch
+genau die Pläne, die sorgfältig zerlegen — je ehrlicher die Zerlegung, desto
+teurer sah das Paket aus.
+
+**Neue Regel: Der Preis eines Knotens ist seine Größe.** Angegeben oder —
+seit D66 — aus den Teilpaketen geschätzt; die Schätzung ist dieselbe Sorte
+Gesamtaussage und übernimmt die Rolle nahtlos. Erledigtes bleibt 0 (D46).
+`cheapestCost()` kollabiert damit auf `ownCost()`: Die Rekursion über die
+Kinder entfällt, die Aggregation für größenlose Knoten trägt allein die
+D66-Schätzregel. Die Wahl in einer Alternativgruppe vergleicht schlicht die
+Größen der Alternativen.
+
+**Die Bewertung gilt auch, wenn die Kinder sie sprengen.** Vier `(S)` unter
+einem `(S)` sind ein `sizeConflict` — der Marker zeigt es, aber der Knoten
+bleibt bewertet, wie er bewertet wurde (ausdrückliche Nutzer-Entscheidung:
+„der übergeordnete Knoten bleibt dennoch S"). Die Alternative — die Kinder
+könnten den Preis anheben (max-Variante) — war vorgeschlagen und ist damit
+verworfen: Sie hätte die Bewertung des Autors stillschweigend überstimmt,
+und für den Widerspruch gibt es bereits den lauten Kanal.
+
+**Das Vereinigungs-Maß der Closure-Suche (D42) zieht mit.** Die Suche über
+die gekoppelten Gruppen verglich Belegungen über die Summe der Knoten-Preise
+der nötigen Menge — mit Teilbaum-Bepreisung zählte ein zerlegtes
+Abhängigkeits-Ziel dann mehrfach (Eltern plus Kinder), ein grobes nur
+einmal: dieselbe Zerlegungs-Strafe, nur im Suchmaß. Jeder nötige Knoten
+zählt jetzt nur mit dem, was seine Größe **über die nötigen Teilpakete
+hinaus** behauptet (nie negativ); die Summe dieser Margen bepreist einen
+vollständig zerlegten Teilbaum mit seiner Spitzengröße, gemeinsam
+Gebrauchtes zählt über die Mengen-Vereinigung weiterhin einmal. Benannte
+Grenze: Wo Kinder ihre Elterngröße im Rangraum übersteigen, liegt das
+Suchmaß über dem Preis der lokalen Wahl — die beiden Maße sind dann nicht
+identisch; das betrifft genau die Teilbäume, die der Größen-Konflikt ohnehin
+anmahnt oder die eng bepreist sind, und die lokale Wahl (der Regelfall)
+folgt strikt der Nutzer-Regel.
+
+**Benannter Verlust:** Erledigte Teilpakete unter einem offenen Knoten
+senken dessen Preis nicht mehr (kein Kinder-Summieren, keine Bruchteile —
+D46 lehnte anteilige Restkosten schon ab). Für die Wahl trägt das kaum:
+Sobald an einer Alternative selbst gearbeitet ist, entscheidet ohnehin
+`chosenPool` (D61); Stationen und Markierung behalten ihre Knoten-Genauigkeit
+unverändert.
+
+**Nachgemessen:** Der gemeldete Fall wählt jetzt „Manuell mit Downtime"
+(S=2 gegen L=4). Der mitgelieferte Werkbaum-Plan wählt unter altem und neuem
+Modell **identisch** (137 Pfadknoten, 57 Stationen, gleiche Menge — per
+git-stash-Vergleich gemessen, nicht angenommen). 450 Tests, davon 5 neue in
+`tests/pricing.test.js`; drei Alt-Tests, die die Summen-Semantik festhielten,
+sind auf die neue Regel umgeschrieben. Gegenproben per Mutation: alte
+Rekursion zurückgebaut → genau die drei danach benannten Zusicherungen
+fallen; Vereinigungs-Maß auf schlichte Summe zurück → genau der eine
+Marginal-Test (dessen erste Fassung nicht unterschied, weil Wurzeln immer
+nötig sind — der Testbaum musste die Ziele unter einen unangetasteten
+`+`-Zweig legen).

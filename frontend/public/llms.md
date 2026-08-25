@@ -111,6 +111,10 @@ One node per line. Everything except the label is optional.
   label. `"(L)"` and `((L))` mention a size literally (quoting convention).
 - From `(M)` upward a node **should be decomposed further**; a node ≥ M
   without children gets a placeholder hint in the diagram.
+- **A size prices its whole subtree.** For the cheapest path, the cost of a
+  node is its own stated size — sub-packages are **not** added on top; the
+  conflict check below guards whether they fit. A done node (`[x]`/`[^]`)
+  costs 0.
 - For cost estimation a missing size is **estimated from the sub-packages**:
   at least the largest size among the counting children (same children as
   the conflict check below, except unsized children count too — estimated

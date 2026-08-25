@@ -48,9 +48,11 @@ describe('Günstigster Pfad — unangetastete Zugaben sind nicht nötig', () => 
     expect(cheapLabels(BAUM)).toEqual(['Pflicht', 'Wurzel']);
   });
 
-  it('rechnet die Zugabe nicht in die Kosten des Elternknotens', () => {
-    /* Wurzel (S=2) + Pflicht (S=2) = 4; mit der XXL-Zugabe wären es 10. */
-    expect(cheapestCost(roots(BAUM)[0])).toBe(4);
+  it('die bewertete Wurzel bepreist ihren Teilbaum — die Zugabe erst recht nicht', () => {
+    /* Seit D69 ist der Preis die eigene Größe: Wurzel (S) = 2, unabhängig
+       von Pflicht und XXL-Zugabe. Dass Zugaben auch die GESCHÄTZTE Größe
+       eines größenlosen Knotens nicht erhöhen, sichern die D66-Tests. */
+    expect(cheapestCost(roots(BAUM)[0])).toBe(2);
   });
 
   it('vergleicht Alternativen ohne deren Zugaben', () => {
@@ -105,9 +107,12 @@ describe('Günstigster Pfad — an einer angefangenen Zugabe wird gearbeitet', (
       .toEqual(['Teil', 'Wurzel', 'Zugabe']);
   });
 
-  it('rechnet sie damit auch in die Kosten des Elternknotens', () => {
-    /* Wurzel (S=2) + Zugabe (S=2) = 4; unangetastet wären es 2. */
-    expect(cheapestCost(roots(`[ ] Wurzel (S)\n  + [~] Zugabe (S)`)[0])).toBe(4);
+  it('die angefangene Zugabe behält ihren eigenen Preis auf dem Pfad', () => {
+    /* Seit D69 bepreist die Wurzel nur sich selbst (S = 2); die angefangene
+       Zugabe liegt mit ihrem eigenen Preis daneben auf dem Pfad. */
+    const [wurzel] = roots(`[ ] Wurzel (S)\n  + [~] Zugabe (S)`);
+    expect(cheapestCost(wurzel)).toBe(2);
+    expect(cheapestCost(wurzel.children[0])).toBe(2);
   });
 
   it('macht sie zur Station statt des Elternknotens', () => {

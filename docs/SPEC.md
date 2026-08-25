@@ -598,18 +598,28 @@ wird die **noch offene** Arbeit — der Pfad beantwortet „was ist als Nächste
 am günstigsten?", nicht „was hätte der Plan von vorn gekostet?". Ermittelt
 werden die für die günstigste Realisierung **nötigen** Knoten:
 
+- **Die Größe bepreist den ganzen Teilbaum.** Der Preis eines Knotens ist
+  seine **angegebene Größe** (§5) — die Teilpakete kommen **nicht** noch
+  einmal obendrauf: Wer ein Paket mit `(S)` bewertet hat, hat den Teilbaum
+  bewertet. Ob die Zerlegung in die Größe passt, prüft der Größen-Konflikt
+  (§5) — die Pfadrechnung zweifelt die Bewertung nicht an. Fehlt die Größe,
+  vertritt die Schätzung aus den Teilpaketen sie (unten). Siehe D69 (bis
+  dahin galt: eigene Größe **plus** Summe/Minimum der Kinder — das
+  bestrafte gerade die sorgfältig zerlegten Pakete).
 - **Erledigtes kostet nichts mehr:** Ein Knoten mit `[x]` oder `[^]` (§4) geht
   mit **0** in die Rechnung, unabhängig von seiner Größe. Angefangenes (`[~]`,
   `[/]`) zählt dagegen **voll** — die Arbeit ist noch offen. Maßgeblich ist der
   **intrinsische** Status: Investiert ist investiert, auch wenn Abhängigkeiten
-  den Knoten effektiv zurückhalten (§4). Abgezogen werden nur die **eigenen**
-  Kosten des Knotens, nicht die seines Teilbaums. Folge in Alternativgruppen:
-  Eine bereits realisierte Alternative gewinnt, auch wenn eine unangetastete
-  nominell billiger wäre — die Wahl ist getroffen und bezahlt. Siehe D46.
+  den Knoten effektiv zurückhalten (§4). Offene Teilpakete unter einem
+  erledigten Knoten bleiben auf dem Pfad und behalten ihre Stationen — die
+  Kostenfrage stellt sich dort nicht mehr, die Wahl ist realisiert. Folge in
+  Alternativgruppen: Eine bereits realisierte Alternative gewinnt, auch wenn
+  eine unangetastete nominell billiger wäre — die Wahl ist getroffen und
+  bezahlt. Siehe D46.
 - **all of:** alle Kinder sind nötig.
-- **any of:** nur die **günstigste** Alternative ist nötig. „Günstig" =
-  kleinste rekursive Kosten (eigene T-Shirt-Größe plus — je Gate — Summe bzw.
-  Minimum der Kinder). Bei Gleichstand gewinnt die **erste** Alternative.
+- **any of:** nur die **günstigste** Alternative ist nötig. „Günstig" ist die
+  **Größe der Alternative selbst** — angegeben oder geschätzt (oben/unten).
+  Bei Gleichstand gewinnt die **erste** Alternative.
   **Ist in der Gruppe etwas realisiert** (§3: `[~]`, `[/]`, `[x]`, `[^]`), ist
   die Wahl damit getroffen — gewählt wird nur noch unter den realisierten
   Alternativen, auch wenn eine unangetastete nominell billiger wäre. Sind es
@@ -617,10 +627,10 @@ werden die für die günstigste Realisierung **nötigen** Knoten:
   `|`-Gruppe zulässig), entscheidet unter ihnen wieder die Kostenregel.
 - **Optionale Knoten (`+`, §3) sind nur nötig, solange an ihnen gearbeitet
   wird** — also wenn sie realisiert (§3), aber noch nicht erledigt sind:
-  `[~]` und `[/]`. Sonst zählen sie weder zu den Kosten ihres Elternknotens
-  noch liegen sie auf dem Pfad, und der Teilbaum unter ihnen ebenso wenig.
-  Genau dafür gibt es das Zeichen: Ohne `+` rechnet der günstigste Pfad jede
-  Zugabe ins Minimum ein und überschätzt es. Die Ausnahme hält den umgekehrten
+  `[~]` und `[/]`. Sonst liegen sie nicht auf dem Pfad (der Teilbaum unter
+  ihnen ebenso wenig) und zählen nicht zur Größen-Schätzung (unten).
+  Genau dafür gibt es das Zeichen: Ohne `+` läge jede
+  Zugabe auf dem günstigsten Pfad. Die Ausnahme hält den umgekehrten
   Fehler heraus — eine angefangene Zugabe ist offene Arbeit, und der Pfad
   zeigt die offene Front. **Erledigte Zugaben bleiben draußen:** Dort ist
   nichts mehr zu tun, und was darunter offen blieb, ist mit ihnen zusammen
@@ -654,7 +664,11 @@ Gebrauchtes zählt über die Mengen-Vereinigung nur **einmal**. Regeln:
   bezahlt werden. **Verfahren (D42): erschöpfende Suche** über die
   **gekoppelten** Gruppen (Gruppen, deren Teilbäume Abhängigkeiten enthalten
   oder gebraucht werden); alle übrigen wählen lokal wie bisher, bei
-  Gleichstand die erste. Wird die Suche zu groß, rechnet die Anzeige **gierig
+  Gleichstand die erste. Verglichen werden die Belegungen über die Summe
+  dessen, was jeder nötige Knoten **über seine nötigen Teilpakete hinaus**
+  behauptet (nie negativ) — so bepreist auch die Vereinigung einen Teilbaum
+  mit seiner Größe, statt Zerlegungstiefe zu bestrafen (D69). Wird die Suche
+  zu groß, rechnet die Anzeige **gierig
   und sagt es** — Warnung `cheapApprox`, zeilenlos.
 
 Darstellung per **Inversion**: nicht benötigte Knoten (nicht-gewählte

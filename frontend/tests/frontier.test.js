@@ -65,10 +65,15 @@ describe('Kosten — Erledigtes zählt nicht mehr', () => {
     expect(ownCost(a)).toBe(0);
   });
 
-  it('zieht nur die eigenen Kosten ab, nicht den Teilbaum', () => {
+  it('der erledigte Knoten bepreist 0; sein offenes Kind bleibt auf dem Pfad', () => {
+    /* Seit D69 bepreist die Größe den ganzen Teilbaum — der erledigte
+       Elternknoten kostet nichts mehr, das offene Kind bleibt trotzdem
+       nötig und behält seinen eigenen Preis. */
     const [n] = roots(`[x] Eltern (L)
   - [ ] Kind (S)`);
-    expect(cheapestCost(n)).toBe(cheapestCost(roots('[ ] Kind (S)')[0]));
+    expect(cheapestCost(n)).toBe(0);
+    const set = computeCheapSet([n]);
+    expect(set.has(n.children[0])).toBe(true);
   });
 });
 

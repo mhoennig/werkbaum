@@ -118,15 +118,14 @@ export function assumedSize(n){
 }
 /* fehlende Größe wird geschätzt (assumedSize); Erledigtes kostet nichts mehr */
 export function ownCost(n){ return isDone(n) ? 0 : SIZE_RANK[assumedSize(n)] + 1; }
-export function cheapestCost(n){
-  const kids = pathChildren(n);
-  let c = ownCost(n);
-  if(kids.length){
-    if(gateOf(kids) !== 'and') c += Math.min(...chosenPool(kids).map(cheapestCost));
-    else c += kids.reduce((s, k) => s + cheapestCost(k), 0);
-  }
-  return c;
-}
+/* Die Größe bepreist den GANZEN Teilbaum (SPEC §9, D69): Wer ein Paket mit
+   (S) bewertet hat, hat den Teilbaum bewertet — die Teilpakete kommen nicht
+   noch einmal obendrauf. Ob sie in die Größe passen, prüft der
+   Größen-Konflikt (§5/D62); fehlt die Größe, vertritt die Schätzung sie
+   (assumedSize, D66). Der Preis einer Alternative ist damit schlicht ihr
+   eigener — die frühere Rekursion (eigene Größe plus Summe/Minimum der
+   Kinder) bestrafte gerade die sorgfältig zerlegten Pakete. */
+export function cheapestCost(n){ return ownCost(n); }
 /* ---------- Günstigster Pfad auf der Dependency Closure (SPEC §9, D42) ----
    Mit Abhängigkeiten zählt nicht mehr der gewählte Teilbaum, sondern die
    HÜLLE: Jeder nötige Knoten zieht seine `:#…`-Ziele samt deren Realisierung
@@ -216,7 +215,20 @@ export function computeCheapPlan(roots){
     }
     return set;
   };
-  const costOf = set => { let c = 0; set.forEach(n => c += ownCost(n)); return c; };
+  /* Preis einer Belegung (D69): Jeder nötige Knoten zählt nur mit dem, was
+     seine Größe über die nötigen Teilpakete HINAUS behauptet (nie negativ) —
+     die Summe bepreist einen Teilbaum so mit seiner Größe, statt
+     Zerlegungstiefe zu bestrafen; gemeinsam Gebrauchtes zählt über die
+     Mengen-Vereinigung weiterhin nur einmal. */
+  const costOf = set => {
+    let c = 0;
+    set.forEach(n => {
+      let kids = 0;
+      for(const k of pathChildren(n)) if(set.has(k)) kids += ownCost(k);
+      c += Math.max(0, ownCost(n) - kids);
+    });
+    return c;
+  };
 
   let product = 1;
   for(const grp of coupled){ product *= grp.pool.length; if(product > EXACT_LIMIT) break; }
