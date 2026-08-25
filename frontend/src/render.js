@@ -13,6 +13,9 @@
      collapsedSet,  // optional: eingeklappte Knoten (Faltung, SPEC §9/D38)
      effStatus,     // optional: Map Knoten -> effektiver Status-Key, nur
                     // Diskrepanzen (effectiveStatus() in model.js, D39)
+     overloadTag,   // optional: Person, die mehr als die Hälfte der offenen
+                    // Pfad-Arbeit trägt (overloadedAssignee(), SPEC §9/D71) —
+                    // ihre Pillen an offenen Pfad-Knoten werden warnfarben
    } */
 
 import { gateOf, needsBreakdown, visibleChildren, cheapCls, isDone, assumedSize } from './model.js';
@@ -190,8 +193,13 @@ function nodeHtml(n, extra, opts, fold){
      als zweiten, dürftigeren Tooltip. Kein zweites Attribut mit demselben Text
      — es ist dasselbe, nur unter anderem Namen. */
   const title = ` data-tip="${attr(tip)}"`;
+  /* Zuständigen-Engpass (SPEC §9/D71): Die Pille der überlasteten Person
+     wechselt an OFFENEN Pfad-Knoten auf die Warnfarbe — dort liegt die Last.
+     Nur direkte Tags haben eine Pille; geerbte Zuständigkeit (die in die
+     Rechnung eingeht) hat nichts, das sich färben ließe. */
+  const hot = tag => opts.overloadTag === tag && opts.cheapSet.has(n) && !isDone(n);
   const tagsHtml = n.tags && n.tags.length
-    ? `<span class="tags" aria-hidden="true">${n.tags.map(tag => `<span class="tag">${esc(tag)}</span>`).join('')}</span>`
+    ? `<span class="tags" aria-hidden="true">${n.tags.map(tag => `<span class="tag${hot(tag) ? ' overload' : ''}">${esc(tag)}</span>`).join('')}</span>`
     : '';
   /* Das implizite Größen-Badge macht eine KOSTENANNAHME sichtbar (D18) —
      seit D66 die aus den Teilpaketen geschätzte Größe statt pauschal M. An

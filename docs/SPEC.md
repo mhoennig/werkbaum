@@ -396,6 +396,9 @@ Größe als **Bereich** gelesen (Untergrenzen verdoppeln sich):
 - `@name` mit `name` aus Unicode-Buchstaben, Ziffern, `.`, `_`, `-`.
 - Mehrere Tags pro Zeile möglich, Position im Text egal.
 - Anzeige: helle Pillen unten rechts an der Knoten-Ecke.
+- Für den **Zuständigen-Engpass** (§9) erbt ein Knoten ohne Tags die Tags des
+  nächsten Vorfahren mit Tags — nur für diese Rechnung; an der Anzeige der
+  Pillen ändert das nichts.
 
 ## 8. Kommentare
 
@@ -726,6 +729,34 @@ Steht der auf einer Station, geht es bei der nächsten weiter, sonst wieder
 vorn. Der Knopf ist **verborgen**, solange es keine Station gibt — bei
 ausgeschaltetem Pfad ebenso wie bei einem durchweg erledigten Plan; sein
 Tooltip nennt die Zahl der offenen Stationen. Siehe D47.
+
+**Zuständigen-Engpass.** Trägt **eine** Person zu viel der offenen Arbeit des
+günstigsten Pfads, meldet eine zeilenlose Warnung `assigneeOverload` die
+mögliche Engstelle: Die nächste Ausbaustufe ist dann nicht parallelisierbar —
+alles Weitere serialisiert sich durch diese Person. Über Reihenfolge oder
+Termine sagt die Warnung nichts (das tut in dieser Notation ohnehin nichts,
+§1). Siehe D71.
+
+- **Last:** Jeder nötige Knoten zählt mit dem, was seine Größe über die
+  nötigen Teilpakete hinaus behauptet (dasselbe Maß wie der Belegungs-Vergleich
+  der Closure-Suche, oben) — Erledigtes also mit 0. Mehrere `@name`-Tags einer
+  Zeile teilen sich den Beitrag zu gleichen Teilen.
+- **Zuständig** ist, wer auf der Zeile getaggt ist (§7); ein Knoten **ohne**
+  Tags erbt für diese Rechnung die Tags des nächsten Vorfahren **mit** Tags —
+  die übliche WBS-Lesart: Wer das Paket hat, hat die Teilpakete. Ohne
+  getaggten Vorfahren zählt der Beitrag als nicht zugewiesen — er verwässert
+  die Anteile, warnt aber nicht selbst.
+- **Gemeldet** wird, wenn mindestens **zwei** Personen Last auf der offenen
+  Front tragen und eine davon **mehr als die Hälfte** der gesamten offenen
+  Pfad-Arbeit hält. Ein Solo-Plan warnt damit nie — eine Person, die alles
+  trägt, ist dort keine Engstelle, sondern die Realität. Die Schwelle ist
+  gesetzt, nicht hergeleitet (wie die ~32 Zeichen des Label-Umbruchs).
+- **Anzeige:** Die Warnung nennt Person, Anteil und Stationen („@anna trägt
+  62 % der offenen Arbeit … 7 von 9 Stationen"); zusätzlich wechseln die
+  Personen-Pillen (§7) der betroffenen Person an **offenen Pfad-Knoten** auf
+  die Warnfarbe (`--warn`) — auch im Grafikexport. Geerbte Zuständigkeit hat
+  keine Pille und damit keine Färbung. Bei ausgeschaltetem Pfad entfällt
+  beides — ohne Pfad gibt es keine offene Front.
 
 ### Diagramm aus einer URL laden (`?sourceUrl=`)
 Der Editor kann den Notationstext aus einer externen Textdatei beziehen:

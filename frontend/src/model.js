@@ -318,6 +318,59 @@ export function cheapCls(n, cheapSet, collapsed){
   return hidesOpenCheap(n, cheapSet) ? 'cheap' : 'cheap cheap-leaf';
 }
 
+/* ---------- Zuständigen-Engpass (SPEC §7/§9, D71) ----------
+   Wer trägt wie viel der OFFENEN Arbeit des günstigsten Pfads? Jeder nötige
+   Knoten zählt mit seiner Marge — dem, was seine Größe über die nötigen
+   Teilpakete hinaus behauptet (dasselbe Maß wie der Belegungs-Vergleich in
+   `computeCheapPlan`, D69); Erledigtes hat `ownCost` 0 und trägt damit von
+   selbst nichts. Zuständig ist, wer auf der Zeile getaggt ist; ein Knoten
+   OHNE Tags erbt für diese Rechnung die Tags des nächsten Vorfahren mit Tags
+   (WBS-Lesart: Wer das Paket hat, hat die Teilpakete). Mehrere Tags teilen
+   sich den Beitrag zu gleichen Teilen. Beiträge ohne getaggten Vorfahren
+   gehen nur in die Gesamtsumme ein — sie verwässern die Anteile, warnen aber
+   nicht selbst. Stationen (die tiefsten offenen Pfad-Knoten, D46) werden für
+   den Meldungstext mitgezählt; ein Knoten mit mehreren Zuständigen zählt als
+   Station bei jedem von ihnen. */
+export function assigneeLoads(roots, cheapSet){
+  const loads = new Map(), stations = new Map();
+  let total = 0, totalStations = 0;
+  const walk = (ns, inherited) => {
+    for(const n of ns){
+      const owners = n.tags && n.tags.length ? n.tags : inherited;
+      if(cheapSet.has(n)){
+        let kids = 0;
+        for(const k of pathChildren(n)) if(cheapSet.has(k)) kids += ownCost(k);
+        const m = Math.max(0, ownCost(n) - kids);
+        total += m;
+        if(m > 0) for(const tag of owners)
+          loads.set(tag, (loads.get(tag) || 0) + m / owners.length);
+        if(!isDone(n) && !hidesOpenCheap(n, cheapSet)){
+          totalStations++;
+          for(const tag of owners) stations.set(tag, (stations.get(tag) || 0) + 1);
+        }
+      }
+      walk(n.children, owners);
+    }
+  };
+  walk(roots, []);
+  return {loads, total, stations, totalStations};
+}
+/* Die Engpass-Entscheidung (SPEC §9, D71): gemeldet nur, wenn mindestens ZWEI
+   Personen Last auf der offenen Front tragen — ein Solo-Plan warnt nie, eine
+   Person mit allem ist dort keine Engstelle, sondern die Realität — und eine
+   davon MEHR ALS DIE HÄLFTE der gesamten offenen Pfad-Arbeit hält (strikt;
+   mehr als eine Person über der Hälfte kann es nicht geben). Die Schwelle ist
+   gesetzt, nicht hergeleitet (D64-Linie). */
+export function overloadedAssignee(roots, cheapSet){
+  const {loads, total, stations, totalStations} = assigneeLoads(roots, cheapSet);
+  if(loads.size < 2 || total <= 0) return null;
+  let tag = null, load = 0;
+  loads.forEach((l, name) => { if(l > load){ load = l; tag = name; } });
+  if(load * 2 <= total) return null;
+  return {tag, share: Math.round(load / total * 100),
+          stations: stations.get(tag) || 0, totalStations};
+}
+
 /* ---------- Effektiver Status (SPEC §4/§9, D39) ----------
    Fortschritts-Rang entlang der Ergebnis-Skala (D5). Außerhalb der Skala:
    neutrale und verworfene Knoten zählen als 0 („nichts Anrechenbares"),

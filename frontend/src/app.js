@@ -1,6 +1,6 @@
 import './style.css';
 import { parse, setFoldMark, expandShortIds, shortIdClosed } from './parser.js';
-import { computeCheapPlan, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, atMostM, lineTargets } from './model.js';
+import { computeCheapPlan, overloadedAssignee, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, atMostM, lineTargets } from './model.js';
 import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning, warningText } from './warnings.js';
 import { padUrls } from './remote.js';
@@ -133,11 +133,16 @@ function render(){
     /* Günstigster Pfad auf der Dependency Closure (D42): scheitert die exakte
        Suche an zu vielen gekoppelten Gruppen, wird die gierige Schätzung
        BENANNT statt stillschweigend geliefert (zeilenlose Warnung). */
-    let cheapSet = new Set();
+    let cheapSet = new Set(), overload = null;
     if(cheapPathOn){
       const plan = computeCheapPlan(roots);
       cheapSet = plan.set;
       if(!plan.exact) warnings = warnings.concat([{type: 'cheapApprox'}]);
+      /* Zuständigen-Engpass (SPEC §9/D71): Trägt eine Person mehr als die
+         Hälfte der offenen Pfad-Arbeit, wird das zeilenlos gemeldet und ihre
+         Pillen an offenen Pfad-Knoten warnfarben (overloadTag unten). */
+      overload = overloadedAssignee(roots, cheapSet);
+      if(overload) warnings = warnings.concat([{type: 'assigneeOverload', ...overload}]);
     }
     out.classList.toggle('cheap-on', cheapPathOn);
     /* Faltung (D38): Anfangszustand aus den Textmarken (`!!!` holt sich mit
@@ -185,7 +190,8 @@ function render(){
     lineTargetMap = lineTargets(roots, collapsedSet, showDiscarded);
     const r = renderTreeHtml(roots, {t, showDiscarded, cheapPath: cheapPathOn, cheapSet, showIds,
                                      freshSet, collapsedSet,
-                                     effStatus: effectiveStatus(roots)});
+                                     effStatus: effectiveStatus(roots),
+                                     overloadTag: overload ? overload.tag : null});
     out.innerHTML = r.html;
     warnings = warnings.concat(r.warnings);
   }
@@ -2220,6 +2226,7 @@ const I18N = {
     sizeConflictWarn:"Zeile {line}: Die Teilpakete übersteigen zusammen die angegebene Größe ({size}) — selbst in der günstigsten Lesart.",
     sizeConflictTooltip:"Die Teilpakete übersteigen zusammen die angegebene Größe",
     cheapApproxWarn:"Zu viele gekoppelte Alternativgruppen für die exakte Suche — der günstigste Pfad ist gierig geschätzt (je Gruppe lokal gewählt).",
+    assigneeOverloadWarn:"@{tag} trägt {share} % der offenen Arbeit auf dem günstigsten Pfad ({stations} von {total} Stationen) — mögliche Engstelle.",
     st_idee:"Idee", st_geplant:"geplant", st_arbeit:"in Arbeit", st_durchstich:"Durchstich",
     st_fertig:"fertig", st_prod:"in Produktion", st_highrisk:"High Risk", st_verworfen:"verworfen",
     unknownStatusWarn:"Zeile {line}: unbekanntes Statuszeichen „{code}“ — als neutral dargestellt.",
@@ -2324,6 +2331,7 @@ const I18N = {
     sizeConflictWarn:"Line {line}: the sub-packages together exceed the given size ({size}) — even in the most optimistic reading.",
     sizeConflictTooltip:"The sub-packages together exceed the given size",
     cheapApproxWarn:"Too many coupled alternative groups for the exact search — the cheapest path is a greedy estimate (chosen locally per group).",
+    assigneeOverloadWarn:"@{tag} carries {share}% of the open work on the cheapest path ({stations} of {total} stations) — a possible bottleneck.",
     st_idee:"idea", st_geplant:"planned", st_arbeit:"in progress", st_durchstich:"walking skeleton",
     st_fertig:"done", st_prod:"in production", st_highrisk:"high risk", st_verworfen:"discarded",
     unknownStatusWarn:"Line {line}: unknown status code “{code}” — shown as neutral.",
@@ -2428,6 +2436,7 @@ const I18N = {
     sizeConflictWarn:"Línea {line}: los subpaquetes juntos superan el tamaño indicado ({size}), incluso en la lectura más optimista.",
     sizeConflictTooltip:"Los subpaquetes juntos superan el tamaño indicado",
     cheapApproxWarn:"Demasiados grupos de alternativas acoplados para la búsqueda exacta — el camino más barato es una estimación voraz (elección local por grupo).",
+    assigneeOverloadWarn:"@{tag} lleva el {share} % del trabajo pendiente en el camino más barato ({stations} de {total} estaciones) — posible cuello de botella.",
     st_idee:"idea", st_geplant:"planificado", st_arbeit:"en curso", st_durchstich:"prototipo funcional",
     st_fertig:"terminado", st_prod:"en producción", st_highrisk:"alto riesgo", st_verworfen:"descartado",
     unknownStatusWarn:"Línea {line}: código de estado desconocido «{code}» — mostrado como neutral.",
@@ -2532,6 +2541,7 @@ const I18N = {
     sizeConflictWarn:"Ligne {line} : les sous-lots dépassent ensemble la taille indiquée ({size}), même dans la lecture la plus optimiste.",
     sizeConflictTooltip:"Les sous-lots dépassent ensemble la taille indiquée",
     cheapApproxWarn:"Trop de groupes d’alternatives couplés pour la recherche exacte — le chemin le moins cher est une estimation gloutonne (choix local par groupe).",
+    assigneeOverloadWarn:"@{tag} porte {share} % du travail restant sur le chemin le moins cher ({stations} stations sur {total}) — goulot d’étranglement possible.",
     st_idee:"idée", st_geplant:"planifié", st_arbeit:"en cours", st_durchstich:"squelette fonctionnel",
     st_fertig:"terminé", st_prod:"en production", st_highrisk:"risque élevé", st_verworfen:"abandonné",
     unknownStatusWarn:"Ligne {line} : code de statut inconnu « {code} » — affiché comme neutre.",
@@ -2636,6 +2646,7 @@ const I18N = {
     sizeConflictWarn:"Wiersz {line}: podzadania razem przekraczają podany rozmiar ({size}) — nawet w najkorzystniejszym odczycie.",
     sizeConflictTooltip:"Podzadania razem przekraczają podany rozmiar",
     cheapApproxWarn:"Zbyt wiele sprzężonych grup alternatyw dla dokładnego wyszukiwania — najtańsza ścieżka jest oszacowana zachłannie (wybór lokalny w każdej grupie).",
+    assigneeOverloadWarn:"@{tag} niesie {share} % otwartej pracy na najtańszej ścieżce ({stations} z {total} stacji) — możliwe wąskie gardło.",
     st_idee:"pomysł", st_geplant:"zaplanowane", st_arbeit:"w toku", st_durchstich:"działający szkielet",
     st_fertig:"gotowe", st_prod:"w produkcji", st_highrisk:"wysokie ryzyko", st_verworfen:"odrzucone",
     unknownStatusWarn:"Wiersz {line}: nieznany znak statusu „{code}” — pokazany jako neutralny.",
@@ -2740,6 +2751,7 @@ const I18N = {
     sizeConflictWarn:"Строка {line}: подзадачи вместе превышают указанный размер ({size}) — даже при самой оптимистичной оценке.",
     sizeConflictTooltip:"Подзадачи вместе превышают указанный размер",
     cheapApproxWarn:"Слишком много связанных групп альтернатив для точного поиска — самый дешёвый путь оценён жадно (локальный выбор в каждой группе).",
+    assigneeOverloadWarn:"@{tag} несёт {share} % открытой работы на самом дешёвом пути ({stations} из {total} станций) — возможное узкое место.",
     st_idee:"идея", st_geplant:"запланировано", st_arbeit:"в работе", st_durchstich:"сквозной прототип",
     st_fertig:"готово", st_prod:"в эксплуатации", st_highrisk:"высокий риск", st_verworfen:"отклонено",
     unknownStatusWarn:"Строка {line}: неизвестный код статуса «{code}» — показан как нейтральный.",
@@ -2844,6 +2856,7 @@ const I18N = {
     sizeConflictWarn:"पंक्ति {line}: उप-पैकेज मिलकर दिए गए आकार ({size}) से बड़े हैं — सबसे आशावादी आकलन में भी।",
     sizeConflictTooltip:"उप-पैकेज मिलकर दिए गए आकार से बड़े हैं",
     cheapApproxWarn:"सटीक खोज के लिए बहुत सारे युग्मित विकल्प-समूह — सबसे सस्ता पथ लालची अनुमान है (प्रति समूह स्थानीय चयन)।",
+    assigneeOverloadWarn:"@{tag} सबसे सस्ते पथ पर खुले काम का {share}% उठाए हुए है ({total} में से {stations} स्टेशन) — संभावित अड़चन।",
     st_idee:"विचार", st_geplant:"नियोजित", st_arbeit:"प्रगति पर", st_durchstich:"कार्यशील ढाँचा",
     st_fertig:"पूर्ण", st_prod:"उत्पादन में", st_highrisk:"उच्च जोखिम", st_verworfen:"अस्वीकृत",
     unknownStatusWarn:"पंक्ति {line}: अज्ञात स्थिति कोड „{code}“ — तटस्थ रूप में दिखाया गया।",
@@ -2948,6 +2961,7 @@ const I18N = {
     sizeConflictWarn:"第 {line} 行：子项合计超出所标注的尺寸（{size}）——即使按最乐观的估算也是如此。",
     sizeConflictTooltip:"子项合计超出所标注的尺寸",
     cheapApproxWarn:"耦合的备选组过多，无法精确搜索——最便宜路径为贪心估计（每组就地选择）。",
+    assigneeOverloadWarn:"@{tag} 承担最便宜路径上 {share}% 的未完成工作（{total} 个站点中的 {stations} 个）——可能的瓶颈。",
     st_idee:"想法", st_geplant:"已计划", st_arbeit:"进行中", st_durchstich:"可运行骨架",
     st_fertig:"已完成", st_prod:"已上线", st_highrisk:"高风险", st_verworfen:"已放弃",
     unknownStatusWarn:"第 {line} 行：未知状态代码“{code}”——显示为中性。",
@@ -3052,6 +3066,7 @@ const I18N = {
     sizeConflictWarn:"{line} 行目：サブパッケージの合計が指定サイズ（{size}）を超えています — 最も楽観的な見積もりでも。",
     sizeConflictTooltip:"サブパッケージの合計が指定サイズを超えています",
     cheapApproxWarn:"結合された選択肢グループが多すぎるため厳密探索は不可 — 最安パスは貪欲法による推定です（グループごとに局所選択）。",
+    assigneeOverloadWarn:"@{tag} が最安パスの未完了作業の {share}% を担っています（全 {total} 駅中 {stations} 駅）— ボトルネックの可能性。",
     st_idee:"アイデア", st_geplant:"計画済み", st_arbeit:"作業中", st_durchstich:"ウォーキングスケルトン",
     st_fertig:"完了", st_prod:"本番稼働", st_highrisk:"高リスク", st_verworfen:"破棄",
     unknownStatusWarn:"{line} 行目: 不明なステータス記号「{code}」— 中立として表示。",

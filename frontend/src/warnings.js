@@ -29,6 +29,11 @@
                                       angegebene Größe des Elternknotens, selbst
                                       in der günstigsten Bereichs-Lesart
                                       (SPEC §5/D62); Zeile = Elternknoten
+   - assigneeOverload { tag, share, stations, totalStations }
+                                    — eine Person trägt mehr als die Hälfte der
+                                      offenen Arbeit des günstigsten Pfads
+                                      (SPEC §9/D71); zeilenlos — der Engpass
+                                      hat keine einzelne Zeile
    - cheapApprox   { }              — günstigster Pfad nur gierig geschätzt:
                                       zu viele gekoppelte Gruppen für die
                                       exakte Suche (D42); zeilenlos
@@ -78,6 +83,9 @@ function build(w, t, esc){
       return t('descStrayWarn', {line: w.line});
     case 'sizeConflict':
       return t('sizeConflictWarn', {line: w.line, size: esc(w.size)});
+    case 'assigneeOverload':
+      return t('assigneeOverloadWarn', {tag: esc(w.tag), share: w.share,
+                                        stations: w.stations, total: w.totalStations});
     case 'cheapApprox':
       return t('cheapApproxWarn');
     case 'sourceLoad':

@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-25
 
+- A warning flags the bottleneck when one `@name` carries more than half of the open work on the cheapest path — their tag pills turn amber on the open nodes
 - The estimated size of an unsized node now prices the remaining work — done sub-packages drop out, and a subtree with everything named done counts as XS
 - The fold chip is solid white with an ink glyph now — the translucent box vanished on the pastel node colours
 - A size prices its whole subtree on the cheapest path — sub-packages no longer add on top, so a carefully decomposed `(S)` beats a coarse `(L)`

@@ -885,6 +885,10 @@
     border-radius:999px;padding:1px 6px;line-height:1.4;
     box-shadow:0 0 0 1.5px var(--card);
   }
+  /* Zuständigen-Engpass (SPEC §9/D71): die Pille der Person, die mehr als die
+     Hälfte der offenen Pfad-Arbeit trägt — Warnfarbe wie das
+     Größen-Konflikt-Badge (D62); der Export liest die gemessenen Farben. */
+  .tag.overload{background:var(--warn);color:#fff;border-color:var(--warn)}
   .ghost-node{
     position:relative;margin-top:14px;
     border:1.5px dashed var(--warn);

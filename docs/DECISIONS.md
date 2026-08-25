@@ -5219,3 +5219,72 @@ fallen; XS-Boden auf M zurück → genau die drei XS-Tests; „Gruppe fertig"
 entfernt → genau die zwei disjunktiven. Der mitgelieferte Plan ist
 unberührt (sein einziger größenloser Knoten ist ein Blatt): weiterhin
 0 Warnungen, 137 Pfadknoten, 57 Stationen, exakt gerechnet.
+
+## D71 — Zuständigen-Engpass: warnen, wenn eine Person mehr als die Hälfte des Pfads trägt
+Gewünscht: „eine Warnung, wenn ein und derselbe Verantwortliche (@name) zu oft
+auf dem Lean-Path liegt — so eine Art Konflikt-Indikator." Kein neues
+Zeichen — Tags (§7) und der günstigste Pfad existieren, es fehlte der
+Konsument, der sie übereinanderlegt. Die Entscheidungen (Vorschlag bestätigt):
+
+**Was der Indikator sagt:** Werkbaum ist bewusst kein Netzplan — die Warnung
+behauptet nichts über Termine, sondern: Die **nächste Ausbaustufe ist nicht
+parallelisierbar**, alles Weitere serialisiert sich durch eine Person. Genau
+die Auskunft, die man beim Lean Pathfinding braucht.
+
+**Maß: Marginalkosten, Stationen nur für den Text.** Zählen und Gewichten
+standen zur Wahl; gewählt ist die Rollenteilung — Schwelle und Anteil rechnen
+**gewichtet** (5×XS sind weniger Last als 2×XL), der Meldungstext nennt
+zusätzlich die **Stationszahl**, weil Stationen sichtbare, mit dem Auge
+nachprüfbare Objekte sind (die Punkte, die der D47-Knopf abgeht). Das
+Gewichts-Maß gab es schon: die Marginalkosten des Belegungs-Vergleichs
+(D69) — jeder nötige Knoten zählt mit dem, was seine Größe über die nötigen
+Teilpakete hinaus behauptet; Erledigtes hat `ownCost` 0 und fällt von selbst
+heraus. Die Personen-Summen ergeben zusammen exakt den Pfadpreis — kein
+zweites Kostenmodell.
+
+**Zuständigkeit erbt vom nächsten getaggten Vorfahren.** Die übliche
+WBS-Lesart: Wer das Paket hat, hat die Teilpakete. Ohne Vererbung zählte in
+sparsam getaggten Plänen fast nichts — im Test trüge die Person eines
+zerlegten L-Pakets nur dessen Marge (1 statt 4). Mehrere Tags einer Zeile
+**teilen** sich den Beitrag zu gleichen Teilen — voll doppelt gezählt bliese
+gemeinsame Pakete künstlich zum Engpass auf. Beiträge ohne getaggten
+Vorfahren gehen nur in die Gesamtsumme ein: Sie **verwässern** die Anteile
+(konservativ — gemeldet wird nur, was sicher ist), warnen aber nicht selbst;
+„viel ist niemandem zugewiesen" wäre eine eigene Aussage und, wenn überhaupt,
+eine eigene Meldung.
+
+**Schwelle: strikt mehr als die Hälfte, und mindestens zwei Personen mit Last
+auf der offenen Front.** Der Solo-Plan ist die Falle — eine Person mit 100 %
+ist dort keine Engstelle, sondern die Realität. Gezählt werden Personen **auf
+der Front** (Last > 0), nicht im Dokument: Wer nur erledigte Knoten trägt,
+macht aus einem faktischen Solo-Rest kein Zwei-Personen-Problem. Mehr als
+eine Person über der Hälfte kann es nicht geben — die Meldung ist eindeutig.
+Die Schwelle ist gesetzt, nicht hergeleitet (wie die 32 Zeichen in D64);
+justiert wird nach Erfahrung.
+
+**Anzeige: zeilenlose Warnung plus Warn-Pille.** Der Engpass hat keine
+einzelne Zeile — `assigneeOverload` ist zeilenlos wie `cheapApprox` und nennt
+Person, Anteil und Stationen. Zusätzlich wechseln die **Personen-Pillen** der
+betroffenen Person an offenen Pfad-Knoten auf `--warn` — derselbe Griff wie
+beim Größen-Konflikt-Badge (D62); der Grafikexport folgt von selbst, weil er
+die gemessenen Pillen-Farben liest (D62). Geerbte Zuständigkeit hat keine
+Pille und damit keine Färbung — benannt, kein Fehler. Kein neuer Umschalter,
+kein Panel; bei ausgeschaltetem Pfad entfällt beides (ohne Pfad keine offene
+Front).
+
+**Headless nach Hausregel** (D54-Nachtrag 3): `assigneeLoads`/
+`overloadedAssignee` in model.js, der Renderer bekommt nur `overloadTag`;
+app.js verdrahtet Warnung und Option. Die mitgelieferten Dokumente bleiben
+still (der Werkbaum-Plan hat keine Knoten-Tags; im Example liegt anna bei
+3 von 13) — nachgemessen, nicht angenommen.
+
+**Nachgemessen** im Browser an einem Wegwerf-Dokument: „@anna trägt 80 % der
+offenen Arbeit auf dem günstigsten Pfad (1 von 2 Stationen) — mögliche
+Engstelle.", genau eine Pille bernstein (`rgb(180,83,9)`) — am offenen
+Pfad-Knoten, nicht am erledigten und nicht bei @ben; Pfad aus ⇒ Warnung und
+Färbung weg, wieder an ⇒ beides zurück. 470 Tests, davon 13 neue in
+`tests/overload.test.js`. Gegenproben per Mutation: Solo-Wächter entfernt →
+genau der Solo-Test fällt; Schwelle aufgeweicht → genau die drei
+Schwellen-Tests; Vererbung entfernt → genau der Vererbungs-Test; Teilung
+entfernt → genau der Mehrfach-Tag-Test; Erledigt-Ausnahme der Pille
+entfernt → genau der Pillen-Test.

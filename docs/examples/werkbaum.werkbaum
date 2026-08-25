@@ -49,6 +49,7 @@
       - [^] #ed.path.started: Started work is on the path, extras included (S)  %% see D61
       - [^] #ed.path.line: Metro-map line through the leaves (S)
       - [^] #ed.path.step: Step from station to station, one button (S)  %% see D47
+      - [x] #ed.path.load: Warn when one person is the bottleneck (S)  %% see D71
       - [^] #ed.closure: Count the whole dependency closure (M)
         - [^] #ed.closure.once: Shared dependencies counted only once (S)
         - [^] #ed.closure.nonlocal: The cheapest alternative is no longer the local one (M)  %% see D34, D42
@@ -422,6 +423,12 @@
   One button walks the stations in order, starting with the one to tackle
   next. Seeing the front was solved; walking it across a very wide tree was
   not.
+
+#ed.path.load
+  Warns when one @name carries more than half of the open work on the
+  cheapest path while at least two people are on it: the next increment
+  would serialize through that person. Untagged nodes inherit the nearest
+  tagged ancestor, and the person's tag pills turn amber on open path nodes.
 
 #ed.closure
   The cheapest path pulls every dependency of a needed node into the needed
