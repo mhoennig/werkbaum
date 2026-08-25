@@ -86,8 +86,8 @@
       - [^] #ed.fold.preset: One switch folds everything from size M downward (S)  %% see D44
     - [^] #ed.snaps: Earlier states of a document, every ten minutes (S)  %% only when something changed
       - [^] #ed.snaps.manual: Save a state by hand, before a larger change (XS)  %% ten minutes is the wrong beat for that moment
-    - [x] #ed.files: Open and save .werkbaum files (S)
-      - [x] #ed.files.inplace: Saving writes back into the opened file (S)  %% File System Access, Chromium
+    - [^] #ed.files: Open and save .werkbaum files (S)
+      - [^] #ed.files.inplace: Saving writes back into the opened file (S)  %% File System Access, Chromium
     + [^] #ed.fresh: Show what is new since your last visit (S)
       - [^] #ed.fresh.news: A star in the header, with the last few days (S)  %% see D58
     + [?] #ed.percolor: A pastel colour per person (S)
