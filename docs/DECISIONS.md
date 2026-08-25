@@ -5660,3 +5660,87 @@ in den Übersetzungen — eine Stelle statt neun, an denen sie vertippt sein
 kann. **Nachgemessen** im Dev-Server (Stufe-1-Pfad erzwungen, Brave per
 `navigator.brave`-Stub zur Laufzeit): mit Stub trägt das Banner die zweite
 Zeile samt Mono-Code der Adresse, ohne Stub fehlt beides.
+
+## D75 — Querverbindungen folgen der Faltung und bekommen einen Schalter; der Falt-Knopf schaltet vier Voreinstellungen durch
+Drei zusammenhängende Nutzerwünsche an derselben Stelle des Diagramms, in
+einem Zug gebaut.
+
+**1. Abhängigkeits-Kanten enden am nächsten sichtbaren Vorfahren.** D41 ließ
+Kanten zu eingeklappten Knoten schlicht entfallen — gerade in einem dicht
+gefalteten Plan verschwand damit die Aussage „dieser Zweig braucht jenen"
+genau dann, wenn man sie am nötigsten hat. Die Regel gab es längst: **Der
+eingeklappte Knoten vertritt seinen Teilbaum** — für die Pfad-Station, den
+„▸ n"-Zähler und die Cursor-Zeile (D38-Nachträge). Jetzt gilt sie auch für
+die Querverbindungen, für **Quelle wie Ziel** (Nutzer-Vorgabe). Fallen beide
+Endpunkte in denselben sichtbaren Knoten, entfällt die Kante (sie sagte
+nichts mehr); mehrere so zusammengefallene Kanten desselben Paars werden
+**eine**. Kanten zu ausgeblendeten **verworfenen** Knoten entfallen
+weiterhin — dieselbe Grenze wie bei der Cursor-Zeile (D38-Nachtrag 4):
+Faltung ist Ansicht, der Verworfen-Filter ist eine Aussage über den Plan.
+
+**Umgesetzt im Renderer, nicht in einer App-Nebenrechnung:** `walkFolded()`
+läuft ohnehin durch jeden verborgenen Teilbaum (Warnungen, „▸ n") und sammelt
+jetzt dessen IDs und Abhängigkeiten mit; der eingeklappte Knoten trägt sie
+als `data-sub-ids`/`data-sub-deps` — getrennt von den eigenen Attributen,
+damit die Bedeutung ablesbar bleibt, und headless testbar (Hausregel
+D54-Nachtrag 3). `depEdges()` in app.js löst dann nur noch auf: Die
+Sub-IDs stehen in DFS- und damit Dokumentreihenfolge, „erste Vergabe
+gewinnt" (D36) gilt so auch über die Faltgrenze hinweg. Der Grafikexport
+nutzt dasselbe `depEdges()` und folgt ohne Zusatzcode.
+
+**2. Ein Umschalter für die Querverbindungen**, neben dem
+Günstigster-Pfad-Knopf (Nutzer-Vorgabe): Voreinstellung an, persistiert in
+`werkbaum-ui` wie die Nachbarn (D22). Export und Druck folgen ihm wie den
+übrigen Ansichts-Filtern (die D38/D44/D56-Linie: das Bild zeigt, was
+sichtbar ist). Der Klick zeichnet nur die Overlays neu statt zu rendern —
+am Baum ändert sich nichts.
+
+**3. Der Falt-Knopf wird ein Durchschalter mit vier Voreinstellungen**
+(Nutzer-Vorgabe, Reihenfolge wie gewünscht): **(1)** ab Größe M abwärts zu
+(die D44-Regel, unverändert), **(2)** alles zu, durch dessen Teilbaum der
+günstigste Pfad nicht läuft — weder der Knoten selbst noch ein Unterknoten
+liegt darauf; sichtbar bleibt genau der Pfad, alles Übrige steht als je ein
+eingeklappter Knoten da —, **(3)** alles zu, **(4)** alles offen, dann
+wieder von vorn. Jede Stufe beschreibt einen **vollständigen** Faltzustand
+(die D44-Eigenschaft bleibt: zweimal Drücken derselben Stufe ergäbe
+dasselbe), geschrieben wird über denselben Weg wie bisher — ein
+Undo-Schritt je Stufe, beim Pad trägt die Sitzungs-Überlagerung.
+
+- **Der Knopf zeigt den NÄCHSTEN Schritt** (Icon per `data-next`, Tooltip
+  aus vier neuen i18n-Schlüsseln × 9 Sprachen; `foldSmallTooltip` entfällt).
+  Das ist die D17-Logik des Bereichs-Umschalters: Ein Knopf, der den
+  Zustand zeigt, den man vor sich hat, sagt nichts — einer, der das Ziel
+  zeigt, sagt, was passiert. Mit vier Stufen ist er zudem kein Umschalter
+  mehr, `aria-pressed` entfällt.
+- **Die Reihum-Position wird nicht gemerkt, sondern geprüft** — die
+  D44-Fortschreibung für vier Stufen: `render()` rechnet nach, ob der Baum
+  noch die zuletzt hergestellte Stufe beschreibt (`presetFoldSet` in
+  model.js, headless getestet); wenn nicht — Handfaltung, Textänderung,
+  Dokumentwechsel —, beginnt der nächste Druck wieder bei 1. Ein reines
+  Ablesen ohne Position (D44) trägt bei vier Stufen nicht mehr: Ein voll
+  offener Baum kann zugleich Stufe 4 und einer leeren Stufe 1 entsprechen —
+  die Mehrdeutigkeit ist den Stufen inhärent, die geprüfte Position löst
+  sie deterministisch.
+- **Stufe 2 rechnet den Pfad auch bei ausgeschaltetem Pfad-Umschalter** —
+  die Voreinstellung fragt nach dem Pfad, nicht nach seiner Anzeige; die
+  Rechnung ist dieselbe, die bei eingeschaltetem Pfad ohnehin je Tastendruck
+  läuft (D42).
+
+**Preis in der Kopfzeile, benannt:** Der Querverbindungs-Knopf ist das elfte
+Element. Auf dem Telefon (375 px) bricht die Zeile damit regulär in zwei
+Reihen à 78 px — genau der Umbruch, den D50/D56 unterhalb von 440 px
+vorsehen; am Schreibtisch bleibt sie einreihig (gemessen 44 px bei 800 px).
+
+**Nachgemessen** im Browser an einem Wegwerf-Dokument (10 Knoten, 3 Kanten,
+über die echte UI angelegt und gelöscht): Mittel eingeklappt → Kante endet
+am Vertreter (`data-sub-deps="z1"`), Ziel-Seite ebenso; beide Quellen unter
+einem Vorfahren eingeklappt → **eine** Kante statt zwei (3 → 2); Wurzel zu →
+0 Kanten. Durchschalter: small → path → closed → open → wieder small, je mit
+korrekter Faltmenge und Tooltip; Handfaltung danach setzt auf small zurück;
+`path` faltet bei ausgeschaltetem Pfad-Umschalter identisch; Undo nimmt eine
+Stufe in einem Zug zurück (4 Marken → 1 → 4). Umschalter: aus → 0 Overlays
+und 0 Kanten im exportierten SVG, an → 3/3; `depLinks` überlebt den Reload.
+480 → 487 Tests, davon 7 neue in `tests/fold.test.js` (presetFoldSet-Modi
+inkl. des per `:#…` gezogenen Ziels unter einer Zugabe; `data-sub-*` in
+Dokumentreihenfolge, dedupliziert, nie an offenen Knoten, nie für
+ausgeblendete verworfene).

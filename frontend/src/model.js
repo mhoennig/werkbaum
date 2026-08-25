@@ -503,6 +503,31 @@ export function initialCollapsed(roots, rescueFocus){
   return set;
 }
 
+/* ---------- Falt-Voreinstellungen des Durchschalters (SPEC §9, D75) ----------
+   Je Modus ein VOLLSTÄNDIGER Faltzustand als Menge der zuzuklappenden Knoten —
+   was nicht in der Menge steht, ist offen (dieselbe Eigenschaft wie beim alten
+   Umschalter, D44). `cheapSet` braucht nur der Modus 'path'; er klappt jeden
+   Knoten zu, durch dessen Teilbaum der günstigste Pfad nicht läuft — weder er
+   selbst noch ein Unterknoten liegt darauf. Sichtbar bleibt so genau der Pfad,
+   alles Übrige steht als je ein eingeklappter Knoten da. */
+export function presetFoldSet(roots, mode, cheapSet){
+  const set = new Set();
+  const walk = ns => {
+    for(const n of ns){
+      if(n.children.length){
+        const zu = mode === 'closed' ? true
+          : mode === 'small' ? atMostM(n)
+          : mode === 'path' ? !(cheapSet.has(n) || hidesCheap(n, cheapSet))
+          : false;                                            /* 'open' */
+        if(zu) set.add(n);
+        walk(n.children);
+      }
+    }
+  };
+  walk(roots);
+  return set;
+}
+
 /* key -> Status-Schlüssel ('' für neutrale Knoten) über den ganzen Baum. */
 export function statusByKey(roots){
   const map = new Map();

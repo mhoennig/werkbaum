@@ -196,6 +196,11 @@
       <button type="button" class="copybtn togglebtn" id="cheapBtn" aria-pressed="true" data-i18n-title="cheapTooltip" data-i18n-aria="cheapTooltip" title="Günstigsten Pfad hervorheben – nicht benötigte Alternativen treten zurück" aria-label="Günstigsten Pfad hervorheben – nicht benötigte Alternativen treten zurück">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M7.5 6H14a3 3 0 0 1 0 6H10a3 3 0 0 0 0 6h6.5"/></svg>
       </button>
+      <!-- Querverbindungen der Abhängigkeiten ein-/ausblenden (SPEC §9, D75):
+           ein Umschalter wie der Pfad daneben; Export und Druck folgen ihm. -->
+      <button type="button" class="copybtn togglebtn" id="depBtn" aria-pressed="true" data-i18n-title="depsTooltip" data-i18n-aria="depsTooltip" title="Querverbindungen der Abhängigkeiten anzeigen" aria-label="Querverbindungen der Abhängigkeiten anzeigen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 19.5 C 9 21.5, 14.5 15.5, 17.3 8.6" stroke-dasharray="0.2 3.4"/><path d="M14.3 7.2 L 18 6.6 L 17.6 10.3"/></svg>
+      </button>
       <!-- Von Station zu Station des günstigsten Pfads (SPEC §9, D47). Kein
            Umschalter, sondern eine Bewegung: jeder Druck holt die nächste noch
            offene Station in die Mitte. Verborgen, solange es keine gibt. -->
@@ -205,10 +210,15 @@
       <!-- Der Stern stand hier bis D58 („Was ist neu?", D28) und ist in die
            Kopfzeile gewandert: Er sagt jetzt nicht nur etwas über das aktive
            Dokument, sondern über das Produkt — und ist deshalb immer da. -->
-      <!-- Faltung für den ganzen Baum (SPEC §9, D44): ein Umschalter wie die
-           beiden Nachbarn. Gedrückt = alles ab Größe M abwärts ist zugeklappt. -->
-      <button type="button" class="copybtn togglebtn" id="foldSmallBtn" aria-pressed="false" data-i18n-title="foldSmallTooltip" data-i18n-aria="foldSmallTooltip" title="Knoten der Größe M und kleiner zuklappen – erneut drücken klappt alle wieder auf" aria-label="Knoten der Größe M und kleiner zuklappen – erneut drücken klappt alle wieder auf">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V3M8 8l4 4 4-4M8 16l4-4 4 4"/></svg>
+      <!-- Faltung für den ganzen Baum (SPEC §9, D44/D75): ein DURCHSCHALTER —
+           jeder Druck stellt die nächste von vier Voreinstellungen her. Icon
+           und Tooltip zeigen den NÄCHSTEN Schritt (was Drücken tun wird);
+           welches Icon sichtbar ist, steuert `data-next` per CSS. -->
+      <button type="button" class="copybtn foldbtn" id="foldBtn" data-next="small" title="Knoten der Größe M und kleiner zuklappen" aria-label="Knoten der Größe M und kleiner zuklappen">
+        <svg class="fc-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3.5l4 4 4-4M8 20.5l4-4 4 4"/><text x="12" y="15" text-anchor="middle" font-size="9.5" font-weight="600" fill="currentColor" stroke="none" font-family="inherit">M</text></svg>
+        <svg class="fc-path" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3.5l4 4 4-4M8 20.5l4-4 4 4"/><circle cx="12" cy="12" r="2.6"/></svg>
+        <svg class="fc-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V3M8 8l4 4 4-4M8 16l4-4 4 4"/></svg>
+        <svg class="fc-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></svg>
       </button>
       <!-- Knoten-IDs vor dem Titel einblenden (SPEC §9, D56) — geschrieben wie
            im Text: `#some.id: Titel`. Das Zeichen selbst ist das Symbol; ein

@@ -444,6 +444,17 @@
   .copybtn.padview[data-view="both"] .ic-both,
   .copybtn.padview[data-view="pad"] .ic-pad,
   .copybtn.padview[data-view="text"] .ic-text{display:block}
+  /* Falt-Durchschalter (SPEC §9/D75): vier Icons, sichtbar ist das des
+     NÄCHSTEN Schritts — `data-next` setzt updateFoldBtn(). Zwei Klassen wie
+     beim Pad-Wähler, damit die Regel `.copybtn svg{display:block}` schlägt. */
+  .copybtn.foldbtn .fc-small,
+  .copybtn.foldbtn .fc-path,
+  .copybtn.foldbtn .fc-closed,
+  .copybtn.foldbtn .fc-open{display:none}
+  .copybtn.foldbtn[data-next="small"] .fc-small,
+  .copybtn.foldbtn[data-next="path"] .fc-path,
+  .copybtn.foldbtn[data-next="closed"] .fc-closed,
+  .copybtn.foldbtn[data-next="open"] .fc-open{display:block}
   /* Läuft ein Abruf, dreht das Symbol: bei gedrosselter Gegenseite (D31) können
      das die vollen 20 s sein, und ein Knopf ohne Rückmeldung wirkt kaputt. */
   /* Sperre nach einem Abruf (D31): sichtbar gedämpft, aber **klickbar** — der

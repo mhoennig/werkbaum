@@ -42,6 +42,8 @@
       - [^] #ed.deplink: Cross links for dependencies (M)
         - [^] #ed.deplink.calm: Visually secondary — the tree carries the message (S)
         - [^] #ed.deplink.focus: Highlight what a selected node needs and feeds (S)
+        - [x] #ed.deplink.fold: A hidden endpoint falls to its visible ancestor (S)  %% source and target alike, see D75
+        - [x] #ed.deplink.toggle: A switch hides the cross links (XS)
     - [^] #ed.path: Cheapest path (XL)
       - [^] #ed.path.cost: Cost model, a size prices its subtree (S)
       - [^] #ed.path.est: Missing size estimated from the sub-packages (S)  %% see D66
@@ -83,7 +85,7 @@
       - [^] #ed.fold.marks: Initial state from the text: > collapses, < re-opens (S)
       - [^] #ed.fold.click: Fold and unfold in the diagram (S)
       - [^] #ed.fold.write: Folding writes the mark back into the text (S)  %% one undo step
-      - [^] #ed.fold.preset: One switch folds everything from size M downward (S)  %% see D44
+      - [x] #ed.fold.preset: The fold button cycles through four presets (S)  %% M-and-smaller, off-path, all, none — see D44/D75
     - [^] #ed.snaps: Earlier states of a document, every ten minutes (S)  %% only when something changed
       - [^] #ed.snaps.manual: Save a state by hand, before a larger change (XS)  %% ten minutes is the wrong beat for that moment
     - [^] #ed.files: Open and save .werkbaum files (S)
@@ -397,6 +399,16 @@
   The selected node — keyboard focus in the diagram, otherwise the node of the
   caret line — pulls its incoming and outgoing edges forward in ink.
 
+#ed.deplink.fold
+  When an endpoint sits in a folded subtree, the edge ends at the nearest
+  visible ancestor instead of vanishing — the collapsed node stands in for
+  its subtree here too, for source and target alike. Edges whose two ends
+  fall into the same visible node disappear, duplicates merge into one.
+
+#ed.deplink.toggle
+  A toggle next to the cheapest-path button hides the cross links entirely;
+  export and print follow it like the other view filters.
+
 #ed.path
   Highlight the cheapest way through the tree: with and, everything; with or,
   the cheapest alternative. This is the feature the whole notation exists for.
@@ -590,9 +602,11 @@
   restores exactly what you were looking at.
 
 #ed.fold.preset
-  One switch puts the whole tree at working height: everything of size M and
-  smaller closed, L and above open. Size rather than depth — depth only says
-  how finely somebody happened to write it down.
+  One button cycles the whole tree through four complete fold states: size M
+  and smaller closed, everything off the cheapest path closed, everything
+  closed, everything open. Icon and tooltip show the next step; a manual fold
+  restarts the cycle. Size rather than depth — depth only says how finely
+  somebody happened to write it down.
 
 #ed.snaps
   A safety net against mishaps: the text is put aside every ten minutes, but

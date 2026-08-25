@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parse, setFoldMark } from '../src/parser.js';
-import { initialCollapsed, computeCheapSet, atMostM } from '../src/model.js';
+import { initialCollapsed, computeCheapSet, atMostM, presetFoldSet } from '../src/model.js';
 import { renderTreeHtml } from '../src/render.js';
 
 const t = key => key;
@@ -332,5 +332,85 @@ describe('lineTargets — der eingeklappte Knoten vertritt seine Zeilen', () => 
     const r = roots(txt);
     expect(lineTargets(r, new Set(), false).has(6)).toBe(false);
     expect(lineTargets(r, new Set(), true).get(6)).toBe(6);
+  });
+});
+
+/* Falt-Voreinstellungen des Durchschalters (SPEC §9, D75): je Modus ein
+   VOLLSTÄNDIGER Faltzustand als Menge der zuzuklappenden Knoten. */
+describe('presetFoldSet — die vier Voreinstellungen', () => {
+  const PLAN = `[ ] #w: Wurzel
+  - [ ] #a: Gross (L)
+    - [ ] #a1: Mittel (M)
+      - [ ] #a1a: Blatt (S)
+    - [ ] #a2: Ohne Groesse
+      - [ ] Blatt 2
+  + [?] #b: Zugabe (M)
+    - [?] #b1: Blatt 3`;
+  const collapsed = (mode, cheapSet) => {
+    const r = roots(PLAN);
+    return [...presetFoldSet(r, mode, cheapSet ?? computeCheapSet(r))]
+      .map(n => n.label).sort();
+  };
+
+  it("'small' klappt jeden faltbaren Knoten mit angegebener Groesse <= M zu", () => {
+    /* `Mittel` (M) und `Zugabe` (M); `Ohne Groesse` bleibt offen — keine
+       Autoren-Aussage (D44) — und `Gross` (L) sowieso. */
+    expect(collapsed('small')).toEqual(['Mittel', 'Zugabe']);
+  });
+
+  it("'path' klappt jeden Knoten zu, durch dessen Teilbaum der Pfad nicht laeuft", () => {
+    /* Die unangetastete Zugabe liegt nie auf dem Pfad (D29/D61) — sie ist der
+       einzige faltbare Knoten ohne Pfad im Teilbaum. */
+    expect(collapsed('path')).toEqual(['Zugabe']);
+  });
+
+  it("'path' laesst einen Knoten offen, sobald ein UNTERKNOTEN auf dem Pfad liegt", () => {
+    const r = roots(`[ ] Wurzel\n  + [?] Zweig\n    - [ ] #ziel: Gebraucht (S)\n  - [ ] Braucht was (S) :#ziel`);
+    /* `#ziel` wird per Abhaengigkeit gezogen (D42) — der Zweig darueber traegt
+       Pfad im Teilbaum und bleibt offen, obwohl er selbst nicht gebraucht wird. */
+    expect([...presetFoldSet(r, 'path', computeCheapSet(r))].map(n => n.label))
+      .toEqual([]);
+  });
+
+  it("'closed' klappt alle faltbaren Knoten zu, 'open' keinen", () => {
+    expect(collapsed('closed'))
+      .toEqual(['Gross', 'Mittel', 'Ohne Groesse', 'Wurzel', 'Zugabe']);
+    expect(collapsed('open')).toEqual([]);
+  });
+});
+
+/* Der eingeklappte Knoten vertritt seinen Teilbaum auch für die
+   Querverbindungen (SPEC §9, D75): IDs und Abhaengigkeiten der verborgenen
+   Knoten haengen als data-sub-ids/data-sub-deps am Vertreter. */
+describe('Renderer — data-sub-ids/data-sub-deps am eingeklappten Knoten', () => {
+  const PLAN = `[ ] Wurzel
+  - [ ] #box: Zweig
+    - [ ] #box.a: Drin :#ziel
+    - [ ] #box.b: Auch drin :#ziel,#box.a
+  - [ ] #ziel: Draussen`;
+
+  it('sammelt IDs (Dokumentreihenfolge) und Abhaengigkeiten (dedupliziert)', () => {
+    const r = roots(PLAN);
+    const zweig = r[0].children[0];
+    const html = renderTreeHtml(r, {t, showDiscarded: false, cheapPath: false,
+      cheapSet: new Set(), collapsedSet: new Set([zweig])}).html;
+    expect(html).toContain('data-sub-ids="box.a box.b"');
+    /* #ziel und #box.a je einmal, obwohl #ziel zweimal gebraucht wird. */
+    expect(html).toContain('data-sub-deps="ziel box.a"');
+  });
+
+  it('haengt an offene Knoten keine sub-Attribute', () => {
+    const html = render(PLAN).html;
+    expect(html).not.toContain('data-sub-ids');
+    expect(html).not.toContain('data-sub-deps');
+  });
+
+  it('sammelt ausgeblendete verworfene Knoten NICHT mit — deren Kanten entfallen weiter', () => {
+    const r = roots(`[ ] Wurzel\n  - [ ] #box: Zweig\n    - [-] #weg: Verworfen :#ziel\n  - [ ] #ziel: Draussen`);
+    const zweig = r[0].children[0];
+    const html = renderTreeHtml(r, {t, showDiscarded: false, cheapPath: false,
+      cheapSet: new Set(), collapsedSet: new Set([zweig])}).html;
+    expect(html).not.toContain('data-sub-ids');
+    expect(html).not.toContain('data-sub-deps');
   });
 });

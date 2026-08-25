@@ -155,6 +155,16 @@ function nodeHtml(n, extra, opts, fold){
      Querverbindungs-Ebene und den Export — beide arbeiten auf dem DOM. */
   const idAttr = n.id ? ` data-id="${attr(n.id)}"` : '';
   const depsAttr = n.deps && n.deps.length ? ` data-deps="${attr(n.deps.join(' '))}"` : '';
+  /* Eingeklappt vertritt der Knoten seinen Teilbaum auch für die
+     Querverbindungen (SPEC §9/D75): IDs und Abhängigkeiten der verborgenen
+     Knoten hängen als eigene Attribute an ihm — getrennt von den eigenen,
+     damit die Bedeutung ablesbar bleibt. Die ID-Liste steht in
+     Dokumentreihenfolge: „erste Vergabe gewinnt" (D36) gilt damit auch über
+     die Faltgrenze hinweg. */
+  const subIdsAttr = fold && fold.subIds.length
+    ? ` data-sub-ids="${attr(fold.subIds.join(' '))}"` : '';
+  const subDepsAttr = fold && fold.subDeps.length
+    ? ` data-sub-deps="${attr(fold.subDeps.join(' '))}"` : '';
   /* Zeilen der Beschreibung (SPEC §9): Steht der Cursor dort, gilt dieser
      Knoten als ausgewählt — die Zeile hat keinen eigenen. Als Liste, damit
      der Attribut-Selektor `~=` sie einzeln trifft. */
@@ -263,8 +273,8 @@ function nodeHtml(n, extra, opts, fold){
                 ownChip;
   const aria = ` aria-label="${attr(nodeAria(n, opts, fold))}"`;
   const html = n.url
-    ? `<a class="${cls}" href="${attr(n.url)}" target="_blank" rel="noopener"${lineAttr}${idAttr}${depsAttr}${descLinesAttr}${aria}${expanded}${title}>${inner}</a>`
-    : `<div class="${cls}" tabindex="0"${lineAttr}${idAttr}${depsAttr}${descLinesAttr}${aria}${expanded}${title}>${inner}</div>`;
+    ? `<a class="${cls}" href="${attr(n.url)}" target="_blank" rel="noopener"${lineAttr}${idAttr}${depsAttr}${subIdsAttr}${subDepsAttr}${descLinesAttr}${aria}${expanded}${title}>${inner}</a>`
+    : `<div class="${cls}" tabindex="0"${lineAttr}${idAttr}${depsAttr}${subIdsAttr}${subDepsAttr}${descLinesAttr}${aria}${expanded}${title}>${inner}</div>`;
   const ghostTip = attr(t('ghostTooltip'));
   const ghost = `<div class="ghost-node" aria-label="${ghostTip}" title="${ghostTip}">${esc(t('ghost'))}</div>`;
   return html + (need ? ghost : '');
@@ -273,8 +283,13 @@ function nodeHtml(n, extra, opts, fold){
 /* Eingeklappter Teilbaum (SPEC §9/D38): Das HTML entfällt, aber die
    Warnungen des verborgenen Teils werden trotzdem gemeldet — sie sind eine
    Aussage über den TEXT, nicht über die Ansicht. Derselbe Lauf zählt die
-   verborgenen Knoten für das „▸ n"-Kennzeichen. */
-function walkFolded(node, warnings, opts){
+   verborgenen Knoten für das „▸ n"-Kennzeichen und sammelt deren IDs und
+   Abhängigkeiten (`agg`, optional): Der eingeklappte Knoten vertritt seinen
+   Teilbaum auch für die Querverbindungen (SPEC §9/D75) — die Kante endet am
+   nächsten sichtbaren Vorfahren statt zu entfallen. Ausgeblendete verworfene
+   Knoten laufen hier NICHT mit (visibleChildren): Der Verworfen-Filter ist
+   eine Aussage über den Plan, ihre Kanten entfallen weiterhin. */
+function walkFolded(node, warnings, opts, agg){
   const kids = visibleChildren(node, opts.showDiscarded);
   if(!kids.length) return 0;
   const types = new Set(kids.map(k => k.type));
@@ -282,7 +297,13 @@ function walkFolded(node, warnings, opts){
     warnings.push({type: 'mixedGate', line: kids[0].line, label: node.label});
   }
   let count = kids.length;
-  for(const k of kids) count += walkFolded(k, warnings, opts);
+  for(const k of kids){
+    if(agg){
+      if(k.id) agg.ids.push(k.id);              /* DFS = Dokumentreihenfolge */
+      if(k.deps) for(const d of k.deps) agg.deps.add(d);
+    }
+    count += walkFolded(k, warnings, opts, agg);
+  }
   return count;
 }
 
@@ -291,8 +312,10 @@ function itemHtml(n, extra, warnings, opts){
   const vk = visibleChildren(n, opts.showDiscarded);
   const canFold = vk.length > 0;
   const collapsed = canFold && !!(opts.collapsedSet && opts.collapsedSet.has(n));
+  const agg = collapsed ? {ids: [], deps: new Set()} : null;
   const fold = canFold
-    ? {collapsed, count: collapsed ? walkFolded(n, warnings, opts) : 0}
+    ? {collapsed, count: collapsed ? walkFolded(n, warnings, opts, agg) : 0,
+       subIds: agg ? agg.ids : [], subDeps: agg ? [...agg.deps] : []}
     : null;
   /* `opt` auch am <li>: den Abzweig zeichnen dessen Pseudoelemente, er wird
      für optionale Knoten gestrichelt (D29). Eingeklappt ist der Knoten ein

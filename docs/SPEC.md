@@ -1083,19 +1083,32 @@ fokussierten Knoten (WAI-ARIA-Baum-Idiom).
   weil eine Fokusmarke `!!!` ihren Knoten immer wieder hervorholt): Dann wird
   lieber nichts geschrieben, als einen Text zu hinterlassen, der etwas anderes
   sagt als das Bild.
-- **Für den ganzen Baum** gibt es im Diagramm-Kopf einen **Umschalter**:
-  gedrückt ist alles **ab Größe M abwärts** zugeklappt, nicht gedrückt ist der
-  ganze Baum **offen**. Betroffen ist jeder Knoten mit Kindern, dessen
-  **angegebene** Größe (§5) `M` oder kleiner ist — offen bleiben `L`, `XL`,
-  `XXL`. Ein Knoten **ohne** Größenangabe wird nicht zugeklappt: Der günstigste
-  Pfad rechnet fehlende Größen zwar als `M` (unten), das ist aber eine
-  Kostenannahme und keine Aussage des Autors.
-- Beide Stellungen beschreiben einen **vollständigen** Faltzustand — was der
-  Umschalter nicht zuklappt, ist danach offen. Sein Zustand wird **nicht
-  gemerkt, sondern am Baum abgelesen**: Wer danach einen Knoten von Hand
-  umklappt, sieht ihn von selbst herausspringen. Geschrieben wird wie beim
-  einzelnen Umklappen — ein einziger Rückgängig-Schritt für den ganzen
-  Vorgang. Siehe D44.
+- **Für den ganzen Baum** gibt es im Diagramm-Kopf einen **Durchschalter**:
+  Jeder Druck stellt die **nächste** von vier Voreinstellungen her, reihum —
+  1. **ab Größe M abwärts zugeklappt**: jeder Knoten mit Kindern, dessen
+     **angegebene** Größe (§5) `M` oder kleiner ist — offen bleiben `L`,
+     `XL`, `XXL`. Ein Knoten **ohne** Größenangabe wird nicht zugeklappt:
+     Der günstigste Pfad schätzt fehlende Größen zwar (unten), das ist aber
+     eine Kostenannahme und keine Aussage des Autors.
+  2. **alles abseits des günstigsten Pfads zugeklappt**: jeder Knoten, durch
+     dessen Teilbaum der günstigste Pfad (§9) **nicht** läuft — weder er
+     selbst noch ein Unterknoten liegt auf ihm. Der Pfad bleibt vollständig
+     sichtbar, alles Übrige steht als je ein eingeklappter Knoten da.
+     Gerechnet wird dafür auch bei **ausgeschaltetem** Pfad-Umschalter — die
+     Voreinstellung fragt nach dem Pfad, nicht nach seiner Anzeige.
+  3. **alles zugeklappt**: jeder Knoten mit Kindern.
+  4. **alles offen**.
+
+  Der Knopf zeigt als Icon und Tooltip den **nächsten** Schritt — also was
+  Drücken tun wird, nicht was gerade gilt: Den Zustand hat man ohnehin vor
+  sich (dieselbe Logik wie beim Bereichs-Umschalter auf kleinem Bildschirm).
+- Jede Voreinstellung beschreibt einen **vollständigen** Faltzustand — was
+  sie nicht zuklappt, ist danach offen. Die Reihum-Position wird **nicht
+  gemerkt, sondern am Baum geprüft**: Beschreibt der Baum nicht mehr den
+  zuletzt hergestellten Schritt (jemand hat von Hand umgeklappt oder den
+  Text geändert), beginnt der nächste Druck wieder bei 1. Geschrieben wird
+  wie beim einzelnen Umklappen — ein einziger Rückgängig-Schritt je
+  Voreinstellung. Siehe D44, D75.
 - Faltung ist **reine Ansicht**: Warnungen aus eingeklappten Teilbäumen werden
   weiter gemeldet (sie gelten dem Text), und der günstigste Pfad rechnet
   unverändert über den ganzen Baum.
@@ -1139,11 +1152,21 @@ Strichen, kein gefülltes Dreieck). Der Baum trägt weiterhin die Hauptaussage.
 - Die Kanten des **ausgewählten** Knotens — Tastaturfokus im Diagramm, sonst
   der Knoten der Cursor-Zeile — sind in Tinte hervorgehoben, ein- wie
   ausgehende; sie liegen über den übrigen Kanten, aber unter jedem Knoten.
-- Kanten zu gerade nicht sichtbaren Knoten (eingeklappt §9, verworfen
-  ausgeblendet §4) entfallen; bei doppelter ID zielt die Kante auf die erste
-  Vergabe (D36/D39).
-- Die Basis-Kanten erscheinen auch im **Grafikexport** und im **Druck**; die
-  Hervorhebung ist Interaktion und erscheint nicht. Siehe D41.
+- **Eingeklappte Knoten vertreten ihre Teilbäume auch hier** (§9, Falten):
+  Liegt ein Endpunkt — Quelle wie Ziel — in einem eingeklappten Teilbaum,
+  endet die Kante am nächsten **sichtbaren Vorfahren**. Fallen beide
+  Endpunkte in denselben sichtbaren Knoten zusammen, entfällt die Kante (sie
+  sagte nichts mehr); mehrere so zusammengefallene Kanten desselben Paars
+  werden zu **einer**. Kanten zu **ausgeblendeten verworfenen** Knoten (§4)
+  entfallen weiterhin — der Verworfen-Filter ist eine Aussage über den Plan,
+  keine Ansicht. Bei doppelter ID zielt die Kante auf die erste Vergabe
+  (D36/D39).
+- **Ein Umschalter im Diagramm-Kopf** (neben dem günstigsten Pfad) blendet
+  die Querverbindungen ein und aus; Voreinstellung **an**, Zustand gemerkt.
+- Die Basis-Kanten erscheinen auch im **Grafikexport** und im **Druck**,
+  sofern der Umschalter an ist (beide folgen ihm wie den übrigen
+  Ansichts-Filtern); die Hervorhebung ist Interaktion und erscheint nicht.
+  Siehe D41, D75.
 
 ### Grafikexport des Diagramms
 Das Diagramm wird aus der Live-Geometrie in ein eigenständiges SVG (nur Formen

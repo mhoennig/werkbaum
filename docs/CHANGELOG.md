@@ -19,6 +19,9 @@ reverse.
 
 ## 2026-08-25
 
+- The fold button cycles through four presets now: size M and smaller, everything off the cheapest path, everything, all open
+- A button next to the cheapest-path toggle switches the dependency cross links on and off
+- Dependency links follow the folding: an edge to a hidden node now ends at its first visible ancestor, for source and target alike
 - In Brave, the file notice names the flag that enables the File System Access API by hand
 - Fix: the file notice and the legend blamed "Chromium", but Brave is Chromium without the File System Access API — they now name the feature and example browsers
 - Browsers without the File System Access API (Firefox, Safari) explain themselves once: files open as copies and saving downloads a new file

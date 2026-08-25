@@ -1,6 +1,6 @@
 import './style.css';
 import { parse, setFoldMark, expandShortIds, shortIdClosed } from './parser.js';
-import { computeCheapPlan, overloadedAssignee, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, atMostM, lineTargets } from './model.js';
+import { computeCheapPlan, overloadedAssignee, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, presetFoldSet, lineTargets } from './model.js';
 import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning, warningText } from './warnings.js';
 import { padUrls } from './remote.js';
@@ -59,7 +59,15 @@ const lineNoInner = lineNoBox.firstElementChild;
    Pfad) lebt headless in model.js, das HTML-Erzeugen in render.js. Hier bleibt
    nur der UI-State des Günstigster-Pfad-Toggles (persistiert). */
 let cheapPathOn = true;
+let depLinksOn = true; /* Querverbindungen der Abhängigkeiten anzeigen (D75) */
 let showIds = false;   /* Knoten-IDs im Diagramm einblenden (D56) */
+/* Falt-Durchschalter (SPEC §9/D75): vier Voreinstellungen, reihum. `Next` ist
+   der Schritt, den der nächste Druck ausführt (Icon + Tooltip zeigen IHN),
+   `Applied` der zuletzt hergestellte — render() prüft ihn gegen den Baum und
+   setzt die Position zurück, sobald er nicht mehr stimmt. Nicht persistiert:
+   Der Faltzustand steht im Text (D38), die Position ist nur der Zeiger darin. */
+const FOLD_CYCLE = ['small', 'path', 'closed', 'open'];
+let foldCycleNext = 0, foldCycleApplied = -1;
 /* Ansicht bei einem Pad-Dokument (D31): beide | nur Pad | nur Spiegel. Hier oben
    deklariert, weil saveUI() sie liest und schon aus applySplit() heraus laufen
    kann — weiter unten stünde sie dann noch in der temporalen Todeszone. */
@@ -167,25 +175,29 @@ function render(){
         ? freshProdSet(freshPrevRoots, roots) : new Set();
     }
     const collapsedSet = new Set();
-    let foldSmallExact = true, foldSmallAny = false;
     foldByLine = new Map();
+    /* Reihum-Position des Falt-Durchschalters (SPEC §9/D75): nicht gemerkt,
+       sondern am Baum GEPRÜFT — die D44-Linie, nur dass der Knopf jetzt vier
+       Voreinstellungen durchläuft. Beschreibt der Baum nicht mehr den zuletzt
+       hergestellten Schritt (Hand-Faltung, Textänderung, Dokumentwechsel),
+       beginnt der nächste Druck wieder vorn. Der 'path'-Schritt braucht den
+       günstigsten Pfad auch bei ausgeschaltetem Pfad-Umschalter — dann wird
+       er hier eigens für die Prüfung gerechnet (dieselbe Rechnung, die sonst
+       ohnehin je Tastendruck läuft). */
+    let presetSet = null, presetMatch = true;
+    if(foldCycleApplied >= 0){
+      const mode = FOLD_CYCLE[foldCycleApplied];
+      const cs = (mode === 'path' && !cheapPathOn) ? computeCheapPlan(roots).set : cheapSet;
+      presetSet = presetFoldSet(roots, mode, cs);
+    }
     keys.forEach((key, n) => {
       const ov = foldOverrides.get(key);
       const collapsed = (ov !== undefined ? ov : initFold.has(n)) && n.children.length > 0;
       if(collapsed) collapsedSet.add(n);
       foldByLine.set(n.line, {key, collapsed, canFold: n.children.length > 0});
-      /* Der Umschalter (D44) merkt sich nichts, er liest ab: gedrückt genau
-         dann, wenn JEDER faltbare Knoten so steht, wie die Voreinstellung ihn
-         stellen würde. */
-      if(n.children.length > 0){
-        if(atMostM(n)) foldSmallAny = true;
-        if(collapsed !== atMostM(n)) foldSmallExact = false;
-      }
+      if(presetSet && n.children.length > 0 && collapsed !== presetSet.has(n)) presetMatch = false;
     });
-    /* `foldSmallAny`: Gäbe es gar keinen Knoten bis M, wären „zugeklappt" und
-       „alles offen" derselbe Zustand — der Knopf säße dann gedrückt da, ohne
-       dass etwas zugeklappt ist. */
-    foldSmallBtn.setAttribute('aria-pressed', foldSmallExact && foldSmallAny ? 'true' : 'false');
+    if(presetSet && !presetMatch){ foldCycleApplied = -1; foldCycleNext = 0; }
     /* Aus DENSELBEN Mengen wie das Rendern — die Map muss dieselbe Faltung
        beschreiben, die gleich im DOM steht (dieselbe Regel wie bei freshSet). */
     lineTargetMap = lineTargets(roots, collapsedSet, showDiscarded);
@@ -223,6 +235,7 @@ function render(){
   revealFocusMark();  /* `!!!` ins Bild holen, wenn die Marke neu ist (SPEC §1) */
   updateFreshBtn();   /* Zähler folgt der gerade gerenderten Menge (D28) */
   updateLeanBtn();    /* Stationen des Pfads haben sich geändert (D47) */
+  updateFoldBtn();    /* Icon + Tooltip = nächster Schritt des Durchschalters (D75) */
 }
 
 /* Fokusmarke `!!!` (SPEC §1): Der erste markierte Knoten wird ins Bild geholt —
@@ -409,16 +422,32 @@ function drawCheapPath(){
    fokussierten Knotens bzw. der Cursor-Zeile liegen hervorgehoben in Tinte
    auf einer vorderen Ebene. */
 function depEdges(){
+  /* Eingeklappte Knoten vertreten ihre Teilbäume (SPEC §9/D75): Der Renderer
+     hängt IDs und Abhängigkeiten der verborgenen Knoten als `data-sub-ids`/
+     `data-sub-deps` an den eingeklappten Vertreter — Quelle wie Ziel enden
+     damit am nächsten sichtbaren Vorfahren. querySelectorAll liefert
+     Dokumentreihenfolge, und die Sub-IDs stehen (DFS) ebenso darin: „erste
+     Vergabe gewinnt" (D36) gilt so auch über die Faltgrenze hinweg. */
   const byId = new Map();
-  out.querySelectorAll('.node[data-id]').forEach(el => {
-    if(!byId.has(el.dataset.id)) byId.set(el.dataset.id, el);   /* erste Vergabe gewinnt (D36) */
+  out.querySelectorAll('.node[data-id], .node[data-sub-ids]').forEach(el => {
+    if(el.dataset.id && !byId.has(el.dataset.id)) byId.set(el.dataset.id, el);
+    if(el.dataset.subIds) for(const id of el.dataset.subIds.split(' '))
+      if(!byId.has(id)) byId.set(id, el);
   });
-  const edges = [];
-  out.querySelectorAll('.node[data-deps]').forEach(el => {
-    for(const d of el.dataset.deps.split(' ')){
+  const edges = [], seen = new Set();
+  out.querySelectorAll('.node[data-deps], .node[data-sub-deps]').forEach(el => {
+    const deps = ((el.dataset.deps || '') + ' ' + (el.dataset.subDeps || ''))
+      .split(' ').filter(Boolean);
+    for(const d of deps){
       const target = byId.get(d);
-      /* verborgene (eingeklappte/ausgeblendete) oder unbekannte Ziele: keine Kante */
-      if(target && target !== el) edges.push([el, target]);
+      /* ausgeblendete (verworfene) oder unbekannte Ziele: keine Kante; beide
+         Endpunkte im selben sichtbaren Knoten zusammengefallen: ebenso —
+         und mehrere zusammengefallene Kanten desselben Paars werden EINE. */
+      if(!target || target === el) continue;
+      const key = el.dataset.line + '>' + target.dataset.line;
+      if(seen.has(key)) continue;
+      seen.add(key);
+      edges.push([el, target]);
     }
   });
   return edges;
@@ -464,6 +493,7 @@ function activeDepNode(){
 }
 function drawDepLinks(){
   out.querySelectorAll('svg.dep-overlay').forEach(e => e.remove());
+  if(!depLinksOn) return;      /* Umschalter (SPEC §9/D75), Voreinstellung an */
   const edges = depEdges();
   if(!edges.length) return;
   const outRect = out.getBoundingClientRect();
@@ -656,8 +686,9 @@ function diagramToSvg(){
   });
 
   /* 1a) Querverbindungen der Abhängigkeiten (D41) — Basis-Kanten hinter den
-     Knoten; die Fokus-Hervorhebung ist Interaktion und wird nicht exportiert. */
-  depEdges().forEach(([from, to]) => {
+     Knoten; die Fokus-Hervorhebung ist Interaktion und wird nicht exportiert.
+     Der Export folgt dem Umschalter (D75) wie den übrigen Ansichts-Filtern. */
+  (depLinksOn ? depEdges() : []).forEach(([from, to]) => {
     const c = depCurve(R(from), R(to));
     parts.push(`<path d="${c.d}" fill="none" stroke="#6B7A8C" stroke-width="1.5" opacity="0.4" stroke-linecap="round" stroke-dasharray="0.1 3"/>`);
     parts.push(`<path d="${depArrow(c.end, c.ctrl)}" fill="none" stroke="#6B7A8C" stroke-width="1.5" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/>`);
@@ -1223,17 +1254,22 @@ function writeAllFoldMarks(roots, want){
   return withEditorWritable(() => replaceTextUndoable(neu));
 }
 
-/* Voreinstellungen aus dem Diagramm-Kopf (SPEC §9, D44): den ganzen Baum auf
-   einmal auf- bzw. bis unter Größe M zuklappen. Gesetzt wird über dieselben
-   Sitzungs-Überlagerungen wie beim einzelnen Umklappen und danach in den Text
-   geschrieben — es ist derselbe Vorgang, nur für viele Knoten. Deshalb auch
-   EIN Undo-Schritt: `replaceTextUndoable` schreibt genau einmal. */
+/* Voreinstellungen aus dem Diagramm-Kopf (SPEC §9, D44/D75): den ganzen Baum
+   auf einmal in einen der vier Durchschalter-Zustände stellen. Gesetzt wird
+   über dieselben Sitzungs-Überlagerungen wie beim einzelnen Umklappen und
+   danach in den Text geschrieben — es ist derselbe Vorgang, nur für viele
+   Knoten. Deshalb auch EIN Undo-Schritt: `replaceTextUndoable` schreibt genau
+   einmal. Der 'path'-Modus rechnet den günstigsten Pfad selbst — er gilt auch
+   bei ausgeschaltetem Pfad-Umschalter (die Voreinstellung fragt nach dem
+   Pfad, nicht nach seiner Anzeige). */
 function applyFoldPreset(mode){
   const roots = parse(src.value).roots;
   if(!roots.length) return;
+  const cs = mode === 'path' ? computeCheapPlan(roots).set : null;
+  const want = presetFoldSet(roots, mode, cs);
   nodeKeys(roots).forEach((key, n) => {
     if(!n.children.length) return;           /* nur faltbare Knoten */
-    foldOverrides.set(key, mode === 'small' ? atMostM(n) : false);
+    foldOverrides.set(key, want.has(n));
   });
   if(!src.readOnly && writeAllFoldMarks(roots, desiredFoldKeys(roots))) foldOverrides.clear();
   else render();                             /* Pad o. nicht ausdrückbar: Überlagerung trägt */
@@ -2011,17 +2047,27 @@ function discardedShown(){ return showc.getAttribute('aria-pressed') === 'true';
 function setDiscarded(on){ showc.setAttribute('aria-pressed', on ? 'true' : 'false'); }
 showc.addEventListener('click', () => { setDiscarded(!discardedShown()); render(); saveUI(); });
 
-/* Faltung für den ganzen Baum (SPEC §9, D44): ein Umschalter wie die beiden
-   Nachbarn. Gedrückt heißt „alles unter Größe M ist zugeklappt". Der Zustand
-   wird nicht gemerkt, sondern bei jedem Rendern am Baum ABGELESEN
-   (`syncFoldSmallBtn`) — klappt jemand danach einen Knoten von Hand um, geht
-   der Knopf von selbst heraus, statt etwas zu behaupten, das nicht mehr
-   stimmt. Deshalb auch nicht in `werkbaum-ui` persistiert: Der Faltzustand
-   steht im Text (D38-Nachtrag 2), der Knopf liest ihn nur ab. */
-const foldSmallBtn = document.getElementById('foldSmallBtn');
-foldSmallBtn.addEventListener('click', () => {
-  applyFoldPreset(foldSmallBtn.getAttribute('aria-pressed') === 'true' ? 'all' : 'small');
+/* Faltung für den ganzen Baum (SPEC §9, D44/D75): ein DURCHSCHALTER — jeder
+   Druck stellt die nächste von vier Voreinstellungen her (ab M abwärts zu →
+   alles abseits des Pfads zu → alles zu → alles offen → wieder vorn). Icon
+   und Tooltip zeigen den NÄCHSTEN Schritt, also was Drücken tun wird — den
+   Zustand hat man vor sich (dieselbe Logik wie beim Bereichs-Umschalter,
+   D17). Die Position wird nicht persistiert; render() prüft sie gegen den
+   Baum und setzt sie zurück, sobald jemand von Hand umklappt (D44-Linie). */
+const foldBtn = document.getElementById('foldBtn');
+foldBtn.addEventListener('click', () => {
+  const mode = FOLD_CYCLE[foldCycleNext];
+  foldCycleApplied = foldCycleNext;
+  foldCycleNext = (foldCycleNext + 1) % FOLD_CYCLE.length;
+  applyFoldPreset(mode);   /* rendert; render() prüft und aktualisiert den Knopf */
 });
+function updateFoldBtn(){
+  const mode = FOLD_CYCLE[foldCycleNext];
+  foldBtn.dataset.next = mode;
+  const tip = t('foldCycle_' + mode);
+  foldBtn.title = tip;
+  foldBtn.setAttribute('aria-label', tip);
+}
 
 /* Günstigster-Pfad-Hervorhebung an/aus */
 const cheapBtn = document.getElementById('cheapBtn');
@@ -2029,6 +2075,18 @@ cheapBtn.addEventListener('click', () => {
   cheapPathOn = !cheapPathOn;
   cheapBtn.setAttribute('aria-pressed', cheapPathOn ? 'true' : 'false');
   render();
+  saveUI();
+});
+
+/* Querverbindungen der Abhängigkeiten an/aus (SPEC §9/D75): ein Umschalter
+   wie der Pfad daneben; Grafikexport und Druck folgen ihm. Nur die Overlays
+   werden neu gezeichnet — am Baum ändert sich nichts, ein render() wäre
+   umsonst gearbeitet. */
+const depBtn = document.getElementById('depBtn');
+depBtn.addEventListener('click', () => {
+  depLinksOn = !depLinksOn;
+  depBtn.setAttribute('aria-pressed', depLinksOn ? 'true' : 'false');
+  drawDepLinks();
   saveUI();
 });
 
@@ -2175,7 +2233,11 @@ const I18N = {
     discardedTooltip:"Verworfene Knoten samt Teilbaum ein-/ausblenden",
     cheapTooltip:"Günstigsten Pfad hervorheben – nicht benötigte Alternativen treten zurück",
     leanNextTooltip:"Zur nächsten Station des günstigsten Pfads springen – was als Nächstes dran ist ({n} offen)",
-    foldSmallTooltip:"Knoten der Größe M und kleiner zuklappen – erneut drücken klappt alle wieder auf",
+    depsTooltip:"Querverbindungen der Abhängigkeiten anzeigen",
+    foldCycle_small:"Knoten der Größe M und kleiner zuklappen",
+    foldCycle_path:"Alles abseits des günstigsten Pfads zuklappen",
+    foldCycle_closed:"Alle Knoten zuklappen",
+    foldCycle_open:"Alle Knoten aufklappen",
     implicitSizeTooltip:"Keine Größe angegeben – für die Kostenschätzung mindestens {size} angenommen",
     fullscreenTooltip:"Vollbild – Panels nutzen die ganze Fensterbreite",
     brandTooltip:"„Werkbaum“ bedeutet so viel wie ‚Werk-Baum‘ — der Baum des Projektstrukturplans (WBS).",
@@ -2284,7 +2346,11 @@ const I18N = {
     discardedTooltip:"Show/hide discarded nodes and their subtree",
     cheapTooltip:"Highlight the cheapest path – unneeded alternatives recede",
     leanNextTooltip:"Jump to the next station on the cheapest path – what to tackle next ({n} open)",
-    foldSmallTooltip:"Collapse nodes of size M and smaller – press again to expand them all",
+    depsTooltip:"Show dependency cross-links",
+    foldCycle_small:"Collapse nodes of size M and smaller",
+    foldCycle_path:"Collapse everything off the cheapest path",
+    foldCycle_closed:"Collapse all nodes",
+    foldCycle_open:"Expand all nodes",
     implicitSizeTooltip:"No size given – assumed at least {size} for the cost estimate",
     fullscreenTooltip:"Full screen – panels use the full window width",
     brandTooltip:"“Werkbaum” means roughly ‘work tree’ — the tree of the work breakdown structure (WBS).",
@@ -2392,7 +2458,11 @@ const I18N = {
     discardedTooltip:"Mostrar u ocultar los nodos descartados y su subárbol",
     cheapTooltip:"Resaltar la ruta más económica: las alternativas no necesarias se atenúan",
     leanNextTooltip:"Ir a la siguiente estación de la ruta más económica: lo próximo que toca ({n} pendientes)",
-    foldSmallTooltip:"Plegar los nodos de talla M o menor: pulsa de nuevo para desplegarlos todos",
+    depsTooltip:"Mostrar los enlaces de dependencias",
+    foldCycle_small:"Plegar los nodos de talla M o menor",
+    foldCycle_path:"Plegar todo lo que queda fuera de la ruta más económica",
+    foldCycle_closed:"Plegar todos los nodos",
+    foldCycle_open:"Desplegar todos los nodos",
     implicitSizeTooltip:"Sin tamaño indicado: se asume al menos {size} para el cálculo de costes",
     fullscreenTooltip:"Pantalla completa – los paneles usan todo el ancho de la ventana",
     brandTooltip:"«Werkbaum» significa algo así como ‘árbol de trabajo’ — el árbol de la estructura de desglose del trabajo (EDT).",
@@ -2500,7 +2570,11 @@ const I18N = {
     discardedTooltip:"Afficher/masquer les nœuds abandonnés et leur sous-arbre",
     cheapTooltip:"Mettre en évidence le chemin le moins coûteux – les alternatives inutiles s'estompent",
     leanNextTooltip:"Aller à la station suivante du chemin le moins coûteux – la prochaine chose à faire ({n} en attente)",
-    foldSmallTooltip:"Replier les nœuds de taille M et moins – appuyez à nouveau pour tout déplier",
+    depsTooltip:"Afficher les liens de dépendances",
+    foldCycle_small:"Replier les nœuds de taille M et moins",
+    foldCycle_path:"Replier tout ce qui est hors du chemin le moins coûteux",
+    foldCycle_closed:"Replier tous les nœuds",
+    foldCycle_open:"Déplier tous les nœuds",
     implicitSizeTooltip:"Aucune taille indiquée – au moins {size} supposé pour l'estimation des coûts",
     fullscreenTooltip:"Plein écran – les panneaux occupent toute la largeur de la fenêtre",
     brandTooltip:"« Werkbaum » signifie à peu près « arbre de travail » — l’arbre de l’organigramme des tâches (WBS).",
@@ -2608,7 +2682,11 @@ const I18N = {
     discardedTooltip:"Pokaż/ukryj odrzucone węzły wraz z poddrzewem",
     cheapTooltip:"Wyróżnij najtańszą ścieżkę – niepotrzebne alternatywy są przygaszone",
     leanNextTooltip:"Przejdź do następnej stacji najtańszej ścieżki – co dalej ({n} otwartych)",
-    foldSmallTooltip:"Zwiń węzły o rozmiarze M i mniejsze – naciśnij ponownie, aby rozwinąć wszystkie",
+    depsTooltip:"Pokaż powiązania zależności",
+    foldCycle_small:"Zwiń węzły o rozmiarze M i mniejsze",
+    foldCycle_path:"Zwiń wszystko poza najtańszą ścieżką",
+    foldCycle_closed:"Zwiń wszystkie węzły",
+    foldCycle_open:"Rozwiń wszystkie węzły",
     implicitSizeTooltip:"Nie podano rozmiaru – do szacowania kosztów przyjęto co najmniej {size}",
     fullscreenTooltip:"Pełny ekran – panele wykorzystują całą szerokość okna",
     brandTooltip:"„Werkbaum” znaczy mniej więcej ‚drzewo pracy’ — drzewo struktury podziału pracy (WBS).",
@@ -2716,7 +2794,11 @@ const I18N = {
     discardedTooltip:"Показать/скрыть отклонённые узлы вместе с поддеревом",
     cheapTooltip:"Выделить самый дешёвый путь — ненужные альтернативы приглушаются",
     leanNextTooltip:"Перейти к следующей станции самого дешёвого пути — что делать дальше ({n} открыто)",
-    foldSmallTooltip:"Свернуть узлы размера M и меньше — нажмите ещё раз, чтобы развернуть все",
+    depsTooltip:"Показать связи зависимостей",
+    foldCycle_small:"Свернуть узлы размера M и меньше",
+    foldCycle_path:"Свернуть всё вне самого дешёвого пути",
+    foldCycle_closed:"Свернуть все узлы",
+    foldCycle_open:"Развернуть все узлы",
     implicitSizeTooltip:"Размер не указан — для оценки затрат принят не меньше {size}",
     fullscreenTooltip:"Полный экран – панели занимают всю ширину окна",
     brandTooltip:"«Werkbaum» примерно означает ‚дерево работ’ — дерево структуры декомпозиции работ (СДР).",
@@ -2824,7 +2906,11 @@ const I18N = {
     discardedTooltip:"अस्वीकृत नोड्स और उनके उप-वृक्ष दिखाएँ/छिपाएँ",
     cheapTooltip:"सबसे किफ़ायती पथ को उजागर करें – अनावश्यक विकल्प मंद हो जाते हैं",
     leanNextTooltip:"सबसे किफ़ायती पथ के अगले पड़ाव पर जाएँ – अगला काम ({n} शेष)",
-    foldSmallTooltip:"आकार M और उससे छोटे नोड समेटें – सभी को खोलने के लिए फिर दबाएँ",
+    depsTooltip:"निर्भरता के आड़े संबंध दिखाएँ",
+    foldCycle_small:"आकार M और उससे छोटे नोड समेटें",
+    foldCycle_path:"सबसे किफ़ायती पथ से बाहर सब कुछ समेटें",
+    foldCycle_closed:"सभी नोड समेटें",
+    foldCycle_open:"सभी नोड खोलें",
     implicitSizeTooltip:"कोई आकार नहीं दिया गया – लागत अनुमान के लिए कम से कम {size} माना गया",
     fullscreenTooltip:"पूर्ण स्क्रीन – पैनल पूरी विंडो चौड़ाई का उपयोग करते हैं",
     brandTooltip:"„Werkbaum“ का अर्थ लगभग ‚कार्य-वृक्ष‘ है — कार्य विभाजन संरचना (WBS) का वृक्ष।",
@@ -2917,7 +3003,11 @@ const I18N = {
     discardedTooltip:"显示/隐藏已放弃的节点及其子树",
     cheapTooltip:"突出显示成本最低的路径——不需要的备选项将淡化",
     leanNextTooltip:"跳到成本最低路径的下一站——接下来该做的事（还有 {n} 项）",
-    foldSmallTooltip:"折叠尺寸 M 及更小的节点——再次点击可全部展开",
+    depsTooltip:"显示依赖关系连线",
+    foldCycle_small:"折叠尺寸 M 及更小的节点",
+    foldCycle_path:"折叠最低成本路径之外的所有节点",
+    foldCycle_closed:"折叠所有节点",
+    foldCycle_open:"展开所有节点",
     implicitSizeTooltip:"未指定尺寸——成本估算时按至少 {size} 计",
     ghostTooltip:"从 M 号起，元素应进一步细分。",
     jumpHint:"Alt+点击：跳转到文本中的该行",
@@ -3025,7 +3115,11 @@ const I18N = {
     discardedTooltip:"破棄したノードとその下位ツリーを表示/非表示",
     cheapTooltip:"最も低コストの経路を強調 – 不要な選択肢は控えめに表示",
     leanNextTooltip:"最も低コストの経路の次の駅へ移動 – 次にやること（残り {n} 件）",
-    foldSmallTooltip:"サイズ M 以下のノードを折りたたむ – もう一度押すとすべて展開",
+    depsTooltip:"依存関係のリンクを表示",
+    foldCycle_small:"サイズ M 以下のノードを折りたたむ",
+    foldCycle_path:"最も低コストの経路以外をすべて折りたたむ",
+    foldCycle_closed:"すべてのノードを折りたたむ",
+    foldCycle_open:"すべてのノードを展開",
     implicitSizeTooltip:"サイズ未指定 – コスト見積もりのため少なくとも {size} として扱う",
     ghostTooltip:"サイズ M 以上の要素はさらに分解すべきです。",
     jumpHint:"Alt+クリック：テキストの該当行へ移動",
@@ -3367,6 +3461,7 @@ function saveUI(){
       mode: modeEl ? modeEl.value : 'horizontal',
       discarded: discardedShown(),
       cheapPath: cheapPathOn,
+      depLinks: depLinksOn,
       showIds,
       split: splitState,
       col: app.style.getPropertyValue('--col') || null,
@@ -3405,6 +3500,10 @@ function restoreState(){
     if(typeof ui.cheapPath === 'boolean'){
       cheapPathOn = ui.cheapPath;
       cheapBtn.setAttribute('aria-pressed', cheapPathOn ? 'true' : 'false');
+    }
+    if(typeof ui.depLinks === 'boolean'){
+      depLinksOn = ui.depLinks;
+      depBtn.setAttribute('aria-pressed', depLinksOn ? 'true' : 'false');
     }
     if(typeof ui.showIds === 'boolean'){
       showIds = ui.showIds;
