@@ -105,7 +105,10 @@ One node per line. Everything except the label is optional.
 
 ### Size (effort)
 
-- T-shirt sizes in parentheses: `(XS) (S) (M) (L) (XL) (XXL)`.
+- T-shirt sizes in parentheses: `(XS) (S) (M) (L) (XL) (XXL)`. Recognized
+  only **free-standing** (preceded by start-of-line or whitespace), and the
+  **last** such token of the line is the size — earlier ones stay in the
+  label. `"(L)"` and `((L))` mention a size literally (quoting convention).
 - From `(M)` upward a node **should be decomposed further**; a node ≥ M
   without children gets a placeholder hint in the diagram.
 - For cost estimation a missing size is **estimated from the sub-packages**:
@@ -134,7 +137,8 @@ One node per line. Everything except the label is optional.
    (whole line or trailing part). This also applies inside descriptions.
 2. Bare `https?://…` URL — makes the node clickable; extracted early so `@`,
    `#` and `!!!` inside URLs never trigger.
-3. `(SIZE)` — first match, case-insensitive.
+3. `(SIZE)` — the **last free-standing** match, case-insensitive; earlier
+   size-like tokens stay in the label.
 4. `@name` — people tags; several per line, any position. Characters:
    Unicode letters, digits, `.`, `_`, `-`.
 5. `#id` — **node ID**: the *first* free-standing `#token` of the line
@@ -214,7 +218,7 @@ One node per line. Everything except the label is optional.
 - Keep rejected alternatives as `[-]` instead of deleting them: the decision
   stays visible (add the reason as a `%%` comment).
 - To mention syntax literally in a label without triggering it, wrap it in
-  parentheses or quotes: `(#id)`, `(:#a,#b)`, `"#123"`.
+  parentheses or quotes: `(#id)`, `(:#a,#b)`, `"#123"`, `"(L)"`, `((L))`.
 
 ## Complete example
 

@@ -5056,3 +5056,45 @@ kann den Handler prinzipiell nicht treffen — der erste Prüflauf sah deshalb
 wie ein Fehler aus, der keiner war. Geprüft wird das Tastatur-Pendant mit
 einem korrekt gebauten `KeyboardEvent`; der Klick-Weg ließ sich dagegen echt
 auslösen.
+
+## D68 — Größe: das letzte alleinstehende Token, nicht das erste
+Gemeldet vom Nutzer: Manchmal braucht der Titel runde Klammern — und wenn ihr
+Inhalt zufällig ein Größenkürzel ist (`Variante (L) bauen`), fraß die
+Extraktion das Titel-`(L)` als Größe. Mit echter Angabe dahinter war es
+doppelt falsch: Das Literal wurde die Größe, das gemeinte `(M)` blieb im
+Label. Entschieden (Nutzer): beide vorgeschlagenen Regeln kombiniert.
+
+**Alleinstehend angesetzt** (`(^|\s)\(…\)`) — dieselbe Regel-Familie wie bei
+`#id`, `:#…`, `!!!` und `&tag`, und der eigentliche Gewinn liegt darin, dass
+die **vorhandenen Zitier-Konventionen dadurch von selbst greifen**: `"(L)"`
+bleibt Label (das `(` hängt am `"`), `((L))` ebenso (am äußeren `(`). Kein
+neues Zeichen, kein Escape — die Notation escapt weiterhin nirgends (D59).
+Wer eine Größe erwähnen will, zitiert sie; llms.md führt beide Formen in der
+Zitier-Faustregel.
+
+**Das letzte Token gewinnt, nicht das erste.** Die übliche Schreibweise
+stellt die Größe hinter den Titel — das letzte Token ist die Angabe, alles
+davor ist Text. Damit löst sich auch der Fall ohne Anführungszeichen richtig
+auf: `Variante (L) bauen (M)` → Größe `M`, Label „Variante (L) bauen“. In
+der Idee-Runde war „letztes statt erstes“ zunächst verworfen worden („stille
+Umdeutung bestehender Zeilen“); der Einwand wiegt hier wenig, weil die alte
+Erste-gewinnt-Lesart in genau diesen Zeilen schon falsch war — es gibt keine
+richtige Bedeutung, die verloren ginge.
+
+**Preis, benannt:** `Backend(L)` ohne Leerzeichen ist keine Größe mehr. Der
+Fehlermodus ist der laute (das Badge fehlt sichtbar, D59-Haltung), und in den
+mitgelieferten Beispielen kommt die enge Schreibweise nicht vor — geprüft per
+Grep und per Parse-Vergleich alt/neu über alle `docs/examples/*.werkbaum`
+(Knoten- und Größenzahlen identisch, Warnungen unverändert; die drei
+`sizeConflict` der Demo-Pläne sind Altbestand).
+
+**Umgesetzt als Schleife über alle Treffer** statt eines cleveren
+Rückwärts-Regex: gut lesbar, und der führende Leerraum der Fundstelle bleibt
+beim Entfernen stehen (wie `pre` bei den übrigen Extraktionen). SPEC §1
+(Schritt 4, eigener Größen-Block, Referenz-Regex) und §5 zuerst, llms.md im
+selben Zug (Schritt-3-Regel, Größen-Abschnitt, Zitier-Faustregel).
+
+**Nachgemessen:** 445 Tests (4 neue in `tests/parser.test.js`); Gegenprobe
+per Mutation: erster statt letzter Treffer → genau der Letztes-gewinnt-Test
+fällt; Anker entfernt → genau die zwei Alleinstehend-/Zitier-Tests. Alle
+Snapshots (kanonisches Beispiel §10) unverändert.

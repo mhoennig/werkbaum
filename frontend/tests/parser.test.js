@@ -128,6 +128,35 @@ describe('parse — Randfälle', () => {
     expect(roots[1].size).toBe('M');
   });
 
+  /* Größen-Token (SPEC §1 Schritt 4, D68): das LETZTE alleinstehend
+     angesetzte `(L)`-Token ist die Größe; frühere bleiben im Label, und die
+     Zitier-Konventionen `"(L)"`/`((L))` halten ein Literal heraus. */
+  it('das letzte alleinstehende Größen-Token gewinnt, frühere bleiben im Label', () => {
+    const { roots } = parse('- Variante (L) bauen (M)');
+    expect(roots[0].size).toBe('M');
+    expect(roots[0].label).toBe('Variante (L) bauen');
+  });
+
+  it('Größe nur alleinstehend angesetzt: Backend(L) bleibt Label', () => {
+    const { roots } = parse('- Backend(L)');
+    expect(roots[0].size).toBe(null);
+    expect(roots[0].label).toBe('Backend(L)');
+  });
+
+  it('Zitier-Konventionen: "(L)" und ((L)) bleiben Label', () => {
+    const { roots } = parse('- Merch "(L)" drucken\n- Auswahl ((L)) treffen (S)');
+    expect(roots[0].size).toBe(null);
+    expect(roots[0].label).toBe('Merch "(L)" drucken');
+    expect(roots[1].size).toBe('S');
+    expect(roots[1].label).toBe('Auswahl ((L)) treffen');
+  });
+
+  it('Größe am Zeilenanfang des Rests zählt weiterhin', () => {
+    const { roots } = parse('- (L) Backend');
+    expect(roots[0].size).toBe('L');
+    expect(roots[0].label).toBe('Backend');
+  });
+
   it('ohne Angaben: status/url/size null, tags leer', () => {
     const { roots } = parse('- Nackt');
     expect(roots[0]).toMatchObject({ status: null, url: null, size: null, tags: [] });

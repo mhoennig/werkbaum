@@ -286,7 +286,21 @@ export function parse(text){
     let rest = m[6], url = null, size = null;
     const tags = [];
     rest = rest.replace(/https?:\/\/\S+/i, s => { url = s; return ''; });
-    rest = rest.replace(/\((XXL|XS|XL|S|M|L)\)/i, (s, g) => { size = g.toUpperCase(); return ''; });
+    /* Größe (SPEC §1 Schritt 4, D68): das LETZTE alleinstehend angesetzte
+       `(L)`-Token der Zeile — die Größe steht nach der üblichen Schreibweise
+       hinter dem Titel, frühere Vorkommen sind Text und bleiben im Label.
+       Alleinstehend wie bei `#id` und `:#…`: `Backend(L)` bleibt Label, und
+       die Zitier-Konventionen `"(L)"` und `((L))` gelten damit von selbst. */
+    {
+      const reSize = /(^|\s)\((XXL|XS|XL|S|M|L)\)/gi;
+      let sm, lastSize = null;
+      while((sm = reSize.exec(rest))) lastSize = sm;
+      if(lastSize){
+        size = lastSize[2].toUpperCase();
+        rest = rest.slice(0, lastSize.index) + lastSize[1]
+             + rest.slice(lastSize.index + lastSize[0].length);
+      }
+    }
     rest = rest.replace(/@([\p{L}\p{N}._-]+)/gu, (s, g) => { tags.push(g); return ''; });
     /* Knoten-ID `#name` (SPEC §1, D36): nur ALLEINSTEHEND ANGESETZT — „C#"
        bleibt Label, und das reservierte `:#a,#b` (§11) wird nicht gefressen.

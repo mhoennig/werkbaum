@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-25
 
+- The size is now the last free-standing `(L)`-style token of the line — earlier ones stay in the title, and `"(L)"` or `((L))` mention a size literally
 - Fix: Ctrl+click on a dependency preceded by a non-breaking space did nothing, although the parser reads it as a dependency
 - Ctrl+click a dependency `:#id` in the text jumps to the line that defines the ID — Ctrl+Enter does the same at the caret
 

@@ -20,7 +20,9 @@ dieser Reihenfolge (wichtig für Kollisionsfreiheit):
    (`>` / `<`) per Zeilen-Regex; `=` nur mit folgendem Leerraum (§3),
    die Faltmarke ebenso (siehe unten).
 3. URL: erstes Token, das auf `https?://\S+` passt (dadurch stören `@` in URLs nicht).
-4. Größe: erstes `(XS|S|M|L|XL|XXL)`, Groß-/Kleinschreibung egal.
+4. Größe: das **letzte** alleinstehend angesetzte `(XS|S|M|L|XL|XXL)`,
+   Groß-/Kleinschreibung egal (siehe unten). Frühere Vorkommen bleiben im
+   Label stehen.
 5. Tags: alle `@name`-Vorkommen.
 6. Knoten-ID: das **erste** alleinstehend angesetzte `#name`-Token (siehe unten).
 7. Abhängigkeiten: alle alleinstehend angesetzten `:#a,#b`-Token (siehe unten).
@@ -83,6 +85,19 @@ Referenz-Regex (Schritt 1b, geprüft auf der kommentarfreien Zeile):
   sie ihn her, und Umklappen im Diagramm schreibt sie zurück (§9) — Text und
   Bild sagen dasselbe. Sie sagen nichts über Fortschritt (§4) oder
   Notwendigkeit (§3) und ändern weder Kosten noch Warnungen.
+
+**Größe `(L)`** — die T-Shirt-Größe (§5) im Zeilenformat:
+
+- Erkannt nur **alleinstehend angesetzt** (`(^|\s)\(…\)`, dieselbe Regel wie
+  bei `#name` und `:#…`): `Backend(L)` bleibt damit ein Label, und die
+  Zitier-Konventionen gelten auch hier — `"(L)"` und `((L))` bleiben Label,
+  wer eine Größe **erwähnen** will, schreibt sie so.
+- Das **letzte** solche Token der Zeile ist die Größe; frühere Vorkommen
+  bleiben im Label stehen (`Variante (L) bauen (M)` → Größe `M`, Label
+  „Variante (L) bauen“). Die Größe steht nach der üblichen Schreibweise
+  hinter dem Titel — das letzte Token ist die Angabe, alles davor ist Text.
+  (Bis D68 galt das **erste** Token; die Umkehrung trifft nur Zeilen mit
+  mehreren Kandidaten.)
 
 **Knoten-ID `#name`** — benennt einen Knoten im **ganzen Dokument** eindeutig;
 sie ist die Adresse für Abhängigkeiten und Beschreibungsblöcke (§11).
@@ -201,6 +216,13 @@ sie setzt die Marke immer in die zweite Stellung und löst die erste dabei auf:
 ^([ \t]*(?:[-|+]|=(?=[ \t]))?[ \t]*)(?:[><](?=[ \t])[ \t]*)?((?:\[[^\]]\][ \t]*)?)(?:[><](?=[ \t])[ \t]*)?
 ```
 
+Für die Größe (Schritt 4, nur der **letzte** Treffer; der führende Leerraum
+bleibt stehen):
+
+```
+(^|\s)\((XXL|XS|XL|S|M|L)\)
+```
+
 Für die Knoten-ID (Schritt 6, nur der erste Treffer; die letzte Gruppe ist der
 optionale Trenn-Doppelpunkt, der mit entfällt):
 
@@ -313,6 +335,8 @@ effektiv nicht weiter sein als das, was er braucht.
 ## 5. Aufwand (T-Shirt-Größen)
 
 - Werte: `XS < S < M < L < XL < XXL`, notiert in Klammern, z. B. `(L)`.
+  Erkannt wird das letzte alleinstehend angesetzte Token der Zeile (§1) —
+  `"(L)"` und `((L))` im Titel bleiben Text.
 - **Untergliederungsregel:** Ab `(M)` muss ein Element weiter zerlegt sein.
   Ein Element ≥ M **ohne Kinder** erhält einen Geister-Knoten an gestrichelter
   Linie darunter (in `--warn`, `#B45309`). Sein Label ist knapp „…“; die
