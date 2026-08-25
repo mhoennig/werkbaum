@@ -43,7 +43,7 @@
         - [^] #ed.deplink.calm: Visually secondary — the tree carries the message (S)
         - [^] #ed.deplink.focus: Highlight what a selected node needs and feeds (S)
     - [^] #ed.path: Cheapest path (XL)
-      - [x] #ed.path.cost: Cost model, a size prices its subtree (S)
+      - [^] #ed.path.cost: Cost model, a size prices its subtree (S)
       - [^] #ed.path.est: Missing size estimated from the sub-packages (S)  %% see D66
       - [^] #ed.path.front: Only the open front: what is done costs nothing (S)  %% see D46
       - [^] #ed.path.started: Started work is on the path, extras included (S)  %% see D61
