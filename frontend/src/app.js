@@ -3977,7 +3977,10 @@ async function adoptFile(handle, name, text){
 }
 async function openWithPicker(){
   let handle;
-  try{ [handle] = await window.showOpenFilePicker({types: FILE_TYPES}); }
+  /* id: Chromium merkt sich je Picker-id den zuletzt benutzten Ordner —
+     Öffnen und handle-loses Speichern teilen sich eine, damit beide Dialoge
+     im Plan-Ordner aufgehen statt in Downloads (D74-Nachtrag). */
+  try{ [handle] = await window.showOpenFilePicker({types: FILE_TYPES, id: 'werkbaum-files'}); }
   catch(_){ return; }   /* Abbruch des Dialogs */
   let text;
   try{ text = await (await handle.getFile()).text(); }catch(_){ return; }
@@ -4008,9 +4011,23 @@ async function saveToKnownFile(d){
   }catch(_){ return false; }
 }
 async function saveWithPicker(d){
+  /* Der Dialog zeigt auf die ORIGINALDATEI, wenn wir eine kennen (Handle
+     vorhanden, aber nicht beschreibbar — etwa nach verweigerter
+     Berechtigung): startIn öffnet in ihrem Ordner, suggestedName ist ihr
+     exakter Name. Ohne das schlägt Chromium im zuletzt benutzten Ordner
+     einen „name (1)"-Nachbarn vor — wer den abbricht, bekommt den Dialog
+     bei jedem Strg+S wieder, denn gemerkt wird ein Handle erst nach einem
+     ABGESCHLOSSENEN Dialog. Wer die Originaldatei wählt und das Ersetzen
+     bestätigt, hat ein beschreibbares Handle — jedes weitere Strg+S ist
+     still. Ohne bekanntes Handle hilft die geteilte Picker-id (siehe
+     openWithPicker). D74-Nachtrag. */
+  const known = fileHandles.get(d.id);
+  const opts = known
+    ? {suggestedName: known.name, startIn: known, types: FILE_TYPES}
+    : {suggestedName: saveFileName(d.name), types: FILE_TYPES, id: 'werkbaum-files'};
   let handle;
   try{
-    handle = await window.showSaveFilePicker({suggestedName: saveFileName(d.name), types: FILE_TYPES});
+    handle = await window.showSaveFilePicker(opts);
   }catch(_){ return; }   /* Abbruch: bewusst kein Download hinterher */
   try{ await writeToHandle(handle, d.text); }catch(_){ return; }
   fileHandles.set(d.id, handle);

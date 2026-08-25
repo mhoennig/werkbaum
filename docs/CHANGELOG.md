@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-25
 
+- Fix: the save dialog suggested a "name (1)" neighbour in the wrong folder — it now points at the original file, and open/save dialogs remember the plan folder
 - Ctrl+S saves the document as a file — with a remembered file it writes straight back in place, and the document name flashes as confirmation
 - Fix: a file double-clicked right after the app starts could open as a duplicate document instead of updating its own
 - The installed app registers for `.werkbaum` files — a double-click in the file manager opens them straight into the editor

@@ -5543,3 +5543,47 @@ Petrol-Haken am Dokumentnamen hat erst ein synthetischer Strg+S nach 400 ms
 gezeigt (Klasse `done`, ✓, `#0F766E`): Der Werkzeug-Umlauf ist langsamer als
 die 1,5 s des Blitzes — eine Messgrenze, kein Befund. Die Legende zeigt die
 neue Zeile in DE und EN.
+
+**Nachtrag — der Speichern-Dialog zeigt jetzt auf die Originaldatei.**
+Gemeldet: „beim Ctrl-S erscheint immer ein Dialog und der Dateiname mit (1)
+dahinter, ich möchte aber direkt speichern." Der Befund hat zwei Schichten:
+
+- **„Immer ein Dialog" ist der Abbruch-Kreislauf.** Ein Handle wird erst nach
+  einem **abgeschlossenen** Dialog gemerkt (D72-Nachtrag) — wer den Dialog
+  abbricht, steht beim nächsten Strg+S wieder davor. Abgebrochen wird er zu
+  Recht, wenn er das Falsche vorschlägt, und genau das tat er:
+- **Das „(1)" ist Chromiums Ausweich-Vorschlag.** `showSaveFilePicker` öffnet
+  ohne weitere Angaben im zuletzt benutzten Ordner und macht aus dem
+  Namensvorschlag einen „name (1)"-Nachbarn, wenn dort schon eine gleichnamige
+  Datei liegt. Wer **den** bestätigt, speichert an der falschen Stelle — der
+  Dialog lud also zum Fehler ein und zum Abbruch gleichermaßen.
+
+Zwei Handgriffe, beide am Picker-Aufruf:
+
+- **Mit bekanntem, aber nicht beschreibbarem Handle** (der Fall „Berechtigung
+  verweigert" oder ein gescheiterter Schreibversuch) bekommt der Dialog
+  `startIn: <handle>` und den **exakten Dateinamen** des Handles: Er öffnet im
+  Ordner der Originaldatei mit ihrem Namen. Einmal Ersetzen bestätigen, und
+  das neue Handle ist beschreibbar — jedes weitere Strg+S ist still.
+- **Ohne bekanntes Handle** teilen sich Öffnen- und Speichern-Dialog eine
+  Picker-`id` (`werkbaum-files`): Chromium merkt sich je id den zuletzt
+  benutzten Ordner, der Speichern-Dialog geht also dort auf, wo zuletzt
+  geöffnet wurde — statt in Downloads. Kein `id` im startIn-Fall: Ein
+  gemerkter Ordner überstimmte sonst das startIn.
+
+Dazu gehört die Einordnung, die kein Code ändern kann: Der **erste** Strg+S
+je Datei zeigt ohne beschreibbares Handle rechtens einen Dialog (die API
+verlangt es), und nach einem App-Neustart fragt der Browser einmal nach der
+Schreibberechtigung — „Bei jedem Besuch zulassen" der installierten App
+räumt auch das ab. Direkt heißt: ab dem zweiten Mal.
+
+**Nachgemessen** (dist, Picker gestubbt): Ohne Handle trägt der Aufruf
+`suggestedName: "Example.werkbaum"` und `id: "werkbaum-files"`; mit
+verweigertem Handle (`queryPermission → 'denied'`) trägt er den exakten
+Handle-Namen und `startIn` = genau dieses Handle, ohne `id`; nach dem
+Dialog wird geschrieben. Wegwerf-Dokument über die echte UI angelegt und
+gelöscht (übrig: Example, Werkbaum). Ob der Nutzer zusätzlich noch das
+**alte, vor dem Deploy geöffnete PWA-Fenster** vor sich hatte (dort gab es
+den Strg+S-Handler noch nicht — die Taste ging an den Browser, dessen
+„Seite speichern" hängt bei Wiederholung ebenfalls „ (1)" an), ließ sich
+von hier nicht feststellen; ein Neustart der App stellt es klar.
