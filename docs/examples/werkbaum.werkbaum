@@ -103,6 +103,7 @@
       - [ ] #bld.pwa.manifest: A manifest with name, icons and standalone display (XS)
       - [ ] #bld.pwa.sw: A service worker that serves the app offline (S)  %% one file to cache
       - [ ] #bld.pwa.update: The reload notice moves into the worker (S)  %% see D45
+      - [ ] #bld.pwa.files: Double-click a .werkbaum file, save without any dialog (S) :#ed.files.inplace  %% file_handlers + launchQueue
     - [-] #bld.ghpages: Deploy through a gh-pages branch (S)  %% GitHub Actions instead
     - [-] #bld.gfonts: Fonts from Google (XS)  %% self-hosted, no third-party request
   - [ ] #be: Backend (XL)
@@ -684,6 +685,14 @@
   With a worker in front of the page, the reload notice has to come from it:
   it decides what gets served, so "the running build against the one the
   server sends" is no longer the same comparison.
+
+#bld.pwa.files
+  The installed app registers for the .werkbaum extension: double-clicking a
+  file in the OS opens it here, with a ready file handle from the launch
+  queue. Together with the persistent write permission an installed app can
+  hold, editing becomes open, type, save — no dialog at all. The saving
+  mechanics already exist; what is missing is the manifest entry and the
+  launch-queue receiver. Chromium only.
 
 #bld.ghpages
   Rejected: the official Actions route needs no extra branch and no deploy
