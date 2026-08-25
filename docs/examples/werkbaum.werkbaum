@@ -196,6 +196,10 @@
       - [-] #trk.plugin: A plugin inside Taiga itself (L)  %% legacy frontend, self-hosted only
     = [?] #trk.tenzu: Tenzu, the successor (XXL) https://tenzu.net
     = [ ] #trk.none: No tracker, plain text is enough (XS)
+  - [?] #ai: AI integration (XL)
+    - [?] #ai.dialog: Edit the plan in a dialogue with the AI (L)
+    - [?] #ai.key: Bring your own API key, no server in between (M)
+    - [?] #ai.ground: llms.md grounds the model in the notation (S)
 
 ---
 #wb
@@ -1034,3 +1038,24 @@
 #trk.none
   The honest alternative: a plan in a text file may simply be enough. It is
   the cheapest node in this group, and the cheapest path duly picks it.
+
+#ai
+  Connect an LLM or an agentic AI to the editor, so the plan can be shaped in
+  conversation instead of by hand alone. An idea for now: the pieces exist
+  (the text is the whole state, and llms.md already teaches agents to read
+  and write it), but nothing here is designed yet.
+
+#ai.dialog
+  A chat beside the diagram: ask for a decomposition, a size estimate or a
+  restructuring, and the AI answers by editing the notation text — every
+  change lands as an undoable text edit, with the human deciding what stays.
+
+#ai.key
+  The user brings their own API key and the browser talks directly to the
+  chosen provider — no Werkbaum server in between, following the D20/D23
+  line: requests only at the user's request, only to the host they configure.
+
+#ai.ground
+  The system prompt is essentially llms.md (D43): the agent guide already
+  explains the notation for reading and writing, so the model needs no
+  training — just the document and the request.

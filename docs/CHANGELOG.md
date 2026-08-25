@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-25
 
+- An AI integration recorded as an idea in the plan — edit the tree in a dialogue, with your own API key and `llms.md` as the model's guide
 - A warning flags the bottleneck when one `@name` carries more than half of the open work on the cheapest path — their tag pills turn amber on the open nodes
 - The estimated size of an unsized node now prices the remaining work — done sub-packages drop out, and a subtree with everything named done counts as XS
 - The fold chip is solid white with an ink glyph now — the translucent box vanished on the pastel node colours
