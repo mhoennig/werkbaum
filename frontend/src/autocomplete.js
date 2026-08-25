@@ -103,8 +103,11 @@ export function depIdAt(text, caret){
   let m;
   while((m = DEP_TOKEN_G.exec(head))){
     const p = m.index;
-    /* Alleinstehend angesetzt — `(:#a,#b)` bleibt damit Zitat (§1/D37). */
-    if(p !== idEnd && p > 0 && !/[ \t]/.test(head[p - 1])) continue;
+    /* Alleinstehend angesetzt — `(:#a,#b)` bleibt damit Zitat (§1/D37).
+       `\s` wie im Parser, nicht nur Space/Tab: Auch vor einem geschützten
+       Leerzeichen (etwa aus einer Web-Seite kopiert) ist das Token eine
+       Abhängigkeit, und der Sprung muss dieselbe Zeile lesen wie der Parser. */
+    if(p !== idEnd && p > 0 && !/\s/.test(head[p - 1])) continue;
     const end = p + m[0].length;
     if(col < p || col > end) continue;
     let s = p + 1;                              /* hinter dem `:` */

@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-25
 
+- Fix: Ctrl+click on a dependency preceded by a non-breaking space did nothing, although the parser reads it as a dependency
 - Ctrl+click a dependency `:#id` in the text jumps to the line that defines the ID — Ctrl+Enter does the same at the caret
 
 ## 2026-08-24

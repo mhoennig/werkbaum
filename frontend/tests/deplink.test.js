@@ -58,6 +58,10 @@ describe('depIdAt — die ID unter der Schreibmarke (D67)', () => {
     expect(depIdAt(...at('- Front|end :#api'))).toBe(null);
   });
 
+  it('geschütztes Leerzeichen vor dem Token zählt wie beim Parser als Leerraum', () => {
+    expect(depIdAt(...at('- X :#a|uth'))).toBe('auth');
+  });
+
   it('in einer Fortsetzungszeile (D59) wird das Token erkannt', () => {
     expect(depIdAt(...at('- Langer Knoten \\\n  :#a|pi'))).toBe('api');
   });
