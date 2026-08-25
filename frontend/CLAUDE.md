@@ -554,6 +554,19 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Hash-Rückfall, der Marker-Pfad ist nur zu prüfen, wenn man einen echten
   `commit/<sha>` in `index.html` einspritzt (danach zurücknehmen!) und
   `window.fetch` überschreibt.
+- **PWA (D73):** `public/sw.js` fasst NUR die Navigation zur App-Wurzel an
+  und beantwortet sie **network-first** — der Cache ist reiner
+  Offline-Rückfall. Wer daraus cache-first macht, bricht die Update-Prüfung
+  (D45): deren `fetch()` läuft nur deshalb ans echte Netz, und „Jetzt laden"
+  bekommt nur deshalb die frische Fassung. Keine Registrierung im Dev-Server
+  (`!import.meta.env.DEV` — sonst cacht der Worker die HMR-Seite). Manifest,
+  Icons und `sw.js` sind public/-Assets neben der einen Datei; **jedes neue
+  public/-Asset muss in BEIDE Deploy-Wege** (pages.yml und deploy-prod.sh
+  stellen die Site je von Hand zusammen) und ggf. in `scripts/prod.htaccess`
+  (Apache kennt `.webmanifest` nicht, D43-Falle). Der `launchQueue`-Empfänger
+  (Dateidoppelklick der installierten App) reicht Handles an `adoptFile()`
+  (D72) weiter — Installieren/Doppelklick sind nur auf echter Hardware
+  prüfbar.
 - **Neuigkeiten (D58):** `NEWS` kommt aus dem virtuellen Modul
   `virtual:werkbaum-news` (Vite-Plugin in `vite.config.js`), gefüllt zur
   **Bauzeit** aus `docs/CHANGELOG.md` (die Notizen) und der git-Historie des

@@ -1,0 +1,19 @@
+{
+  "name": "Werkbaum",
+  "short_name": "Werkbaum",
+  "description": "A textual notation for work breakdown structures with and/or decomposition, and a live diagram editor.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#243447",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "file_handlers": [
+    { "action": "./", "accept": { "text/plain": [".werkbaum", ".txt"] } }
+  ],
+  "launch_handler": { "client_mode": "focus-existing" }
+}

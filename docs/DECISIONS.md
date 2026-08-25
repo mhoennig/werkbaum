@@ -5389,3 +5389,90 @@ IndexedDB-Rundreise über einen Neustart: Stub-Handles überleben den
 Structured Clone nicht (`DataCloneError`, planmäßig geschluckt) — echte
 Handles sind gerade dafür klonbar; dieser eine Pfad ist Code-Review statt
 Messung. 480 Tests.
+
+## D73 — PWA: Manifest und ein bewusst dummer Offline-Worker, network-first
+Werkbaum ist als App installierbar (`#bld.pwa`): Manifest mit Icons und
+Standalone-Fenster, ein Service Worker für den Offline-Start, und die
+installierte App registriert sich für `.werkbaum`-Dateien. Die tragende
+Entscheidung ist die Rolle des Workers — und sie hat den gefürchteten Teil
+des Features aufgelöst.
+
+**Der Worker ist ein Offline-Mantel, kein App-Verwalter.** Er fasst
+ausschließlich die **Navigation zur App-Wurzel** an und beantwortet sie
+**network-first**: Der Server bleibt die Quelle der Wahrheit, genau wie ohne
+Worker; der Cache hält nur die zuletzt gesehene Fassung der einen
+self-contained Datei (D19) für den Offline-Fall und wird bei jeder
+erfolgreichen Navigation aufgefrischt. Alles andere — `?sourceUrl=`- und
+Pad-Abrufe (D23/D31), `llms.md`/`llms.txt`, jeder `fetch()` — geht unangefasst
+durch.
+
+**Damit blieb die geplante D45-Migration aus — und das ist ein Befund, keine
+Abkürzung.** Der Plan-Knoten hieß „The reload notice moves into the worker",
+in der Annahme, ein Worker entscheide, was ausgeliefert wird, und der
+Vergleich „laufender Build gegen den, den der Server sendet" (D45) verliere
+seine Grundlage. Das gilt für einen **cache-first** Worker — und genau
+deshalb ist der verworfen: Er hätte den skipWaiting-/updatefound-Lebenszyklus
+gebraucht (die Stelle, an der PWAs erfahrungsgemäß Fehler sammeln, und D45
+hat seine eigene Fehlergeschichte), eine zweite Update-Logik neben der
+bestehenden, und jeden Nutzer bis dahin auf der zuerst installierten Fassung
+festgenagelt. Network-first braucht nichts davon: Der Prüf-`fetch()` ist
+keine Navigation und läuft ans echte Netz; „Jetzt laden" ist eine Navigation
+und bekommt die frische Fassung. Beides gemessen, nicht angenommen (unten).
+Der Knoten heißt jetzt „The reload notice stays truthful under the worker" —
+die Arbeit war der Nachweis, nicht der Umzug. Der Preis von network-first ist
+benannt: Der Start kostet online weiterhin einen Netz-Abruf (wie bisher auch)
+statt sofort aus dem Cache zu kommen — für ein Produkt, das laufend deployt,
+der richtige Tausch.
+
+**`sw.js` ändert sich praktisch nie.** Weil die App vom Server kommt und
+nicht aus dem Worker, gibt es keine Versionsnummer, die dort gepflegt oder
+von den Deploy-Skripten eingespritzt werden müsste — kein zweiter
+`sed`-Stempel neben der Footer-Version (D16).
+
+**Aus „eine Datei" wird ehrlich „eine Datei plus App-Hülle".** Manifest,
+Icons und Worker sind **nicht inlinebar** — der Browser holt sie per URL;
+ein Worker braucht seine eigene Adresse. Sie liegen als `frontend/public/`-
+Assets neben der Datei (der `llms.md`-Weg, D43) und werden von **beiden**
+Deploy-Wegen mitkopiert (Pages-Workflow und `deploy-prod.sh` stellen die Site
+je von Hand zusammen — dieselbe Doppelpflege wie bei den `sed`-Regeln, D16).
+Die `file://`-Tauglichkeit der einen Datei bleibt: Ohne die Hülle fehlt nur
+die Installierbarkeit, nicht die App. Die `.htaccess` bekommt den MIME-Typ
+für `.webmanifest` — dieselbe Apache-Falle wie bei `.md` (D43-Nachtrag 2):
+unbekannte Endung, kein Content-Type, Chromium verwirft das Manifest still.
+
+**Icons aus der Marke, eingecheckt.** Die Raster-Größen (192/512 plus eine
+Maskable-Variante mit Schutzzone: Marke auf 60 % statt 78 % der Fläche) sind
+einmalig per Inkscape aus `docs/brand/favicon.svg` gerendert und eingecheckt —
+der Fonts-Präzedenzfall (D20): Assets im Repo, kein Werkzeug im Build.
+
+**Nicht im Dev-Server registriert.** Dort würde der Worker die HMR-Seite
+cachen; der Zweig hängt an `!import.meta.env.DEV` und fällt im Dev als toter
+Code weg. Auf `file://` und http ohne Secure Context gibt es keinen nutzbaren
+`serviceWorker` — das Scheitern ist geschluckt, die App läuft ohne.
+
+**Dateihandling (`#bld.pwa.files`):** `file_handlers` im Manifest
+(`.werkbaum`/`.txt`, dieselben Endungen wie `FILE_TYPES`, D72) plus ein
+`launchQueue`-Empfänger, der das gereichte Handle an das vorhandene
+`adoptFile()` gibt — dieselbe Datei landet damit im selben Dokument, und das
+gemerkte Handle macht „Als Datei speichern" dialogfrei (D72-Nachtrag).
+`launch_handler: focus-existing`, damit der Doppelklick ein offenes Fenster
+wiederverwendet, statt Instanzen zu stapeln. Chromium only — Firefox
+installiert auf dem Desktop nicht, Safari kennt `file_handlers` nicht; dort
+ändert sich nichts.
+
+**Nachgemessen** am gebauten Stand (`vite preview`, dist auf localhost:8138):
+Worker aktiv und `controller` gesetzt, Cache hält genau `./`. Dann ein Marker
+in `dist/index.html` geschrieben: Der D45-artige `fetch(…, no-store)` **sieht
+ihn sofort** (läuft also am Worker vorbei ans Netz), während die laufende
+Seite ihn nicht hat; ein Reload **lädt ihn** (Navigation network-first) und
+frischt den Cache mit auf. Server gestoppt, Reload: Die Seite kommt
+vollständig aus dem Cache (18 Knoten gerendert, Marker enthalten). Manifest
+parst mit `file_handlers` und `launch_handler`; `launchQueue` existiert und
+der Consumer registriert sich fehlerfrei. Aufgeräumt per `unregister()` +
+`caches.delete()`. 480 Tests unverändert grün.
+
+**Werkzeuggrenzen, wie bei D72 benannt:** Installieren, der OS-Doppelklick
+auf eine `.werkbaum`-Datei und die persistente Schreibberechtigung der
+installierten App sind Betriebssystem-Dialoge und bleiben ein Handtest auf
+echter Hardware; gemessen ist alles bis an diese Kante (Manifest gültig,
+Consumer registriert, `adoptFile()`-Weg seit D72 geprüft).

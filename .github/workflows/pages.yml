@@ -88,6 +88,11 @@ jobs:
           cp frontend/dist/llms.md site/llms.md
           # Wegweiser der llms.txt-Konvention (D43-Nachtrag 2)
           cp frontend/dist/llms.txt site/llms.txt
+          # PWA-Hülle (D73): Manifest + Icons + Service Worker — public/-Assets
+          # neben der einen Datei
+          cp frontend/dist/manifest.webmanifest site/manifest.webmanifest
+          cp frontend/dist/icon-192.png frontend/dist/icon-512.png frontend/dist/icon-maskable-512.png site/
+          cp frontend/dist/sw.js site/sw.js
 
       - name: Pages-Konfiguration
         uses: actions/configure-pages@v6

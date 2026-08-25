@@ -99,11 +99,11 @@
     - [^] #bld.tests: Unit tests (S)
     - [^] #bld.pages: Published on every push (S)
     - [^] #bld.update: Says when a new build is out (S)  %% compares against the running one, see D45
-    - [ ] #bld.pwa: Installable as a progressive web app (M)
-      - [ ] #bld.pwa.manifest: A manifest with name, icons and standalone display (XS)
-      - [ ] #bld.pwa.sw: A service worker that serves the app offline (S)  %% one file to cache
-      - [ ] #bld.pwa.update: The reload notice moves into the worker (S)  %% see D45
-      - [ ] #bld.pwa.files: Double-click a .werkbaum file, save without any dialog (S) :#ed.files.inplace  %% file_handlers + launchQueue
+    - [x] #bld.pwa: Installable as a progressive web app (M)
+      - [x] #bld.pwa.manifest: A manifest with name, icons and standalone display (XS)
+      - [x] #bld.pwa.sw: A service worker that serves the app offline (S)  %% network-first, cache as fallback
+      - [x] #bld.pwa.update: The reload notice stays truthful under the worker (S)  %% see D45/D73
+      - [x] #bld.pwa.files: Double-click a .werkbaum file, save without any dialog (S) :#ed.files.inplace  %% file_handlers + launchQueue
     - [-] #bld.ghpages: Deploy through a gh-pages branch (S)  %% GitHub Actions instead
     - [-] #bld.gfonts: Fonts from Google (XS)  %% self-hosted, no third-party request
   - [ ] #be: Backend (XL)
@@ -667,31 +667,32 @@
 
 #bld.pwa
   Installable from the browser and startable like an app, in its own window
-  and with its own icon. Everything it needs is already in one file, so what
-  is missing is mostly the declaration that says so.
+  and with its own icon. Everything it needs was already in one file — what
+  was missing was mostly the declaration that says so.
 
 #bld.pwa.manifest
   Name, icons, theme colour and a standalone display mode — the declaration a
-  browser reads before it offers to install anything. The brand mark exists
-  and needs the raster sizes an installer asks for.
+  browser reads before it offers to install anything. The raster icons are
+  rendered from the brand mark, with a padded maskable variant.
 
 #bld.pwa.sw
-  A worker answering from the cache lets the editor start without a network.
-  There is exactly one object to cache, because the build inlines fonts,
-  styles and modules; documents live in the browser anyway. Texts pulled from
-  a URL or a pad stay online by their nature.
+  A worker lets the editor start without a network. It is deliberately dumb:
+  navigations go network-first, and the cache only keeps the last version it
+  has seen of the one self-contained file for the offline case. Texts pulled from a URL
+  or a pad pass through untouched and stay online by their nature.
 
 #bld.pwa.update
-  With a worker in front of the page, the reload notice has to come from it:
-  it decides what gets served, so "the running build against the one the
-  server sends" is no longer the same comparison.
+  The feared migration turned out unnecessary: because the worker only
+  touches navigations and answers them network-first, the update check still
+  fetches the real server and a reload really loads the new build. The work
+  here was proving that, not moving code.
 
 #bld.pwa.files
   The installed app registers for the .werkbaum extension: double-clicking a
   file in the OS opens it here, with a ready file handle from the launch
   queue. Together with the persistent write permission an installed app can
   hold, editing becomes open, type, save — no dialog at all. The saving
-  mechanics already exist; what is missing is the manifest entry and the
+  mechanics existed already; this added the manifest entry and the
   launch-queue receiver. Chromium only.
 
 #bld.ghpages

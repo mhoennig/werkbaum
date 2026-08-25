@@ -20,4 +20,7 @@
   AddType text/markdown;charset=utf-8 .md
   AddType text/plain;charset=utf-8 .txt
   AddType text/plain;charset=utf-8 .werkbaum
+  # PWA-Manifest (D73): ohne Zuordnung liefert Apache die unbekannte Endung
+  # ohne Content-Type aus, und Chromium verwirft das Manifest dann still.
+  AddType application/manifest+json .webmanifest
 </IfModule>

@@ -6,6 +6,13 @@
 <title>Werkbaum – PSP &amp; Lean Pathfinding Editor (Work Breakdown Structure)</title>
 <meta name="description" content="Werkbaum ist ein textbasierter Editor für PSP/Lean Pathfinding und Projektstrukturpläne (WBS): Schreibe die Struktur als Text, das And/Or-Diagramm entsteht live. Auch für Feature-Trees &amp; Requirements.">
 <link rel="icon" type="image/svg+xml" href="../docs/brand/favicon.svg">
+<!-- PWA (D73): Manifest + Icons liegen als public/-Assets NEBEN der einen
+     self-contained Datei (nicht inlinebar — der Browser holt das Manifest
+     per URL). Relativer Pfad, damit Pages unter /werkbaum/ und die
+     Wurzel-Installation denselben Verweis nutzen; per file:// bleibt der
+     Link wirkungslos, die Datei selbst läuft unverändert. -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#243447">
 </head>
 <body>
 

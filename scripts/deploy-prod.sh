@@ -138,6 +138,11 @@ cp frontend/dist/llms.md "$STAGE/llms.md"
 # llms.md, SPEC und Repo zeigt. Nur er liegt an der Adresse, die Agenten von
 # selbst probieren.
 cp frontend/dist/llms.txt "$STAGE/llms.txt"
+# PWA-Hülle (D73): Manifest + Icons + Service Worker — public/-Assets neben
+# der einen Datei
+cp frontend/dist/manifest.webmanifest "$STAGE/manifest.webmanifest"
+cp frontend/dist/icon-192.png frontend/dist/icon-512.png frontend/dist/icon-maskable-512.png "$STAGE/"
+cp frontend/dist/sw.js "$STAGE/sw.js"
 # Ohne diese Zuordnung liefert Apache `.md` ohne Content-Type aus und der
 # Browser rät windows-1252 (D43-Nachtrag 2). Pages braucht sie nicht.
 cp scripts/prod.htaccess "$STAGE/.htaccess"

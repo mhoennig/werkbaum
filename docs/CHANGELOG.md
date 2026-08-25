@@ -19,6 +19,9 @@ reverse.
 
 ## 2026-08-25
 
+- The installed app registers for `.werkbaum` files — a double-click in the file manager opens them straight into the editor
+- A service worker starts the editor offline; navigations stay network-first, so the update notice keeps telling the truth
+- Werkbaum installs as an app: a web app manifest with standalone display and icons rendered from the brand mark
 - PWA file handling recorded in the plan — an installed app would open `.werkbaum` files on double-click and save without any dialog
 - In Chromium browsers, saving writes back to the opened file, and the same file reopens into the same document
 - Open a local `.werkbaum` file and save the document back as a file, from the document menu

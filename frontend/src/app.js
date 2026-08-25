@@ -4568,8 +4568,39 @@ try{ startLang = localStorage.getItem('werkbaum-lang') || detectLang(); }catch(_
 applyLang(I18N[startLang] ? startLang : 'de');   /* setzt Texte + rendert */
 initDocs();      /* Dokumente laden + aktiven Text in den Editor (nach Sprache) */
 if(hasFsAccess) idbLoadHandles();   /* gemerkte Datei-Handles zurückholen (D72, Stufe 2) */
+
+/* PWA-Dateihandling (D73): Die installierte App registriert sich über das
+   Manifest (`file_handlers`) für .werkbaum/.txt; ein Doppelklick im
+   Dateimanager reicht die Datei als Handle über die launchQueue herein.
+   `adoptFile()` (D72) übernimmt — dieselbe Datei landet im selben Dokument,
+   und das Handle macht „Als Datei speichern" dialogfrei. Außerhalb einer
+   installierten Chromium-App gibt es die launchQueue nicht: dann ist der
+   Block ein No-op. */
+if('launchQueue' in window){
+  window.launchQueue.setConsumer(async params => {
+    for(const h of (params && params.files) || []){
+      try{
+        const text = await (await h.getFile()).text();
+        await adoptFile(h, h.name, text);
+      }catch(_){ /* nicht lesbar — still, wie beim Picker-Abbruch (D72) */ }
+    }
+  });
+}
 applyMobile();   /* Mobil-Verhalten (nach Sprache/Restore) anwenden */
 loadRemoteSource();    /* ?sourceUrl= / ?etherpad= nachladen (asynchron, D23/D31) */
+
+/* ---------- PWA: Service Worker (D73) ----------
+   Ein reiner Offline-Mantel (public/sw.js): Navigationen network-first, der
+   Cache hält nur die zuletzt gesehene Fassung — die Update-Prüfung (D45)
+   bleibt dadurch unverändert wahr. NICHT im Dev-Server registrieren: dort
+   würde der Worker die HMR-Seite cachen; der Zweig fällt im Dev als toter
+   Code weg. Relativer Pfad, damit der Scope dem Auslieferungsort folgt
+   (Pages unter /werkbaum/, prod an der Wurzel). Auf file:// und http gibt es
+   keinen (nutzbaren) serviceWorker — das Scheitern ist geschluckt, die App
+   läuft ohne. */
+if(!import.meta.env.DEV && 'serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 
 /* ---------- Build-Hinweis (Vorschau/Dev + „latest build") ----------
    Kennzeichnet einen nicht-produktiven Build mit einem kleinen Symbol samt
