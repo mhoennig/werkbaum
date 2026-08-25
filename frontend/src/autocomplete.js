@@ -1,10 +1,12 @@
-/* ID-Vorschläge beim Tippen von Abhängigkeiten (D63).
+/* ID-Vorschläge beim Tippen von Abhängigkeiten (D63) und der Sprung entlang
+   einer Abhängigkeit (Strg+Klick auf `:#ziel`, D67).
 
-   Eine Eingabehilfe wie die ID-Kurzform (D55), keine Notation: Der Parser
-   sieht nie etwas davon, SPEC und llms.md bleiben unberührt. Hier steht, WAS
-   gilt — wann ein `:#…`-Kontext vorliegt und welche IDs dazu passen; app.js
-   verdrahtet nur (Popup, Tasten, Einfügen). Frontend-Hausregel: Was
-   entscheidbar ist, gehört in ein Modul (D54-Nachtrag 3). */
+   Eingabehilfen wie die ID-Kurzform (D55), keine Notation: Der Parser sieht
+   nie etwas davon, SPEC und llms.md bleiben unberührt. Hier steht, WAS
+   gilt — wann ein `:#…`-Kontext vorliegt, welche IDs dazu passen und welche
+   ID unter der Schreibmarke steht; app.js verdrahtet nur (Popup, Tasten,
+   Einfügen, Sprung). Frontend-Hausregel: Was entscheidbar ist, gehört in ein
+   Modul (D54-Nachtrag 3). */
 
 const ID_CHARS = '[\\p{L}\\p{N}._-]';
 
@@ -67,6 +69,64 @@ export function collectIds(roots){
   };
   walk(roots);
   return out;
+}
+
+/* Welche Abhängigkeits-ID steht an dieser Stelle des Textes? (D67, für den
+   Sprung per Strg+Klick.) null, oder die ID (ohne `#`), auf der die
+   Schreibmarke in einem `:#a,#b`-Token steht. Erkannt wird dieselbe Form wie
+   oben (alleinstehend angesetzt oder Kopf-Form `#auth:#db`) — nur vollständig
+   statt bis zur Schreibmarke, denn geklickt wird auf fertige Token. Kein
+   Treffer im Kommentar, im Beschreibungsteil hinter `---` und in einer URL
+   (die Extraktion §1 nimmt die URL zuerst — ein `:#` darin ist keins). */
+const URL_RE = /https?:\/\/\S+/i;
+const DEP_TOKEN_G = new RegExp(':#' + ID_CHARS + '+(?:,#' + ID_CHARS + '+)*', 'gu');
+
+export function depIdAt(text, caret){
+  const sol = text.lastIndexOf('\n', caret - 1) + 1;
+  let eol = text.indexOf('\n', caret);
+  if(eol === -1) eol = text.length;
+  const line = text.slice(sol, eol);
+  const col = caret - sol;
+  for(const l of text.slice(0, sol).split('\n')){
+    if(/^\s*-{3,}\s*$/.test(l)) return null;
+  }
+  const k = line.indexOf('%%');
+  if(k !== -1 && col >= k) return null;
+  const head = k === -1 ? line : line.slice(0, k);
+  const u = URL_RE.exec(head);
+  if(u && col > u.index && col < u.index + u[0].length) return null;
+  /* Kopf-Form: unmittelbar hinter der Knoten-ID der Zeile (dem ersten
+     alleinstehenden `#`-Token, Extraktion Schritt 6) darf das Token ansetzen. */
+  const own = OWN_ID_RE.exec(head);
+  const idEnd = own ? own.index + own[0].length : -1;
+  DEP_TOKEN_G.lastIndex = 0;
+  let m;
+  while((m = DEP_TOKEN_G.exec(head))){
+    const p = m.index;
+    /* Alleinstehend angesetzt — `(:#a,#b)` bleibt damit Zitat (§1/D37). */
+    if(p !== idEnd && p > 0 && !/[ \t]/.test(head[p - 1])) continue;
+    const end = p + m[0].length;
+    if(col < p || col > end) continue;
+    let s = p + 1;                              /* hinter dem `:` */
+    for(const part of m[0].slice(1).split(',')){
+      const e = s + part.length;
+      if(col <= e) return part.slice(1);        /* ohne `#` */
+      s = e + 1;                                /* hinter dem `,` */
+    }
+    return null;
+  }
+  return null;
+}
+
+/* Die Zeile, die eine ID vergibt — bei doppelter ID die ERSTE Vergabe, wie
+   überall bei der Auflösung (D36/D39). null für unbekannte IDs. */
+export function idLine(roots, id){
+  for(const n of roots){
+    if(n.id === id) return n.line;
+    const hit = idLine(n.children, id);
+    if(hit) return hit;
+  }
+  return null;
 }
 
 /* Passende Kandidaten: erst Präfix-Treffer, dann Teilstring-Treffer, je in

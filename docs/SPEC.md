@@ -845,6 +845,16 @@ verknüpft (siehe D25):
   nötig und nur beim Zeilenwechsel (sonst ruckelte das Diagramm beim Tippen).
   Wer einen Knoten wirklich **sehen** will, sagt es mit Alt. Auf einer Zeile ohne
   Knoten geschieht nichts.
+- **Text → Text, entlang einer Abhängigkeit:** **Strg+Klick** (macOS auch
+  Cmd+Klick) auf eine ID in einem Abhängigkeits-Token — `:#ziel`, jede ID der
+  Liste `:#a,#b`, auch die Kopf-Form `#auth:#ziel` — markiert die **Zeile, die
+  diese ID vergibt**: derselbe Sprung wie aus dem Diagramm (ganze Zeile
+  ausgewählt, in Sicht gescrollt), nur innerhalb des Textes. Tastatur:
+  **Strg+Enter**, wenn die Schreibmarke im Token steht. Bei doppelter ID
+  gewinnt die erste Vergabe (§1/§4); eine unbekannte ID tut still nichts (sie
+  ist schon als `unknownDep` gewarnt). Kein Sprung im Kommentar, im
+  Beschreibungsteil hinter `---` und innerhalb einer URL; Alt+Klick behält
+  daneben unverändert seine Richtung ins Diagramm. Siehe D67.
 - Der **einfache** Klick bleibt unverändert der Link (§6): Ein Knoten mit URL
   öffnet sie weiterhin im neuen Tab. Deshalb Alt und nicht der einfache Klick.
 - **Auffindbarkeit:** Solange **Alt gedrückt** ist, zeigen alle Knoten den

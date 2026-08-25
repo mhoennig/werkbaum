@@ -4990,3 +4990,69 @@ stehen. 424 Tests, davon 19 neue in `tests/assumed.test.js`. Gegenprobe per
 Mutation: Stufe-ab-drei entfernt → genau die drei danach benannten
 Zusicherungen fallen; disjunktiv Maximum statt Minimum → genau eine; alte
 M-Pauschale in `ownCost` zurückgebaut → genau die zwei Kosten-Tests.
+
+## D67 — Strg+Klick folgt einer Abhängigkeit zur Zeile ihrer ID
+Gewünscht vom Nutzer: Strg+Klick auf eine ID-Referenz wie `:#ziel` im Textfeld
+soll zur referenzierten ID springen; Alt+Klick bleibt wie gehabt und
+fokussiert den Knoten im Diagramm. Die Lücke ist real: Abhängigkeiten zeigen
+bewusst quer durch den Baum (D34), und im mitgelieferten Plan liegt das Ziel
+oft hunderte Zeilen entfernt. Die ID-Vorschläge (D63) helfen beim
+**Schreiben** einer Abhängigkeit — beim **Lesen** blieb nur die Textsuche.
+
+**Die Schreibmarke ist der Treffer, kein eigenes Hit-Testing.** Ein Klick ins
+Textfeld setzt die Schreibmarke, bevor das `click`-Ereignis läuft —
+`depIdAt(text, caret)` liest also einfach an `selectionStart`, welche ID dort
+steht. Kein Pixel-Rechnen, kein Spiegel-`div`; dieselbe Sparsamkeit wie beim
+Alt+Klick im Textfeld (D25-Nachtrag), der auch nur die Cursor-Zeile nimmt.
+
+**Erkannt wird dieselbe Form wie bei den ID-Vorschlägen (D63):** das Token
+alleinstehend angesetzt oder in der Kopf-Form `#auth:#db`; kein Treffer im
+Kommentar, im Beschreibungsteil hinter `---` und innerhalb einer URL, und
+`(:#a,#b)` bleibt Zitat (§1/D37). Jede ID der Liste ist einzeln ansteuerbar —
+die Schreibmarke wählt das Segment. **Benannte Grenze:** Der Parser erkennt
+nach der Extraktion auch Randformen wie `(M):#b` als Abhängigkeit (die
+Größen-Entfernung macht das Token alleinstehend); die Klick-Erkennung auf der
+rohen Zeile tut das nicht. Dort geschieht schlicht nichts — der harmlose
+Fehlermodus, und dieselbe Vereinfachung, die D63 bereits gewählt hat.
+
+**Aufgelöst wird zur ersten Vergabe** (`idLine`, Dokumentreihenfolge) — die
+Regel aus D36/D39, nach der überall aufgelöst wird. Eine unbekannte ID tut
+still nichts: `unknownDep` warnt bereits, ein zweiter Kanal wäre Lärm.
+Vorwärts-Referenzen springen nach unten, Zyklen sind schlicht zwei Sprünge.
+
+**Das Ziel bekommt denselben Sprung wie aus dem Diagramm:** `jumpToLine()` —
+ganze Zeile markiert, in Sicht gescrollt, waagerecht auf Anfang (D49), und
+über `caretLine` hebt sich der Zielknoten im Diagramm mit hervor. Kein neues
+Idiom für dieselbe Aussage „hier ist es".
+
+**Strg, mit Cmd als macOS-Zwilling.** Alt ist vergeben (Text → Diagramm,
+D25); Strg+Klick ist in Editoren und IDEs die etablierte
+„zur Definition"-Geste. Auf macOS ist Strg+Klick das Kontextmenü — dort
+übernimmt Cmd+Klick (`metaKey`). Tastatur-Pendant ist **Strg+Enter** an der
+Schreibmarke im Token — dasselbe Muster wie Alt+Enter (D25); `preventDefault`
+nur bei erfolgtem Sprung, sonst bleibt der Browser-Default unberührt. Auf
+Touch gibt es kein Strg und **kein Pendant** — bewusst nicht gebaut; der
+lange Druck ist vergeben (D25), und ein Knopf im Knoten-Fenster wäre eine
+eigene Entscheidung.
+
+**Headless nach Hausregel** (D54-Nachtrag 3): `depIdAt` und `idLine` liegen
+in `autocomplete.js` neben den D63-Regeln, mit denen sie sich Zeichenmenge
+und Kontext-Ausschlüsse teilen; app.js verdrahtet nur zwei Handler.
+Auffindbarkeit über die vorhandene Legenden-Zeile `hint_jump` (erweitert in
+allen neun Sprachen, statt eines neuen Schlüssels — das D25-Idiom) und
+SPEC §9.
+
+**Nachgemessen** im Browser mit einem **echten** Strg+Klick auf das `#ui` in
+`:#api,#ui`: Zeile `- #ui: Oberflaeche (S)` vollständig markiert, Fokus im
+Textfeld, `scrollLeft` 0, Diagramm hebt „Oberflaeche" hervor. Strg+Enter im
+Token springt ebenso (preventDefault gesetzt, kein Umbruch eingefügt); im
+Kommentar, im Label und neben dem Token geschieht nichts. 440 Tests, davon 16
+neue in `tests/deplink.test.js`; Gegenprobe per Mutation: Alleinstehend-
+Prüfung entfernt → genau die zwei danach benannten Zusicherungen fallen.
+
+**Werkzeuggrenze, wieder dieselbe Sorte wie D53:** Der synthetische
+Strg+Enter der Browser-Automatisierung kommt mit **`e.key === ""`** an und
+kann den Handler prinzipiell nicht treffen — der erste Prüflauf sah deshalb
+wie ein Fehler aus, der keiner war. Geprüft wird das Tastatur-Pendant mit
+einem korrekt gebauten `KeyboardEvent`; der Klick-Weg ließ sich dagegen echt
+auslösen.

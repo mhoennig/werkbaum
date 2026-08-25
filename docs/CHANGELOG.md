@@ -17,6 +17,10 @@ the git history of `docs/examples/werkbaum.werkbaum`. A day can therefore carry
 a link without having a note (someone forgot to write one) — but never the
 reverse.
 
+## 2026-08-25
+
+- Ctrl+click a dependency `:#id` in the text jumps to the line that defines the ID — Ctrl+Enter does the same at the caret
+
 ## 2026-08-24
 
 - A missing size is now estimated from the sub-packages — at least the largest child size, one step more from three children of that size

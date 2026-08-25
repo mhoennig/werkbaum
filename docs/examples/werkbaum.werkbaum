@@ -72,6 +72,7 @@
       - [^] #ed.docs.url: Load a document from ?sourceUrl= (S)
       - [^] #ed.docs.restore: Restore a shipped document from the menu (XS)
     - [^] #ed.jump: Jump between diagram and text (S)
+      - [x] #ed.jump.dep: Ctrl+click follows a dependency to its id (XS)
     - [^] #ed.lineno: Line numbers in the text editor (XS)  %% the warnings name them
     - [^] #ed.shortid: Type #.kc under #prod-stage, get #prod-stage.kc (XS)  %% an input aid, not notation
     - [^] #ed.depcomplete: Typing :# suggests the known ids (S)  %% arrows choose, Enter inserts
@@ -522,6 +523,11 @@
   Alt+click on a node selects its line in the text; Alt+click in the text
   centres the node. One gesture, both directions — and descriptions count as
   part of the node they describe.
+
+#ed.jump.dep
+  Ctrl+click (Cmd on macOS) on an id inside a dependency token like (:#target)
+  selects the line that defines the id; Ctrl+Enter at the caret does the same.
+  The first assignment wins for duplicate ids, an unknown id does nothing.
 
 #ed.lineno
   A narrow strip beside the text field showing the logical line numbers, the

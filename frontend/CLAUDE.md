@@ -610,7 +610,13 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   zurückzunehmen.
 - **ID-Vorschläge `:#` (D63):** Die Regeln stehen headless in `autocomplete.js`
   (`depFragment`/`collectIds`/`matchIds`, Tests); app.js verdrahtet nur Popup,
-  Tasten, Einfügen (`writeAt`, undo-fähig). Der Tasten-Handler hängt an
+  Tasten, Einfügen (`writeAt`, undo-fähig). Daneben liegen `depIdAt`/`idLine`
+  (D67): Strg/Cmd+Klick bzw. Strg+Enter im Textfeld springt von einer
+  Abhängigkeits-ID zur Zeile ihrer ersten Vergabe — die Schreibmarke ist der
+  Treffer (`selectionStart`), kein eigenes Hit-Testing. Ein synthetischer
+  Strg+Enter der Automatisierung kommt mit `e.key === ""` an (Werkzeuggrenze
+  wie beim synthetischen Strg+Z) — mit korrekt gebautem `KeyboardEvent`
+  prüfen. Der Tasten-Handler hängt an
   `document` in der **Capture-Phase** — die Textfeld-Handler (Tab rückt ein,
   Esc löst die Tab-Falle, D53) sind früher registriert und kämen sonst zuerst;
   `stopPropagation` hält sie nur bei **offener** Liste heraus. `acSuppress`
