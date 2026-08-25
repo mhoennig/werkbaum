@@ -5587,3 +5587,39 @@ gelöscht (übrig: Example, Werkbaum). Ob der Nutzer zusätzlich noch das
 den Strg+S-Handler noch nicht — die Taste ging an den Browser, dessen
 „Seite speichern" hängt bei Wiederholung ebenfalls „ (1)" an), ließ sich
 von hier nicht feststellen; ein Neustart der App stellt es klar.
+
+## D72 — Nachtrag 2: Browser ohne File System Access erklären sich einmalig
+Gewünscht vom Nutzer: In Firefox/Safari (und allem anderen ohne die API)
+verhält sich die App bei lokalen Dateien „etwas seltsam" — eine geöffnete
+Datei kommt als Kopie herein (beim erneuten Öffnen eine weitere, D72), und
+Speichern legt eine neue Datei in den Downloads ab, statt zurückzuschreiben.
+Wer die Chromium-Fassung kennt oder erwartet, hält das für einen Fehler.
+Ein **einmaliger Hinweis** benennt die Grenze, bevor sie verwirrt.
+
+- **Gezeigt beim ersten Öffnen oder Speichern, nicht beim App-Start.** Der
+  Hinweis erklärt das Verhalten der Datei-Funktionen — wer sie nie benutzt,
+  bekommt ihn nie zu sehen. Ein Banner beim Start hätte jeden
+  Firefox-Besucher mit einer Auskunft über etwas begrüßt, das ihn (noch)
+  nichts angeht.
+- **Form: das Banner-Idiom der Update-Meldung** (fixiert oben, Tinte statt
+  Petrol — Information, keine Aufforderung), mit „Verstanden"-Knopf. Er darf
+  neben dem gerade aufgehenden Datei-Dialog erscheinen: Der Dialog liegt
+  darüber, und nach dessen Schließen steht die Erklärung da — genau dann,
+  wenn man das Ergebnis sieht.
+- **„Verstanden" merkt der localStorage** (`werkbaum-fs-notice`); der
+  Debug-Reset räumt den Schlüssel mit weg. Kein erneutes Zeigen je Sitzung
+  oder je Dokument — die Auskunft ändert sich nicht, und ein wiederkehrender
+  Hinweis wäre Gängelung.
+- **Text in allen neun Sprachen** (`fsNotice`/`fsNoticeOk`, Deutsch als
+  Quellsprache): was passiert (Kopie, Download) und dass Chromium-Browser
+  direkt zurückschreiben — die eine Zeile, die den Wechsel-Anreiz ehrlich
+  benennt, ohne zu werben.
+
+**Nachgemessen** im Dev-Server mit erzwungenem `hasFsAccess = false` (das
+Prüf-Pane ist Chromium — dieselbe Werkzeuggrenze wie bei den
+Picker-Stubs; der Datei-Input war stummgeschaltet): Erstes „Datei öffnen…"
+zeigt das Banner mit deutschem Text und Knopf, der Input-Klick läuft
+trotzdem; „Verstanden" setzt den Merker und entfernt das Banner; ein
+zweites Öffnen zeigt nichts mehr und öffnet weiter den Input. In Chromium
+(`hasFsAccess` wahr) kehrt `maybeShowFsNotice()` in der ersten Zeile um —
+dort existiert der Hinweis nicht.
