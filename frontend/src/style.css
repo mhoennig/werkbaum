@@ -502,6 +502,10 @@
   }
   .doctrigger:hover,.doctrigger[aria-expanded="true"]{color:var(--or)}
   .doctrigger:focus-visible{outline:2px solid var(--or);outline-offset:2px}
+  /* Rückmeldung fürs stille In-Place-Speichern (Strg+S, D74): Petrol-Blitz
+     samt Haken am Dokumentnamen — das Haus-Idiom von flashBtn (D54). */
+  .doctrigger.done{color:var(--or)}
+  .doctrigger.done::before{content:"✓ ";flex:0 0 auto}
   .docname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
   .doc-caret{width:13px;height:13px;flex:0 0 auto;opacity:.7}
   .panel.collapsed .doc-caret{display:none}

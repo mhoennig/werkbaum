@@ -2252,7 +2252,8 @@ const I18N = {
     hint_eff:"Die Knotenfarbe zeigt den effektiven Status (mit Abhängigkeiten); ist der eigene weiter, steht er als Marke unten links.",
     hint_desc:"Beschreibungen: \" Zeile unter dem Knoten; Langtext hinter --- als eingerückter #id-Block — beides im Tooltip (”).",
     hint_fold:"Falten: - [x] > … startet eingeklappt, < holt hervor; ▾/▸ am Knoten klappt um (Tastatur: ←/→).",
-    hint_jump:"Alt+Klick auf einen Knoten (mobil: langer Druck) springt zur zugehörigen Textzeile; Alt+Klick im Text holt den Knoten ins Bild; Strg+Klick auf eine Abhängigkeit :#id springt zur Zeile dieser ID."
+    hint_jump:"Alt+Klick auf einen Knoten (mobil: langer Druck) springt zur zugehörigen Textzeile; Alt+Klick im Text holt den Knoten ins Bild; Strg+Klick auf eine Abhängigkeit :#id springt zur Zeile dieser ID.",
+    hint_save:"Strg+S speichert das Dokument als Datei — mit gemerkter Datei (Chromium) direkt an Ort und Stelle."
   },
   en: {
     subtitle:"Werkbaum – Work Breakdown Structure / Lean Pathfinding · Project structure editor (also feature-tree & requirements)",
@@ -2358,7 +2359,8 @@ const I18N = {
     hint_eff:"Node colour shows the effective status (with dependencies); if its own is further along, it appears as a mark at the bottom left.",
     hint_desc:"Descriptions: a \" line below the node; long text behind --- as an indented #id block — both in the tooltip (”).",
     hint_fold:"Folding: - [x] > … starts collapsed, < brings it back; ▾/▸ on a node toggles (keyboard: ←/→).",
-    hint_jump:"Alt+click a node (long press on touch) jumps to its line in the text; Alt+click in the text brings the node into view; Ctrl+click a dependency :#id jumps to that ID's line."
+    hint_jump:"Alt+click a node (long press on touch) jumps to its line in the text; Alt+click in the text brings the node into view; Ctrl+click a dependency :#id jumps to that ID's line.",
+    hint_save:"Ctrl+S saves the document as a file — with a remembered file (Chromium) right back in place."
   },
   es: {
     subtitle:"Werkbaum – EDT / Lean Pathfinding · Editor de estructura de proyectos (también árboles de características y requisitos)",
@@ -2464,7 +2466,8 @@ const I18N = {
     hint_eff:"El color del nodo muestra el estado efectivo (con dependencias); si el propio va más adelante, aparece como marca abajo a la izquierda.",
     hint_desc:"Descripciones: línea \" bajo el nodo; texto largo tras --- como bloque #id sangrado — ambos en el tooltip (”).",
     hint_fold:"Plegado: - [x] > … empieza plegado, < lo recupera; ▾/▸ en el nodo alterna (teclado: ←/→).",
-    hint_jump:"Alt+clic en un nodo (pulsación larga en táctil) salta a su línea en el texto; Alt+clic en el texto trae el nodo a la vista; Ctrl+clic en una dependencia :#id salta a la línea de esa ID."
+    hint_jump:"Alt+clic en un nodo (pulsación larga en táctil) salta a su línea en el texto; Alt+clic en el texto trae el nodo a la vista; Ctrl+clic en una dependencia :#id salta a la línea de esa ID.",
+    hint_save:"Ctrl+S guarda el documento como archivo — con un archivo recordado (Chromium), directamente en el mismo lugar."
   },
   fr: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · Éditeur de structure de projet (aussi pour arbres de fonctionnalités et d'exigences)",
@@ -2570,7 +2573,8 @@ const I18N = {
     hint_eff:"La couleur du nœud montre le statut effectif (avec dépendances) ; si le sien est plus avancé, il apparaît en marque en bas à gauche.",
     hint_desc:"Descriptions : ligne \" sous le nœud ; texte long après --- en bloc #id indenté — les deux dans l’infobulle (”).",
     hint_fold:"Pliage : - [x] > … démarre replié, < le fait ressortir ; ▾/▸ sur le nœud bascule (clavier : ←/→).",
-    hint_jump:"Alt+clic sur un nœud (appui long sur tactile) saute à sa ligne dans le texte ; Alt+clic dans le texte amène le nœud à l’écran ; Ctrl+clic sur une dépendance :#id saute à la ligne de cet ID."
+    hint_jump:"Alt+clic sur un nœud (appui long sur tactile) saute à sa ligne dans le texte ; Alt+clic dans le texte amène le nœud à l’écran ; Ctrl+clic sur une dépendance :#id saute à la ligne de cet ID.",
+    hint_save:"Ctrl+S enregistre le document comme fichier — avec un fichier mémorisé (Chromium), directement sur place."
   },
   pl: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · Edytor struktury projektów (również dla drzew funkcji i wymagań)",
@@ -2676,7 +2680,8 @@ const I18N = {
     hint_eff:"Kolor węzła pokazuje status efektywny (z zależnościami); jeśli własny jest dalej, widnieje jako znacznik u dołu po lewej.",
     hint_desc:"Opisy: wiersz \" pod węzłem; dłuższy tekst za --- jako wcięty blok #id — oba w podpowiedzi (”).",
     hint_fold:"Zwijanie: - [x] > … zaczyna zwinięte, < przywraca; ▾/▸ na węźle przełącza (klawiatura: ←/→).",
-    hint_jump:"Alt+kliknięcie węzła (długie naciśnięcie na dotyku) przechodzi do jego wiersza w tekście; Alt+kliknięcie w tekście pokazuje węzeł na diagramie; Ctrl+kliknięcie zależności :#id przechodzi do wiersza tego ID."
+    hint_jump:"Alt+kliknięcie węzła (długie naciśnięcie na dotyku) przechodzi do jego wiersza w tekście; Alt+kliknięcie w tekście pokazuje węzeł na diagramie; Ctrl+kliknięcie zależności :#id przechodzi do wiersza tego ID.",
+    hint_save:"Ctrl+S zapisuje dokument jako plik — przy zapamiętanym pliku (Chromium) bezpośrednio w tym samym miejscu."
   },
   ru: {
     subtitle:"Werkbaum – СДР / Lean Pathfinding · Редактор структуры проектов (также для деревьев функций и требований)",
@@ -2782,7 +2787,8 @@ const I18N = {
     hint_eff:"Цвет узла показывает фактический статус (с учётом зависимостей); если собственный дальше, он показан меткой слева внизу.",
     hint_desc:"Описания: строка \" под узлом; длинный текст после --- как блок #id с отступом — оба в подсказке (”).",
     hint_fold:"Сворачивание: - [x] > … открывается свёрнутым, < возвращает; ▾/▸ на узле переключает (клавиши: ←/→).",
-    hint_jump:"Alt+клик по узлу (долгое нажатие на сенсоре) переходит к его строке в тексте; Alt+клик в тексте показывает узел на диаграмме; Ctrl+клик по зависимости :#id переходит к строке этого ID."
+    hint_jump:"Alt+клик по узлу (долгое нажатие на сенсоре) переходит к его строке в тексте; Alt+клик в тексте показывает узел на диаграмме; Ctrl+клик по зависимости :#id переходит к строке этого ID.",
+    hint_save:"Ctrl+S сохраняет документ как файл — с запомненным файлом (Chromium) прямо на месте."
   },
   hi: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · परियोजना संरचना संपादक (फ़ीचर और रिक्वायरमेंट ट्री के लिए भी)",
@@ -2888,7 +2894,8 @@ const I18N = {
     hint_eff:"नोड का रंग प्रभावी स्थिति दिखाता है (निर्भरताओं सहित); यदि अपनी स्थिति आगे है, तो वह नीचे-बाएँ चिह्न के रूप में दिखती है।",
     hint_desc:"विवरण: नोड के नीचे \" पंक्ति; --- के बाद #id ब्लॉक में लंबा पाठ — दोनों टूलटिप में (”)।",
     hint_fold:"फ़ोल्डिंग: - [x] > … समेटा हुआ खुलता है, < वापस लाता है; नोड पर ▾/▸ टॉगल करता है (कीबोर्ड: ←/→)।",
-    hint_jump:"किसी नोड पर Alt+क्लिक (टच पर लंबा दबाव) टेक्स्ट में उसकी पंक्ति पर ले जाता है; टेक्स्ट में Alt+क्लिक उस नोड को आरेख में दिखाता है; :#id निर्भरता पर Ctrl+क्लिक उस ID की पंक्ति पर ले जाता है।"
+    hint_jump:"किसी नोड पर Alt+क्लिक (टच पर लंबा दबाव) टेक्स्ट में उसकी पंक्ति पर ले जाता है; टेक्स्ट में Alt+क्लिक उस नोड को आरेख में दिखाता है; :#id निर्भरता पर Ctrl+क्लिक उस ID की पंक्ति पर ले जाता है।",
+    hint_save:"Ctrl+S दस्तावेज़ को फ़ाइल के रूप में सहेजता है — याद रखी गई फ़ाइल (Chromium) में सीधे उसी जगह।"
   },
   zh: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · 项目结构编辑器（也支持功能树和需求树）",
@@ -2994,7 +3001,8 @@ const I18N = {
     hint_eff:"节点颜色显示实际状态（含依赖）；若自身状态更靠前，会以左下角标记显示。",
     hint_desc:"描述：节点下方的 \" 行；--- 之后的缩进 #id 块为长文本——均显示在提示中（”）。",
     hint_fold:"折叠：- [x] > … 打开时即折叠，< 将其展开；节点上的 ▾/▸ 切换（键盘：←/→）。",
-    hint_jump:"Alt+点击节点（触摸屏为长按）可跳转到文本中对应的行；在文本中 Alt+点击则把该节点带入视野；在依赖 :#id 上 Ctrl+点击可跳转到该 ID 所在的行。"
+    hint_jump:"Alt+点击节点（触摸屏为长按）可跳转到文本中对应的行；在文本中 Alt+点击则把该节点带入视野；在依赖 :#id 上 Ctrl+点击可跳转到该 ID 所在的行。",
+    hint_save:"Ctrl+S 将文档保存为文件——若已记住文件（Chromium），则直接就地写回。"
   },
   ja: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · プロジェクト構造エディター（フィーチャーツリーと要件ツリーにも対応）",
@@ -3100,7 +3108,8 @@ const I18N = {
     hint_eff:"ノードの色は実効ステータス（依存関係込み）を示します。自身が先行している場合は左下のマークで表示されます。",
     hint_desc:"説明：ノード直下の \" 行。--- 以降は #id ブロック（字下げ）で長文 — どちらもツールチップに表示（”）。",
     hint_fold:"折りたたみ：- [x] > … は折りたたんだ状態で開き、< は呼び戻します。ノードの ▾/▸ で切替（キー：←/→）。",
-    hint_jump:"ノードを Alt+クリック（タッチでは長押し）すると、テキストの該当行へ移動します。テキスト内で Alt+クリックすると、そのノードが図の中央に表示されます。依存関係 :#id を Ctrl+クリックすると、その ID の行へ移動します。"
+    hint_jump:"ノードを Alt+クリック（タッチでは長押し）すると、テキストの該当行へ移動します。テキスト内で Alt+クリックすると、そのノードが図の中央に表示されます。依存関係 :#id を Ctrl+クリックすると、その ID の行へ移動します。",
+    hint_save:"Ctrl+S は文書をファイルとして保存します。記憶されたファイル（Chromium）には、そのまま直接書き戻します。"
   }
 };
 let lang = 'de';
@@ -3140,7 +3149,7 @@ function buildHint(){
     ${esc(t('hint_desc'))}
     ${esc(t('hint_fold'))}
     <code>!!!</code>&nbsp; ${esc(t('hint_focus'))}
-    <div class="hint-op">${esc(t('hint_jump'))}</div>`;
+    <div class="hint-op">${esc(t('hint_jump'))}<br>${esc(t('hint_save'))}</div>`;
 }
 function applyLang(l){
   lang = l;
@@ -3891,6 +3900,11 @@ fileOpenInput.addEventListener('change', async () => {
    Stufe-1-Weg; die Bedienung ist in beiden Fällen dieselbe. */
 const hasFsAccess = typeof window.showOpenFilePicker === 'function';
 const fileHandles = new Map();   /* docId → FileSystemFileHandle */
+/* Beim Start werden die gemerkten Handles asynchron zurückgeholt; wer die
+   Map fürs isSameEntry-Abgleichen braucht (adoptFile), wartet auf dieses
+   Promise — sonst legt ein Doppelklick unmittelbar nach dem App-Start ein
+   Duplikat an statt dasselbe Dokument zu aktualisieren (D74). */
+let handlesReady = Promise.resolve();
 /* Handles überleben den Neustart nur in IndexedDB (localStorage kann sie
    nicht halten — sie sind nicht JSON-serialisierbar). Alles hier ist Komfort,
    keine Pflicht: Scheitert IndexedDB, funktioniert Speichern weiter über den
@@ -3941,6 +3955,7 @@ async function adoptFile(handle, name, text){
   flushActive();
   let targetId = null;
   if(handle){
+    await handlesReady;   /* gemerkte Handles müssen da sein (D74) */
     for(const [id, h] of fileHandles){
       try{ if(await handle.isSameEntry(h) && docs.some(d => d.id === id)){ targetId = id; break; } }
       catch(_){}
@@ -4008,13 +4023,33 @@ async function saveLocalFile(){
   flushActive();
   const d = activeDoc();
   if(!d) return;
+  let inPlace = false;
   if(hasFsAccess){
-    if(!(await saveToKnownFile(d))) await saveWithPicker(d);
+    inPlace = await saveToKnownFile(d);
+    if(!inPlace) await saveWithPicker(d);
   } else {
     saveBlob(new Blob([d.text], {type:'text/plain;charset=utf-8'}), saveFileName(d.name));
   }
   closeDocMenu();
+  /* Stilles In-Place-Speichern braucht eine sichtbare Antwort — sonst wirkt
+     die Geste tot. Haus-Idiom flashBtn (Petrol-Blitz, D54), am Dokumentnamen:
+     Der ist das, was gespeichert wurde. Dialog und Download sind selbst
+     sichtbar und brauchen keinen. */
+  if(inPlace) flashBtn(docTrigger);
 }
+/* Strg+S / Cmd+S speichert als Datei (D74) — die Geste, die jeder zuerst
+   versucht. Ohne preventDefault öffnet der Browser „Seite speichern": genau
+   der Dialog, den niemand will. Ohne gemerktes Handle verhält sich die Geste
+   wie der Menü-Eintrag (Dialog in Chromium, Download sonst) — ein
+   Speichern-Dialog auf eine Speichern-Geste ist keine Überraschung. Der
+   Tastendruck ist zugleich die Nutzergeste, die requestPermission braucht. */
+document.addEventListener('keydown', e => {
+  if((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey
+     && (e.key === 's' || e.key === 'S')){
+    e.preventDefault();
+    if(!e.repeat) saveLocalFile();
+  }
+});
 /* Dokumente laden + aktiven Text in den Editor holen (nach applyLang). */
 function initDocs(){
   restoring = true;
@@ -4567,7 +4602,7 @@ let startLang = 'de';
 try{ startLang = localStorage.getItem('werkbaum-lang') || detectLang(); }catch(_){ startLang = detectLang(); }
 applyLang(I18N[startLang] ? startLang : 'de');   /* setzt Texte + rendert */
 initDocs();      /* Dokumente laden + aktiven Text in den Editor (nach Sprache) */
-if(hasFsAccess) idbLoadHandles();   /* gemerkte Datei-Handles zurückholen (D72, Stufe 2) */
+if(hasFsAccess) handlesReady = idbLoadHandles();   /* gemerkte Datei-Handles zurückholen (D72, Stufe 2) */
 
 /* PWA-Dateihandling (D73): Die installierte App registriert sich über das
    Manifest (`file_handlers`) für .werkbaum/.txt; ein Doppelklick im

@@ -5476,3 +5476,70 @@ auf eine `.werkbaum`-Datei und die persistente Schreibberechtigung der
 installierten App sind Betriebssystem-Dialoge und bleiben ein Handtest auf
 echter Hardware; gemessen ist alles bis an diese Kante (Manifest gültig,
 Consumer registriert, `adoptFile()`-Weg seit D72 geprüft).
+
+## D74 — Strg+S speichert direkt: die D72-Zurückstellung ist umgekehrt
+D72-Nachtrag hielt fest: „Kein Strg+S — erwogen und zurückgestellt", mit zwei
+Einwänden — der Browser-Default (Seite speichern) müsste abgefangen werden,
+und ohne Handle öffnete die Geste unvermittelt einen Dialog. Mit der
+installierten PWA (D73) kippt die Abwägung, und der Nutzer hat es benannt:
+Ein lokal geladenes Dokument soll **direkt** speicherbar sein, ohne Dialog.
+Genau dafür ist Strg+S die Geste, die jeder zuerst versucht — und ohne
+eigenen Handler tut sie das Schlimmstmögliche: Sie öffnet den
+„Seite speichern"-Dialog des Browsers, also einen Dialog, der nicht einmal
+das Dokument speichert.
+
+**Die beiden D72-Einwände, neu bewertet:**
+
+- **Der Browser-Default ist kein Preis, sondern der Anlass.** `preventDefault`
+  ist eine Zeile; was sie unterdrückt, war vorher der einzige Effekt der
+  Geste — und der falsche.
+- **„Ohne Handle unvermittelt ein Dialog" trägt nicht mehr.** Die Geste
+  **heißt** Speichern; ein Speicher-Dialog auf eine Speichern-Geste ist keine
+  Überraschung, sondern das Verhalten jedes Editors beim ersten Strg+S.
+  Danach ist das Handle gemerkt und jede weitere Geste dialogfrei.
+
+**Verhalten = der Menü-Eintrag, nur als Geste.** Strg+S (macOS auch Cmd+S)
+ruft dasselbe `saveLocalFile()`: mit gemerktem Handle in dieselbe Datei
+(die einmalige Schreibberechtigungs-Nachfrage des Browsers bleibt — der
+Tastendruck ist die dafür nötige Nutzergeste; die installierte App kann sie
+mit „Bei jedem Besuch zulassen" dauerhaft erteilen), ohne Handle der
+Speichern-Dialog (Chromium) bzw. Download (Firefox/Safari). Pad-Dokumente
+dürfen wie über das Menü gespeichert werden (D72: der Schreibschutz gilt dem
+Textfeld, nicht dem Export). `e.repeat` ist ausgefiltert — eine gehaltene
+Taste speichert einmal.
+
+**Stilles Speichern braucht eine sichtbare Antwort.** Der In-Place-Weg zeigt
+sonst nichts — die Geste wirkte tot, und niemand wüsste, ob gespeichert ist.
+Rückmeldung im Haus-Idiom (`flashBtn`, D54: 1,5 s Petrol samt Haken), am
+**Dokumentnamen** in der Editor-Titelzeile — der benennt, was gespeichert
+wurde. Dialog und Download sind selbst sichtbar und brauchen keine.
+
+**Die Legenden-Zeile, die D72 zur Bedingung machte, ist da:** `hint_save` in
+allen neun Sprachen, als zweite Zeile der Bedienungs-Zeile am Ende der
+Legende (D25-Idiom: Auffindbarkeit gehört zur Geste).
+
+**Nebenbefund, mitbehoben: der launchQueue-Empfänger wartete nicht auf die
+gemerkten Handles.** `idbLoadHandles()` läuft asynchron beim Start; ein
+Doppelklick, der die App erst startet, konnte seinen Consumer **vor** dem
+Laden der Handle-Map erreichen — der `isSameEntry`-Abgleich lief dann über
+eine leere Map, und dieselbe Datei wurde als Duplikat angelegt statt ihr
+Dokument zu aktualisieren (genau die Zusage aus D73, „dieselbe Datei landet
+im selben Dokument", wäre im häufigsten PWA-Startweg gebrochen).
+`adoptFile()` wartet jetzt auf das `handlesReady`-Promise, bevor es
+abgleicht — an der einen Stelle, die die Map braucht, statt in jedem
+Aufrufer. Der Race ist zeitabhängig und im Werkzeug nicht deterministisch
+auslösbar; der Fix ist eine Ordnungszusage im Code, geprüft per Review und
+dadurch, dass der Picker-Weg (der dasselbe `adoptFile()` nimmt) unverändert
+funktioniert.
+
+**Nachgemessen** am gebauten Stand (dist auf localhost, Picker gestubbt —
+die Werkzeuggrenze aus D72: den nativen Dialog kann die Automatisierung
+nicht bedienen, die Logik dahinter schon): Erster Strg+S ruft den
+Speichern-Dialog genau einmal (richtiger `suggestedName`) und schreibt;
+zweiter Strg+S schreibt **ohne** Dialog in dasselbe Handle (0 weitere
+Picker-Aufrufe, 2 Schreibvorgänge). Beide waren **echte** Tastendrücke
+(CDP), und kein Browser-Dialog erschien — `preventDefault` greift. Den
+Petrol-Haken am Dokumentnamen hat erst ein synthetischer Strg+S nach 400 ms
+gezeigt (Klasse `done`, ✓, `#0F766E`): Der Werkzeug-Umlauf ist langsamer als
+die 1,5 s des Blitzes — eine Messgrenze, kein Befund. Die Legende zeigt die
+neue Zeile in DE und EN.

@@ -19,6 +19,8 @@ reverse.
 
 ## 2026-08-25
 
+- Ctrl+S saves the document as a file — with a remembered file it writes straight back in place, and the document name flashes as confirmation
+- Fix: a file double-clicked right after the app starts could open as a duplicate document instead of updating its own
 - The installed app registers for `.werkbaum` files — a double-click in the file manager opens them straight into the editor
 - A service worker starts the editor offline; navigations stay network-first, so the update notice keeps telling the truth
 - Werkbaum installs as an app: a web app manifest with standalone display and icons rendered from the brand mark

@@ -88,6 +88,7 @@
       - [^] #ed.snaps.manual: Save a state by hand, before a larger change (XS)  %% ten minutes is the wrong beat for that moment
     - [^] #ed.files: Open and save .werkbaum files (S)
       - [^] #ed.files.inplace: Saving writes back into the opened file (S)  %% File System Access, Chromium
+      - [x] #ed.files.ctrls: Ctrl+S saves the document as a file (XS)  %% in place with a remembered handle
     + [^] #ed.fresh: Show what is new since your last visit (S)
       - [^] #ed.fresh.news: A star in the header, with the last few days (S)  %% see D58
     + [?] #ed.percolor: A pastel colour per person (S)
@@ -614,6 +615,12 @@
   Where the File System Access API exists (Chromium), opening keeps a file
   handle: saving writes back into the same file, and the same file reopens
   into the same document. Firefox and Safari keep the plain download.
+
+#ed.files.ctrls
+  The save gesture everyone tries first. Without it the browser offers to
+  save the page — the one dialog nobody wants. With a remembered handle it
+  writes straight back in place and flashes the document name as its answer;
+  otherwise it behaves like the menu entry.
 
 #ed.fresh
   For documents that come from outside, nodes that went to production since
