@@ -7,6 +7,7 @@ import { padUrls } from './remote.js';
 import { depFragment, collectIds, matchIds, depIdAt, idLine } from './autocomplete.js';
 import { LS_SNAPS, SNAP_EVERY, parseSnaps, addSnapshot, persistSnaps, snapLabel }
   from './snapshots.js';
+import { FILE_ACCEPT, saveFileName } from './localfile.js';
 /* Neuigkeiten (D58): die git-Historie, zur BAUZEIT eingelesen (Vite-Plugin in
    vite.config.js). Zur Laufzeit gibt es kein git — und keinen Server, der
    nachliefern könnte (D11/D19). Leer, wo git nicht erreichbar war. */
@@ -2191,6 +2192,7 @@ const I18N = {
     docDeleteConfirm:"Dokument „{name}“ löschen?",
     docRestore:"Original wiederherstellen",
     docRestoreConfirm:"„{name}“ auf den mitgelieferten Stand zurücksetzen? Eigene Änderungen gehen verloren.",
+    docOpenFile:"Datei öffnen…", docSaveFile:"Als Datei speichern",
     copy:"kopieren", copyDone:"kopiert ✓", copyTooltip:"Text in die Zwischenablage kopieren",
     copyDiagramTooltip:"Diagramm als PNG-Bild in die Zwischenablage kopieren",
     downloadDiagramTooltip:"Diagramm als SVG-Datei herunterladen (z. B. für LibreOffice: Einfügen → Bild)",
@@ -2296,6 +2298,7 @@ const I18N = {
     docDeleteConfirm:"Delete document “{name}”?",
     docRestore:"Restore original",
     docRestoreConfirm:"Reset “{name}” to the shipped version? Your changes will be lost.",
+    docOpenFile:"Open file…", docSaveFile:"Save as file",
     copy:"copy", copyDone:"copied ✓", copyTooltip:"Copy text to clipboard",
     copyDiagramTooltip:"Copy diagram as a PNG image to the clipboard",
     downloadDiagramTooltip:"Download diagram as an SVG file (e.g. for LibreOffice: Insert → Image)",
@@ -2401,6 +2404,7 @@ const I18N = {
     docDeleteConfirm:"¿Eliminar el documento «{name}»?",
     docRestore:"Restaurar original",
     docRestoreConfirm:"¿Restablecer «{name}» a la versión incluida? Tus cambios se perderán.",
+    docOpenFile:"Abrir archivo…", docSaveFile:"Guardar como archivo",
     copy:"copiar", copyDone:"copiado ✓", copyTooltip:"Copiar el texto al portapapeles",
     copyDiagramTooltip:"Copiar el diagrama como imagen PNG al portapapeles",
     downloadDiagramTooltip:"Descargar el diagrama como archivo SVG (p. ej. para LibreOffice: Insertar → Imagen)",
@@ -2506,6 +2510,7 @@ const I18N = {
     docDeleteConfirm:"Supprimer le document « {name} » ?",
     docRestore:"Restaurer l’original",
     docRestoreConfirm:"Réinitialiser « {name} » à la version livrée ? Vos modifications seront perdues.",
+    docOpenFile:"Ouvrir un fichier…", docSaveFile:"Enregistrer comme fichier",
     copy:"copier", copyDone:"copié ✓", copyTooltip:"Copier le texte dans le presse-papiers",
     copyDiagramTooltip:"Copier le diagramme comme image PNG dans le presse-papiers",
     downloadDiagramTooltip:"Télécharger le diagramme en fichier SVG (p. ex. pour LibreOffice : Insertion → Image)",
@@ -2611,6 +2616,7 @@ const I18N = {
     docDeleteConfirm:"Usunąć dokument „{name}”?",
     docRestore:"Przywróć oryginał",
     docRestoreConfirm:"Przywrócić „{name}” do dostarczonej wersji? Twoje zmiany zostaną utracone.",
+    docOpenFile:"Otwórz plik…", docSaveFile:"Zapisz jako plik",
     copy:"kopiuj", copyDone:"skopiowano ✓", copyTooltip:"Kopiuj tekst do schowka",
     copyDiagramTooltip:"Kopiuj diagram jako obraz PNG do schowka",
     downloadDiagramTooltip:"Pobierz diagram jako plik SVG (np. dla LibreOffice: Wstaw → Obraz)",
@@ -2716,6 +2722,7 @@ const I18N = {
     docDeleteConfirm:"Удалить документ «{name}»?",
     docRestore:"Восстановить оригинал",
     docRestoreConfirm:"Вернуть «{name}» к поставляемой версии? Ваши изменения будут потеряны.",
+    docOpenFile:"Открыть файл…", docSaveFile:"Сохранить как файл",
     copy:"копировать", copyDone:"скопировано ✓", copyTooltip:"Скопировать текст в буфер обмена",
     copyDiagramTooltip:"Скопировать диаграмму как изображение PNG в буфер обмена",
     downloadDiagramTooltip:"Скачать диаграмму как файл SVG (напр. для LibreOffice: Вставка → Изображение)",
@@ -2821,6 +2828,7 @@ const I18N = {
     docDeleteConfirm:"दस्तावेज़ „{name}“ हटाएँ?",
     docRestore:"मूल पुनर्स्थापित करें",
     docRestoreConfirm:"„{name}“ को मूल संस्करण पर लौटाएँ? आपके परिवर्तन खो जाएँगे।",
+    docOpenFile:"फ़ाइल खोलें…", docSaveFile:"फ़ाइल के रूप में सहेजें",
     copy:"कॉपी करें", copyDone:"कॉपी हो गया ✓", copyTooltip:"टेक्स्ट को क्लिपबोर्ड पर कॉपी करें",
     copyDiagramTooltip:"आरेख को PNG छवि के रूप में क्लिपबोर्ड पर कॉपी करें",
     downloadDiagramTooltip:"आरेख को SVG फ़ाइल के रूप में डाउनलोड करें (जैसे LibreOffice: सम्मिलित करें → छवि)",
@@ -2926,6 +2934,7 @@ const I18N = {
     docDeleteConfirm:"删除文档“{name}”？",
     docRestore:"恢复原始版本",
     docRestoreConfirm:"将“{name}”重置为随附版本？您的更改将丢失。",
+    docOpenFile:"打开文件…", docSaveFile:"另存为文件",
     copy:"复制", copyDone:"已复制 ✓", copyTooltip:"将文本复制到剪贴板",
     copyDiagramTooltip:"将图表作为 PNG 图片复制到剪贴板",
     downloadDiagramTooltip:"将图表下载为 SVG 文件（例如用于 LibreOffice：插入 → 图像）",
@@ -3031,6 +3040,7 @@ const I18N = {
     docDeleteConfirm:"ドキュメント「{name}」を削除しますか？",
     docRestore:"オリジナルを復元",
     docRestoreConfirm:"「{name}」を同梱版に戻しますか？変更内容は失われます。",
+    docOpenFile:"ファイルを開く…", docSaveFile:"ファイルとして保存",
     copy:"コピー", copyDone:"コピーしました ✓", copyTooltip:"テキストをクリップボードにコピー",
     copyDiagramTooltip:"ダイアグラムを PNG 画像としてクリップボードにコピー",
     downloadDiagramTooltip:"ダイアグラムを SVG ファイルとしてダウンロード（例：LibreOffice の 挿入 → 画像）",
@@ -3845,6 +3855,43 @@ function deleteDoc(){
   persistDocs();
   closeDocMenu();
 }
+/* ---------- Lokale Dateien öffnen und speichern (D72, Stufe 1) ----------
+   Der klassische Weg, der in jedem Browser läuft: Datei-Input zum Öffnen,
+   Blob-Download zum Speichern. Geöffnet wird als NEUES Dokument (D22) — eine
+   Identität „gleicher Dateiname = gleiches Dokument" wäre eine Vermutung, und
+   zwei verschiedene Dateien gleichen Namens überschrieben sich still. Der
+   Dateiname wird der Dokumentname; beim Speichern entsteht er daraus zurück
+   (saveFileName, localfile.js). */
+const fileOpenInput = document.createElement('input');
+fileOpenInput.type = 'file';
+fileOpenInput.accept = FILE_ACCEPT;
+fileOpenInput.hidden = true;
+document.body.appendChild(fileOpenInput);
+fileOpenInput.addEventListener('change', async () => {
+  const f = fileOpenInput.files && fileOpenInput.files[0];
+  fileOpenInput.value = '';   /* dieselbe Datei soll erneut wählbar sein */
+  if(!f) return;
+  let text;
+  try{ text = await f.text(); }catch(_){ return; }
+  flushActive();
+  const d = { id: uid(), name: uniqueName(f.name), text };
+  docs.push(d);
+  activeId = d.id;
+  foldOverrides.clear();
+  loadActiveIntoEditor();
+  persistDocs();
+  closeDocMenu();
+});
+function openLocalFile(){ fileOpenInput.click(); }
+/* Speichern über den vorhandenen Blob-Download (saveBlob, Grafikexport):
+   UTF-8, LF — das Textfeld normalisiert Zeilenenden ohnehin auf \n (D24). */
+function saveLocalFile(){
+  flushActive();
+  const d = activeDoc();
+  if(!d) return;
+  saveBlob(new Blob([d.text], {type:'text/plain;charset=utf-8'}), saveFileName(d.name));
+  closeDocMenu();
+}
 /* Dokumente laden + aktiven Text in den Editor holen (nach applyLang). */
 function initDocs(){
   restoring = true;
@@ -4176,6 +4223,8 @@ docList.addEventListener('click', e => {
 /* `newDoc()` zeichnet das Menü selbst neu — es geht direkt ins Umbenennen
    (D51), und ein zweiter Durchlauf baute das Eingabefeld nur noch einmal auf. */
 document.getElementById('docNew').addEventListener('click', e => { e.stopPropagation(); newDoc(); });
+document.getElementById('docOpenFile').addEventListener('click', e => { e.stopPropagation(); openLocalFile(); });
+document.getElementById('docSaveFile').addEventListener('click', e => { e.stopPropagation(); saveLocalFile(); });
 document.getElementById('docRename').addEventListener('click', e => { e.stopPropagation(); renameDoc(); });
 document.getElementById('docDelete').addEventListener('click', e => { e.stopPropagation(); deleteDoc(); });
 document.getElementById('docRestore').addEventListener('click', e => { e.stopPropagation(); restoreDoc(); });

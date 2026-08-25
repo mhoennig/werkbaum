@@ -5288,3 +5288,54 @@ genau der Solo-Test fällt; Schwelle aufgeweicht → genau die drei
 Schwellen-Tests; Vererbung entfernt → genau der Vererbungs-Test; Teilung
 entfernt → genau der Mehrfach-Tag-Test; Erledigt-Ausnahme der Pille
 entfernt → genau der Pillen-Test.
+
+## D72 — Lokale Dateien öffnen und speichern, in zwei Stufen
+Der Notationstext ist das führende Datenformat (D14) — und war zugleich das
+Einzige, das den Browser nicht als Datei verlassen konnte, während das
+Diagramm zwei Download-Knöpfe hat. D24 hatte den Fall vorgesehen („ein
+künftiges Öffnen/Speichern im Editor — dann als `accept`-Filter und
+Download-Endung"). Entschieden (Nutzer): **zwei Stufen** — zuerst der
+klassische Weg, der in jedem Browser läuft; darauf die File System Access API
+für Chromium, die aus „Speichern unter" ein echtes „Speichern" macht.
+
+**Stufe 1: Datei-Input und Blob-Download, im Dokumenten-Menü.** Zwei Einträge
+neben „Neues Dokument": „Datei öffnen…" (verstecktes
+`<input type="file" accept=".werkbaum,.txt,text/plain">`, gelesen per
+`file.text()`) und „Als Datei speichern" (Blob + `<a download>`, über das
+vorhandene `saveBlob()` des Grafikexports). Das Menü ist der richtige Ort:
+Beide Aktionen handeln davon, *welcher Text* da ist — wie Anlegen, Umbenennen,
+Wiederherstellen (D22).
+
+**Geöffnet wird als NEUES Dokument, nicht per Namens-Identität.** D23 lässt
+denselben `?sourceUrl=`-Link dasselbe Dokument aktualisieren — dort ist die
+URL eine echte Adresse. Ein Dateiname ist keine: Zwei verschiedene Dateien
+gleichen Namens (`plan.werkbaum` aus zwei Ordnern) überschrieben sich still,
+und der stille Fehler ist der schlimmere (D59-Linie). Wer dieselbe Datei
+zweimal öffnet, bekommt eben `plan.werkbaum` und `plan.werkbaum (2)` — sichtbar
+und harmlos; die echte Datei-Identität bringt erst das Handle der Stufe 2.
+Der Dateiname wird der Dokumentname (über `uniqueName`, wie überall).
+
+**Der Dateiname beim Speichern entsteht aus dem Dokumentnamen** — headless in
+`localfile.js` (`saveFileName`, Hausregel D54-Nachtrag 3): verbotene Zeichen
+und Pfadtrenner werden zu `-` (URL-Namen aus D23 bleiben so lesbar), führende
+Punkte fallen weg (sonst entstünde eine versteckte Datei), die Endung
+`.werkbaum` kommt dazu, wenn nicht schon `.werkbaum` oder `.txt` dasteht
+(D24: `.txt` bleibt zulässig), leerer Rest fällt auf `plan.werkbaum` zurück.
+Gespeichert wird als `text/plain;charset=utf-8` mit LF — die D24-Konvention;
+Pad-Dokumente (D31) dürfen ebenso gespeichert werden (der Schreibschutz gilt
+dem Textfeld, nicht dem Export).
+
+**Kein SPEC-Eintrag:** Öffnen/Speichern ist Dokumentverwaltung wie der
+Wähler (D22) und die früheren Stände (D54) — Notation und Darstellung des
+Plans ändern sich nicht; `llms.md` bleibt unberührt. Die Endungs-Konvention
+steht seit D24 in SPEC §12.
+
+**Nachgemessen** im Browser (echte `File` per DataTransfer — das prüft den
+vollständigen Weg samt `file.text()`; der Download mit abgefangenem
+Anchor-Klick und zurückgelesenem Blob): Öffnen legt ein drittes Dokument
+„probe-plan.werkbaum" an, aktiviert es, Diagramm zeigt dessen 2 Knoten, der
+Input ist geleert (dieselbe Datei bleibt erneut wählbar); Speichern liefert
+`probe-plan.werkbaum` mit byte-identischem Inhalt. 479 Tests, davon 9 neue in
+`tests/localfile.test.js`. Werkzeuggrenze wie in D25/D53: Der echte
+Dateidialog und der echte Download lassen sich nicht automatisiert auslösen —
+geprüft ist alles bis an diese Kante.
