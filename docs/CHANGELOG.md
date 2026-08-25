@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-25
 
+- Fix: the file notice and the legend blamed "Chromium", but Brave is Chromium without the File System Access API — they now name the feature and example browsers
 - Browsers without the File System Access API (Firefox, Safari) explain themselves once: files open as copies and saving downloads a new file
 - Fix: the save dialog suggested a "name (1)" neighbour in the wrong folder — it now points at the original file, and open/save dialogs remember the plan folder
 - Ctrl+S saves the document as a file — with a remembered file it writes straight back in place, and the document name flashes as confirmation

@@ -2193,7 +2193,7 @@ const I18N = {
     docRestore:"Original wiederherstellen",
     docRestoreConfirm:"„{name}“ auf den mitgelieferten Stand zurücksetzen? Eigene Änderungen gehen verloren.",
     docOpenFile:"Datei öffnen…", docSaveFile:"Als Datei speichern",
-    fsNotice:"Dieser Browser kann lokale Dateien nicht direkt beschreiben: Eine geöffnete Datei wird als Kopie geladen, und Speichern legt eine neue Datei in den Downloads ab. Chromium-Browser schreiben direkt in die geöffnete Datei zurück.", fsNoticeOk:"Verstanden",
+    fsNotice:"Dieser Browser kann lokale Dateien nicht direkt beschreiben: Eine geöffnete Datei wird als Kopie geladen, und Speichern legt eine neue Datei in den Downloads ab. Browser mit der File-System-Access-Schnittstelle (z. B. Chrome oder Edge) schreiben direkt in die geöffnete Datei zurück.", fsNoticeOk:"Verstanden",
     copy:"kopieren", copyDone:"kopiert ✓", copyTooltip:"Text in die Zwischenablage kopieren",
     copyDiagramTooltip:"Diagramm als PNG-Bild in die Zwischenablage kopieren",
     downloadDiagramTooltip:"Diagramm als SVG-Datei herunterladen (z. B. für LibreOffice: Einfügen → Bild)",
@@ -2254,7 +2254,7 @@ const I18N = {
     hint_desc:"Beschreibungen: \" Zeile unter dem Knoten; Langtext hinter --- als eingerückter #id-Block — beides im Tooltip (”).",
     hint_fold:"Falten: - [x] > … startet eingeklappt, < holt hervor; ▾/▸ am Knoten klappt um (Tastatur: ←/→).",
     hint_jump:"Alt+Klick auf einen Knoten (mobil: langer Druck) springt zur zugehörigen Textzeile; Alt+Klick im Text holt den Knoten ins Bild; Strg+Klick auf eine Abhängigkeit :#id springt zur Zeile dieser ID.",
-    hint_save:"Strg+S speichert das Dokument als Datei — mit gemerkter Datei (Chromium) direkt an Ort und Stelle."
+    hint_save:"Strg+S speichert das Dokument als Datei — mit gemerkter Datei (z. B. Chrome/Edge) direkt an Ort und Stelle."
   },
   en: {
     subtitle:"Werkbaum – Work Breakdown Structure / Lean Pathfinding · Project structure editor (also feature-tree & requirements)",
@@ -2301,7 +2301,7 @@ const I18N = {
     docRestore:"Restore original",
     docRestoreConfirm:"Reset “{name}” to the shipped version? Your changes will be lost.",
     docOpenFile:"Open file…", docSaveFile:"Save as file",
-    fsNotice:"This browser cannot write to local files directly: an opened file is loaded as a copy, and saving puts a new file into your downloads. Chromium browsers write straight back into the opened file.", fsNoticeOk:"Got it",
+    fsNotice:"This browser cannot write to local files directly: an opened file is loaded as a copy, and saving puts a new file into your downloads. Browsers with the File System Access API (such as Chrome or Edge) write straight back into the opened file.", fsNoticeOk:"Got it",
     copy:"copy", copyDone:"copied ✓", copyTooltip:"Copy text to clipboard",
     copyDiagramTooltip:"Copy diagram as a PNG image to the clipboard",
     downloadDiagramTooltip:"Download diagram as an SVG file (e.g. for LibreOffice: Insert → Image)",
@@ -2362,7 +2362,7 @@ const I18N = {
     hint_desc:"Descriptions: a \" line below the node; long text behind --- as an indented #id block — both in the tooltip (”).",
     hint_fold:"Folding: - [x] > … starts collapsed, < brings it back; ▾/▸ on a node toggles (keyboard: ←/→).",
     hint_jump:"Alt+click a node (long press on touch) jumps to its line in the text; Alt+click in the text brings the node into view; Ctrl+click a dependency :#id jumps to that ID's line.",
-    hint_save:"Ctrl+S saves the document as a file — with a remembered file (Chromium) right back in place."
+    hint_save:"Ctrl+S saves the document as a file — with a remembered file (e.g. Chrome/Edge) right back in place."
   },
   es: {
     subtitle:"Werkbaum – EDT / Lean Pathfinding · Editor de estructura de proyectos (también árboles de características y requisitos)",
@@ -2409,7 +2409,7 @@ const I18N = {
     docRestore:"Restaurar original",
     docRestoreConfirm:"¿Restablecer «{name}» a la versión incluida? Tus cambios se perderán.",
     docOpenFile:"Abrir archivo…", docSaveFile:"Guardar como archivo",
-    fsNotice:"Este navegador no puede escribir directamente en archivos locales: un archivo abierto se carga como copia, y al guardar se crea un archivo nuevo en las descargas. Los navegadores Chromium escriben directamente en el archivo abierto.", fsNoticeOk:"Entendido",
+    fsNotice:"Este navegador no puede escribir directamente en archivos locales: un archivo abierto se carga como copia, y al guardar se crea un archivo nuevo en las descargas. Los navegadores con la API File System Access (como Chrome o Edge) escriben directamente en el archivo abierto.", fsNoticeOk:"Entendido",
     copy:"copiar", copyDone:"copiado ✓", copyTooltip:"Copiar el texto al portapapeles",
     copyDiagramTooltip:"Copiar el diagrama como imagen PNG al portapapeles",
     downloadDiagramTooltip:"Descargar el diagrama como archivo SVG (p. ej. para LibreOffice: Insertar → Imagen)",
@@ -2470,7 +2470,7 @@ const I18N = {
     hint_desc:"Descripciones: línea \" bajo el nodo; texto largo tras --- como bloque #id sangrado — ambos en el tooltip (”).",
     hint_fold:"Plegado: - [x] > … empieza plegado, < lo recupera; ▾/▸ en el nodo alterna (teclado: ←/→).",
     hint_jump:"Alt+clic en un nodo (pulsación larga en táctil) salta a su línea en el texto; Alt+clic en el texto trae el nodo a la vista; Ctrl+clic en una dependencia :#id salta a la línea de esa ID.",
-    hint_save:"Ctrl+S guarda el documento como archivo — con un archivo recordado (Chromium), directamente en el mismo lugar."
+    hint_save:"Ctrl+S guarda el documento como archivo — con un archivo recordado (p. ej. Chrome/Edge), directamente en el mismo lugar."
   },
   fr: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · Éditeur de structure de projet (aussi pour arbres de fonctionnalités et d'exigences)",
@@ -2517,7 +2517,7 @@ const I18N = {
     docRestore:"Restaurer l’original",
     docRestoreConfirm:"Réinitialiser « {name} » à la version livrée ? Vos modifications seront perdues.",
     docOpenFile:"Ouvrir un fichier…", docSaveFile:"Enregistrer comme fichier",
-    fsNotice:"Ce navigateur ne peut pas écrire directement dans les fichiers locaux : un fichier ouvert est chargé comme copie, et l’enregistrement dépose un nouveau fichier dans les téléchargements. Les navigateurs Chromium réécrivent directement dans le fichier ouvert.", fsNoticeOk:"Compris",
+    fsNotice:"Ce navigateur ne peut pas écrire directement dans les fichiers locaux : un fichier ouvert est chargé comme copie, et l’enregistrement dépose un nouveau fichier dans les téléchargements. Les navigateurs dotés de l’API File System Access (comme Chrome ou Edge) réécrivent directement dans le fichier ouvert.", fsNoticeOk:"Compris",
     copy:"copier", copyDone:"copié ✓", copyTooltip:"Copier le texte dans le presse-papiers",
     copyDiagramTooltip:"Copier le diagramme comme image PNG dans le presse-papiers",
     downloadDiagramTooltip:"Télécharger le diagramme en fichier SVG (p. ex. pour LibreOffice : Insertion → Image)",
@@ -2578,7 +2578,7 @@ const I18N = {
     hint_desc:"Descriptions : ligne \" sous le nœud ; texte long après --- en bloc #id indenté — les deux dans l’infobulle (”).",
     hint_fold:"Pliage : - [x] > … démarre replié, < le fait ressortir ; ▾/▸ sur le nœud bascule (clavier : ←/→).",
     hint_jump:"Alt+clic sur un nœud (appui long sur tactile) saute à sa ligne dans le texte ; Alt+clic dans le texte amène le nœud à l’écran ; Ctrl+clic sur une dépendance :#id saute à la ligne de cet ID.",
-    hint_save:"Ctrl+S enregistre le document comme fichier — avec un fichier mémorisé (Chromium), directement sur place."
+    hint_save:"Ctrl+S enregistre le document comme fichier — avec un fichier mémorisé (p. ex. Chrome/Edge), directement sur place."
   },
   pl: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · Edytor struktury projektów (również dla drzew funkcji i wymagań)",
@@ -2625,7 +2625,7 @@ const I18N = {
     docRestore:"Przywróć oryginał",
     docRestoreConfirm:"Przywrócić „{name}” do dostarczonej wersji? Twoje zmiany zostaną utracone.",
     docOpenFile:"Otwórz plik…", docSaveFile:"Zapisz jako plik",
-    fsNotice:"Ta przeglądarka nie może bezpośrednio zapisywać plików lokalnych: otwarty plik jest wczytywany jako kopia, a zapis tworzy nowy plik w pobranych. Przeglądarki Chromium zapisują bezpośrednio do otwartego pliku.", fsNoticeOk:"Rozumiem",
+    fsNotice:"Ta przeglądarka nie może bezpośrednio zapisywać plików lokalnych: otwarty plik jest wczytywany jako kopia, a zapis tworzy nowy plik w pobranych. Przeglądarki z interfejsem File System Access (np. Chrome lub Edge) zapisują bezpośrednio do otwartego pliku.", fsNoticeOk:"Rozumiem",
     copy:"kopiuj", copyDone:"skopiowano ✓", copyTooltip:"Kopiuj tekst do schowka",
     copyDiagramTooltip:"Kopiuj diagram jako obraz PNG do schowka",
     downloadDiagramTooltip:"Pobierz diagram jako plik SVG (np. dla LibreOffice: Wstaw → Obraz)",
@@ -2686,7 +2686,7 @@ const I18N = {
     hint_desc:"Opisy: wiersz \" pod węzłem; dłuższy tekst za --- jako wcięty blok #id — oba w podpowiedzi (”).",
     hint_fold:"Zwijanie: - [x] > … zaczyna zwinięte, < przywraca; ▾/▸ na węźle przełącza (klawiatura: ←/→).",
     hint_jump:"Alt+kliknięcie węzła (długie naciśnięcie na dotyku) przechodzi do jego wiersza w tekście; Alt+kliknięcie w tekście pokazuje węzeł na diagramie; Ctrl+kliknięcie zależności :#id przechodzi do wiersza tego ID.",
-    hint_save:"Ctrl+S zapisuje dokument jako plik — przy zapamiętanym pliku (Chromium) bezpośrednio w tym samym miejscu."
+    hint_save:"Ctrl+S zapisuje dokument jako plik — przy zapamiętanym pliku (np. Chrome/Edge) bezpośrednio w tym samym miejscu."
   },
   ru: {
     subtitle:"Werkbaum – СДР / Lean Pathfinding · Редактор структуры проектов (также для деревьев функций и требований)",
@@ -2733,7 +2733,7 @@ const I18N = {
     docRestore:"Восстановить оригинал",
     docRestoreConfirm:"Вернуть «{name}» к поставляемой версии? Ваши изменения будут потеряны.",
     docOpenFile:"Открыть файл…", docSaveFile:"Сохранить как файл",
-    fsNotice:"Этот браузер не может напрямую записывать локальные файлы: открытый файл загружается как копия, а сохранение создаёт новый файл в загрузках. Браузеры на Chromium записывают прямо в открытый файл.", fsNoticeOk:"Понятно",
+    fsNotice:"Этот браузер не может напрямую записывать локальные файлы: открытый файл загружается как копия, а сохранение создаёт новый файл в загрузках. Браузеры с API File System Access (например, Chrome или Edge) записывают прямо в открытый файл.", fsNoticeOk:"Понятно",
     copy:"копировать", copyDone:"скопировано ✓", copyTooltip:"Скопировать текст в буфер обмена",
     copyDiagramTooltip:"Скопировать диаграмму как изображение PNG в буфер обмена",
     downloadDiagramTooltip:"Скачать диаграмму как файл SVG (напр. для LibreOffice: Вставка → Изображение)",
@@ -2794,7 +2794,7 @@ const I18N = {
     hint_desc:"Описания: строка \" под узлом; длинный текст после --- как блок #id с отступом — оба в подсказке (”).",
     hint_fold:"Сворачивание: - [x] > … открывается свёрнутым, < возвращает; ▾/▸ на узле переключает (клавиши: ←/→).",
     hint_jump:"Alt+клик по узлу (долгое нажатие на сенсоре) переходит к его строке в тексте; Alt+клик в тексте показывает узел на диаграмме; Ctrl+клик по зависимости :#id переходит к строке этого ID.",
-    hint_save:"Ctrl+S сохраняет документ как файл — с запомненным файлом (Chromium) прямо на месте."
+    hint_save:"Ctrl+S сохраняет документ как файл — с запомненным файлом (напр. Chrome/Edge) прямо на месте."
   },
   hi: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · परियोजना संरचना संपादक (फ़ीचर और रिक्वायरमेंट ट्री के लिए भी)",
@@ -2841,7 +2841,7 @@ const I18N = {
     docRestore:"मूल पुनर्स्थापित करें",
     docRestoreConfirm:"„{name}“ को मूल संस्करण पर लौटाएँ? आपके परिवर्तन खो जाएँगे।",
     docOpenFile:"फ़ाइल खोलें…", docSaveFile:"फ़ाइल के रूप में सहेजें",
-    fsNotice:"यह ब्राउज़र स्थानीय फ़ाइलों में सीधे नहीं लिख सकता: खोली गई फ़ाइल एक प्रति के रूप में लोड होती है, और सहेजने पर डाउनलोड में एक नई फ़ाइल बनती है। Chromium ब्राउज़र सीधे खोली गई फ़ाइल में लिखते हैं।", fsNoticeOk:"समझ गया",
+    fsNotice:"यह ब्राउज़र स्थानीय फ़ाइलों में सीधे नहीं लिख सकता: खोली गई फ़ाइल एक प्रति के रूप में लोड होती है, और सहेजने पर डाउनलोड में एक नई फ़ाइल बनती है। File System Access API वाले ब्राउज़र (जैसे Chrome या Edge) सीधे खोली गई फ़ाइल में लिखते हैं।", fsNoticeOk:"समझ गया",
     copy:"कॉपी करें", copyDone:"कॉपी हो गया ✓", copyTooltip:"टेक्स्ट को क्लिपबोर्ड पर कॉपी करें",
     copyDiagramTooltip:"आरेख को PNG छवि के रूप में क्लिपबोर्ड पर कॉपी करें",
     downloadDiagramTooltip:"आरेख को SVG फ़ाइल के रूप में डाउनलोड करें (जैसे LibreOffice: सम्मिलित करें → छवि)",
@@ -2902,7 +2902,7 @@ const I18N = {
     hint_desc:"विवरण: नोड के नीचे \" पंक्ति; --- के बाद #id ब्लॉक में लंबा पाठ — दोनों टूलटिप में (”)।",
     hint_fold:"फ़ोल्डिंग: - [x] > … समेटा हुआ खुलता है, < वापस लाता है; नोड पर ▾/▸ टॉगल करता है (कीबोर्ड: ←/→)।",
     hint_jump:"किसी नोड पर Alt+क्लिक (टच पर लंबा दबाव) टेक्स्ट में उसकी पंक्ति पर ले जाता है; टेक्स्ट में Alt+क्लिक उस नोड को आरेख में दिखाता है; :#id निर्भरता पर Ctrl+क्लिक उस ID की पंक्ति पर ले जाता है।",
-    hint_save:"Ctrl+S दस्तावेज़ को फ़ाइल के रूप में सहेजता है — याद रखी गई फ़ाइल (Chromium) में सीधे उसी जगह।"
+    hint_save:"Ctrl+S दस्तावेज़ को फ़ाइल के रूप में सहेजता है — याद रखी गई फ़ाइल (जैसे Chrome/Edge) में सीधे उसी जगह।"
   },
   zh: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · 项目结构编辑器（也支持功能树和需求树）",
@@ -2949,7 +2949,7 @@ const I18N = {
     docRestore:"恢复原始版本",
     docRestoreConfirm:"将“{name}”重置为随附版本？您的更改将丢失。",
     docOpenFile:"打开文件…", docSaveFile:"另存为文件",
-    fsNotice:"此浏览器无法直接写入本地文件：打开的文件会作为副本载入，保存时会在下载目录生成一个新文件。Chromium 浏览器则会直接写回打开的文件。", fsNoticeOk:"知道了",
+    fsNotice:"此浏览器无法直接写入本地文件：打开的文件会作为副本载入，保存时会在下载目录生成一个新文件。支持 File System Access API 的浏览器（如 Chrome、Edge）则会直接写回打开的文件。", fsNoticeOk:"知道了",
     copy:"复制", copyDone:"已复制 ✓", copyTooltip:"将文本复制到剪贴板",
     copyDiagramTooltip:"将图表作为 PNG 图片复制到剪贴板",
     downloadDiagramTooltip:"将图表下载为 SVG 文件（例如用于 LibreOffice：插入 → 图像）",
@@ -3010,7 +3010,7 @@ const I18N = {
     hint_desc:"描述：节点下方的 \" 行；--- 之后的缩进 #id 块为长文本——均显示在提示中（”）。",
     hint_fold:"折叠：- [x] > … 打开时即折叠，< 将其展开；节点上的 ▾/▸ 切换（键盘：←/→）。",
     hint_jump:"Alt+点击节点（触摸屏为长按）可跳转到文本中对应的行；在文本中 Alt+点击则把该节点带入视野；在依赖 :#id 上 Ctrl+点击可跳转到该 ID 所在的行。",
-    hint_save:"Ctrl+S 将文档保存为文件——若已记住文件（Chromium），则直接就地写回。"
+    hint_save:"Ctrl+S 将文档保存为文件——若已记住文件（如 Chrome/Edge），则直接就地写回。"
   },
   ja: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · プロジェクト構造エディター（フィーチャーツリーと要件ツリーにも対応）",
@@ -3057,7 +3057,7 @@ const I18N = {
     docRestore:"オリジナルを復元",
     docRestoreConfirm:"「{name}」を同梱版に戻しますか？変更内容は失われます。",
     docOpenFile:"ファイルを開く…", docSaveFile:"ファイルとして保存",
-    fsNotice:"このブラウザーはローカルファイルへ直接書き込めません。開いたファイルはコピーとして読み込まれ、保存するとダウンロードに新しいファイルが作られます。Chromium 系ブラウザーは開いたファイルへ直接書き戻します。", fsNoticeOk:"わかりました",
+    fsNotice:"このブラウザーはローカルファイルへ直接書き込めません。開いたファイルはコピーとして読み込まれ、保存するとダウンロードに新しいファイルが作られます。File System Access API に対応したブラウザー（Chrome や Edge など）は、開いたファイルへ直接書き戻します。", fsNoticeOk:"わかりました",
     copy:"コピー", copyDone:"コピーしました ✓", copyTooltip:"テキストをクリップボードにコピー",
     copyDiagramTooltip:"ダイアグラムを PNG 画像としてクリップボードにコピー",
     downloadDiagramTooltip:"ダイアグラムを SVG ファイルとしてダウンロード（例：LibreOffice の 挿入 → 画像）",
@@ -3118,7 +3118,7 @@ const I18N = {
     hint_desc:"説明：ノード直下の \" 行。--- 以降は #id ブロック（字下げ）で長文 — どちらもツールチップに表示（”）。",
     hint_fold:"折りたたみ：- [x] > … は折りたたんだ状態で開き、< は呼び戻します。ノードの ▾/▸ で切替（キー：←/→）。",
     hint_jump:"ノードを Alt+クリック（タッチでは長押し）すると、テキストの該当行へ移動します。テキスト内で Alt+クリックすると、そのノードが図の中央に表示されます。依存関係 :#id を Ctrl+クリックすると、その ID の行へ移動します。",
-    hint_save:"Ctrl+S は文書をファイルとして保存します。記憶されたファイル（Chromium）には、そのまま直接書き戻します。"
+    hint_save:"Ctrl+S は文書をファイルとして保存します。記憶されたファイル（Chrome/Edge など）には、そのまま直接書き戻します。"
   }
 };
 let lang = 'de';

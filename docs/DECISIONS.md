@@ -5623,3 +5623,24 @@ trotzdem; „Verstanden" setzt den Merker und entfernt das Banner; ein
 zweites Öffnen zeigt nichts mehr und öffnet weiter den Input. In Chromium
 (`hasFsAccess` wahr) kehrt `maybeShowFsNotice()` in der ersten Zeile um —
 dort existiert der Hinweis nicht.
+
+**Nachtrag 3 — „Chromium" war die falsche Auskunft: Brave ist Chromium ohne
+die API.** Gemeldet vom Nutzer, der den neuen Hinweis ausgerechnet in Brave
+bekam: „Aber der ist doch Chromium basiert." Stimmt — und genau deshalb war
+der Text falsch. Brave schaltet die File-System-Access-Schnittstelle
+**bewusst ab** (Fingerprinting-/Datenschutz-Haltung; `showOpenFilePicker`
+existiert dort nicht). Die Feature-Erkennung der App tat das Richtige — Brave
+verhält sich wie Firefox —, aber Hinweis und Legenden-Zeile begründeten das
+Verhalten mit der **Engine-Familie**, obwohl es am **Feature** hängt. Eine
+Erklärung, die dem Betroffenen nachweislich widerspricht, ist schlimmer als
+keine.
+
+Alle 18 nutzersichtbaren Stellen (`fsNotice` und `hint_save`, je neun
+Sprachen) benennen jetzt die Schnittstelle und Beispiel-Browser („mit der
+File-System-Access-Schnittstelle, z. B. Chrome oder Edge") statt „Chromium".
+Beispiele statt einer Liste, weil die Menge sich bewegt (Opera und Vivaldi
+haben die API, Brave nicht, und Brave-Nutzer können sie über
+`brave://flags/#file-system-access-api` selbst einschalten — dann greift
+Stufe 2 dort unverändert, die Erkennung ist ja Feature-basiert).
+Code-Kommentare dürfen weiter „Chromium" sagen — sie reden mit Entwicklern,
+und dort ist die Kurzform tragbar.
