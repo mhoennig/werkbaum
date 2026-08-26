@@ -133,9 +133,18 @@ REMOTE
 
 unset PASSWORT PASSWORT2
 
-echo "==> Fertig. Probe — curl fragt selbst nach dem Passwort:"
-echo "    curl -su werkbaum <basis-url>/api/v1/documents"
+# Die oeffentliche Adresse steht nicht in der Backend-Konfiguration, wohl aber
+# im rsync-Ziel des Frontends (`.../doms/<domain>/htdocs-ssl`). Wenn sie sich
+# daraus ablesen laesst, wird aus dem Hinweis ein Befehl zum Kopieren.
+BASIS="$(env_value DEPLOY_TARGET | sed -n 's|.*/doms/\([^/]*\)/.*|https://\1|p')"
+BASIS="${BASIS:-https://<deine-adresse>}"
+
+echo "==> Fertig. So probierst du es aus:"
 echo
-echo "    Bewusst OHNE Passwort im Befehl: In 'curl -u werkbaum:ge\$heim' fasst"
-echo "    die Shell es genauso an wie beim Hashen — und dann ist die Antwort"
-echo "    ein 401, obwohl der Hash stimmt."
+echo "      curl -su werkbaum ${BASIS}/api/v1/documents"
+echo
+echo "    curl fragt dann nach dem Passwort. Erwartet wird [] - eine leere Liste."
+echo
+echo "    Schreib das Passwort nicht mit in den Befehl: Die Shell kann es"
+echo "    veraendern, bevor curl es sieht (aus ge\$heim wird ge), und du"
+echo "    bekommst ein 401, obwohl alles richtig gesetzt ist."
