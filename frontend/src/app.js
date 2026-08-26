@@ -8,6 +8,7 @@ import { depFragment, collectIds, matchIds, depIdAt, idLine } from './autocomple
 import { LS_SNAPS, SNAP_EVERY, parseSnaps, addSnapshot, persistSnaps, snapLabel }
   from './snapshots.js';
 import { FILE_ACCEPT, FILE_TYPES, saveFileName } from './localfile.js';
+import { LIVE_PARAM, SOURCE_PARAM, ETHERPAD_PARAM, docSearch } from './docurl.js';
 /* Neuigkeiten (D58): die git-Historie, zur BAUZEIT eingelesen (Vite-Plugin in
    vite.config.js). Zur Laufzeit gibt es kein git — und keinen Server, der
    nachliefern könnte (D11/D19). Leer, wo git nicht erreichbar war. */
@@ -80,6 +81,13 @@ let mobilePane = 'diagram';
 let caretLine = null, currentNodeEl = null;
 /* Warnung des ?sourceUrl-Ladens (D23) — zeilenlos und persistent, siehe render(). */
 let sourceWarning = null;
+/* Steht die App? Erst danach folgt die Adresszeile dem aktiven Dokument (D80)
+   und wird eine Live-Sitzung beim Umschalten übernommen. Während des Starts
+   dürfen beide nicht laufen: `loadRemoteSource()`/`loadLive()` lesen ihre
+   Parameter erst nach dem Wiederherstellen des zuletzt aktiven Dokuments —
+   ein vorschnelles Aufräumen der Adresszeile nähme ihnen die Vorlage. Hier
+   oben deklariert, weil `loadActiveIntoEditor()` schon beim Start läuft. */
+let bootDone = false;
 /* „Was ist neu?" (D28): Knoten, die gegenüber der zuletzt GESEHENEN Fassung neu
    in Produktion sind. Gilt immer für genau ein Dokument (`freshDocId`) — nur
    Dokumente von außen (mitgeliefert oder ?sourceUrl=) haben eine
@@ -3892,9 +3900,44 @@ function loadActiveIntoEditor(){ const d = activeDoc(); src.value = d ? d.text :
   /* Vergleichsstand für den nächsten Snapshot (D54): Ohne ihn legte der
      erste Takt nach dem Öffnen auch ein unverändertes Dokument weg. */
   snapBase = src.value; closeSnapMenu();
-  render(); updateDocName(); updateFreshBtn(); }
+  render(); updateDocName(); updateFreshBtn();
+  /* Ein Dokumentwechsel ist mehr als neuer Text im Feld: Adresszeile und
+     Live-Sitzung gehören dem, was man vor sich hat (D80). Hier, weil jeder
+     Weg zu einem anderen aktiven Dokument durch diese eine Stelle führt —
+     Umschalten, Anlegen, Löschen, Datei öffnen, Server-Dokument laden. */
+  followActiveDoc(); }
+
+/* Die Adresszeile beschreibt das aktive Dokument (D80). Geschrieben wird nur,
+   wenn sich wirklich etwas ändert — sonst stünde in der Historie des Browsers
+   bei jedem Rendern ein Eintrag mehr. */
+function syncDocUrl(){
+  let u;
+  try{ u = new URL(location.href); }catch(_){ return; }
+  const neu = docSearch(u.search, activeId);
+  if(neu === u.search) return;
+  try{ history.replaceState(null, '', u.origin + u.pathname + neu + u.hash); }catch(_){}
+}
+
+/* Die Live-Sitzung gehört dem sichtbaren Dokument (D80). Ohne das liefe der
+   Feed eines Server-Dokuments weiter, während ein anderes vorn steht — und
+   `setLiveText()` schriebe die fremde Änderung in **dessen** Text. */
+function followActiveDoc(){
+  if(!bootDone) return;
+  syncDocUrl();
+  if(liveState && liveState.id !== activeId) stopLive();
+  const d = activeDoc();
+  if(!liveState && d && String(d.id).startsWith('live:')) startLive(d.id.slice(5));
+}
+
 function switchDoc(id){
   if(id === activeId) return;
+  /* Was noch im Debounce steckt, ist getippt und gemeint: erst loswerden,
+     solange das Textfeld noch den Text dieses Dokuments zeigt (D80). */
+  if(liveActive() && liveState.pushTimer){
+    clearTimeout(liveState.pushTimer);
+    liveState.pushTimer = null;
+    pushLive();          /* liest src.value synchron; das Ergebnis braucht niemand mehr */
+  }
   flushActive();
   activeId = id;
   foldOverrides.clear();   /* Falt-Eingriffe gelten je Dokument-Sitzung (D38) */
@@ -4231,8 +4274,8 @@ function initDocs(){
 
    `?etherpad=` gab es hier einmal daneben (D31) und ist ausgebaut (D78) — ein
    alter Link meldet sich, statt still nichts zu tun. */
-const SOURCE_PARAM = 'sourceUrl';
-const ETHERPAD_PARAM = 'etherpad';
+/* Die Parameternamen stehen in docurl.js — dort wird auch entschieden, welcher
+   von ihnen zum aktiven Dokument gehört (D80). */
 function urlParam(name){
   try{ return new URLSearchParams(location.search).get(name); }catch(_){ return null; }
 }
@@ -4315,7 +4358,6 @@ async function loadRemoteSource(){
    Was hier NICHT passiert: Zusammenführen. Überschneiden sich zwei Änderungen
    wirklich, entscheidet der Mensch (Konflikt-Band unten). Alles andere
    verschiebt der Server selbst. */
-const LIVE_PARAM = 'live';
 const LIVE_DEBOUNCE_MS = 600;    /* Ruhe vor dem Senden; D76, D79 */
 const LIVE_WAIT_S = 25;          /* Wartezeit des Feeds; der Server klemmt sie ohnehin */
 const LIVE_RETRY_MS = 5000;      /* nach einem Netzfehler, bevor der Feed erneut fragt */
@@ -4367,8 +4409,12 @@ function stopLive(){
   hideConflictBanner();
 }
 
-async function loadLive(){
-  const raw = urlParam(LIVE_PARAM);
+function loadLive(){ startLive(urlParam(LIVE_PARAM)); }
+
+/* Eine Sitzung für dieses Server-Dokument aufnehmen: Stand holen, Feed öffnen.
+   Zwei Wege hierher — der `?live=`-Parameter beim Laden und das Umschalten auf
+   ein Server-Dokument im Wähler (D80). */
+async function startLive(raw){
   if(!raw) return;
   const urls = live.liveUrls(raw, location.href);
   if(!urls){
@@ -4444,7 +4490,12 @@ async function pushLive(){
   const ops = live.computeOps(liveState.shadow, now);
   if(!ops.length) return;
 
-  liveState.busy = true;
+  /* Die Sitzung selbst festhalten, nicht nur ihre Felder: Wer während des
+     Sendens auf ein anderes Dokument umschaltet, beendet sie (D80) — die
+     Fortsetzung unten dürfte danach weder schreiben noch in ein `null`
+     greifen. Der PATCH ist dann trotzdem draußen, und das ist gewollt. */
+  const sitzung = liveState;
+  sitzung.busy = true;
   const seq = nextSeq();
   /* Die Basis, gegen die `ops` gerechnet sind — VOR dem Warten festgehalten.
      Sie hinterher aus `liveState` zu lesen hieße anzunehmen, dass sich
@@ -4452,21 +4503,22 @@ async function pushLive(){
      Feed dazwischenfunkt (D76-Nachtrag 9). Der Feed lässt sich jetzt aus,
      solange wir senden — aber eine Rechnung, die nur wegen einer Sperre
      anderswo stimmt, schreibt man nicht auf. */
-  const basis = liveState.shadow;
+  const basis = sitzung.shadow;
   try{
     const body = {
-      baseVersion: liveState.version,
-      checksum: await live.checksum(live.text(liveState.shadow)),
+      baseVersion: sitzung.version,
+      checksum: await live.checksum(live.text(sitzung.shadow)),
       clientId: clientId(),
       displayName: displayName(),
       seq,
       ops,
     };
-    const result = await fetchJson(liveState.urls.content, {
+    const result = await fetchJson(sitzung.urls.content, {
       method: 'PATCH',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(body),
     });
+    if(liveState !== sitzung) return;   /* inzwischen umgeschaltet (D80) */
     /* Angenommen. Hat der Server verschoben, stehen die fremden Operationen in
        `opsSinceBase`: Die Schattenkopie zieht erst darüber nach, dann kommt
        unsere eigene Änderung darauf — verschoben um die fremde. Genau diese
@@ -4475,14 +4527,14 @@ async function pushLive(){
     const foreign = (result.opsSinceBase || []);
     const meine = foreign.length ? live.rebaseOps(ops, foreign) : ops;
     if(meine == null){ await reloadLive(); return; }   /* kann nicht sein - dann lieber neu */
-    liveState.shadow = live.applyOps(
+    sitzung.shadow = live.applyOps(
       foreign.length ? live.applyOps(basis, foreign) : basis, meine);
-    liveState.version = result.version;
-    if(foreign.length) applyForeign(basis, foreign, liveState.shadow, liveState.version);
+    sitzung.version = result.version;
+    if(foreign.length) applyForeign(basis, foreign, sitzung.shadow, sitzung.version);
   }catch(err){
-    handlePushError(err);
+    if(liveState === sitzung) handlePushError(err);
   }finally{
-    liveState.busy = false;
+    sitzung.busy = false;
   }
 }
 
@@ -4736,10 +4788,10 @@ async function putOnServer(){
     runFeed();
 
     /* Die Adresszeile IST der Link — dort sucht man ihn, und ein Neuladen
-       führt zurück ins selbe Dokument. Zusätzlich in die Zwischenablage,
-       weil Weitergeben der eigentliche Zweck ist. */
-    const teilen = location.origin + location.pathname + '?live=' + urls.doc;
-    try{ history.replaceState(null, '', teilen); }catch(_){}
+       führt zurück ins selbe Dokument. Gesetzt hat sie `adoptLive()` schon
+       (D80); in die Zwischenablage geht der Link ohne fremde Parameter, denn
+       ein `?server=` geht den Empfänger nichts an. */
+    const teilen = location.origin + location.pathname + '?' + LIVE_PARAM + '=' + urls.doc;
     try{ await navigator.clipboard.writeText(teilen); }catch(_){}
     flashBtn(document.getElementById('docTrigger'));
     sourceWarning = null;
@@ -4979,6 +5031,9 @@ if('launchQueue' in window){
 applyMobile();   /* Mobil-Verhalten (nach Sprache/Restore) anwenden */
 loadRemoteSource();    /* ?sourceUrl= / ?etherpad= nachladen (asynchron, D23/D31) */
 loadLive();            /* ?live= — Server-Dokument samt Feed (asynchron, D76) */
+/* Beide haben ihren Parameter jetzt gelesen (synchron, vor dem ersten
+   `await`). Ab hier folgt die Adresszeile dem aktiven Dokument (D80). */
+bootDone = true;
 
 /* ---------- PWA: Service Worker (D73) ----------
    Ein reiner Offline-Mantel (public/sw.js): Navigationen network-first, der

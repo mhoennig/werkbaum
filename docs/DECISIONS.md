@@ -6819,3 +6819,85 @@ die 600 ms sind gesetzt, und was daneben liegt (Server 39 ms, Rundlauf 130 ms,
 PATCH → sichtbar 46 ms) ist einzeln gemessen. Dieselbe Lehre wie D25
 (synthetische `TouchEvent`s), D17-Nachtrag 4 (Bildschirmtastatur) und D53
 (synthetisches Strg+Z): Was die Umgebung stellt, stellt der Emulator nicht.
+
+## D80 — Die Adresszeile beschreibt das aktive Dokument, und die Live-Sitzung folgt ihm
+Gemeldet: Wer bei offenem `?live=…` auf ein anderes Dokument umschaltet, behält
+die alte Adresse — „das sieht optisch falsch aus, und beim Neuladen würde wohl
+auch das Dokument aus `live=` wieder geladen". Beides stimmt, und beim
+Nachsehen kam ein dritter, schwererer Befund dazu.
+
+**Die Adresse ist kein Andenken an den Aufruf, sondern der Stand.** Sie ist der
+Link, den man weitergibt, und das, was ein Neuladen wiederherstellt. Zeigt sie
+auf etwas anderes als der Bildschirm, ist eines von beiden gelogen — und beim
+Neuladen entscheidet die Adresse. Die Regel lautet deshalb: **Der Parameter
+gehört zum aktiven Dokument.** Umschalten auf ein lokales Dokument räumt ihn
+weg, Umschalten auf ein anderes Server-Dokument tauscht ihn aus.
+
+**Sie gilt für beide Eingänge, nicht nur für `?live=`.** `?sourceUrl=` (D23)
+hatte dasselbe Problem, und eine Regel, die nur für einen der beiden gilt, ist
+keine. Beide Eingänge sind ohnehin schon die **Identität** des Dokuments
+(`live:<url>`, `url:<href>`) — der Parameter lässt sich also aus der id
+zurückrechnen, statt nebenher geführt zu werden. `?etherpad=` ist ausgebaut
+(D78) und wird nur noch weggeräumt.
+
+**Für `?sourceUrl=` ist das keine neue Gefahr**, obwohl der Parameter beim
+Zurückschalten wiederkommt und ein Neuladen den Text dann erneut holt (D23:
+„lokale Änderungen daran überleben ein Neuladen nicht"). Bisher stand er
+**immer** da, unabhängig davon, was vorn war — es wird also nicht mehr
+überschrieben als vorher, sondern weniger.
+
+**Fremde Parameter bleiben wörtlich stehen — auch ihre Schreibweise.** Der
+naheliegende Weg über `URLSearchParams` schriebe jedes `:` und `/` als
+`%3A`/`%2F` und machte damit gerade die URL unleserlich, um die es hier geht;
+`?server=` (D76-Nachtrag 8) fiele bei einem Neubau der Adresse ganz weg.
+Maskiert wird nur, was den Query-String sonst zerrisse (`&`, `#`). Die
+entscheidbare Hälfte steht als reine Funktion in `docurl.js`
+(Hausregel D54-Nachtrag 3), die `history.replaceState`-Seite in app.js.
+
+**Der dritte Befund: Die Live-Sitzung lief weiter, während ein anderes Dokument
+vorn stand.** `switchDoc()` hat bisher nur `activeId` gewechselt; `liveState`
+blieb, der Feed lief, und `setLiveText()` schreibt in `src.value` **und** in
+`activeDoc().text` — eine fremde Änderung am Server-Dokument landete also im
+Text des Dokuments, das man gerade ansieht. Nachgemessen war die Lücke echt:
+Die Meldung des Nutzers ist die Tür dazu.
+
+**Also gehört die Sitzung dem sichtbaren Dokument.** Umschalten beendet sie;
+Umschalten auf ein Server-Dokument nimmt sie auf (`startLive()`, aus
+`loadLive()` herausgelöst — derselbe Weg, nur mit der URL aus dem Dokument
+statt aus dem Parameter). Der Nebengewinn ist der eigentliche: Ein
+Server-Dokument, das man im Wähler auswählt, ist danach wirklich live. Vorher
+zeigte es stumm seinen letzten Stand — die Adresse hätte also nicht nur
+optisch, sondern der Sache nach gelogen, wenn man sie einfach mitgeführt hätte.
+
+**Verdrahtet an genau einer Stelle:** `loadActiveIntoEditor()` — jeder Weg zu
+einem anderen aktiven Dokument führt dort durch (Umschalten, Anlegen, Löschen,
+Datei öffnen, Server-Dokument laden). Während des Starts ruht die Regel
+(`bootDone`): `loadRemoteSource()` und `loadLive()` lesen ihre Parameter erst,
+nachdem das zuletzt aktive Dokument wiederhergestellt ist — ein vorschnelles
+Aufräumen nähme ihnen die Vorlage.
+
+**Was noch im Debounce steckt, wird beim Umschalten losgeschickt.** Sonst
+verlöre ein Wechsel innerhalb von 600 ms nach dem letzten Tastendruck genau
+diese Änderung an den Server. Gesendet wird, **bevor** `activeId` wechselt —
+`pushLive()` liest `src.value` synchron, danach zeigt das Feld schon den
+anderen Text.
+
+**Und `pushLive()` hält jetzt seine Sitzung fest, nicht nur deren Felder.**
+Wer während des Sendens umschaltet, beendet sie; die Fortsetzung nach dem
+`await` dürfte danach weder schreiben noch in ein `null` greifen (das
+`finally` hätte es getan). Dieselbe Sorte Annahme, die D76-Nachtrag 9 schon
+einmal an dieser Funktion korrigiert hat: dass sich über ein `await` hinweg
+nichts ändert.
+
+**Nachgemessen** im Browser gegen ein lokales Backend, mit zwei
+Server-Dokumenten: Umschalten auf ein lokales Dokument räumt `?live=` weg,
+Umschalten auf das andere Server-Dokument tauscht die URL aus, `?sourceUrl=`
+verhält sich symmetrisch und bleibt unmaskiert lesbar. Eine fremde Änderung
+erreicht das per Wähler geöffnete Server-Dokument ohne Neuladen (die Sitzung
+läuft also wirklich); dieselbe Änderung, während ein lokales Dokument vorn
+steht, lässt dessen Text unangetastet (vorher hätte sie ihn überschrieben);
+beim Zurückschalten steht der Server-Stand da. Eine Zeile, im selben Zug
+getippt und umgeschaltet, kommt beim Server an. 514 Tests, davon 13 neue in
+`tests/docurl.test.js`; Gegenproben: fremde Parameter mitwerfen → genau die
+zwei danach benannten Zusicherungen fallen, `encodeURIComponent` statt der
+sparsamen Maskierung → genau die sieben, die die Lesbarkeit festhalten.

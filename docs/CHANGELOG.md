@@ -19,6 +19,9 @@ reverse.
 
 ## 2026-08-26
 
+- The address bar follows the document you switch to: `?live=` and `?sourceUrl=` name what is in front of you, so a reload brings back the same plan
+- Switching to a server document in the picker now really opens it live — before it only showed its last state
+- Fix: a foreign change to a server document could land in the text of a local document you had switched to
 - Changes in a shared document now reach the others after 0.6 s instead of 1.5 s — the wait before sending was almost the whole delay
 
 - The Etherpad integration is gone: collaboration now runs through a Werkbaum backend, and an old `?etherpad=` link says so instead of doing nothing

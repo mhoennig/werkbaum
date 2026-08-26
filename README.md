@@ -105,6 +105,11 @@ above you, it stays where it was in the text.
 The document's **title** is its name (everyone sees the same one), the full
 address sits in the tooltip.
 
+**The address bar follows the document you are on.** Switch to a local plan and
+`?live=` goes away; switch to another server document and its address takes its
+place — so a reload brings back what you were looking at. Picking a server
+document from the menu also puts you back into the shared session.
+
 When two changes really overlap — the same lines — a bar at the top asks whose
 version should win: *take theirs* or *keep mine*. Everything else the server
 merges without asking. Nothing is lost either way: the discarded state stays in

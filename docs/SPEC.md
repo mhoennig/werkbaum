@@ -766,6 +766,9 @@ Seite aufgelöst; zugelassen sind nur `http`/`https`). Der Text wird als
 Tooltip); derselbe Link aktualisiert dieses Dokument, statt ein neues anzulegen.
 Ist der Parameter gesetzt, wird bei **jedem** Laden neu geholt — die URL ist die
 Quelle der Wahrheit, lokale Änderungen daran überleben ein Neuladen nicht.
+Die **Adresszeile folgt dem aktiven Dokument** (§9, `?live=`): Beim Umschalten
+auf ein anderes verschwindet der Parameter, beim Zurückschalten steht er wieder
+da.
 Scheitert das Laden (häufigster Fall: das Ziel sendet keinen
 `Access-Control-Allow-Origin`-Header, außerdem 404/Netzfehler), bleibt der
 bisherige Stand stehen und es erscheint eine **Warnung**. Siehe D23.
@@ -796,6 +799,13 @@ anderen, ohne neu zu laden.
   jede Version in der Historie des Servers.
 - Der Abruf läuft **nur im sichtbaren Tab**; im Hintergrund ruht er und holt
   beim Zurückkommen den Rückstand.
+- **Die Adresszeile beschreibt das Dokument, das vorn ist.** Umschalten auf ein
+  lokales Dokument räumt `?live=` weg, Umschalten auf ein anderes
+  Server-Dokument trägt dessen Adresse ein — ein Neuladen bringt also zurück,
+  was man vor sich hatte. Dasselbe gilt für `?sourceUrl=` (oben). Und die
+  gemeinsame Sitzung gehört dem sichtbaren Dokument: Wer ein Server-Dokument im
+  Wähler auswählt, arbeitet darin wieder gemeinsam; wer es verlässt, hört auf,
+  mitzuschreiben. Siehe D80.
 
 Siehe D76 (Protokoll und Begründung) und
 `backend/docs/live-editing-proposal.md`.

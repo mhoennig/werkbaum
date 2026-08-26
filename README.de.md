@@ -110,6 +110,12 @@ oberhalb Zeilen ein, bleibt sie an ihrer Stelle im Text.
 Der **Name** ist der Titel des Dokuments (alle sehen denselben), die vollständige
 Adresse steht im Tooltip.
 
+**Die Adresszeile folgt dem Dokument, das vorn ist.** Umschalten auf einen
+lokalen Plan räumt `?live=` weg, Umschalten auf ein anderes Server-Dokument
+trägt dessen Adresse ein — ein Neuladen bringt also zurück, was man vor sich
+hatte. Wer ein Server-Dokument im Menü auswählt, arbeitet darin auch wieder
+gemeinsam.
+
 **Überschneiden sich zwei Änderungen wirklich** — dieselben Zeilen —, fragt ein
 Band oben, wessen Fassung gelten soll: *Fremde übernehmen* oder *Eigene
 durchsetzen*. Alles andere führt der Server selbst zusammen, ohne zu fragen.
