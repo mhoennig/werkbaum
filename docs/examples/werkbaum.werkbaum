@@ -111,8 +111,8 @@
       - [^] #bld.backend.jdk: Its own JDK 21 in the server's home (S)  %% only 17 is installed there
       - [^] #bld.backend.unit: A systemd user unit that survives the session (S)
       - [^] #bld.backend.proxy: Apache passes /api/ on, in .htaccess (XS)  %% measured: the P flag is allowed
-      - [x] #bld.backend.remote: One command for everything on the server (S)  %% remote <target> <action>
-      - [x] #bld.backend.backup: Save the database, and prove it can be read back (XS)
+      - [^] #bld.backend.remote: One command for everything on the server (S)  %% remote <target> <action>
+      - [^] #bld.backend.backup: Save the database, and prove it can be read back (XS)
     - [-] #bld.ghpages: Deploy through a gh-pages branch (S)  %% GitHub Actions instead
     - [-] #bld.gfonts: Fonts from Google (XS)  %% self-hosted, no third-party request
   - [ ] #be: Backend (XL)
