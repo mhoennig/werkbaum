@@ -69,11 +69,17 @@ JDK_DIR="$(env_value BACKEND_JDK_DIR)"; JDK_DIR="${JDK_DIR:-opt/jdk21}"
 PORT="$(env_value BACKEND_PORT)";       PORT="${PORT:-9080}"
 XMX="$(env_value BACKEND_XMX)";         XMX="${XMX:-192m}"
 
-# Zweimal derselbe Pfad in zwei Schreibweisen: systemd kennt `%h`, die Shell
-# kennt `$HOME` — und systemd expandiert `$HOME` nicht (siehe Unit-Vorlage).
+# Derselbe Pfad in DREI Schreibweisen, weil ihn drei Werkzeuge lesen:
+#
+#   systemd  kennt `%h` und expandiert **keine** Shell-Variablen
+#   die Shell kennt `$HOME` (in einem ssh-Aufruf läuft eine)
+#   rsync    kennt `~`, aber **kein** `$HOME`: Seit 3.2.4 ist
+#            `--protect-args` voreingestellt, der entfernte Pfad geht also
+#            nicht mehr durch eine Shell. Ein `$HOME` bliebe wörtlich stehen —
+#            gemessen: „change_dir /home/pacs/mih00/\$HOME/opt/werkbaum failed".
 case "$DIR" in
-  /*) DIR_UNIT="$DIR";      DIR_SH="$DIR" ;;
-  *)  DIR_UNIT="%h/$DIR";   DIR_SH="\$HOME/$DIR" ;;
+  /*) DIR_UNIT="$DIR";    DIR_SH="$DIR";        DIR_RSYNC="$DIR" ;;
+  *)  DIR_UNIT="%h/$DIR"; DIR_SH="\$HOME/$DIR"; DIR_RSYNC="~/$DIR" ;;
 esac
 case "$JDK_DIR" in
   /*) JAVA_UNIT="$JDK_DIR/bin/java" ;;
@@ -126,9 +132,9 @@ fi
 # räumt nicht auf.
 echo "==> Übertragen"
 ssh "$SSH_TARGET" "mkdir -p \"$DIR_SH\" \"\$HOME/.config/systemd/user\""
-rsync -az --chmod=F644 "$STAGE/werkbaum-backend.jar" "$SSH_TARGET:$DIR_SH/werkbaum-backend.jar"
+rsync -az --chmod=F644 "$STAGE/werkbaum-backend.jar" "$SSH_TARGET:$DIR_RSYNC/werkbaum-backend.jar"
 rsync -az --chmod=F644 "$STAGE/werkbaum-backend.service" \
-      "$SSH_TARGET:\$HOME/.config/systemd/user/werkbaum-backend.service"
+      "$SSH_TARGET:~/.config/systemd/user/werkbaum-backend.service"
 
 ssh "$SSH_TARGET" DIR="$DIR_SH" PORT="$PORT" RESTART="$RESTART" 'bash -s' <<'REMOTE'
 set -euo pipefail

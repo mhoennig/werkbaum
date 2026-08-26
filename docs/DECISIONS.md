@@ -6348,6 +6348,27 @@ Laufzeit-Abhängigkeit (Actuator) — er steht als eigener Knoten im Plan
 (`#be.scaffold.ci`), und bis dahin ist die 404 die ehrlichste Probe, die ohne
 ihn zu haben ist.
 
+**Nachtrag beim ersten Lauf: `$HOME` taugt nicht als rsync-Ziel.** Das Skript
+schrieb die entfernten Pfade als `$HOME/opt/werkbaum/…`. Seit rsync 3.2.4 ist
+`--protect-args` aber **voreingestellt**: Der entfernte Pfad geht nicht mehr
+durch eine Shell, und ein `$HOME` bleibt wörtlich stehen. Gemessen gegen die
+Zielumgebung (beide Seiten 3.2.7): `change_dir "/home/pacs/mih00/$HOME/opt/
+werkbaum" failed: No such file or directory`. Mit `~/opt/werkbaum` gelingt es —
+die Tilde expandiert rsync selbst, und genau deshalb funktioniert
+`deploy-prod.sh` seit jeher.
+
+Damit steht derselbe Pfad jetzt in **drei** Schreibweisen im Skript, je eine
+für systemd (`%h`, keine Shell-Variablen), die Shell im ssh-Aufruf (`$HOME`)
+und rsync (`~`). Das sieht nach Umständlichkeit aus und ist keine: Jedes der
+drei Werkzeuge liest den Pfad anders, und zwei davon scheitern still oder
+legen ein Verzeichnis an, das wörtlich `$HOME` heißt.
+
+**Warum es der Stub-Test nicht gefunden hat:** Er ersetzte `rsync` durch ein
+Skript, das seine Argumente protokolliert — und ein Protokoll expandiert
+nichts. Der Test hat bewiesen, dass die richtigen Pfade *übergeben* werden,
+nicht dass die Gegenseite sie versteht. Dieselbe Grenze wie in D25 und D72,
+nur eine Ebene tiefer: Ein Stub prüft die eigene Seite der Naht.
+
 **Nicht getestet, weil es nicht zu testen war:** Alles bis zur SSH-Grenze ist
 gemessen — die erzeugte Unit ist mit `systemd-analyze verify` gültig, das Jar
 startet mit **genau** den Flags der Unit in einer Sekunde, antwortet auf die
