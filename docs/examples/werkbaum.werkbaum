@@ -110,14 +110,16 @@
     - [-] #bld.ghpages: Deploy through a gh-pages branch (S)  %% GitHub Actions instead
     - [-] #bld.gfonts: Fonts from Google (XS)  %% self-hosted, no third-party request
   - [ ] #be: Backend (XL)
-    - [ ] #be.scaffold: Kotlin and Spring Boot scaffold (M)
-      - [ ] #be.scaffold.gradle: Gradle Kotlin DSL, JDK 21 (S)
+    - [/] #be.scaffold: Kotlin and Spring Boot scaffold (M)
+      - [x] #be.scaffold.gradle: Gradle Kotlin DSL, JDK 21 (S)
       - [ ] #be.scaffold.ci: Health endpoint and CI (S)
-    - [ ] #be.docs: Documents on the server (L) :#be.scaffold
-      - [ ] #be.docs.model: Text plus metadata, no structure format (M)
-        - [ ] #be.docs.rest: REST endpoints (S)
-        - [ ] #be.docs.db: Persistence (S)
-      - [ ] #be.docs.share: Share by link (S)
+    - [x] #be.docs: Documents on the server (L) :#be.scaffold
+      - [x] #be.docs.model: Text plus metadata, no structure format (M)
+        - [x] #be.docs.rest: REST endpoints (S)
+        - [x] #be.docs.db: Persistence (S)
+        - [x] #be.docs.history: History in two layers, and restore (S)
+      - [x] #be.docs.share: Share by link (S)
+      - [x] #be.docs.list: Master password for the document list (S)
     - [?] #be.auth: Accounts and permissions (L) :#be.docs
       | [?] #be.auth.token: Single user, one token (S)
       | [?] #be.auth.oidc: Log in with OIDC (L)
@@ -153,12 +155,17 @@
           - [?] #col.git.diff: Diff between two versions (S)
           - [?] #col.git.blame: Who changed this line (S)
         - [?] #col.git.branch: A branch per scenario (S)
-    - [?] #col.live: Live editing, several people at once (XL)
-      - [ ] #col.live.ws: Transport over a websocket (S) :#be.scaffold  %% the easy half
-      - [!] #col.live.merge: Merging simultaneous edits (L)  %% the actual work
+    - [/] #col.live: Live editing, several people at once (XL) :#be.docs
+      - [x] #col.live.http: Transport over plain HTTP (M) :#be.docs  %% no websocket needed
+        - [x] #col.live.patch: Submit a change as a line diff (S)
+        - [x] #col.live.feed: Long polling holds the other direction open (S)
+      - [x] #col.live.merge: Merging simultaneous edits (L)  %% the actual work
+        | [x] #col.live.diff: Line diffs against a base version; the server rebases (L)
         | [?] #col.live.crdt: Text CRDT — the plan is plain text, so it fits (L)
         | [?] #col.live.ot: Operational transformation (XL)
+      - [x] #col.live.ask: On a real overlap, ask whose version wins (S)
       - [?] #col.live.cursors: Cursors and who else is here (S)
+      - [-] #col.live.ws: Transport over a websocket (S)  %% plain HTTP turned out to be enough
       - [-] #col.live.own: A merge algorithm of our own (XL)  %% solved problem, do not reinvent
   - [?] #mmd: Mermaid plugin (XL)
     - [!] #mmd.layout: A layout engine of its own (XL)  %% measure, place, route — the real work
@@ -757,9 +764,19 @@
   Somewhere to keep them. Whether that also keeps their history is decided in
   the git branch of this plan, not here.
 
+#be.docs.history
+  Every change is kept as a snapshot. Two layers: milestones are the history
+  people read, sync versions carry the diffs of live editing and are compacted
+  after a while.
+
 #be.docs.share
-  A link that shows a plan to someone who has no account. The read-only half
-  of collaboration, and by far the cheaper one.
+  A link that shows a plan to someone who has no account. It is no longer the
+  read-only half: with live editing the same link is the way in.
+
+#be.docs.list
+  Listing all documents would make every document's address findable, so that
+  one endpoint asks for a master password. Without a configured one the list
+  stays shut rather than open.
 
 #be.auth
   As soon as documents live on a server, the question is who may do what. Open
@@ -899,12 +916,36 @@
   Everybody typing at once, cursors and all. The largest single piece of work
   in this plan, and the least necessary one.
 
-#col.live.ws
-  The transport is the easy half: a socket, and a backend to terminate it.
+#col.live.http
+  Plain request and response, no websocket: a change goes up as a line diff,
+  and one held-open request brings the others' changes down. It is testable
+  with the same tools as everything else, needs no special treatment in
+  proxies or service workers, and at ten onlookers the efficiency difference
+  is beside the point.
+
+#col.live.patch
+  Every change is a diff against a known version, with a checksum of that
+  version. A repeated submission is recognised and not applied twice — over a
+  mobile connection the lost answer is the normal case, not the exception.
+
+#col.live.feed
+  The server holds the request open until something happens, then answers at
+  once. Costs one open request per onlooker and runs only in the visible tab.
 
 #col.live.merge
   What happens when two people change the same line. The actual work — and a
   solved problem, which is exactly why it should not be solved again here.
+
+#col.live.diff
+  The answer we took: changes are line diffs against a base version. Where two
+  changes do not touch the same lines the server shifts them itself, so nobody
+  has to retry; where they do, a human decides. No runtime dependency, and the
+  same model on both sides.
+
+#col.live.ask
+  On a real overlap a bar asks whose version should win. Whoever loses loses
+  nothing: the discarded state stays in the local snapshots, and every version
+  stays in the server's history.
 
 #col.live.crdt
   Because the plan is plain text, a text CRDT fits it without any merge logic
@@ -918,6 +959,11 @@
 #col.live.cursors
   Seeing where the others are. A by-product of the merge layer rather than a
   feature in its own right.
+
+#col.live.ws
+  A socket and a backend to terminate it — long the obvious answer, and not
+  needed after all: request and response carry a diff just as well, and
+  everything around them stays simpler.
 
 #col.live.own
   Rejected: writing a merge algorithm is a research project with a known
