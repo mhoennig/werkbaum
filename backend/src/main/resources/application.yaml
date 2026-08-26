@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: editor-backend
+
+  datasource:
+    # H2 im File-Modus mit PostgreSQL-Kompatibilitaet.
+    # Spaeterer Umstieg auf echtes PostgreSQL = im Wesentlichen nur diese URL aendern.
+    url: jdbc:h2:file:./data/editor;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate   # Schema kommt ausschliesslich von Liquibase
+    open-in-view: false
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.sql
+
+server:
+  port: 8080

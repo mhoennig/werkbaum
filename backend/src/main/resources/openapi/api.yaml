@@ -1,0 +1,308 @@
+openapi: 3.0.3
+info:
+  title: Editor Backend API
+  description: |
+    CRUD-Grundgeruest fuer Dokumente.
+
+    Vorbereitete Erweiterungen (noch nicht aktiv):
+    - Autorisierung: securitySchemes.bearerAuth ist definiert, wird aber noch
+      auf keine Operation angewendet.
+    - Live-Editing: Das Feld `version` dient spaeter der Konflikterkennung
+      (Optimistic Locking) und als Basis fuer Delta-Updates via WebSocket.
+    - Clientseitige Verschluesselung: `content` ist ein opaker String. Der
+      Server interpretiert den Inhalt nicht, sodass spaeter Ciphertext
+      transportiert werden kann, ohne die API zu aendern.
+  version: 0.1.0
+
+servers:
+  - url: /api/v1
+
+tags:
+  - name: Documents
+    description: Verwaltung von Dokumenten
+
+paths:
+  /documents:
+    get:
+      tags: [Documents]
+      operationId: listDocuments
+      summary: Alle Dokumente auflisten
+      responses:
+        "200":
+          description: Liste aller Dokumente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+    post:
+      tags: [Documents]
+      operationId: createDocument
+      summary: Neues Dokument anlegen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentCreateRequest"
+      responses:
+        "201":
+          description: Dokument wurde angelegt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /documents/{documentId}:
+    parameters:
+      - name: documentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Documents]
+      operationId: getDocument
+      summary: Einzelnes Dokument abrufen
+      responses:
+        "200":
+          description: Das angeforderte Dokument
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Documents]
+      operationId: updateDocument
+      summary: Dokument vollstaendig aktualisieren
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentUpdateRequest"
+      responses:
+        "200":
+          description: Aktualisiertes Dokument
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Versionskonflikt (fuer spaeteres Optimistic Locking reserviert)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+    delete:
+      tags: [Documents]
+      operationId: deleteDocument
+      summary: Dokument loeschen
+      responses:
+        "204":
+          description: Dokument wurde geloescht
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /documents/{documentId}/history:
+    parameters:
+      - name: documentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Documents]
+      operationId: getDocumentHistory
+      summary: Historie eines Dokuments abrufen
+      description: >
+        Liefert alle Versionen eines Dokuments in chronologischer Reihenfolge.
+        Die Historie bleibt auch nach dem Loeschen des Dokuments erhalten.
+      responses:
+        "200":
+          description: Historie des Dokuments (aelteste zuerst)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DocumentHistoryEntry"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /documents/{documentId}/restore:
+    parameters:
+      - name: documentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [Documents]
+      operationId: restoreDocument
+      summary: Geloeschtes Dokument aus der Historie wiederherstellen
+      description: >
+        Stellt ein geloeschtes Dokument unter derselben UUID wieder her.
+        Ohne Request-Body wird der letzte Stand vor dem Loeschen
+        wiederhergestellt; optional kann eine bestimmte Version angegeben
+        werden (auch als Rollback fuer ein noch existierendes Dokument).
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RestoreRequest"
+      responses:
+        "200":
+          description: Wiederhergestelltes Dokument
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: >
+            Dokument existiert noch und es wurde keine Zielversion angegeben.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+
+components:
+  responses:
+    NotFound:
+      description: Ressource nicht gefunden
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
+    BadRequest:
+      description: Ungueltige Anfrage
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
+
+  schemas:
+    Document:
+      type: object
+      required: [id, title, content, version, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        content:
+          type: string
+          description: >
+            Opaker Inhalt. Bei clientseitiger Verschluesselung enthaelt dieses
+            Feld spaeter den Ciphertext.
+        version:
+          type: integer
+          format: int64
+          description: Wird bei jeder Aenderung inkrementiert (Basis fuer Live-Editing/Konflikterkennung).
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+
+    DocumentCreateRequest:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        content:
+          type: string
+
+    DocumentUpdateRequest:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        content:
+          type: string
+        expectedVersion:
+          type: integer
+          format: int64
+          description: Optional; wird spaeter fuer Optimistic Locking ausgewertet.
+
+    DocumentHistoryEntry:
+      type: object
+      required: [documentId, version, title, content, changeType, timestamp]
+      properties:
+        documentId:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          format: int64
+        title:
+          type: string
+        content:
+          type: string
+        changeType:
+          type: string
+          enum: [CREATED, UPDATED, DELETED, RESTORED]
+        timestamp:
+          type: string
+          format: date-time
+
+    RestoreRequest:
+      type: object
+      properties:
+        version:
+          type: integer
+          format: int64
+          description: >
+            Optionale Zielversion. Ohne Angabe wird der letzte inhaltliche
+            Stand vor dem Loeschen wiederhergestellt.
+
+    ProblemDetail:
+      type: object
+      description: Fehlerformat nach RFC 9457 (Problem Details)
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Noch nicht aktiv. Wird bei Einfuehrung der Autorisierung auf die
+        Operationen angewendet (security: - bearerAuth: []).
