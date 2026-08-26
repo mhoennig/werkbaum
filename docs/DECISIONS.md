@@ -6314,7 +6314,69 @@ gleichnamiges daneben. Erkannt an der id (`live:…`), nicht am laufenden
 Feed: Auch ein Server-Dokument, das gerade nicht das aktive ist, liegt
 bereits dort.
 
-## D77 — Backend-Deploy: JDK im Home, systemd-User-Unit, Proxy in der `.htaccess`
+**Nachtrag 9 — der Client stritt mit sich selbst: der Feed liefert die eigene
+Änderung zurück (2026-08-26).** Gemeldet mit zwei Browsern am selben Dokument:
+Einen Knoten zuklappen, und es kommt „Someone changed the same lines. Whose
+version should win?" — mit der Vermutung, die Änderung des anderen zähle wieder
+als eigene und die beiden spielten Ping-Pong. Die Vermutung war richtig, nur
+braucht es den zweiten Browser dafür nicht.
+
+**Der Server schickt jedem die Änderungen ALLER, die eigenen eingeschlossen.**
+Das ist keine Nachlässigkeit, sondern die Bauform des Feeds: Er beantwortet
+„was ist seit Version N geschehen", und wer da mitgeschrieben hat, steht nicht
+in der Frage. Wacht er im Moment des eigenen Sendens auf, kommt die eigene
+Änderung also zurück, **bevor die Antwort darauf da ist**. Die Schattenkopie
+steht dann noch auf dem Stand davor — der Client hält die eigene Änderung für
+fremd, sieht sie sich mit dem eigenen (aus seiner Sicht ungesendeten) Text
+überschneiden und stellt die Frage, die für genau diesen Fall gebaut ist
+(Nachtrag 7: „der Konflikt entsteht beim Tippen"). Die Erkennung hatte recht;
+falsch war nur, wen sie für den anderen hielt.
+
+**Das Falten macht es sichtbar, verursacht es aber nicht.** Umklappen schreibt
+eine Faltmarke in den Text (D38-Nachtrag 2), also eine gewöhnliche
+Textänderung — die Geste ist nur die kürzeste, die eine ganze Zeile ändert und
+dabei keine Sekunde Tippen kostet.
+
+**Nachgemessen statt vermutet, und das war der eigentliche Aufwand.** Auf
+localhost liegen die beiden Antworten **7 ms** auseinander, und die PATCH-Antwort
+gewinnt — der Fehler tritt dort nie auf. Erst als die PATCH-Antwort im Client um
+500 ms verzögert wurde (eine Reihenfolge, die übers Netz jederzeit auftritt),
+stand er in der Spur: `PATCH an 200` · `FEED an 200` · `KONFLIKT-BANNER`, drei
+Zeilen, fünf Millisekunden. Ohne das Erzwingen hätte die Prüfung „geht doch"
+gemeldet.
+
+**Behoben, wo die Regel hingehört: `feedAction` in `live.js`.** Sie entscheidet
+ohnehin, ob eine Feed-Antwort angewendet werden darf; jetzt lautet die dritte
+Bedingung „nicht, solange ein eigenes Diff unterwegs ist". Verloren geht
+dadurch nichts — was zwischen unserer Basis und der neuen Version liegt, steht
+in `opsSinceBase` der Antwort, und der nächste Abruf setzt auf der dann
+aktuellen Version auf. Dass die Regel im Modul steht, ist der Punkt: Sie hat
+eine Zusicherung und eine Gegenprobe (Sperre entfernt ⇒ genau die zwei neuen
+Tests fallen, sonst nichts). Genau diese Lehre steht seit D54-Nachtrag 3 im
+Haus, und dieser Fehler wäre ihr Beispiel gewesen.
+
+**Die Sperre gehört an ZWEI Stellen, gegen zwei verschiedene Fälle.** In
+`feedAction` für die Antwort, die eintrifft, während wir senden — und in der
+Feed-Schleife dafür, dass währenddessen gar nicht erst gefragt wird. Ohne die
+zweite fragte die Schleife sofort wieder, bekäme sofort dieselbe Antwort,
+ließe sie wieder aus und drehte eine enge Runde über das Netz, bis das Senden
+durch ist.
+
+**Dabei gefunden: `pushLive()` las seine Basis erst NACH dem Warten.** `const
+alt = liveState.shadow` stand hinter dem `await` und nahm damit an, dass sich
+dazwischen nichts ändert. Genau die Annahme brach der Feed: Er zog die
+Schattenkopie schon nach, und die eigene Änderung wäre ein zweites Mal
+daraufgerechnet worden — Textverderb ohne Fehlermeldung, hinter dem Banner
+verborgen. Die Basis wird jetzt **vor** dem Warten festgehalten. Die Sperre
+oben verhindert den Fall zwar auch, aber eine Rechnung, die nur wegen einer
+Sperre anderswo stimmt, schreibt man nicht auf.
+
+**Nachgemessen** im Browser gegen ein lokales Backend, mit erzwungener
+Reihenfolge: Falten in A erzeugt **kein** Banner mehr (Feed-Antwort ausgelassen,
+danach mit der neuen Version neu aufgesetzt); eine echte fremde Änderung aus B
+kommt weiterhin an; und der **echte** Konflikt wird weiterhin erkannt — A hält
+ungesendeten Text auf Zeile 1, B ändert dieselbe Zeile, das Banner erscheint,
+„Fremde übernehmen" setzt B's Fassung. 525 Tests.
 Das Frontend geht seit D16 per rsync auf die stabile Instanz. Das Backend
 braucht mehr als Dateien: eine Java-Laufzeit, einen dauerhaft laufenden Dienst
 und einen Weg von außen nach innen. Die Zielumgebung ist vermessen

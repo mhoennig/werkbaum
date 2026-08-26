@@ -4581,6 +4581,13 @@ async function pushLive(){
 
   liveState.busy = true;
   const seq = nextSeq();
+  /* Die Basis, gegen die `ops` gerechnet sind — VOR dem Warten festgehalten.
+     Sie hinterher aus `liveState` zu lesen hieße anzunehmen, dass sich
+     dazwischen nichts ändert; genau diese Annahme ist gebrochen, sobald der
+     Feed dazwischenfunkt (D76-Nachtrag 9). Der Feed lässt sich jetzt aus,
+     solange wir senden — aber eine Rechnung, die nur wegen einer Sperre
+     anderswo stimmt, schreibt man nicht auf. */
+  const basis = liveState.shadow;
   try{
     const body = {
       baseVersion: liveState.version,
@@ -4601,13 +4608,12 @@ async function pushLive(){
        Rechnung hat der Server auch gemacht; wir kommen deshalb auf denselben
        Text, ohne ihn abholen zu müssen. */
     const foreign = (result.opsSinceBase || []);
-    const alt = liveState.shadow;
     const meine = foreign.length ? live.rebaseOps(ops, foreign) : ops;
     if(meine == null){ await reloadLive(); return; }   /* kann nicht sein - dann lieber neu */
     liveState.shadow = live.applyOps(
-      foreign.length ? live.applyOps(alt, foreign) : alt, meine);
+      foreign.length ? live.applyOps(basis, foreign) : basis, meine);
     liveState.version = result.version;
-    if(foreign.length) applyForeign(alt, foreign, liveState.shadow, liveState.version);
+    if(foreign.length) applyForeign(basis, foreign, liveState.shadow, liveState.version);
   }catch(err){
     handlePushError(err);
   }finally{
@@ -4651,7 +4657,13 @@ async function reloadLive(){
    Abruf den Rückstand. */
 async function runFeed(){
   while(liveState){
-    if(document.hidden || liveConflict){ await sleep(500); continue; }
+    /* `busy` gehört hierher UND in `feedAction`, und zwar gegen zwei
+       verschiedene Fälle: Hier wird gar nicht erst gefragt, solange ein
+       eigenes Diff unterwegs ist — sonst antwortete der Server sofort mit
+       unserer eigenen Änderung, die Antwort würde ausgelassen, und die
+       Schleife fragte in einer engen Runde erneut. Dort greift der Fall, dass
+       das Senden BEGINNT, während die Anfrage schon offen steht. */
+    if(document.hidden || liveConflict || liveState.busy){ await sleep(500); continue; }
     const ctl = new AbortController();
     liveState.feedAbort = ctl;
     try{
@@ -4681,7 +4693,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 function applyFeed(feed){
-  const what = live.feedAction(feed, liveState.version);
+  const what = live.feedAction(feed, liveState.version, liveState.busy);
   if(what === 'skip') return;
   if(what === 'replace'){
     /* Volltext: die Basis ist verdichtet, ein Diff gibt es nicht mehr. */

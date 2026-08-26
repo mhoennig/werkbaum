@@ -217,3 +217,23 @@ describe('Basis-Adresse des Backends', () => {
     expect(serverBase('javascript:alert(1)', null, null)).toBe(null);
   });
 })
+
+describe('Feed-Antwort anwenden oder nicht', () => {
+  it('waehrend ein eigenes Diff unterwegs ist, wird nichts angewendet', () => {
+    // Der Server schickt jedem die Aenderungen ALLER — die eigenen
+    // eingeschlossen. Wacht der Feed im Moment des eigenen Sendens auf, kaeme
+    // die eigene Aenderung zurueck, bevor die Antwort darauf da ist: Die
+    // Schattenkopie steht noch auf dem Stand davor, der Client haelt die
+    // eigene Aenderung fuer fremd und fragt, wessen Fassung gelten soll.
+    // Er streitet mit sich selbst (D76-Nachtrag 9).
+    const eigene = {fromVersion: 4, currentVersion: 5,
+                    ops: [{op: 'replace', index: 1, count: 1, lines: ['  - [ ] > Eins (M)']}]};
+    expect(feedAction(eigene, 4, true)).toBe('skip');
+    expect(feedAction(eigene, 4, false)).toBe('apply');
+  });
+
+  it('auch ein Volltext wird waehrend des Sendens ausgelassen', () => {
+    // Sonst risse er den gerade getippten, noch nicht gesendeten Text weg.
+    expect(feedAction({fromVersion: null, currentVersion: 87, content: 'x'}, 4, true)).toBe('skip');
+  });
+});

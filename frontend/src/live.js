@@ -271,10 +271,23 @@ export function lineColToCaret(ls, line, col){
    Client dieselben Operationen doppelt an — der Fall tritt ein, wenn Feed und
    409-Antwort beide dasselbe fremde Diff liefern.
 
+   **Solange ein eigenes Diff unterwegs ist, sagt der Feed nichts Neues.** Der
+   Server schickt jedem die Änderungen ALLER, die eigenen eingeschlossen; wacht
+   der Feed also im Moment des eigenen Sendens auf, kommt die eigene Änderung
+   zurück, bevor die Antwort darauf da ist. Die Schattenkopie steht dann noch
+   auf dem Stand davor — der Client hält die eigene Änderung für fremd, sieht
+   sie sich mit dem eigenen (aus Sicht der Schattenkopie ungesendeten) Text
+   überschneiden und fragt, wessen Fassung gelten soll. Er streitet mit sich
+   selbst. Verloren geht durch das Auslassen nichts: Was zwischen unserer Basis
+   und der neuen Version liegt, steht in `opsSinceBase` der Antwort, und der
+   nächste Feed-Abruf setzt auf der dann aktuellen Version auf. Siehe D76-
+   Nachtrag 9.
+
    'apply'   – Operationen anwenden
    'replace' – Volltext übernehmen (Basis verdichtet oder Erstkontakt)
-   'skip'    – nichts tun (schon gesehen oder passt nicht auf unseren Stand) */
-export function feedAction(feed, shadowVersion){
+   'skip'    – nichts tun (schon gesehen, passt nicht, oder wir senden gerade) */
+export function feedAction(feed, shadowVersion, pushInFlight){
+  if(pushInFlight) return 'skip';
   if(!feed || typeof feed.currentVersion !== 'number') return 'skip';
   if(feed.currentVersion <= shadowVersion) return 'skip';
   if(typeof feed.content === 'string' && feed.fromVersion == null) return 'replace';

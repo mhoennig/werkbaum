@@ -129,6 +129,17 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   **Konflikt entsteht beim Tippen**, nicht erst beim Senden — der Server kennt
   den ungesendeten Text nicht. Fremde Änderungen werden bewusst **nicht**
   undo-fähig eingespielt.
+  **Der Feed liefert die EIGENE Änderung zurück** (D76-Nachtrag 9): Er
+  beantwortet „was ist seit Version N geschehen", und wer mitgeschrieben hat,
+  steht nicht in der Frage. Wacht er im Moment des eigenen Sendens auf, hielte
+  der Client sich selbst für den anderen und fragte, wessen Fassung gelten soll.
+  Deshalb `busy` an **zwei** Stellen: in `feedAction()` (Antwort auslassen) und
+  in der `runFeed`-Schleife (gar nicht erst fragen — sonst dreht sie eine enge
+  Runde übers Netz). `pushLive()` hält seine Basis **vor** dem `await` fest;
+  hinterher aus `liveState` gelesen nähme sie an, dass sich währenddessen
+  nichts ändert. Auf localhost liegen PATCH- und Feed-Antwort **7 ms**
+  auseinander und die PATCH-Antwort gewinnt — wer das prüfen will, muss die
+  PATCH-Antwort im Client verzögern, sonst meldet die Messung „geht doch".
 - Zustand wird im `localStorage` gehalten (Server-Dokumente ausgenommen): `werkbaum-lang`
   (Sprache), `werkbaum-docs` (JSON-Array der Dokumente `[{id,name,text}]`),
   `werkbaum-active` (id des aktiven Dokuments), `werkbaum-src` (Spiegel des

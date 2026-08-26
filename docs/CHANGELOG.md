@@ -26,6 +26,7 @@ reverse.
 - "Put on the server" in the document menu turns a local plan into a shared one and puts the link in the address bar
 - A service endpoint `/api/v1/info` says which build is running — for deploys and monitoring
 - One `remote` command drives the server: deploy, log, service state, and a database backup that is read back before it is kept
+- Fix: folding a node in a shared document could ask whose version should win — the editor was arguing with itself, because the change feed hands your own change back to you
 
 ## 2026-08-25
 
