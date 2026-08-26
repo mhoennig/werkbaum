@@ -118,7 +118,11 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   (Adressen, Zeilen-Diff, Rebasen, Cursor-Rechnung, Feed-Regel), `app.js` die
   Verdrahtung: `loadLive()` holt Text und Version und merkt beides als
   **Schattenkopie**, `scheduleLivePush()` schickt nach 1,5 s Ruhe das Diff,
-  `runFeed()` hält einen Abruf offen (nur im sichtbaren Tab). Zwei Fallen, beide
+  `runFeed()` hält einen Abruf offen (nur im sichtbaren Tab), `putOnServer()`
+  legt das aktive Dokument an („Auf den Server legen"). Die Basis-Adresse
+  bestimmt `serverBase()` (live.js): `?server=` vor dem offenen Dokument vor
+  der eigenen Herkunft — die Vorgabe stimmt damit ohne Konfiguration, weil das
+  Backend produktiv hinter derselben Domain liegt. Zwei Fallen, beide
   im Live-Test gefunden (D76-Nachtrag 7): `clientId` **und** `seq` gehören in den
   `sessionStorage` (je Tab, überlebt Neuladen — sonst hält der Server die erste
   Änderung nach einem Reload für eine Wiederholung und tut nichts), und der

@@ -169,6 +169,7 @@
         | [?] #col.live.crdt: Text CRDT — the plan is plain text, so it fits (L)
         | [?] #col.live.ot: Operational transformation (XL)
       - [^] #col.live.ask: On a real overlap, ask whose version wins (S)
+      - [x] #col.live.upload: Put a local plan on the server, from the menu (S)
       - [?] #col.live.cursors: Cursors and who else is here (S)
       - [-] #col.live.ws: Transport over a websocket (S)  %% plain HTTP turned out to be enough
       - [-] #col.live.own: A merge algorithm of our own (XL)  %% solved problem, do not reinvent
@@ -985,6 +986,12 @@
 #col.live.ot
   The other established answer, and the one Google Docs uses. More machinery
   for the same result.
+
+#col.live.upload
+  Without it the only way onto the server was a curl command. The local plan
+  stays where it is: whoever entrusts their only copy to a server should not
+  lose it in the act. The picker names the host beside a server document, so
+  the two entries are told apart.
 
 #col.live.cursors
   Seeing where the others are. A by-product of the merge layer rather than a

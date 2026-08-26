@@ -1,7 +1,7 @@
 import {describe, it, expect} from 'vitest';
 import {
   liveUrls, normalize, lines, text, computeOps, applyOps,
-  mapLine, caretToLineCol, lineColToCaret, feedAction,
+  mapLine, caretToLineCol, lineColToCaret, feedAction, serverBase, documentsUrl,
 } from '../src/live.js';
 
 describe('Adressen', () => {
@@ -185,3 +185,35 @@ describe('Feed-Antwort anwenden oder nicht', () => {
     expect(feedAction({currentVersion: 9}, 4)).toBe('skip');
   });
 });
+
+describe('Basis-Adresse des Backends', () => {
+  const seite = 'https://werkbaum.example/editor/';
+
+  it('nimmt die Herkunft der Seite, wenn nichts anderes da ist', () => {
+    expect(serverBase(null, null, seite)).toBe('https://werkbaum.example');
+    expect(documentsUrl(serverBase(null, null, seite)))
+      .toBe('https://werkbaum.example/api/v1/documents');
+  });
+
+  it('der ?server=-Parameter hat Vorrang', () => {
+    expect(serverBase('http://localhost:8080', 'https://fremd.example/api/v1/documents/x', seite))
+      .toBe('http://localhost:8080');
+  });
+
+  it('sonst gilt der Server des offenen Dokuments', () => {
+    // Wer in einem ?live=-Dokument sitzt und ein neues anlegt, meint denselben.
+    expect(serverBase(null, 'https://anderer.example/api/v1/documents/3f2a', seite))
+      .toBe('https://anderer.example');
+  });
+
+  it('ein Backend unter einem Unterpfad bleibt erhalten', () => {
+    expect(serverBase(null, 'https://h.example/werkbaum/api/v1/documents/3f2a', seite))
+      .toBe('https://h.example/werkbaum');
+  });
+
+  it('ohne brauchbare Herkunft lieber nichts', () => {
+    // Auf file:// gibt es keine; raten waere schlechter als fragen.
+    expect(serverBase(null, null, 'file:///home/x/index.html')).toBe(null);
+    expect(serverBase('javascript:alert(1)', null, null)).toBe(null);
+  });
+})

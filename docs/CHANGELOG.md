@@ -23,6 +23,8 @@ reverse.
 - When two people change the same lines, a bar asks whose version should win — everything else the server merges by itself
 - The caret stays where you put it when someone else inserts lines above you
 - The backend can be deployed to a server: its own JDK, a systemd service, and Apache passing `/api/` on
+- "Put on the server" in the document menu turns a local plan into a shared one and puts the link in the address bar
+- A service endpoint `/api/v1/info` says which build is running — for deploys and monitoring
 
 ## 2026-08-25
 

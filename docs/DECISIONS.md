@@ -6280,6 +6280,40 @@ alles Übrige zu sehen.
 **Offen bleibt** `PATCH /title` (und damit das Ereignis `RENAMED`), ein
 Eingabefeld für den Anzeigenamen und die Präsenz-Anzeige.
 
+**Nachtrag 8 — „Auf den Server legen" im Dokumenten-Menü (2026-08-26).** Der
+Haupttext sah den Menüeintrag vor („analog zu ‚Als Datei speichern'", D72), er
+fehlte aber: Auf den Server kam ein Plan nur per `curl`. Jetzt legt der Knopf
+das aktive Dokument an, schaltet dorthin um, schreibt den Link in die
+Adresszeile (`history.replaceState`) und in die Zwischenablage. Vier
+Festlegungen:
+
+**Die Basis-Adresse ist die eigene Herkunft.** Bei der produktiven
+Installation liegt das Backend hinter derselben Domain (`/api/…` per
+Proxy-Regel, D77) — wer nichts konfiguriert, bekommt also das Richtige.
+Darüber liegen zwei stärkere Quellen: der `?server=`-Parameter (für die
+Entwicklung, Editor auf 8137 und Backend auf 8080) und die Adresse des
+gerade offenen Server-Dokuments (wer dort sitzt und ein neues anlegt, meint
+denselben Server). Trägt nichts davon — auf `file://` gibt es keine
+brauchbare Herkunft —, wird gefragt und die Antwort gemerkt. Die Reihenfolge
+steht als reine Funktion in `live.js`, der Dialog nicht: Fragen ist keine
+entscheidbare Regel.
+
+**Das lokale Dokument bleibt.** Es zu löschen wäre die aufgeräumtere Geste
+und die riskantere: Wer sein einziges Exemplar einem Server anvertraut, soll
+es nicht im selben Zug verlieren.
+
+**Dafür braucht der Wähler eine Unterscheidung.** Das hochgeladene Dokument
+trägt denselben Namen wie das lokale — im Test standen prompt zwei Einträge
+„Nur lokal" da, unterscheidbar nur am Tooltip. Server-Dokumente nennen
+deshalb ihren **Host** neben dem Namen, zurückgenommen gesetzt; der Name
+bleibt die Hauptaussage.
+
+**Und der Knopf verschwindet, wo er nichts mehr zu tun hat.** Bei einem
+Dokument, das schon auf einem Server liegt, entstünde sonst ein zweites,
+gleichnamiges daneben. Erkannt an der id (`live:…`), nicht am laufenden
+Feed: Auch ein Server-Dokument, das gerade nicht das aktive ist, liegt
+bereits dort.
+
 ## D77 — Backend-Deploy: JDK im Home, systemd-User-Unit, Proxy in der `.htaccess`
 Das Frontend geht seit D16 per rsync auf die stabile Instanz. Das Backend
 braucht mehr als Dateien: eine Java-Laufzeit, einen dauerhaft laufenden Dienst

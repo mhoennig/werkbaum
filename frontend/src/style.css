@@ -1568,3 +1568,13 @@
 .live-conflict button.mine{ background: #fff; color: var(--warn, #B45309); border-color: #fff; }
 .live-conflict button:focus-visible{ outline: 2px solid #fff; outline-offset: 2px; }
 @media print{ .live-conflict{ display: none; } }
+
+/* Server-Dokumente im Wähler: der Host neben dem Namen (D76). Ein
+   hochgeladenes Dokument heißt wie das lokale, aus dem es entstand — ohne
+   diesen Zusatz stünden zwei gleiche Einträge da. Zurückgenommen, denn der
+   Name bleibt die Hauptaussage. */
+.docitem-where{
+  margin-left: auto; padding-left: 10px;
+  font-size: .82em; color: var(--muted); white-space: nowrap;
+}
+.docitem[aria-checked="true"] .docitem-where{ color: inherit; opacity: .75; }

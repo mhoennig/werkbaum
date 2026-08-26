@@ -2262,6 +2262,10 @@ const I18N = {
     docRestore:"Original wiederherstellen",
     docRestoreConfirm:"„{name}“ auf den mitgelieferten Stand zurücksetzen? Eigene Änderungen gehen verloren.",
     docOpenFile:"Datei öffnen…", docSaveFile:"Als Datei speichern",
+    docToServer:"Auf den Server legen",
+    docToServerAsk:"Adresse des Werkbaum-Servers (z. B. https://werkbaum.example):",
+    docToServerDone:"Auf dem Server — der Link steht in der Adresszeile und in der Zwischenablage.",
+    docToServerFailed:"Nicht auf den Server gelegt: {error}",
     fsNotice:"Dieser Browser kann lokale Dateien nicht direkt beschreiben: Eine geöffnete Datei wird als Kopie geladen, und Speichern legt eine neue Datei in den Downloads ab. Browser mit der File-System-Access-Schnittstelle (z. B. Chrome oder Edge) schreiben direkt in die geöffnete Datei zurück.", fsNoticeOk:"Verstanden", fsNoticeBrave:"In Brave lässt sich die Schnittstelle von Hand einschalten:",
     copy:"kopieren", copyDone:"kopiert ✓", copyTooltip:"Text in die Zwischenablage kopieren",
     copyDiagramTooltip:"Diagramm als PNG-Bild in die Zwischenablage kopieren",
@@ -2379,6 +2383,10 @@ const I18N = {
     docRestore:"Restore original",
     docRestoreConfirm:"Reset “{name}” to the shipped version? Your changes will be lost.",
     docOpenFile:"Open file…", docSaveFile:"Save as file",
+    docToServer:"Put on the server",
+    docToServerAsk:"Address of the Werkbaum server (e.g. https://werkbaum.example):",
+    docToServerDone:"On the server — the link is in the address bar and on the clipboard.",
+    docToServerFailed:"Not put on the server: {error}",
     fsNotice:"This browser cannot write to local files directly: an opened file is loaded as a copy, and saving puts a new file into your downloads. Browsers with the File System Access API (such as Chrome or Edge) write straight back into the opened file.", fsNoticeOk:"Got it", fsNoticeBrave:"In Brave you can enable the API yourself:",
     copy:"copy", copyDone:"copied ✓", copyTooltip:"Copy text to clipboard",
     copyDiagramTooltip:"Copy diagram as a PNG image to the clipboard",
@@ -2496,6 +2504,10 @@ const I18N = {
     docRestore:"Restaurar original",
     docRestoreConfirm:"¿Restablecer «{name}» a la versión incluida? Tus cambios se perderán.",
     docOpenFile:"Abrir archivo…", docSaveFile:"Guardar como archivo",
+    docToServer:"Poner en el servidor",
+    docToServerAsk:"Dirección del servidor Werkbaum (p. ej. https://werkbaum.example):",
+    docToServerDone:"En el servidor: el enlace está en la barra de direcciones y en el portapapeles.",
+    docToServerFailed:"No se pudo poner en el servidor: {error}",
     fsNotice:"Este navegador no puede escribir directamente en archivos locales: un archivo abierto se carga como copia, y al guardar se crea un archivo nuevo en las descargas. Los navegadores con la API File System Access (como Chrome o Edge) escriben directamente en el archivo abierto.", fsNoticeOk:"Entendido", fsNoticeBrave:"En Brave puedes activar la API manualmente:",
     copy:"copiar", copyDone:"copiado ✓", copyTooltip:"Copiar el texto al portapapeles",
     copyDiagramTooltip:"Copiar el diagrama como imagen PNG al portapapeles",
@@ -2613,6 +2625,10 @@ const I18N = {
     docRestore:"Restaurer l’original",
     docRestoreConfirm:"Réinitialiser « {name} » à la version livrée ? Vos modifications seront perdues.",
     docOpenFile:"Ouvrir un fichier…", docSaveFile:"Enregistrer comme fichier",
+    docToServer:"Mettre sur le serveur",
+    docToServerAsk:"Adresse du serveur Werkbaum (p. ex. https://werkbaum.example) :",
+    docToServerDone:"Sur le serveur — le lien est dans la barre d'adresse et dans le presse-papiers.",
+    docToServerFailed:"Non déposé sur le serveur : {error}",
     fsNotice:"Ce navigateur ne peut pas écrire directement dans les fichiers locaux : un fichier ouvert est chargé comme copie, et l’enregistrement dépose un nouveau fichier dans les téléchargements. Les navigateurs dotés de l’API File System Access (comme Chrome ou Edge) réécrivent directement dans le fichier ouvert.", fsNoticeOk:"Compris", fsNoticeBrave:"Dans Brave, l’API peut être activée manuellement :",
     copy:"copier", copyDone:"copié ✓", copyTooltip:"Copier le texte dans le presse-papiers",
     copyDiagramTooltip:"Copier le diagramme comme image PNG dans le presse-papiers",
@@ -2730,6 +2746,10 @@ const I18N = {
     docRestore:"Przywróć oryginał",
     docRestoreConfirm:"Przywrócić „{name}” do dostarczonej wersji? Twoje zmiany zostaną utracone.",
     docOpenFile:"Otwórz plik…", docSaveFile:"Zapisz jako plik",
+    docToServer:"Umieść na serwerze",
+    docToServerAsk:"Adres serwera Werkbaum (np. https://werkbaum.example):",
+    docToServerDone:"Na serwerze — link jest w pasku adresu i w schowku.",
+    docToServerFailed:"Nie umieszczono na serwerze: {error}",
     fsNotice:"Ta przeglądarka nie może bezpośrednio zapisywać plików lokalnych: otwarty plik jest wczytywany jako kopia, a zapis tworzy nowy plik w pobranych. Przeglądarki z interfejsem File System Access (np. Chrome lub Edge) zapisują bezpośrednio do otwartego pliku.", fsNoticeOk:"Rozumiem", fsNoticeBrave:"W Brave interfejs można włączyć ręcznie:",
     copy:"kopiuj", copyDone:"skopiowano ✓", copyTooltip:"Kopiuj tekst do schowka",
     copyDiagramTooltip:"Kopiuj diagram jako obraz PNG do schowka",
@@ -2847,6 +2867,10 @@ const I18N = {
     docRestore:"Восстановить оригинал",
     docRestoreConfirm:"Вернуть «{name}» к поставляемой версии? Ваши изменения будут потеряны.",
     docOpenFile:"Открыть файл…", docSaveFile:"Сохранить как файл",
+    docToServer:"Положить на сервер",
+    docToServerAsk:"Адрес сервера Werkbaum (например, https://werkbaum.example):",
+    docToServerDone:"На сервере — ссылка в адресной строке и в буфере обмена.",
+    docToServerFailed:"Не удалось положить на сервер: {error}",
     fsNotice:"Этот браузер не может напрямую записывать локальные файлы: открытый файл загружается как копия, а сохранение создаёт новый файл в загрузках. Браузеры с API File System Access (например, Chrome или Edge) записывают прямо в открытый файл.", fsNoticeOk:"Понятно", fsNoticeBrave:"В Brave интерфейс можно включить вручную:",
     copy:"копировать", copyDone:"скопировано ✓", copyTooltip:"Скопировать текст в буфер обмена",
     copyDiagramTooltip:"Скопировать диаграмму как изображение PNG в буфер обмена",
@@ -2964,6 +2988,10 @@ const I18N = {
     docRestore:"मूल पुनर्स्थापित करें",
     docRestoreConfirm:"„{name}“ को मूल संस्करण पर लौटाएँ? आपके परिवर्तन खो जाएँगे।",
     docOpenFile:"फ़ाइल खोलें…", docSaveFile:"फ़ाइल के रूप में सहेजें",
+    docToServer:"सर्वर पर रखें",
+    docToServerAsk:"Werkbaum सर्वर का पता (जैसे https://werkbaum.example):",
+    docToServerDone:"सर्वर पर है — लिंक पता-पट्टी में और क्लिपबोर्ड में है।",
+    docToServerFailed:"सर्वर पर नहीं रखा जा सका: {error}",
     fsNotice:"यह ब्राउज़र स्थानीय फ़ाइलों में सीधे नहीं लिख सकता: खोली गई फ़ाइल एक प्रति के रूप में लोड होती है, और सहेजने पर डाउनलोड में एक नई फ़ाइल बनती है। File System Access API वाले ब्राउज़र (जैसे Chrome या Edge) सीधे खोली गई फ़ाइल में लिखते हैं।", fsNoticeOk:"समझ गया", fsNoticeBrave:"Brave में आप API को स्वयं चालू कर सकते हैं:",
     copy:"कॉपी करें", copyDone:"कॉपी हो गया ✓", copyTooltip:"टेक्स्ट को क्लिपबोर्ड पर कॉपी करें",
     copyDiagramTooltip:"आरेख को PNG छवि के रूप में क्लिपबोर्ड पर कॉपी करें",
@@ -3081,6 +3109,10 @@ const I18N = {
     docRestore:"恢复原始版本",
     docRestoreConfirm:"将“{name}”重置为随附版本？您的更改将丢失。",
     docOpenFile:"打开文件…", docSaveFile:"另存为文件",
+    docToServer:"放到服务器上",
+    docToServerAsk:"Werkbaum 服务器地址（例如 https://werkbaum.example）：",
+    docToServerDone:"已在服务器上——链接在地址栏和剪贴板中。",
+    docToServerFailed:"未能放到服务器上：{error}",
     fsNotice:"此浏览器无法直接写入本地文件：打开的文件会作为副本载入，保存时会在下载目录生成一个新文件。支持 File System Access API 的浏览器（如 Chrome、Edge）则会直接写回打开的文件。", fsNoticeOk:"知道了", fsNoticeBrave:"在 Brave 中可以手动启用该接口：",
     copy:"复制", copyDone:"已复制 ✓", copyTooltip:"将文本复制到剪贴板",
     copyDiagramTooltip:"将图表作为 PNG 图片复制到剪贴板",
@@ -3198,6 +3230,10 @@ const I18N = {
     docRestore:"オリジナルを復元",
     docRestoreConfirm:"「{name}」を同梱版に戻しますか？変更内容は失われます。",
     docOpenFile:"ファイルを開く…", docSaveFile:"ファイルとして保存",
+    docToServer:"サーバーに置く",
+    docToServerAsk:"Werkbaum サーバーのアドレス（例: https://werkbaum.example）:",
+    docToServerDone:"サーバーにあります — リンクはアドレス欄とクリップボードにあります。",
+    docToServerFailed:"サーバーに置けませんでした: {error}",
     fsNotice:"このブラウザーはローカルファイルへ直接書き込めません。開いたファイルはコピーとして読み込まれ、保存するとダウンロードに新しいファイルが作られます。File System Access API に対応したブラウザー（Chrome や Edge など）は、開いたファイルへ直接書き戻します。", fsNoticeOk:"わかりました", fsNoticeBrave:"Brave では、この API を手動で有効にできます：",
     copy:"コピー", copyDone:"コピーしました ✓", copyTooltip:"テキストをクリップボードにコピー",
     copyDiagramTooltip:"ダイアグラムを PNG 画像としてクリップボードにコピー",
@@ -3603,6 +3639,12 @@ let renamingId = null;   /* id des gerade inline umbenannten Dokuments (oder nul
 /* Kam das Umbenennen von einem frisch angelegten Dokument? Dann geht es danach
    im Textfeld weiter — Anlegen heißt schreiben wollen (D51). */
 let renameIsNew = false;
+/* Host eines Server-Dokuments (`live:<url>`), sonst null. */
+function serverHostOf(id){
+  const roh = String(id || '');
+  if(!roh.startsWith('live:')) return null;
+  try{ return new URL(roh.slice(5)).host; }catch(_){ return null; }
+}
 function renderDocMenu(){
   docList.innerHTML = docs.map(d => {
     if(d.id === renamingId){
@@ -3611,10 +3653,16 @@ function renderDocMenu(){
       return `<div class="docitem editing"><span class="doccheck" aria-hidden="true"></span>` +
              `<input type="text" class="docrename"></div>`;
     }
+    /* Bei einem Server-Dokument steht der Host daneben. Ein hochgeladenes
+       Dokument trägt denselben Namen wie das lokale, aus dem es entstand —
+       ohne den Zusatz stünden zwei gleiche Einträge da, und nur der Tooltip
+       verriete den Unterschied. */
+    const host = serverHostOf(d.id);
+    const zusatz = host ? `<span class="docitem-where">${esc(host)}</span>` : '';
     return `<button type="button" class="docitem" role="menuitemradio" data-id="${d.id}" ` +
       `aria-checked="${d.id === activeId ? 'true' : 'false'}">` +
       `<span class="doccheck" aria-hidden="true">✓</span>` +
-      `<span class="docitem-name">${esc(d.name)}</span></button>`;
+      `<span class="docitem-name">${esc(d.name)}</span>${zusatz}</button>`;
   }).join('');
   if(renamingId){
     const inp = docList.querySelector('.docrename');
@@ -3650,6 +3698,14 @@ function updateRestoreBtn(){
      Eintrag nicht auffindbar (Nutzer: „ich sehe keinen Reset-Button"). */
   btn.hidden = !shipped;
   btn.disabled = !!shipped && d.text === shipped.text && d.name === shipped.name;
+
+  /* „Auf den Server legen" entfällt, wo es schon liegt. Sonst entstünde ein
+     zweites, gleichnamiges Dokument auf demselben Server — im Wähler nicht zu
+     unterscheiden. Erkennbar an der id (`live:…`), nicht am laufenden
+     `liveState`: Auch ein Server-Dokument, das gerade nicht das aktive ist,
+     liegt bereits dort. */
+  const zumServer = document.getElementById('docToServer');
+  if(zumServer) zumServer.hidden = !!d && String(d.id).startsWith('live:');
 }
 function restoreDoc(){
   const d = activeDoc();
@@ -4752,6 +4808,72 @@ function displayName(){
   try{ return localStorage.getItem(LS_NAME) || undefined; }catch(_){ return undefined; }
 }
 
+/* ---------- Ein Dokument auf den Server legen (D76) ----------
+   Der Weg vom lokalen Dokument zum gemeinsam bearbeitbaren: anlegen, dorthin
+   umschalten, Link in die Adresszeile und in die Zwischenablage.
+
+   Das lokale Dokument bleibt bestehen. Es zu löschen wäre die aufgeräumtere
+   Geste und die riskantere: Wer sein einziges Exemplar einem Server anvertraut,
+   soll es nicht dabei verlieren. Der Server-Stand ist ein neues Dokument im
+   Wähler, erkennbar am Namen und an der Adresse im Tooltip. */
+const SERVER_PARAM = 'server';
+const LS_SERVER = 'werkbaum-server';
+
+/* Wohin? Reihenfolge und Begründung stehen in live.js. Was dort nicht
+   hingehört, ist der letzte Ausweg: fragen und die Antwort merken — ein
+   Dialog ist keine entscheidbare Regel. */
+function serverBaseOrAsk(){
+  const offen = liveState ? liveState.urls.doc : null;
+  let gemerkt = null;
+  try{ gemerkt = localStorage.getItem(LS_SERVER); }catch(_){}
+  const basis = live.serverBase(urlParam(SERVER_PARAM) || gemerkt, offen, location.href);
+  if(basis) return basis;
+
+  const eingabe = window.prompt(t('docToServerAsk'), 'https://');
+  if(!eingabe) return null;
+  const geprueft = live.serverBase(eingabe, null, location.href);
+  if(geprueft){ try{ localStorage.setItem(LS_SERVER, geprueft); }catch(_){} }
+  return geprueft;
+}
+
+async function putOnServer(){
+  const d = activeDoc();
+  if(!d) return;
+  const basis = serverBaseOrAsk();
+  if(!basis) return;
+
+  closeDocMenu();
+  try{
+    const doc = await fetchJson(live.documentsUrl(basis), {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({title: d.name, content: live.normalize(src.value)}),
+    });
+    const urls = live.liveUrls(basis + '/api/v1/documents/' + doc.id, location.href);
+    if(!urls) throw new Error('unerwartete Antwort des Servers');
+
+    stopLive();
+    liveState = {urls, id: 'live:' + urls.doc, version: 0, shadow: [''],
+                 pushTimer: null, feedAbort: null, busy: false};
+    adoptLive(doc);
+    runFeed();
+
+    /* Die Adresszeile IST der Link — dort sucht man ihn, und ein Neuladen
+       führt zurück ins selbe Dokument. Zusätzlich in die Zwischenablage,
+       weil Weitergeben der eigentliche Zweck ist. */
+    const teilen = location.origin + location.pathname + '?live=' + urls.doc;
+    try{ history.replaceState(null, '', teilen); }catch(_){}
+    try{ await navigator.clipboard.writeText(teilen); }catch(_){}
+    flashBtn(document.getElementById('docTrigger'));
+    sourceWarning = null;
+    render();
+  }catch(err){
+    sourceWarning = {type: 'liveLoad', url: live.documentsUrl(basis),
+                     error: (err && err.message) || String(err)};
+    render();
+  }
+}
+
 /* ---------- Pad: auf Knopfdruck neu holen (D31) ----------
    Kein Hintergrund-Takt. Der erste Entwurf holte alle 2,5 s selbsttätig — und
    lief damit in Etherpads **Drosselung**: `importExportRateLimiting` ist
@@ -4973,6 +5095,7 @@ docList.addEventListener('click', e => {
 document.getElementById('docNew').addEventListener('click', e => { e.stopPropagation(); newDoc(); });
 document.getElementById('docOpenFile').addEventListener('click', e => { e.stopPropagation(); openLocalFile(); });
 document.getElementById('docSaveFile').addEventListener('click', e => { e.stopPropagation(); saveLocalFile(); });
+document.getElementById('docToServer').addEventListener('click', e => { e.stopPropagation(); putOnServer(); });
 document.getElementById('docRename').addEventListener('click', e => { e.stopPropagation(); renameDoc(); });
 document.getElementById('docDelete').addEventListener('click', e => { e.stopPropagation(); deleteDoc(); });
 document.getElementById('docRestore').addEventListener('click', e => { e.stopPropagation(); restoreDoc(); });

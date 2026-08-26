@@ -37,6 +37,46 @@ export function liveUrls(raw, base){
   return {doc, content: doc + '/content', changes: doc + '/changes', id: m[1].toLowerCase()};
 }
 
+/* Basis-Adresse des Backends bestimmen — für „auf den Server legen" (D76).
+
+   Der Editor läuft je nach Installation überall, das Backend liegt bei der
+   produktiven Installation hinter **derselben** Herkunft (`/api/…` per
+   Proxy-Regel, D77). Das ist deshalb die Vorgabe: Wer nichts konfiguriert,
+   bekommt das Richtige.
+
+   Vorrang, von stark nach schwach:
+   1. [explicit] — der `?server=`-Parameter, für Entwicklung (Editor auf 8137,
+      Backend auf 8080) oder ein Backend auf fremdem Host.
+   2. [openDoc] — die Adresse des gerade offenen Server-Dokuments. Wer in einem
+      `?live=`-Dokument sitzt und ein neues anlegt, meint denselben Server.
+   3. Die Herkunft der Seite selbst.
+
+   `null`, wenn nichts davon trägt — auf `file://` gibt es keine brauchbare
+   Herkunft, und Raten wäre schlechter als Fragen. */
+export function serverBase(explicit, openDoc, pageUrl){
+  for(const kandidat of [explicit, openDoc, pageUrl]){
+    if(!kandidat) continue;
+    let u;
+    try{ u = new URL(kandidat, pageUrl || undefined); }catch(_){ continue; }
+    if(u.protocol !== 'http:' && u.protocol !== 'https:') continue;
+    return u.origin + basisPfad(u.pathname);
+  }
+  return null;
+}
+
+/* Der Pfad **vor** `/api/v1/…`, damit ein Backend auch unter einem
+   Unterverzeichnis liegen darf. Alles andere fällt weg: Aus der Adresse eines
+   Dokuments wird die des Dienstes. */
+function basisPfad(pfad){
+  const i = pfad.indexOf('/api/v1/');
+  return i >= 0 ? pfad.slice(0, i) : '';
+}
+
+/* Sammel-Adresse: hier wird angelegt (POST) und aufgelistet (GET). */
+export function documentsUrl(base){
+  return String(base).replace(/\/+$/, '') + '/api/v1/documents';
+}
+
 /* ------------------------------------------------------------------ Zeilen */
 
 /* Zeilenenden auf LF (SPEC §12). Der Server normalisiert beim Speichern
