@@ -11,6 +11,12 @@ plugins {
 group = "de.werkbaum"
 version = "0.1.0-SNAPSHOT"
 
+// Erzeugt META-INF/build-info.properties (Teil des Boot-Plugins, keine neue
+// Abhaengigkeit) - daraus speist sich GET /api/v1/info.
+springBoot {
+    buildInfo()
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)

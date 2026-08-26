@@ -270,8 +270,14 @@ The backend is a separate deploy, because it is a service rather than files:
 ```bash
 scripts/install-jdk.sh          # once: a JDK 21 into the server's home
 scripts/deploy-backend.sh       # build, upload, systemd user unit, restart
+scripts/reset-password.sh       # asks for the master password, hashes it there
 scripts/deploy-prod.sh          # the editor — also writes the /api/ proxy rule
 ```
+
+`GET /api/v1/info` answers with name, version and build time — that is the
+liveness check, for the deploy and for monitoring. Expecting a **404** from a
+document that does not exist would be a poor assurance: a misconfigured proxy
+returns one too.
 
 Configuration lives in the git-ignored `.env` (template `.env.example`):
 `BACKEND_SSH`, and optionally `BACKEND_DIR`, `BACKEND_JDK_DIR`, `BACKEND_PORT`,
@@ -292,8 +298,10 @@ Configuration lives in the git-ignored `.env` (template `.env.example`):
 - **The master password never leaves the server.** It goes into
   `<BACKEND_DIR>/env` (mode 600), which the deploy creates empty on the first
   run. Until a hash is in it, the document list stays locked — deliberately.
-  Generate it **interactively** (`htpasswd -nBC 12 ''`, no `-b`): a password on
-  a command line lands in the shell history, and the shell mangles it on the
+  `scripts/reset-password.sh` asks for it, sends it to the server over
+  **stdin** (never as an argument — those show up in the process list) and
+  verifies afterwards that hash and password match. Never put a password on a
+  command line: it lands in the shell history, and the shell mangles it on the
   way — `ge$heim` becomes `ge`. What gets hashed is then not what you type
   later, and the server answers 401 while everything looks right.
 - **Memory is the scarce resource on that host**, not CPU. The JVM flags are

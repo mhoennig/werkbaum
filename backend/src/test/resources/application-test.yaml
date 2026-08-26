@@ -1,0 +1,20 @@
+# Nur die Abweichungen fuer Tests. Bewusst `application-test.yaml` und nicht
+# `application.yaml`: Gleichnamig VERDECKT die Testdatei die Hauptkonfiguration
+# vollstaendig, und dann pruefen die Tests eine Konfiguration, die in
+# Produktion nie laeuft. Als Profil-Ueberlagerung laedt Spring erst die
+# Hauptdatei und legt diese darueber - Fehler wie die Liquibase-Schreibweise
+# (D77-Nachtrag) fallen so im Test auf statt beim zweiten Start am Server.
+spring:
+  datasource:
+    url: jdbc:h2:mem:editor-test;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+
+werkbaum:
+  live-editing:
+    # Kurz, damit die Behavior-Tests nicht auf die Produktionswerte warten.
+    max-wait: 5s
+
+  master-password:
+    # {noop} = Klartext. Nur im Test; in Produktion steht hier {bcrypt}$2a$...
+    hash: "{noop}test-geheim"
+    max-attempts: 3
+    lockout: 2s

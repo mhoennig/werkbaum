@@ -71,6 +71,22 @@ class DocumentStepDefinitions {
         lastResponse = listDocuments("test-geheim")
     }
 
+    @Wenn("ich die Info des Dienstes abrufe")
+    fun `ich rufe die Info ab`() {
+        lastResponse = client.get()
+            .uri("/api/v1/info")
+            .exchange()
+            .returnResult(String::class.java)
+    }
+
+    @Und("die Antwort nennt einen Namen und eine Version")
+    fun `die Antwort nennt Name und Version`() {
+        withClue("Antwort: ${body()}") {
+            body() shouldContain "\"name\""
+            body() shouldContain "\"version\""
+        }
+    }
+
     @Wenn("ich alle Dokumente ohne Master-Passwort abrufe")
     fun `ich rufe alle Dokumente ohne Passwort ab`() {
         lastResponse = client.get()

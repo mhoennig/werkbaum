@@ -6386,6 +6386,68 @@ nichts. Der Test hat bewiesen, dass die richtigen Pfade *übergeben* werden,
 nicht dass die Gegenseite sie versteht. Dieselbe Grenze wie in D25 und D72,
 nur eine Ebene tiefer: Ein Stub prüft die eigene Seite der Naht.
 
+**Nachtrag beim ersten Betrieb: `MODE=PostgreSQL` verhindert den Neustart.**
+Der Dienst lief einmal und stürzte danach in einer Schleife: Liquibase legt
+seine Verwaltungstabelle an, H2 antwortet „Table databasechangelog already
+exists". In dem Modus schreibt H2 unquotierte Bezeichner **klein** (wie
+PostgreSQL, dafür stand er in der URL); Liquibase sucht sie **groß**, findet
+nichts und legt sie neu an. Der erste Start ging, jeder weitere nicht.
+
+Gemessen, mit dem echten Jar und je frischem Verzeichnis:
+
+| URL | zweiter Start |
+|---|---|
+| `MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE` (bisher) | stürzt ab |
+| dito, Liquibase-Tabellen kleingeschrieben konfiguriert | stürzt ab |
+| **ohne `MODE=PostgreSQL`** | **läuft** |
+
+Die zweite Zeile ist der Grund, warum der Modus ganz weicht statt Liquibase
+umkonfiguriert zu werden: Liquibase korrigiert den Namen selbst wieder auf
+Großschreibung. Verloren geht wenig — der Modus ließ H2 wie PostgreSQL
+*aussehen*, das Schema kommt aber ohnehin aus einem Liquibase-Changelog, und
+der Umstieg auf echtes PostgreSQL bleibt eine Frage von URL und Treiber.
+
+**Warum die Testsuite das nicht gefunden hat, und was daraus folgt.** Jeder
+Test bekam eine frische In-Memory-Datenbank; „starte noch einmal" kam nie vor.
+Der Regressionstest dafür hat mich dann **zweimal hintereinander belogen**, und
+beide Male auf dieselbe Art — er prüfte etwas anderes, als er behauptete:
+
+1. Er reichte die JDBC-URL über `SpringApplicationBuilder.properties(…)`
+   herein. Das sind **Default**-Properties mit der *niedrigsten* Priorität; die
+   `application.yaml` überstimmt sie. Der Test lief die ganze Zeit gegen eine
+   andere Datenbank und meldete für jede Variante dasselbe Ergebnis.
+2. Als Kommandozeilen-Argument gereicht wirkte die URL — aber jetzt prüfte der
+   Test eine URL, die er sich **selbst ausgedacht** hatte, während die
+   ausgelieferte ungeprüft blieb. Die Gegenprobe (Modus zurückbauen, muss
+   fallen) blieb prompt stumm.
+
+Beides fiel nur auf, weil die Gegenprobe zum Verfahren gehört. Jetzt hat die
+URL **einen** Regler — `werkbaum.data-dir` —, der Test überschreibt nur den,
+und alles Übrige an der ausgelieferten URL steht unter Test. Mit
+`MODE=PostgreSQL` zurück fällt genau die eine danach benannte Zusicherung.
+
+Dieselbe Lehre eine Ebene höher: Die Testkonfiguration hieß
+`application.yaml` und **verdeckte** damit die Hauptkonfiguration vollständig —
+die Tests prüften eine Konfiguration, die in Produktion nie läuft. Sie heißt
+jetzt `application-test.yaml` und ist eine Profil-Überlagerung.
+
+**Eine Lebendprobe braucht einen eigenen Endpunkt.** Bis hierher fragte das
+Deploy nach einem Dokument, das es nicht gibt, und hoffte auf **404**. Ein
+erwarteter *Fehler* ist eine schlechte Zusicherung: Dieselbe 404 liefert auch
+ein falsch konfigurierter Proxy. `GET /api/v1/info` antwortet stattdessen mit
+Name, Version und Bauzeitpunkt — offen, ohne Nebenwirkung, und es sagt
+zugleich, **welcher Stand** läuft. Die Daten kommen aus
+`META-INF/build-info.properties` (Gradle: `springBoot { buildInfo() }`, Teil
+des Boot-Plugins — keine neue Abhängigkeit) und sind optional: Wer aus der IDE
+startet, hat die Datei nicht und bekommt „unbekannt" statt eines Fehlers.
+
+**Das Passwort setzt jetzt ein eigenes Skript** (`scripts/reset-password.sh`).
+Es fragt verdeckt nach, schickt das Passwort über **stdin** zum Server (nicht
+als Argument — Argumente stehen in der Prozessliste, die auf einem geteilten
+Host jeder lesen kann), hasht dort mit `htpasswd -i` und prüft anschließend
+selbst mit `htpasswd -vi`, ob Hash und Passwort zueinander passen. Genau diese
+Gegenprobe fehlte, als das erste 401 wie ein Konfigurationsfehler aussah.
+
 **Nicht getestet, weil es nicht zu testen war:** Alles bis zur SSH-Grenze ist
 gemessen — die erzeugte Unit ist mit `systemd-analyze verify` gültig, das Jar
 startet mit **genau** den Flags der Unit in einer Sekunde, antwortet auf die

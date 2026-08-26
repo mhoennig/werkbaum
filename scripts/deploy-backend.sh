@@ -190,14 +190,16 @@ REMOTE
 # ---- 4) Nachsehen, ob er wirklich antwortet ----
 if [ "$RESTART" -eq 1 ]; then
   echo "==> Warten, bis der Dienst antwortet"
-  # Es gibt (noch) keinen Health-Endpunkt — der steht als eigener Knoten im
-  # Plan (`#be.scaffold.ci`). Bis dahin ist die ehrlichste Lebendprobe eine
-  # Anfrage nach einem Dokument, das es nicht gibt: 404 heißt, die Anwendung
-  # ist oben und beantwortet Anfragen.
-  PROBE="http://127.0.0.1:${PORT}/api/v1/documents/00000000-0000-0000-0000-000000000000"
+  # `GET /api/v1/info` — offen, ohne Nebenwirkung, und sagt zugleich, welcher
+  # Stand läuft. Vorher stand hier eine Anfrage nach einem nicht existierenden
+  # Dokument mit der Erwartung 404; ein erwarteter **Fehler** ist eine schlechte
+  # Zusicherung, weil ihn auch ein falsch konfigurierter Proxy liefert.
+  PROBE="http://127.0.0.1:${PORT}/api/v1/info"
   if ssh "$SSH_TARGET" "for i in \$(seq 1 45); do
-        code=\$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 '$PROBE' || true)
-        if [ \"\$code\" = '404' ]; then echo \"    oben nach \${i}s (HTTP 404 wie erwartet)\"; exit 0; fi
+        body=\$(curl -s --max-time 3 '$PROBE' || true)
+        case \"\$body\" in
+          *'\"version\"'*) echo \"    oben nach \${i}s: \$body\"; exit 0 ;;
+        esac
         sleep 1
       done
       echo '    ! antwortet nicht.'; exit 1"; then

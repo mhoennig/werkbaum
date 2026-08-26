@@ -218,20 +218,46 @@ alles richtig aussieht.
 
 ## Persistenz
 
-- **H2 im File-Modus** (`./data/editor.mv.db`) mit `MODE=PostgreSQL` –
-  läuft im Server-Prozess, keine Datenbank-Installation nötig. Dokumente und
-  Historie überleben einen Neustart.
+- **H2 im File-Modus** (`${werkbaum.data-dir:./data}/editor.mv.db`) – läuft im
+  Server-Prozess, keine Datenbank-Installation nötig. Dokumente und Historie
+  überleben einen Neustart.
+- **Bewusst ohne `MODE=PostgreSQL`**, obwohl es naheliegt: In dem Modus legt H2
+  unquotierte Bezeichner klein an, Liquibase sucht seine Verwaltungstabellen
+  aber groß — findet nichts, legt sie an, und H2 antwortet „Table
+  databasechangelog already exists". Der erste Start ging, **jeder weitere
+  stürzte ab**. Gemessen und in D77 begründet.
+- Die JDBC-URL hat **einen** Regler: `werkbaum.data-dir`. Der Regressionstest
+  überschreibt nur den, damit alles Übrige an der ausgelieferten URL unter
+  Test steht.
 - **Schema per Liquibase im formatierten SQL-Format**
   (`src/main/resources/db/changelog/db.changelog-master.sql`, kein XML).
   Neue Änderungen werden als weitere `--changeset`-Blöcke angehängt;
   Hibernate validiert nur (`ddl-auto: validate`).
 - **Umstieg auf echtes PostgreSQL:** im Wesentlichen JDBC-URL/Credentials in
   der `application.yaml` tauschen und den Postgres-Treiber als Dependency
-  ergänzen – Schema-Migrationen und Code bleiben unverändert.
-- Tests laufen gegen H2 in-memory (`src/test/resources/application.yaml`),
-  mit demselben Liquibase-Schema.
+  ergänzen – Schema-Migrationen und Code bleiben unverändert. (Der
+  H2-PostgreSQL-Modus war ein Nachbau davon und ist es nicht wert, siehe oben.)
+- Tests laufen gegen H2 in-memory. Die Testkonfiguration heißt
+  `application-test.yaml` und ist eine **Profil-Überlagerung**: Gleichnamig
+  (`application.yaml`) verdeckte sie die Hauptkonfiguration vollständig, und
+  die Tests prüften eine Konfiguration, die in Produktion nie läuft.
 - Service-Methoden sind `@Transactional`: Dokument-Änderung und
   Historieneintrag werden atomar geschrieben.
+
+## Läuft er? `GET /api/v1/info`
+
+```json
+{"name":"editor-backend","version":"0.1.0-SNAPSHOT","builtAt":"2026-08-26T16:59:40.341Z"}
+```
+
+Offen, ohne Nebenwirkung, und sagt zugleich, **welcher Stand** läuft. Vorher
+war die Lebendprobe eine Anfrage nach einem nicht existierenden Dokument mit
+der Erwartung **404** — ein erwarteter *Fehler* ist eine schlechte
+Zusicherung, weil ihn auch ein falsch konfigurierter Proxy liefert.
+
+Die Angaben kommen aus `META-INF/build-info.properties`
+(`springBoot { buildInfo() }`, Teil des Boot-Plugins). Fehlt die Datei — etwa
+beim Start aus der IDE —, steht dort `unbekannt` statt eines Fehlers.
 
 ## Betrieb auf der stabilen Instanz
 
@@ -244,8 +270,10 @@ nur auf `127.0.0.1` — von außen kommt man über die Proxy-Regel in
 - **Speicher:** `-Xmx192m -Xms48m` plus Freiraum-Verhältnisse; gemessen rund
   174 MB RSS gegen 291 MB ohne Angaben. Nach einem GC leben ~45 MB. Zu wenig
   Luft? `BACKEND_XMX` in `.env`.
-- **Master-Passwort:** `<BACKEND_DIR>/env` auf dem Server, Modus 600. Ohne
-  Hash bleibt `GET /documents` gesperrt.
+- **Master-Passwort:** `scripts/reset-password.sh` fragt es verdeckt ab, hasht
+  es auf dem Server und prüft selbst nach, ob Hash und Passwort zueinander
+  passen. Gespeichert wird nur der Hash (`<BACKEND_DIR>/env`, Modus 600); ohne
+  ihn bleibt `GET /documents` gesperrt.
 - **Datenbank:** H2 im Dateimodus unter `<BACKEND_DIR>/data/`. Ein Deploy
   fasst das Verzeichnis nicht an (kein `--delete`). Umstieg auf das dort
   laufende PostgreSQL: JDBC-URL in der `application.yaml` tauschen und den

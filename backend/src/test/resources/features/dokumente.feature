@@ -4,6 +4,15 @@ Funktionalität: Dokumente verwalten
   möchte ich Dokumente anlegen, abrufen, ändern und löschen können,
   damit das Backend die Grundlage für den Editor bildet.
 
+  Szenario: Der Dienst sagt, wer er ist
+    Wenn ich die Info des Dienstes abrufe
+    Dann erhalte ich den Status 200
+    Und die Antwort nennt einen Namen und eine Version
+
+  Szenario: Die Info ist ohne Master-Passwort zu haben
+    Wenn ich die Info des Dienstes abrufe
+    Dann erhalte ich den Status 200
+
   Szenario: Ein neues Dokument anlegen
     Wenn ich ein Dokument mit dem Titel "Notizen" und dem Inhalt "Hallo Welt" anlege
     Dann erhalte ich den Status 201

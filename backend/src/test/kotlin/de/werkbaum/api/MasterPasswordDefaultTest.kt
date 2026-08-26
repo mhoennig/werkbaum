@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.client.RestTestClient
 import java.util.Base64
@@ -18,6 +19,7 @@ import java.util.Base64
  * UUID offen da, und das Zugriffsmodell (D76) wäre hinfällig — ohne dass es
  * jemandem auffiele.
  */
+@ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureRestTestClient
 @TestPropertySource(
@@ -26,8 +28,8 @@ import java.util.Base64
         // Eigene Datenbank: Dieser Test braucht einen zweiten Spring-Kontext,
         // und zwei Kontexte auf derselben In-Memory-H2 stolpern uebereinander
         // (Liquibase legt DATABASECHANGELOG ein zweites Mal an).
-        "spring.datasource.url=jdbc:h2:mem:editor-master-pw;MODE=PostgreSQL;" +
-            "DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1",
+        "spring.datasource.url=jdbc:h2:mem:editor-master-pw;" +
+            "DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1",
     ]
 )
 class MasterPasswordDefaultTest {

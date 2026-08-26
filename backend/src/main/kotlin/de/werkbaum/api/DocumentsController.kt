@@ -10,6 +10,7 @@ import de.werkbaum.generated.model.DocumentCreateRequest
 import de.werkbaum.generated.model.DocumentHistoryEntry as ApiHistoryEntry
 import de.werkbaum.generated.model.DocumentUpdateRequest
 import de.werkbaum.generated.model.RestoreRequest
+import de.werkbaum.generated.model.ServiceInfo
 import de.werkbaum.domain.ChangeAuthor
 import de.werkbaum.domain.ChangeEvent
 import de.werkbaum.domain.ChangeFeed
@@ -18,6 +19,7 @@ import de.werkbaum.domain.Document
 import de.werkbaum.domain.DocumentHistoryEntry
 import de.werkbaum.service.DocumentService
 import de.werkbaum.service.LiveEditingService
+import org.springframework.boot.info.BuildProperties
 import org.springframework.http.CacheControl
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -36,7 +38,29 @@ import java.util.UUID
 class DocumentsController(
     private val service: DocumentService,
     private val liveEditing: LiveEditingService,
+    /**
+     * Aus `META-INF/build-info.properties` (Gradle: `springBoot { buildInfo() }`).
+     * Bewusst optional: Wer die Anwendung aus der IDE startet, hat die Datei
+     * nicht — dann fehlt die Zusatzangabe, statt dass der Start scheitert.
+     */
+    private val buildProperties: BuildProperties? = null,
 ) : DocumentsApi {
+
+    /**
+     * Lebendprobe: läuft der Dienst, und welcher Stand ist es?
+     *
+     * Offen und ohne Nebenwirkung. Vorher musste die Prüfung eine Anfrage nach
+     * einem nicht existierenden Dokument stellen und auf **404** hoffen — ein
+     * erwarteter Fehler ist eine schlechte Zusicherung, weil ihn auch ein
+     * falsch konfigurierter Proxy liefert.
+     */
+    override fun getInfo(): ResponseEntity<ServiceInfo> = ResponseEntity.ok(
+        ServiceInfo(
+            name = buildProperties?.name ?: "werkbaum-backend",
+            version = buildProperties?.version ?: "unbekannt",
+            builtAt = buildProperties?.time?.atOffset(java.time.ZoneOffset.UTC),
+        )
+    )
 
     override fun listDocuments(): ResponseEntity<List<ApiDocument>> =
         ResponseEntity.ok(service.findAll().map { it.toApi() })

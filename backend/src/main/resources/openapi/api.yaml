@@ -313,6 +313,25 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /info:
+    get:
+      tags: [Documents]
+      operationId: getInfo
+      summary: Name und Version des Dienstes
+      description: >
+        Offen und ohne Nebenwirkung - gedacht als Lebendprobe fuer Deploy und
+        Ueberwachung. Ohne diesen Endpunkt bliebe dafuer nur eine Anfrage nach
+        einem Dokument, das es nicht gibt, und man muesste auf eine 404 hoffen:
+        Ein erwarteter Fehler ist eine schlechte Zusicherung, weil ihn auch ein
+        falsch konfigurierter Proxy liefert.
+      responses:
+        "200":
+          description: Der Dienst laeuft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceInfo"
+
 components:
   responses:
     NotFound:
@@ -564,6 +583,19 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ChangeEvent"
+
+    ServiceInfo:
+      type: object
+      required: [name, version]
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        builtAt:
+          type: string
+          format: date-time
+          description: Fehlt, wenn ohne Build-Informationen gestartet (z. B. aus der IDE).
 
     ProblemDetail:
       type: object

@@ -8,7 +8,9 @@ import io.cucumber.spring.CucumberContextConfiguration
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.ActiveProfiles
 
+@ActiveProfiles("test")
 @CucumberContextConfiguration
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 // Seit Boot 4 stellt @SpringBootTest die Test-Client-Bean nicht mehr von selbst bereit

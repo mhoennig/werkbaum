@@ -116,7 +116,8 @@
   - [ ] #be: Backend (XL)
     - [/] #be.scaffold: Kotlin and Spring Boot scaffold (M)
       - [^] #be.scaffold.gradle: Gradle Kotlin DSL, JDK 21 (S)
-      - [ ] #be.scaffold.ci: Health endpoint and CI (S)
+      - [x] #be.scaffold.info: An endpoint that says name and version (XS)
+      - [ ] #be.scaffold.ci: Continuous integration for the backend (S)
     - [^] #be.docs: Documents on the server (L) :#be.scaffold
       - [^] #be.docs.model: Text plus metadata, no structure format (M)
         - [^] #be.docs.rest: REST endpoints (S)
@@ -768,9 +769,14 @@
   The build itself: Kotlin DSL, one module, the current long-term-support
   Java.
 
+#be.scaffold.info
+  Something to ask "are you there, and which build is it?" — open and without
+  side effects. Expecting a 404 from a document that does not exist would be a
+  poor assurance: a misconfigured proxy returns one too.
+
 #be.scaffold.ci
-  Enough to see that it lives: a health endpoint, and a pipeline that builds
-  and tests it on every push.
+  A pipeline that builds and tests the backend on every push, like the editor
+  has. The "is it alive" half moved out into its own node and is done.
 
 #be.docs
   Documents on a server instead of in one browser. Text plus metadata —
