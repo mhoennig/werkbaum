@@ -77,6 +77,8 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `cheapPathOn` lebt als UI-State in `app.js`. Tests: `tests/*.test.js`.
 - **Was entscheidbar ist, gehört in ein eigenes Modul** — auch bei Features, die
   wie reine UI aussehen: `remote.js` (Pad-URLs normalisieren, D31),
+  `live.js` (Server-Dokumente: Adressen, Zeilen-Diff, Cursor-Rechnung, wann eine
+  Feed-Antwort angewendet werden darf — D76),
   `warnings.js` (Warnung → Text), `snapshots.js` (frühere Stände: wann entsteht
   ein Stand, was fliegt bei Platzmangel raus, wie sieht der Speicherinhalt aus).
   Dort steht **was gilt**, in `app.js` bleibt **woher die Werte kommen und wohin
