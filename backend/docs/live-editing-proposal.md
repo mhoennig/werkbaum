@@ -303,6 +303,8 @@ Gemessen auf `mih00.hostsharing.net`, wo die stabile Instanz
 | `Timeout` | **300 s** | `wait=25` liegt weit darunter |
 | `ProxyTimeout` | nicht gesetzt → 300 s | dito |
 | mod_proxy_http, mod_rewrite | geladen | Reverse Proxy technisch möglich |
+| `RewriteRule … [P]` in `.htaccess` | **erlaubt** (gemessen) | So kommt der Request zum Backend |
+| Long-Poll durch Apache | **30 s gehalten** (gemessen) | `wait=25` trägt dort nachweislich |
 | HTTP/2 | **nicht angeboten** | siehe unten |
 | Java | **nur 17** | Backend verlangt 21 |
 | systemd `Linger` | **yes** | Ein eigener Dienst darf dauerhaft laufen |
@@ -320,22 +322,39 @@ dauerhaft gebunden und die übrigen Requests drängen sich in den Rest. Zu
 beheben wäre es serverseitig (HTTP/2 aktivieren) oder clientseitig, indem
 sich mehrere Tabs über einen SharedWorker **eine** Feed-Verbindung teilen.
 
-**Zwei offene Punkte vor einem Deployment dorthin:**
+**Der Weg zum Backend steht: `RewriteRule … [P]` in der `.htaccess`.**
+`ProxyPass` ist dort nicht zulässig und `~/doms/<domain>/etc/` ist leer —
+aber das P-Flag von mod_rewrite ist auf diesem Server **erlaubt**, was
+manche Hoster sperren. Am 26.08.2026 mit einer temporären Regel und einem
+lokalen Testprozess gemessen (danach vollständig zurückgebaut):
 
-1. **Java 17 statt 21.** `build.gradle.kts` verlangt `JavaLanguageVersion.of(21)`.
-   Entweder die Toolchain auf 17 senken (dann fallen Sprachfeatures weg) oder
-   ein eigenes JDK 21 ins Home legen — beim Selfhosting problemlos, aber es
-   muss jemand tun.
-2. **Der Weg vom Apache zum Backend ist ungeklärt.** `ProxyPass` ist in
-   `.htaccess` nicht zulässig, und `~/doms/<domain>/etc/` ist leer, sodass
-   unklar bleibt, ob dort eigene vhost-Direktiven abgelegt werden können.
-   Möglich wären `RewriteRule … [P]` (mod_rewrite ist aktiv, das P-Flag
-   sperren manche Hoster jedoch) oder eine Rückfrage bei Hostsharing. **Nicht
-   getestet**, weil dafür eine Proxy-Regel in der Produktionsumgebung
-   einzurichten wäre.
+```
+RewriteEngine On
+RewriteRule ^api/(.*)$ http://127.0.0.1:<port>/api/$1 [P,L]
+```
 
-Die Lehre aus D17-Nachtrag 4 bleibt: Was die Umgebung stellt, stellt der
-Emulator nicht — die Zahlen oben sind gemessen, der Proxy-Pfad ist es nicht.
+- sofortige Antwort: **HTTP 200 nach 0,13 s**
+- absichtlich verzögerte Antwort: **HTTP 200 nach 30,1 s** — Apache hält die
+  Verbindung also durch und puffert nichts weg. Damit ist Long Polling mit
+  `wait=25` auf dieser Umgebung nicht nur rechnerisch, sondern **gemessen**
+  tragfähig.
+
+Zu beachten: `scripts/deploy-prod.sh` spiegelt die `.htaccess` mit
+`rsync --delete` aus `scripts/prod.htaccess`. Die Proxy-Regel gehört deshalb
+**dorthin**, sonst ist sie nach dem nächsten Deploy weg.
+
+**Offen bleibt Java:** installiert ist 17, `build.gradle.kts` verlangt
+`JavaLanguageVersion.of(21)`. Entschieden ist, ein eigenes **JDK 21 ins Home**
+zu legen (kein Root nötig, `Linger=yes` erlaubt den dauerhaften Dienst) statt
+die Toolchain zu senken — Entwicklung und Produktion laufen dann auf
+derselben Version. Ein natives Binary via GraalVM wäre der elegantere Weg
+(kein Java auf dem Server, ein Bruchteil des knappen RAM), scheitert aber
+vorerst an dreierlei: der glibc-Differenz zwischen Ubuntu 24.04 (2.39) und
+Debian 12 (2.36), die einen Container-Build erzwingt; dem Umstand, dass
+Liquibase Metadaten aus einem Native-Agent-Lauf braucht und Hibernate das
+Enhancement-Plugin; und einem offenen Fehler in Spring Boot 4, der genau die
+Kombination JPA + Liquibase im Native-Image-Build zerlegt. Vorgemerkt, nicht
+verworfen.
 
 ## Grenzen der simplen Variante (bewusst akzeptiert)
 

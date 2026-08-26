@@ -5937,3 +5937,33 @@ Rückfrage beim Hoster. Dieser letzte Punkt ist bewusst **nicht** getestet —
 dafür hätte eine Proxy-Regel in der Produktionsumgebung eingerichtet werden
 müssen. Details in `backend/docs/live-editing-proposal.md`, Abschnitt
 „Betrieb".
+
+**Nachtrag 2 — der Proxy-Weg ist gemessen, und das JDK ist entschieden
+(2026-08-26).** Der in Nachtrag 1 als ungetestet markierte Punkt ist
+nachgeholt: **`RewriteRule … [P]` ist in der `.htaccess` erlaubt** — manche
+Hoster sperren das P-Flag, dieser nicht. Gemessen mit einer temporären Regel
+auf einen lokalen Testprozess (danach vollständig zurückgebaut, `.htaccess`
+aus der Sicherung wiederhergestellt, Prozess und Skript entfernt, Site
+verifiziert): sofortige Antwort HTTP 200 nach 0,13 s, **absichtlich um 30 s
+verzögerte Antwort HTTP 200 nach 30,1 s**. Apache hält die Verbindung also
+durch und puffert nichts weg — Long Polling mit `wait=25` ist auf dieser
+Umgebung nicht nur rechnerisch, sondern gemessen tragfähig. Die Regel gehört
+nach `scripts/prod.htaccess`, weil `deploy-prod.sh` die Datei mit
+`rsync --delete` spiegelt.
+
+**JDK: ein eigenes 21 ins Home**, statt die Toolchain auf die installierte 17
+zu senken — Entwicklung und Produktion laufen dann auf derselben Version, und
+`Linger=yes` erlaubt den dauerhaften Dienst ohne Root. Erwogen und
+**vorgemerkt statt verworfen** war ein natives Binary via GraalVM: Es löste
+das Problem vollständig (kein Java auf dem Server) und spart den Großteil des
+knappen RAM — gemessen sind dort nur **832 MB frei** bei 3,9 GB gesamt, es ist
+ein geteilter Server. Dagegen stehen derzeit drei Dinge: die glibc-Differenz
+zwischen Ubuntu 24.04 (2.39) und Debian 12 (2.36), die einen Container-Build
+erzwingt; Liquibase braucht Metadaten aus einem Native-Agent-Lauf und
+Hibernate das Enhancement-Plugin; und ein offener Fehler in Spring Boot 4
+zerlegt Native-Image-Builds mit genau der Kombination JPA + Liquibase.
+**Kotlin/Native scheidet grundsätzlich aus** — Spring, Hibernate, Liquibase
+und JDBC sind JVM-Bibliotheken; das wäre kein Umbau, sondern ein Neubau auf
+einem anderen Stack. Unabhängig davon: Beim Deployment gehört ein `-Xmx`
+gesetzt, statt der JVM auf einem geteilten Server die Voreinstellung zu
+überlassen.
