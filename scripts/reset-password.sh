@@ -133,5 +133,9 @@ REMOTE
 
 unset PASSWORT PASSWORT2
 
-echo "==> Fertig. Probe:"
-echo "    curl -su werkbaum:<passwort> https://werkbaum.javagil.de/api/v1/documents"
+echo "==> Fertig. Probe — curl fragt selbst nach dem Passwort:"
+echo "    curl -su werkbaum <basis-url>/api/v1/documents"
+echo
+echo "    Bewusst OHNE Passwort im Befehl: In 'curl -u werkbaum:ge\$heim' fasst"
+echo "    die Shell es genauso an wie beim Hashen — und dann ist die Antwort"
+echo "    ein 401, obwohl der Hash stimmt."
