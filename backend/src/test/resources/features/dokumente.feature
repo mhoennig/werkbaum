@@ -64,6 +64,15 @@ Funktionalität: Dokumente verwalten
     Und die Antwort enthält den Titel "Vertrag"
     Und das Dokument ist wieder abrufbar
 
+  Szenario: Ein Rückfall auf eine alte Version ist kein Wiederherstellen
+    Angenommen es existiert ein Dokument mit dem Titel "Satzung"
+    Wenn ich den Titel dieses Dokuments auf "Satzung v2" ändere
+    Und ich dieses Dokument auf Version 1 zurücksetze
+    Dann erhalte ich den Status 200
+    Und die Antwort enthält den Titel "Satzung"
+    Wenn ich die Historie dieses Dokuments abrufe
+    Dann die Antwort enthält den Änderungstyp "ROLLED_BACK"
+
   Szenario: Wiederherstellen ohne Historie schlägt fehl
     Wenn ich ein Dokument mit einer unbekannten ID abrufe
     Dann erhalte ich den Status 404

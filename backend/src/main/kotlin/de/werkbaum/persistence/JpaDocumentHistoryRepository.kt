@@ -3,6 +3,7 @@ package de.werkbaum.persistence
 import de.werkbaum.domain.DocumentHistoryEntry
 import de.werkbaum.repository.DocumentHistoryRepository
 import org.springframework.stereotype.Repository
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @Repository
@@ -14,8 +15,28 @@ class JpaDocumentHistoryRepository(
         jpa.save(DocumentHistoryEntity.fromDomain(entry))
     }
 
-    override fun findByDocumentId(documentId: UUID): List<DocumentHistoryEntry> =
-        jpa.findByDocumentIdOrderByIdAsc(documentId).map { it.toDomain() }
+    override fun exists(documentId: UUID): Boolean = jpa.existsByDocumentId(documentId)
+
+    override fun findVersion(documentId: UUID, version: Long): DocumentHistoryEntry? =
+        jpa.findFirstByDocumentIdAndVersionOrderByIdDesc(documentId, version)?.toDomain()
+
+    override fun findLatest(documentId: UUID): DocumentHistoryEntry? =
+        jpa.findFirstByDocumentIdOrderByIdDesc(documentId)?.toDomain()
+
+    override fun findOldest(documentId: UUID): DocumentHistoryEntry? =
+        jpa.findFirstByDocumentIdOrderByIdAsc(documentId)?.toDomain()
+
+    override fun maxVersion(documentId: UUID): Long? = jpa.maxVersion(documentId)
+
+    override fun findMilestones(documentId: UUID): List<DocumentHistoryEntry> =
+        jpa.findByDocumentIdAndMilestoneTrueOrderByIdAsc(documentId).map { it.toDomain() }
+
+    override fun promoteToMilestone(documentId: UUID, version: Long) {
+        jpa.promoteToMilestone(documentId, version)
+    }
+
+    override fun compact(documentId: UUID, olderThan: OffsetDateTime): Int =
+        jpa.deleteSyncVersionsOlderThan(documentId, olderThan)
 
     override fun clear() = jpa.deleteAll()
 }

@@ -38,6 +38,10 @@ class DocumentHistoryEntity(
 
     @Column(name = "change_time", nullable = false)
     val changeTime: OffsetDateTime,
+
+    /** Meilenstein (nutzersichtbar, bleibt) oder Sync-Version (wird verdichtet) – D76. */
+    @Column(nullable = false)
+    var milestone: Boolean = true,
 ) {
     fun toDomain() = DocumentHistoryEntry(
         documentId = documentId,
@@ -46,6 +50,7 @@ class DocumentHistoryEntity(
         content = content,
         changeType = changeType,
         timestamp = changeTime,
+        milestone = milestone,
     )
 
     companion object {
@@ -56,6 +61,7 @@ class DocumentHistoryEntity(
             content = entry.content,
             changeType = entry.changeType,
             changeTime = entry.timestamp,
+            milestone = entry.milestone,
         )
     }
 }

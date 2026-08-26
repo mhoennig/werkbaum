@@ -8,6 +8,7 @@ import de.werkbaum.repository.DocumentRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
+import java.time.Duration
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -17,6 +18,7 @@ class DocumentService(
     private val repository: DocumentRepository,
     private val historyRepository: DocumentHistoryRepository,
     private val clock: Clock,
+    private val properties: LiveEditingProperties,
 ) {
 
     fun findAll(): List<Document> = repository.findAll()
@@ -39,7 +41,16 @@ class DocumentService(
         return document
     }
 
-    fun update(id: UUID, title: String, content: String): Document {
+    /**
+     * Ersetzt Titel und Inhalt vollständig.
+     *
+     * [milestone] `false` schreibt eine **Sync-Version** – gedacht für den
+     * getakteten Strom des Live-Editings (D76), der sonst hunderte
+     * nutzersichtbare Stände je Sitzung erzeugte. Der Vollersatz über die API
+     * ist dagegen eine bewusste Handlung (Import, Reparatur) und bleibt
+     * Meilenstein.
+     */
+    fun update(id: UUID, title: String, content: String, milestone: Boolean = true): Document {
         val existing = findById(id)
         val updated = existing.copy(
             title = title,
@@ -48,7 +59,7 @@ class DocumentService(
             updatedAt = OffsetDateTime.now(clock),
         )
         repository.save(updated)
-        recordHistory(updated, ChangeType.UPDATED)
+        recordHistory(updated, ChangeType.UPDATED, milestone)
         return updated
     }
 
@@ -66,26 +77,42 @@ class DocumentService(
     }
 
     /**
-     * Historie eines Dokuments – funktioniert auch für bereits gelöschte
-     * Dokumente. 404 nur, wenn die UUID gänzlich unbekannt ist.
+     * Die **nutzersichtbare** Historie: alle Meilensteine, älteste zuerst,
+     * dazu immer der jüngste Stand. Sync-Versionen bleiben draußen – sie
+     * tragen das Protokoll, nicht die Erzählung (D76).
+     *
+     * Funktioniert auch für bereits gelöschte Dokumente; 404 nur, wenn die
+     * UUID gänzlich unbekannt ist.
      */
     fun history(id: UUID): List<DocumentHistoryEntry> {
-        val entries = historyRepository.findByDocumentId(id)
-        if (entries.isEmpty()) throw DocumentNotFoundException(id)
-        return entries
+        if (!historyRepository.exists(id)) throw DocumentNotFoundException(id)
+        val milestones = historyRepository.findMilestones(id)
+        // Die letzte Version einer noch laufenden Schreibphase ist noch kein
+        // Meilenstein – sichtbar sein muss sie trotzdem.
+        val latest = historyRepository.findLatest(id)
+        return if (latest != null && milestones.none { it.version == latest.version }) {
+            milestones + latest
+        } else {
+            milestones
+        }
     }
 
     /**
      * Stellt ein Dokument unter derselben UUID wieder her.
      *
-     * - Ohne [targetVersion]: letzter inhaltlicher Stand vor dem Löschen.
+     * - Ohne [targetVersion]: letzter Stand vor dem Löschen ([ChangeType.RESTORED]).
      *   Existiert das Dokument noch, gibt es einen Konflikt (409).
      * - Mit [targetVersion]: Inhalt dieser Version wird als neue Version
-     *   übernommen – funktioniert auch als Rollback für existierende Dokumente.
+     *   übernommen. Bei einem lebenden Dokument ist das ein Rückfall
+     *   ([ChangeType.ROLLED_BACK]), kein Wiederherstellen – der Client hatte
+     *   nie eine Sperre.
+     *
+     * Eine verdichtete Sync-Version ist nicht mehr anzusteuern (404). Das ist
+     * die Zwei-Ebenen-Regel im Betrieb: Angeboten werden Meilensteine, und die
+     * bleiben.
      */
     fun restore(id: UUID, targetVersion: Long? = null): Document {
-        val entries = historyRepository.findByDocumentId(id)
-        if (entries.isEmpty()) throw DocumentNotFoundException(id)
+        if (!historyRepository.exists(id)) throw DocumentNotFoundException(id)
 
         val existing = repository.findById(id)
         if (existing != null && targetVersion == null) {
@@ -95,28 +122,59 @@ class DocumentService(
         }
 
         val snapshot = if (targetVersion != null) {
-            entries.lastOrNull { it.version == targetVersion && it.changeType != ChangeType.DELETED }
+            historyRepository.findVersion(id, targetVersion)
+                ?.takeIf { it.changeType != ChangeType.DELETED }
                 ?: throw DocumentNotFoundException(id)
         } else {
-            entries.last { it.changeType != ChangeType.DELETED }
+            // Der Tombstone trägt den letzten Stand – er ist die verlässliche
+            // Quelle, auch wenn die Version davor längst verdichtet wurde.
+            historyRepository.findLatest(id) ?: throw DocumentNotFoundException(id)
         }
 
         val now = OffsetDateTime.now(clock)
-        val lastVersion = maxOf(entries.maxOf { it.version }, existing?.version ?: 0)
+        val lastVersion = maxOf(historyRepository.maxVersion(id) ?: 0, existing?.version ?: 0)
         val restored = Document(
             id = id,
             title = snapshot.title,
             content = snapshot.content,
             version = lastVersion + 1,
-            createdAt = existing?.createdAt ?: entries.first().timestamp,
+            createdAt = existing?.createdAt
+                ?: historyRepository.findOldest(id)?.timestamp
+                ?: now,
             updatedAt = now,
         )
         repository.save(restored)
-        recordHistory(restored, ChangeType.RESTORED)
+        recordHistory(
+            restored,
+            if (existing != null) ChangeType.ROLLED_BACK else ChangeType.RESTORED,
+        )
         return restored
     }
 
-    private fun recordHistory(document: Document, changeType: ChangeType) {
+    /**
+     * Schreibt einen Historieneintrag und hält dabei die zwei Ebenen instand:
+     *
+     * 1. War die vorige Version eine Sync-Version und liegt sie länger als
+     *    [LiveEditingProperties.milestonePause] zurück, war sie die **letzte
+     *    vor einer Schreibpause** und wird nachträglich Meilenstein. So
+     *    braucht es keinen Zeitgeber – die nächste Änderung stellt fest, dass
+     *    eine Pause war.
+     * 2. Strukturelle Änderungen sind immer Meilensteine.
+     * 3. Danach wird verdichtet: Sync-Versionen jenseits der
+     *    Aufbewahrungsfrist entfallen.
+     */
+    private fun recordHistory(
+        document: Document,
+        changeType: ChangeType,
+        milestone: Boolean = true,
+    ) {
+        val previous = historyRepository.findLatest(document.id)
+        if (previous != null && !previous.milestone &&
+            Duration.between(previous.timestamp, document.updatedAt) >= properties.milestonePause
+        ) {
+            historyRepository.promoteToMilestone(document.id, previous.version)
+        }
+
         historyRepository.append(
             DocumentHistoryEntry(
                 documentId = document.id,
@@ -125,7 +183,17 @@ class DocumentService(
                 content = document.content,
                 changeType = changeType,
                 timestamp = document.updatedAt,
+                milestone = milestone || changeType.isStructural,
             )
         )
+
+        historyRepository.compact(
+            document.id,
+            document.updatedAt.minus(properties.syncRetention),
+        )
     }
+
+    /** Anlegen, Löschen, Wiederherstellen und Rückfall sind nie bloß Sync-Versionen. */
+    private val ChangeType.isStructural: Boolean
+        get() = this != ChangeType.UPDATED
 }

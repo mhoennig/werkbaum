@@ -159,6 +159,16 @@ class DocumentStepDefinitions {
             .returnResult(String::class.java)
     }
 
+    @Wenn("ich dieses Dokument auf Version {long} zurücksetze")
+    fun `ich setze dieses Dokument zurueck`(version: Long) {
+        lastResponse = client.post()
+            .uri("/api/v1/documents/$currentDocumentId/restore")
+            .contentType(MediaType.APPLICATION_JSON)
+            .body("""{"version":$version}""")
+            .exchange()
+            .returnResult(String::class.java)
+    }
+
     @Und("die Antwort enthält {int} Historieneinträge")
     fun `die Antwort enthaelt n Historieneintraege`(anzahl: Int) {
         val count = Regex("\"changeType\"").findAll(body()).count()

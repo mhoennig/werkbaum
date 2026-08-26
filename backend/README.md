@@ -61,16 +61,31 @@ werden.
 
 ## Historie & Wiederherstellung
 
-- Jede Änderung (CREATED, UPDATED, DELETED, RESTORED) wird als Snapshot in
-  einer vom Dokument getrennten Historie protokolliert – sie **überlebt ein
-  DELETE**.
-- `GET /api/v1/documents/{uuid}/history` liefert alle Einträge (älteste
-  zuerst); Identifier ist die UUID, wie bei GET (der Titel ist nicht eindeutig).
+- Jede Änderung wird als Snapshot in einer vom Dokument getrennten Historie
+  protokolliert – sie **überlebt ein DELETE**.
+- **Zwei Ebenen** (D76): **Meilensteine** sind die nutzersichtbare Historie und
+  bleiben; **Sync-Versionen** tragen die Diffs des Live-Editings, sind
+  kurzlebig und werden verdichtet. Ohne die Trennung würde die Historie beim
+  getakteten Schreiben zum Transaktionslog – hunderte Volltext-Snapshots eines
+  40-kB-Dokuments je Sitzung.
+  - Meilenstein wird ein Stand bei einer strukturellen Änderung (Anlegen,
+    Löschen, Wiederherstellen, Rückfall), beim Vollersatz per `PUT` und
+    **nach einer Schreibpause**. Letzteres ohne Zeitgeber: Die nächste
+    Änderung stellt fest, dass eine Pause war, und befördert die Version
+    davor nachträglich. Der Knopfdruck aus dem Konzept ist derselbe
+    Schalter (`milestone = true`), sobald `PATCH /content` ihn durchreicht.
+  - Stellschrauben: `werkbaum.live-editing.milestone-pause` (30 s) und
+    `sync-retention` (1 h).
+- `GET /api/v1/documents/{uuid}/history` liefert die Meilensteine (älteste
+  zuerst) und immer den jüngsten Stand; Identifier ist die UUID, wie bei GET
+  (der Titel ist nicht eindeutig).
 - `POST /api/v1/documents/{uuid}/restore` stellt ein gelöschtes Dokument unter
-  derselben UUID wieder her (letzter Stand vor dem Löschen). Mit optionalem
-  Body `{"version": n}` wird eine bestimmte Version wiederhergestellt – das
-  funktioniert auch als Rollback für noch existierende Dokumente; ohne
-  Zielversion antwortet der Server bei existierendem Dokument mit 409.
+  derselben UUID wieder her (`RESTORED`, letzter Stand aus dem Tombstone). Mit
+  optionalem Body `{"version": n}` wird eine bestimmte Version übernommen – bei
+  einem noch lebenden Dokument ist das ein Rückfall (`ROLLED_BACK`), kein
+  Wiederherstellen: Der Client hatte nie eine Sperre. Ohne Zielversion
+  antwortet der Server bei existierendem Dokument mit 409, eine bereits
+  verdichtete Zielversion mit 404.
 
 ## Vorbereitete Erweiterungen
 
@@ -81,12 +96,13 @@ werden.
   Spec; die Behavior-Tests erhalten dann einen Auth-Schritt
   („Angenommen ich bin als … angemeldet").
 
-**Live-Editing**
-- Jedes Dokument trägt eine `version`, die bei jedem Update inkrementiert
-  wird – Basis für Optimistic Locking (HTTP 409 ist in der Spec bereits
-  reserviert) und für Delta-Synchronisation über WebSocket/STOMP.
-- `DocumentUpdateRequest.expectedVersion` ist bereits im Vertrag vorgesehen,
-  wird aber noch nicht ausgewertet.
+**Live-Editing** (Konzept: `docs/live-editing-proposal.md`, Entscheidung: D76)
+- **Gebaut:** das Zeilen-Diff als reine Funktionen (`de.werkbaum.diff` –
+  Anwenden, Berechnen, Rebasen, Prüfsumme) und die zweistufige Historie.
+- **Offen:** `PATCH /content` samt Rebase und Idempotenz, der Änderungsfeed per
+  Long Polling, Master-Passwort für `GET /documents`, Client-Anpassung.
+- `DocumentUpdateRequest.expectedVersion` ist im Vertrag vorgesehen, wird aber
+  noch nicht ausgewertet.
 
 **Clientseitige Verschlüsselung**
 - `content` ist ein opaker String, den der Server nie interpretiert. Der

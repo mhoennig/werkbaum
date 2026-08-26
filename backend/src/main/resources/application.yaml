@@ -18,5 +18,13 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.sql
 
+werkbaum:
+  live-editing:
+    # Schreibpause, nach der die letzte Version zum Meilenstein wird.
+    milestone-pause: 30s
+    # Danach wird eine Sync-Version verdichtet; der Feed antwortet auf ein so
+    # altes "since" dann mit Volltext statt mit einem Diff.
+    sync-retention: 1h
+
 server:
   port: 8080

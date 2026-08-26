@@ -127,11 +127,13 @@ paths:
       operationId: getDocumentHistory
       summary: Historie eines Dokuments abrufen
       description: >
-        Liefert alle Versionen eines Dokuments in chronologischer Reihenfolge.
-        Die Historie bleibt auch nach dem Loeschen des Dokuments erhalten.
+        Liefert die nutzersichtbaren Staende (Meilensteine) in chronologischer
+        Reihenfolge, dazu immer den juengsten Stand. Kurzlebige Sync-Versionen
+        des Live-Editings bleiben aussen vor. Die Historie ueberlebt das
+        Loeschen des Dokuments.
       responses:
         "200":
-          description: Historie des Dokuments (aelteste zuerst)
+          description: Meilensteine des Dokuments (aelteste zuerst)
           content:
             application/json:
               schema:
@@ -253,6 +255,10 @@ components:
           description: Optional; wird spaeter fuer Optimistic Locking ausgewertet.
 
     DocumentHistoryEntry:
+      description: >
+        Ein Stand der nutzersichtbaren Historie. Sync-Versionen des
+        Live-Editings erscheinen hier nicht - sie tragen das Protokoll, nicht
+        die Erzaehlung.
       type: object
       required: [documentId, version, title, content, changeType, timestamp]
       properties:
@@ -268,7 +274,11 @@ components:
           type: string
         changeType:
           type: string
-          enum: [CREATED, UPDATED, DELETED, RESTORED]
+          description: >
+            RESTORED heisst: ein geloeschtes Dokument ist wieder da.
+            ROLLED_BACK ist der Rueckfall eines lebenden Dokuments auf eine
+            aeltere Version.
+          enum: [CREATED, UPDATED, DELETED, RESTORED, ROLLED_BACK]
         timestamp:
           type: string
           format: date-time

@@ -26,3 +26,13 @@ CREATE TABLE document_history (
 --changeset editor:003-index-document-history
 CREATE INDEX idx_document_history_document_id ON document_history (document_id);
 --rollback DROP INDEX idx_document_history_document_id;
+
+--changeset editor:004-history-milestone
+-- Zwei Ebenen (D76): Meilensteine sind die nutzersichtbare Historie und
+-- bleiben; Sync-Versionen tragen die Diffs des Live-Editings und werden nach
+-- einer Weile verdichtet. Bestand ist Meilenstein - er stammt aus der Zeit
+-- ohne Live-Editing und ist durchweg nutzersichtbar.
+ALTER TABLE document_history ADD COLUMN milestone BOOLEAN DEFAULT TRUE NOT NULL;
+CREATE INDEX idx_document_history_version ON document_history (document_id, version);
+--rollback DROP INDEX idx_document_history_version;
+--rollback ALTER TABLE document_history DROP COLUMN milestone;
