@@ -6744,3 +6744,78 @@ Textfeld liegt mit dem Zahlenstreifen bündig (1151 + 20 px), die Zeilennummern
 sitzen auf ihren Höhen, Pfad und Stationen werden gezeichnet; der
 Legenden-Splitter teilt wie zuvor. 501 Tests (die 24 Pad-Adress-Tests sind mit
 `remote.js` gegangen, `padGone` ist dazugekommen).
+
+## D79 — Debounce auf 600 ms, Sync-Versionen nur noch fünf Minuten
+Gemeldet: „der Delay beim Live-Editing zwischen zwei Browsern ist ca. 3 s, das
+ist zu träge." Nachgemessen und zerlegt, statt am Gefühl zu drehen.
+
+**Die Wartezeit vor dem Senden IST die Verzögerung.** Der Weg A → B in Zahlen
+(lokal, Wanduhr beider Tabs):
+
+| Abschnitt | gemessen |
+|---|---|
+| Tippen → PATCH raus | 1666 ms |
+| PATCH-Rundlauf | 48 ms |
+| Feed-Antwort bei B | 9 ms danach |
+| Text steht bei B | 11 ms |
+
+Alles außer dem Debounce sind zusammen rund 70 ms. Zwei Verdächtige sind
+ausdrücklich **freigesprochen**: Der Server weckt den wartenden Feed **39 ms**
+nach dem PATCH (isoliert per curl gemessen, ohne Browser), und der Apache der
+produktiven Instanz hält den Long-Poll die vollen **25 s** durch und schließt
+sauber mit 204 — es gibt also kein Fenster ohne offenen Feed und keinen
+5-Sekunden-Fehlerpfad (`LIVE_RETRY_MS`). Produktiv kommen ~130 ms Rundlauf je
+Anfrage dazu (gemessen, TLS eingeschlossen), macht ≈ 1,8 s.
+
+Die gemeldeten 3 s liegen darüber, und der Rest steckt in der Wahrnehmung —
+das ist keine Ausrede, sondern eine **Eigenschaft des Debounce**: Die Uhr
+startet bei jedem Tastendruck neu. Gefühlt beginnt die Wartezeit, wenn der
+Gedanke fertig ist; gerechnet beim letzten Anschlag.
+
+**Entschieden (Nutzer): 600 ms, und es bleibt ein Debounce.** Erwogen war, aus
+dem Debounce eine **Drossel** zu machen (regelmäßig senden statt nur in der
+Pause) — verworfen: Wer durchtippt, soll weiterhin keine Version erzeugen. Der
+Grund, aus dem D76 bei 1,5 s blieb, trägt ohnehin nicht mehr: Er stammte aus
+der Rate-Limit-Disziplin des Etherpad-Konzepts, und Etherpad ist ausgebaut
+(D78).
+
+**Die zweite Hälfte ist die Aufbewahrung — und sie zahlt die erste.** Jede
+Version speichert den **ganzen** Text; Sync-Versionen lagen eine Stunde. Wofür
+ist die Frist überhaupt da? Für genau eines: ob ein zurückgefallener Client ein
+**Diff** bekommt oder den **Volltext**. Nutzersichtbar ist die Historie der
+**Meilensteine**, und die wird nie verdichtet. Wer einen offenen Feed hat,
+fällt gar nicht zurück — zurückfallen kann nur, wessen Feed **ruht**
+(Hintergrund-Tab, D76-Nachtrag 1). Fünf Minuten decken die kurze Abwesenheit
+ab, alles darüber bekommt anstandslos den Volltext.
+
+Zusammen **sinkt** der Platzbedarf, obwohl öfter gesendet wird — gerechnet mit
+dem mitgelieferten Plan (49 kB), Dauertippen als Spitze:
+
+| | Versionen/min | Frist | Spitze je Dokument |
+|---|---|---|---|
+| vorher | 40 | 60 min | **115 MB** |
+| nachher | 100 | 5 min | **24 MB** |
+
+Auf einem Host mit rund 300 MB frei (D76-Nachtrag 3) ist das der Unterschied,
+der zählt.
+
+**Dabei gefunden, und erst durch die kurze Frist gefährlich:** Eine Schreibpause
+**länger als die Aufbewahrungsfrist** war mit einer Stunde der Ausnahmefall und
+ist mit fünf Minuten der Normalfall. Dass die letzte Sync-Version davor
+trotzdem nicht verlorengeht, hängt an einer einzigen Sache — `recordHistory()`
+**befördert zuerst und verdichtet danach**. In der anderen Reihenfolge löschte
+die Verdichtung genau den Stand, den die Beförderung gleich zum Meilenstein
+gemacht hätte: ein nutzersichtbarer Stand wäre still weg. Die Reihenfolge war
+bisher nur eine Anordnung von Anweisungen; sie hat jetzt eine Zusicherung
+(`verifyOrder`). Gegenprobe: vertauscht fällt genau der danach benannte Test.
+
+**Werkzeuggrenze, die diese Messung fast verdorben hätte.** Der
+Automatisierungs-Browser zeigt seine Fläche nicht an, die Seite ist damit
+wirklich verborgen — und Chrome drosselt Timer verborgener Seiten auf **1 Hz**.
+Der `document.hidden`-Stub belügt die App, nicht den Scheduler. Nachgemessen:
+ein blanker `setTimeout(…, 600)` feuert dort nach 999–1053 ms. Ein
+Sub-Sekunden-Debounce ist in dieser Umgebung **grundsätzlich nicht messbar**;
+die 600 ms sind gesetzt, und was daneben liegt (Server 39 ms, Rundlauf 130 ms,
+PATCH → sichtbar 46 ms) ist einzeln gemessen. Dieselbe Lehre wie D25
+(synthetische `TouchEvent`s), D17-Nachtrag 4 (Bildschirmtastatur) und D53
+(synthetisches Strg+Z): Was die Umgebung stellt, stellt der Emulator nicht.

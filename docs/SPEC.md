@@ -783,7 +783,7 @@ Dokument-Adresse: `…?live=https://example.org/api/v1/documents/<uuid>`.
 Geschrieben wird **im Editor selbst**, und alle sehen die Änderungen der
 anderen, ohne neu zu laden.
 
-- **Das Textfeld bleibt beschreibbar.** Nach kurzer Ruhe (1,5 s) schickt der
+- **Das Textfeld bleibt beschreibbar.** Nach kurzer Ruhe (0,6 s) schickt der
   Editor die Änderung als Zeilen-Diff; ein offener Abruf hält die Gegenrichtung
   bereit und spielt fremde Änderungen ein. Die **Schreibmarke wandert mit** —
   fügt jemand oberhalb Zeilen ein, bleibt sie an ihrer Stelle im Text.

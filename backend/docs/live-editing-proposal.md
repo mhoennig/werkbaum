@@ -301,8 +301,9 @@ Diff-Format und Konfliktlogik bleiben identisch.
 
 ### Historie in zwei Ebenen
 
-Mit 1,5 s Debounce wird die Historie sonst zum Transaktionslog: hunderte
-Volltext-Snapshots eines 40-kB-Dokuments je Sitzung. Getrennt werden deshalb:
+Ohne Trennung wird die Historie zum Transaktionslog: hunderte
+Volltext-Snapshots eines 50-kB-Dokuments je Sitzung — bei 0,6 s Debounce (D79)
+bis zu 100 je Minute Tippen. Getrennt werden deshalb:
 
 - **Sync-Versionen** — tragen das Protokoll (Diffs zwischen beliebigen
   Versionen), kurzlebig, werden nach einer Weile verdichtet. Danach

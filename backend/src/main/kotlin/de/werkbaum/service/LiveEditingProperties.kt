@@ -20,8 +20,16 @@ data class LiveEditingProperties(
     /**
      * Wie lange Sync-Versionen aufgehoben werden. Danach beantwortet der Feed
      * ein so altes `since` mit Volltext statt mit einem Diff.
+     *
+     * **Das ist die einzige Aufgabe des Werts** – nutzersichtbar ist die
+     * Historie der Meilensteine, und die wird nie verdichtet. Wer einen
+     * offenen Feed hat, fällt gar nicht zurück; zurückfallen kann nur, wessen
+     * Feed **ruht** (Hintergrund-Tab, D76-Nachtrag 1) oder gerade neu
+     * ansetzt. Fünf Minuten decken die kurze Abwesenheit ab, alles darüber
+     * bekommt anstandslos den Volltext. Länger aufzuheben kostet dagegen
+     * echten Platz: Jede Version speichert den **ganzen** Text (D79).
      */
-    val syncRetention: Duration = Duration.ofHours(1),
+    val syncRetention: Duration = Duration.ofMinutes(5),
 
     /**
      * Höchstzahl der Operationen je Anfrage. Ohne Grenze ist ein einzelner

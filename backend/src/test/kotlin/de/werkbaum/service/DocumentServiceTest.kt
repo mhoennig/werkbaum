@@ -12,6 +12,7 @@ import io.mockk.mockk
 import io.mockk.CapturingSlot
 import io.mockk.slot
 import io.mockk.verify
+import io.mockk.verifyOrder
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Duration
@@ -213,6 +214,37 @@ class DocumentServiceTest {
         service.update(doc.id, "T", "C", milestone = false)
 
         verify(exactly = 0) { historyRepository.promoteToMilestone(any(), any()) }
+    }
+
+    /**
+     * Eine Schreibpause, die **länger ist als die Aufbewahrungsfrist**, war mit
+     * einer Stunde Frist der Ausnahmefall und ist mit fünf Minuten der
+     * Normalfall (D79). Dass die letzte Sync-Version davor trotzdem nicht
+     * verlorengeht, hängt an einer einzigen Sache: `recordHistory` **befördert
+     * zuerst und verdichtet danach**. In der anderen Reihenfolge löschte die
+     * Verdichtung genau den Stand, den die Beförderung gleich zum Meilenstein
+     * gemacht hätte — ein nutzersichtbarer Stand wäre still weg.
+     */
+    @Test
+    fun `nach einer Pause laenger als die Frist wird zuerst befoerdert, dann verdichtet`() {
+        val kurz = LiveEditingProperties(
+            milestonePause = Duration.ofSeconds(30),
+            syncRetention = Duration.ofMinutes(5),
+        )
+        val dienst = DocumentService(repository, historyRepository, clock, kurz, notifier)
+        val doc = sampleDocument(version = 5)
+        every { repository.findById(doc.id) } returns doc
+        every { repository.save(any()) } answers { firstArg() }
+        every { historyRepository.findLatest(doc.id) } returns
+            historyEntry(doc.id, 5, ChangeType.UPDATED, milestone = false)
+
+        clock.moment = clock.moment.plusSeconds(600)   // zehn Minuten Pause
+        dienst.update(doc.id, "T", "C", milestone = false)
+
+        verifyOrder {
+            historyRepository.promoteToMilestone(doc.id, 5)
+            historyRepository.compact(doc.id, OffsetDateTime.now(clock).minusMinutes(5))
+        }
     }
 
     @Test

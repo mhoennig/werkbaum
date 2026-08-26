@@ -97,7 +97,7 @@ server"**: it uploads the active plan, switches to it, and puts the link in the
 address bar and on your clipboard. Share that link — the address is the
 invitation, and knowing it is what grants access.
 
-The text area stays **writable**. After 1.5 s of quiet the editor sends the
+The text area stays **writable**. After 0.6 s of quiet the editor sends the
 change as a line diff; an open request holds the other direction ready and plays
 foreign changes in. **The caret travels with them** — if someone inserts lines
 above you, it stays where it was in the text.

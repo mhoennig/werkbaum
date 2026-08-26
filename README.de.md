@@ -102,7 +102,7 @@ Dokumenten-Menü: Er lädt den aktiven Plan hoch, schaltet dorthin um und schrei
 den Link in die Adresszeile und in die Zwischenablage. Diesen Link weitergeben —
 die Adresse ist die Einladung, und wer sie kennt, kommt hinein.
 
-**Das Textfeld bleibt beschreibbar.** Nach 1,5 s Ruhe schickt der Editor die
+**Das Textfeld bleibt beschreibbar.** Nach 0,6 s Ruhe schickt der Editor die
 Änderung als Zeilen-Diff; ein offener Abruf hält die Gegenrichtung bereit und
 spielt fremde Änderungen ein. **Die Schreibmarke wandert mit** — fügt jemand
 oberhalb Zeilen ein, bleibt sie an ihrer Stelle im Text.

@@ -117,7 +117,8 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
 - **Server-Dokumente (`?live=`, D76):** `live.js` hält die entscheidbare Hälfte
   (Adressen, Zeilen-Diff, Rebasen, Cursor-Rechnung, Feed-Regel), `app.js` die
   Verdrahtung: `loadLive()` holt Text und Version und merkt beides als
-  **Schattenkopie**, `scheduleLivePush()` schickt nach 1,5 s Ruhe das Diff,
+  **Schattenkopie**, `scheduleLivePush()` schickt nach 0,6 s Ruhe das Diff
+  (D79 — die Wartezeit IST die gefuehlte Verzoegerung),
   `runFeed()` hält einen Abruf offen (nur im sichtbaren Tab), `putOnServer()`
   legt das aktive Dokument an („Auf den Server legen"). Die Basis-Adresse
   bestimmt `serverBase()` (live.js): `?server=` vor dem offenen Dokument vor

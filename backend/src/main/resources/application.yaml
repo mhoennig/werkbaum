@@ -35,8 +35,11 @@ werkbaum:
     # Schreibpause, nach der die letzte Version zum Meilenstein wird.
     milestone-pause: 30s
     # Danach wird eine Sync-Version verdichtet; der Feed antwortet auf ein so
-    # altes "since" dann mit Volltext statt mit einem Diff.
-    sync-retention: 1h
+    # altes "since" dann mit Volltext statt mit einem Diff. Nutzersichtbar ist
+    # die Historie der Meilensteine - die bleibt unberuehrt. Zurueckfallen kann
+    # nur ein ruhender Feed (Hintergrund-Tab); fuenf Minuten decken die kurze
+    # Abwesenheit ab, und jede Version kostet den ganzen Text (D79).
+    sync-retention: 5m
     # Obergrenze fuers Warten am Feed. Gemessen: Apache auf der Zielumgebung
     # haelt einen Long-Poll 30 s durch, seine Zeitgrenzen liegen bei 300 s.
     max-wait: 25s

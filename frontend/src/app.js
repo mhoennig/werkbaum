@@ -4316,7 +4316,7 @@ async function loadRemoteSource(){
    wirklich, entscheidet der Mensch (Konflikt-Band unten). Alles andere
    verschiebt der Server selbst. */
 const LIVE_PARAM = 'live';
-const LIVE_DEBOUNCE_MS = 1500;   /* Ruhe vor dem Senden; D76 */
+const LIVE_DEBOUNCE_MS = 600;    /* Ruhe vor dem Senden; D76, D79 */
 const LIVE_WAIT_S = 25;          /* Wartezeit des Feeds; der Server klemmt sie ohnehin */
 const LIVE_RETRY_MS = 5000;      /* nach einem Netzfehler, bevor der Feed erneut fragt */
 
@@ -4423,9 +4423,14 @@ function adoptLive(doc){
 
 /* ---------- Hinschicken ---------- */
 
-/* Nach jeder Eingabe neu gestartet: Gesendet wird erst, wenn 1,5 s Ruhe ist.
-   Ohne den Takt entstünde je Tastendruck eine Version — die Historie wäre ein
-   Transaktionslog, und das Netz hätte zu tun. */
+/* Nach jeder Eingabe neu gestartet: Gesendet wird erst, wenn es 600 ms ruhig
+   ist. Ohne den Takt entstünde je Tastendruck eine Version — die Historie wäre
+   ein Transaktionslog, und das Netz hätte zu tun.
+
+   Die Wartezeit **ist** die gefühlte Verzögerung: Gemessen braucht der Weg vom
+   Tastendruck bis zum Text des anderen 1,73 s, davon 1,67 s hier — der Server
+   weckt den wartenden Feed 39 ms nach dem PATCH (D79). Sie bleibt ein
+   Debounce, kein Takt: Wer durchtippt, erzeugt weiterhin keine Version. */
 function scheduleLivePush(){
   if(!liveActive() || liveConflict) return;
   if(liveState.pushTimer) clearTimeout(liveState.pushTimer);
