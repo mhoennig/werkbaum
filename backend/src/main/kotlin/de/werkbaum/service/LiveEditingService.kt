@@ -2,10 +2,14 @@ package de.werkbaum.service
 
 import de.werkbaum.diff.DiffNotApplicableException
 import de.werkbaum.diff.LineDiff
+import de.werkbaum.domain.ChangeEvent
+import de.werkbaum.domain.ChangeFeed
 import de.werkbaum.domain.ContentPatch
 import de.werkbaum.domain.ContentPatchOutcome
+import de.werkbaum.domain.DocumentHistoryEntry
 import de.werkbaum.repository.DocumentHistoryRepository
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.util.UUID
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -32,6 +36,7 @@ class LiveEditingService(
     private val documents: DocumentService,
     private val history: DocumentHistoryRepository,
     private val properties: LiveEditingProperties,
+    private val notifier: ChangeNotifier,
 ) {
 
     /**
@@ -121,6 +126,66 @@ class LiveEditingService(
                 "Basisversion $baseVersion ist nicht mehr verfügbar (verdichtet)"
             )
     }
+
+    // -----------------------------------------------------------------------
+    // Änderungsfeed
+    // -----------------------------------------------------------------------
+
+    /**
+     * Alles seit [since] – oder `null`, wenn innerhalb von [wait] nichts
+     * passiert (im Protokoll: 204).
+     *
+     * Der Feed arbeitet auf der **Historie**, nicht am Dokument: `delete()`
+     * entfernt das Dokument und lässt nur den Tombstone stehen – ein Feed am
+     * Dokument müsste danach 404 liefern, ausgerechnet für das
+     * DELETED-Ereignis, das er zustellen soll. 404 gibt es deshalb nur bei
+     * gänzlich unbekannter UUID.
+     */
+    fun changesSince(documentId: UUID, since: Long, wait: Duration): ChangeFeed? {
+        if (!history.exists(documentId)) throw DocumentNotFoundException(documentId)
+
+        // Den Stempel VOR dem Nachsehen lesen: Ändert sich in der Lücke
+        // dazwischen etwas, kehrt das Warten unten sofort zurück.
+        val stamp = notifier.stampOf(documentId)
+        feedSince(documentId, since)?.let { return it }
+
+        val timeout = minOf(wait, properties.maxWait)
+        if (timeout.isNegative || timeout.isZero) return null
+        if (!notifier.awaitChange(documentId, stamp, timeout)) return null
+
+        return feedSince(documentId, since)
+    }
+
+    private fun feedSince(documentId: UUID, since: Long): ChangeFeed? {
+        val latest = history.findLatest(documentId) ?: return null
+        if (latest.version <= since) return null
+
+        val events = history.findAfterVersion(documentId, since).map { it.toEvent() }
+        val base = history.findVersion(documentId, since)?.content
+
+        // Ohne Basis kein exaktes Diff - dann der Volltext. Das deckt den
+        // Nachzügler nach dem Verdichten ebenso ab wie den Erstkontakt
+        // (since = 0) und die PWA nach langer Offline-Zeit.
+        return if (base == null) {
+            ChangeFeed(
+                fromVersion = null,
+                currentVersion = latest.version,
+                ops = null,
+                content = latest.content,
+                events = events,
+            )
+        } else {
+            ChangeFeed(
+                fromVersion = since,
+                currentVersion = latest.version,
+                ops = LineDiff.compute(LineDiff.lines(base), LineDiff.lines(latest.content)),
+                content = null,
+                events = events,
+            )
+        }
+    }
+
+    private fun DocumentHistoryEntry.toEvent() = ChangeEvent(version, changeType, author)
 
     private fun lockFor(documentId: UUID): ReentrantLock =
         stripes[Math.floorMod(documentId.hashCode(), stripes.size)]

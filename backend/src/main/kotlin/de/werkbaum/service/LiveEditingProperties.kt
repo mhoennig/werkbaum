@@ -31,4 +31,12 @@ data class LiveEditingProperties(
 
     /** Höchstlänge des Dokuments in Zeichen; der mitgelieferte Plan hat ~40 000. */
     val maxContentLength: Int = 2_000_000,
+
+    /**
+     * Obergrenze für das Warten am Änderungsfeed. Ein Client darf keine
+     * beliebig lange Verbindung binden. 25 s sind gemessen: Apache auf der
+     * Zielumgebung hält einen Long-Poll nachweislich 30 s durch, seine
+     * Zeitgrenzen liegen bei 300 s (D76-Nachtrag 1/2).
+     */
+    val maxWait: Duration = Duration.ofSeconds(25),
 )

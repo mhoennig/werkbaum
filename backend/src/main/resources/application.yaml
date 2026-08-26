@@ -18,6 +18,14 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.sql
 
+  threads:
+    virtual:
+      # Der Aenderungsfeed blockiert seinen Thread, bis sich etwas tut
+      # (Long Polling). Auf einem virtuellen Thread kostet das Warten fast
+      # nichts - ein Plattform-Thread je Beobachter waere ein Megabyte Stack
+      # auf einem Host, dessen knappe Groesse der Speicher ist (D76).
+      enabled: true
+
 werkbaum:
   live-editing:
     # Schreibpause, nach der die letzte Version zum Meilenstein wird.
@@ -25,6 +33,9 @@ werkbaum:
     # Danach wird eine Sync-Version verdichtet; der Feed antwortet auf ein so
     # altes "since" dann mit Volltext statt mit einem Diff.
     sync-retention: 1h
+    # Obergrenze fuers Warten am Feed. Gemessen: Apache auf der Zielumgebung
+    # haelt einen Long-Poll 30 s durch, seine Zeitgrenzen liegen bei 300 s.
+    max-wait: 25s
 
 server:
   port: 8080

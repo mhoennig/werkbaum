@@ -6114,3 +6114,49 @@ Zahlen: 104 Tests. Gegenproben je Regel — Prüfsumme nicht geprüft, Idempoten
 entfernt, veraltete Basis abgelehnt statt verschoben, Schreibpause ignoriert,
 Rückfall wieder als `RESTORED`, jüngster Stand aus der Historie genommen: Es
 fallen jeweils genau die danach benannten Zusicherungen.
+
+**Nachtrag 5 — Long Polling blockiert, aber auf einem virtuellen Thread
+(2026-08-26).** Der Haupttext sah `DeferredResult` vor, damit ein Wartender
+keinen Server-Thread bindet. Beim Bauen stellte sich das als teurer heraus,
+als es klingt: Der Endpunkt steht in der OpenAPI-Spezifikation, und der
+Generator erzeugt daraus eine **synchrone** Signatur
+(`ResponseEntity<ChangeFeed>`). Ein `DeferredResult` verlangt eine andere —
+also entweder die Operation aus der Generierung herausnehmen (dann prüft
+niemand mehr, ob Vertrag und Code zusammenpassen; genau die Zusage, für die
+API-First in diesem Projekt gebaut ist) oder den Generator umstellen (WebFlux
+für alles).
+
+**Gewählt: blockieren, und `spring.threads.virtual.enabled=true`.** Auf JDK 21
+kostet ein wartender virtueller Thread praktisch nichts — kein Stack von einem
+Megabyte, keine Poolgrenze. Das Argument gegen das Blockieren war der
+Speicher, und der ist auf der Zielumgebung tatsächlich die knappe Größe
+(D76-Nachtrag 3); genau dort löst der virtuelle Thread es auf, statt es zu
+verschieben. Der Endpunkt behält die generierte Signatur, und für ihn gilt
+dieselbe Regel wie für alle anderen: Weicht die Implementierung vom Vertrag
+ab, bricht der Compile.
+
+**Zwei Dinge, die daran hängen und leicht zu übersehen sind.** Erstens darf
+das Warten nicht mit `synchronized`/`wait()` gebaut sein — ein Monitor nagelt
+den virtuellen Thread an seinen Träger (JDK 21). Der `ChangeNotifier` benutzt
+deshalb `ReentrantLock`/`Condition`. Zweitens darf **während** des Wartens
+keine Transaktion und keine Datenbankverbindung offen sein; der
+`LiveEditingService` ist ohnehin nicht transaktional und liest über je eigene
+Aufrufe.
+
+**Geweckt wird nach dem Commit, nicht davor** (`afterCommit` der
+Transaktions-Synchronisation). Davor geweckt läse ein Beobachter einen Stand,
+der noch nicht steht — und bekäme das Ereignis nie wieder, denn er zieht
+danach mit der neuen Version weiter.
+
+**Der Stempel statt der Versionsnummer.** Der Aufrufer liest den Stempel des
+Dokuments, **bevor** er in der Datenbank nachsieht. Ändert sich etwas in der
+Lücke dazwischen, kehrt das Warten sofort zurück. Ohne diesen Griff ginge das
+Signal verloren und der Client bekäme seine Änderung erst nach Ablauf der
+vollen Wartezeit — ein Fehler, der im Test nur auffällt, wenn man die **Dauer**
+misst. Das Cucumber-Szenario tut das (< 4 s bei 5 s Wartezeit); gegengeprüft
+durch Entfernen der Benachrichtigung, dann fällt genau dieses Szenario.
+
+**`RENAMED` ist noch nicht vergeben.** Der Feed kennt `CREATED`, `UPDATED`,
+`DELETED`, `RESTORED` und `ROLLED_BACK`. Das Umbenennen bekommt seinen eigenen
+Weg (`PATCH /title` mit `expectedVersion`) und erst damit den Typ — ihn vorher
+zu deklarieren wäre eine Zusage ohne Deckung.

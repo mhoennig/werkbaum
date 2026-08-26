@@ -1,6 +1,7 @@
 package de.werkbaum.bdd
 
 import de.werkbaum.diff.LineDiff
+import de.werkbaum.generated.model.ChangeFeed
 import de.werkbaum.generated.model.ContentConflict
 import de.werkbaum.generated.model.ContentPatchResult
 import de.werkbaum.generated.model.Document as ApiDocument
@@ -12,11 +13,14 @@ import io.cucumber.java.de.Und
 import io.cucumber.java.de.Wenn
 import io.kotest.assertions.withClue
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.client.EntityExchangeResult
 import org.springframework.test.web.servlet.client.RestTestClient
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 
 /**
  * Behavior-Tests des Live-Editings (D76) gegen die laufende Anwendung.
@@ -37,6 +41,10 @@ class LiveEditingStepDefinitions {
 
     private var lastResponse: EntityExchangeResult<String>? = null
     private var lastRequestBody: String? = null
+
+    /** Ein Feed-Abruf, der im Hintergrund wartet – für Long Polling. */
+    private var pendingFeed: CompletableFuture<EntityExchangeResult<String>>? = null
+    private var feedStartedAt: Long = 0
 
     private fun status(): Int? = lastResponse?.status?.value()
 
@@ -79,7 +87,8 @@ class LiveEditingStepDefinitions {
         seq: Long = 1,
     ) = """
         {"baseVersion":$baseVersion,"checksum":${json(checksum)},
-         "clientId":${json(clientId)},"seq":$seq,"ops":$ops}
+         "clientId":${json(clientId)},"displayName":${json(clientId)},
+         "seq":$seq,"ops":$ops}
     """.trimIndent()
 
     private fun baseOf(clientId: String): Pair<Long, String> =
@@ -115,6 +124,17 @@ class LiveEditingStepDefinitions {
             .status.value() shouldBe 204
     }
 
+    @Angenommen("dieses Dokument wiederhergestellt wird")
+    fun `dieses Dokument wird wiederhergestellt`() {
+        client.post()
+            .uri("/api/v1/documents/$documentId/restore")
+            .contentType(MediaType.APPLICATION_JSON)
+            .body("{}")
+            .exchange()
+            .returnResult(String::class.java)
+            .status.value() shouldBe 200
+    }
+
     // ---------------- Wenn ----------------
 
     @Wenn("Client {string} folgendes Diff einreicht:")
@@ -133,6 +153,86 @@ class LiveEditingStepDefinitions {
     fun `dieselbe Anfrage noch einmal`() {
         sendPatch(lastRequestBody.shouldNotBeNull())
     }
+
+    // ---------------- Änderungsfeed ----------------
+
+    @Wenn("ich die Änderungen seit Version {long} abrufe")
+    fun `ich rufe die Aenderungen ab`(since: Long) {
+        lastResponse = feedRequest(since, wait = 0)
+    }
+
+    @Wenn("ich höchstens {int} Sekunden auf Änderungen seit Version {long} warte")
+    fun `ich warte auf Aenderungen`(sekunden: Int, since: Long) {
+        lastResponse = feedRequest(since, wait = sekunden)
+    }
+
+    @Wenn("im Hintergrund auf Änderungen seit Version {long} gewartet wird")
+    fun `im Hintergrund wird gewartet`(since: Long) {
+        feedStartedAt = System.nanoTime()
+        pendingFeed = CompletableFuture.supplyAsync { feedRequest(since, wait = 5) }
+        // Dem Abruf einen Moment geben, damit er wirklich wartet, statt die
+        // Aenderung schon vorzufinden - sonst prueft das Szenario nichts.
+        Thread.sleep(300)
+    }
+
+    @Dann("hat der wartende Abruf die Änderung erhalten")
+    fun `der wartende Abruf hat die Aenderung erhalten`() {
+        val response = pendingFeed.shouldNotBeNull().get(10, TimeUnit.SECONDS)
+        val dauer = (System.nanoTime() - feedStartedAt) / 1_000_000
+        withClue("Antwort: ${response.responseBody}") { response.status.value() shouldBe 200 }
+        withClue("Der Abruf hat $dauer ms gebraucht - er wurde nicht geweckt, sondern lief ab") {
+            (dauer < 4_000) shouldBe true
+        }
+        lastResponse = response
+    }
+
+    @Und("der Feed meldet die Version {long}")
+    fun `der Feed meldet die Version`(erwartet: Long) {
+        lastBody<ChangeFeed>().currentVersion shouldBe erwartet
+    }
+
+    @Und("der Feed liefert {int} Operationen ab Version {long}")
+    fun `der Feed liefert n Operationen`(anzahl: Int, from: Long) {
+        val feed = lastBody<ChangeFeed>()
+        feed.fromVersion shouldBe from
+        feed.ops.shouldNotBeNull().size shouldBe anzahl
+    }
+
+    @Und("der Feed liefert den Volltext:")
+    fun `der Feed liefert den Volltext`(erwartet: String) {
+        val feed = lastBody<ChangeFeed>()
+        feed.fromVersion shouldBe null
+        feed.content shouldBe erwartet
+    }
+
+    @Und("der Feed meldet das Ereignis {string}")
+    fun `der Feed meldet das Ereignis`(typ: String) {
+        lastBody<ChangeFeed>().events.map { it.changeType.value } shouldContain typ
+    }
+
+    @Und("der Feed nennt als Absender {string}")
+    fun `der Feed nennt als Absender`(name: String) {
+        lastBody<ChangeFeed>().events.mapNotNull { it.displayName } shouldContain name
+    }
+
+    @Und("die Antwort verbietet das Zwischenspeichern")
+    fun `die Antwort verbietet das Zwischenspeichern`() {
+        lastResponse?.responseHeaders?.cacheControl shouldBe "no-store"
+    }
+
+    @Wenn("ich die Änderungen eines unbekannten Dokuments abrufe")
+    fun `ich rufe die Aenderungen eines unbekannten Dokuments ab`() {
+        lastResponse = client.get()
+            .uri("/api/v1/documents/00000000-0000-0000-0000-000000000000/changes?since=0&wait=0")
+            .exchange()
+            .returnResult(String::class.java)
+    }
+
+    private fun feedRequest(since: Long, wait: Int): EntityExchangeResult<String> =
+        client.get()
+            .uri("/api/v1/documents/$documentId/changes?since=$since&wait=$wait")
+            .exchange()
+            .returnResult(String::class.java)
 
     // ---------------- Dann / Und ----------------
 

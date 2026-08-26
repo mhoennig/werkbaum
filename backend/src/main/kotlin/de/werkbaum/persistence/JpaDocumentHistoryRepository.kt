@@ -28,6 +28,9 @@ class JpaDocumentHistoryRepository(
 
     override fun maxVersion(documentId: UUID): Long? = jpa.maxVersion(documentId)
 
+    override fun findAfterVersion(documentId: UUID, version: Long): List<DocumentHistoryEntry> =
+        jpa.findByDocumentIdAndVersionGreaterThanOrderByIdAsc(documentId, version).map { it.toDomain() }
+
     override fun findMilestones(documentId: UUID): List<DocumentHistoryEntry> =
         jpa.findByDocumentIdAndMilestoneTrueOrderByIdAsc(documentId).map { it.toDomain() }
 

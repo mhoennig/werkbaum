@@ -8,6 +8,7 @@ import de.werkbaum.domain.ChangeType
 import de.werkbaum.domain.ContentPatch
 import de.werkbaum.domain.ContentPatchOutcome
 import de.werkbaum.domain.Document
+import de.werkbaum.domain.ChangeEvent
 import de.werkbaum.domain.DocumentHistoryEntry
 import de.werkbaum.repository.DocumentHistoryRepository
 import io.kotest.assertions.throwables.shouldThrow
@@ -17,6 +18,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import java.time.Duration
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -25,8 +27,13 @@ class LiveEditingServiceTest {
     private val id = UUID.randomUUID()
     private val documents = mockk<DocumentService>()
     private val history = mockk<DocumentHistoryRepository>(relaxed = true)
-    private val properties = LiveEditingProperties(maxOps = 3, maxContentLength = 40)
-    private val service = LiveEditingService(documents, history, properties)
+    private val properties = LiveEditingProperties(
+        maxOps = 3,
+        maxContentLength = 40,
+        maxWait = Duration.ofMillis(200),
+    )
+    private val notifier = ChangeNotifier()
+    private val service = LiveEditingService(documents, history, properties, notifier)
 
     private val basis = "eins\nzwei\ndrei"
 
@@ -240,6 +247,104 @@ class LiveEditingServiceTest {
             service.patchContent(id, patch(ops = listOf(LineOp.Insert(0, listOf("x".repeat(60))))))
         }
         verify(exactly = 0) { documents.update(any(), any(), any(), any(), any()) }
+    }
+
+    // -----------------------------------------------------------------------
+    // Änderungsfeed
+    // -----------------------------------------------------------------------
+
+    @Test
+    fun `ohne Aenderung liefert der Feed nichts`() {
+        every { history.exists(id) } returns true
+        every { history.findLatest(id) } returns historyEntry(basis, 7)
+
+        service.changesSince(id, since = 7, wait = Duration.ZERO) shouldBe null
+    }
+
+    @Test
+    fun `der Feed liefert das kumulierte Diff seit der bekannten Version`() {
+        every { history.exists(id) } returns true
+        every { history.findLatest(id) } returns historyEntry("eins\nZWEI\ndrei", 9)
+        every { history.findVersion(id, 7) } returns historyEntry(basis, 7)
+        every { history.findAfterVersion(id, 7) } returns listOf(
+            historyEntry("eins\nzwischendrin\ndrei", 8),
+            historyEntry("eins\nZWEI\ndrei", 9),
+        )
+
+        val feed = service.changesSince(id, since = 7, wait = Duration.ZERO)!!
+
+        feed.fromVersion shouldBe 7
+        feed.currentVersion shouldBe 9
+        feed.ops shouldBe listOf(LineOp.Replace(1, 1, listOf("ZWEI")))
+        feed.content shouldBe null
+        feed.events.map { it.version } shouldBe listOf(8L, 9L)
+    }
+
+    @Test
+    fun `eine verdichtete Basis liefert den Volltext statt eines Diffs`() {
+        every { history.exists(id) } returns true
+        every { history.findLatest(id) } returns historyEntry("neu", 9)
+        every { history.findVersion(id, 2) } returns null
+        every { history.findAfterVersion(id, 2) } returns emptyList()
+
+        val feed = service.changesSince(id, since = 2, wait = Duration.ZERO)!!
+
+        feed.fromVersion shouldBe null
+        feed.ops shouldBe null
+        feed.content shouldBe "neu"
+    }
+
+    @Test
+    fun `der Feed nennt den Absender jeder Aenderung`() {
+        every { history.exists(id) } returns true
+        every { history.findLatest(id) } returns historyEntry("neu", 8)
+        every { history.findVersion(id, 7) } returns historyEntry(basis, 7)
+        every { history.findAfterVersion(id, 7) } returns listOf(
+            historyEntry("neu", 8).copy(author = ChangeAuthor("c-1", "Anna")),
+        )
+
+        service.changesSince(id, since = 7, wait = Duration.ZERO)!!.events shouldBe listOf(
+            ChangeEvent(8, ChangeType.UPDATED, ChangeAuthor("c-1", "Anna")),
+        )
+    }
+
+    @Test
+    fun `ein geloeschtes Dokument hat weiterhin einen Feed`() {
+        // Sonst käme ausgerechnet das DELETED-Ereignis nie an.
+        every { history.exists(id) } returns true
+        every { history.findLatest(id) } returns
+            historyEntry(basis, 8).copy(changeType = ChangeType.DELETED)
+        every { history.findVersion(id, 7) } returns historyEntry(basis, 7)
+        every { history.findAfterVersion(id, 7) } returns listOf(
+            historyEntry(basis, 8).copy(changeType = ChangeType.DELETED),
+        )
+
+        val feed = service.changesSince(id, since = 7, wait = Duration.ZERO)!!
+
+        feed.events.single().changeType shouldBe ChangeType.DELETED
+    }
+
+    @Test
+    fun `eine gaenzlich unbekannte UUID hat keinen Feed`() {
+        every { history.exists(id) } returns false
+
+        shouldThrow<DocumentNotFoundException> {
+            service.changesSince(id, since = 0, wait = Duration.ZERO)
+        }
+    }
+
+    @Test
+    fun `die Wartezeit wird serverseitig geklemmt`() {
+        // maxWait steht in diesem Test auf 200 ms; ein Client darf keine
+        // beliebig lange Verbindung binden.
+        every { history.exists(id) } returns true
+        every { history.findLatest(id) } returns historyEntry(basis, 7)
+
+        val start = System.nanoTime()
+        service.changesSince(id, since = 7, wait = Duration.ofSeconds(30)) shouldBe null
+        val dauer = Duration.ofNanos(System.nanoTime() - start)
+
+        (dauer < Duration.ofSeconds(5)) shouldBe true
     }
 
     private fun historyEntry(content: String, version: Long) = DocumentHistoryEntry(

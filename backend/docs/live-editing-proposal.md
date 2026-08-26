@@ -1,8 +1,9 @@
 # Live-Editing über HTTP (Variante „Simpel")
 
-Status: **Konzept entschieden** (D76), **Schritte 1–3 der Umsetzungsreihenfolge
-gebaut** (Zeilen-Diff, zweistufige Historie, `PATCH /content`); der
-Änderungsfeed, das Master-Passwort und der Client stehen aus. Die offenen
+Status: **Konzept entschieden** (D76), **Schritte 1–4 der Umsetzungsreihenfolge
+gebaut** (Zeilen-Diff, zweistufige Historie, `PATCH /content`, Änderungsfeed);
+das Master-Passwort und der Client stehen aus, ebenso das Umbenennen per
+`PATCH /title` und damit das Ereignis `RENAMED`. Die offenen
 Punkte des ersten Entwurfs sind beantwortet; die Begründungen stehen in
 `docs/DECISIONS.md` unter D76 und werden hier nicht wiederholt, sondern nur
 verwiesen. Was beim Bauen zusätzlich zu entscheiden war, steht dort in
@@ -232,8 +233,10 @@ bekommen**, bevor die Warteliste verworfen wird.
   ~2,4 Requests/Minute im Leerlauf — rate-limit-freundlich, PWA-tauglich,
   kein WebSocket nötig.
 
-**Änderungstypen im Feed:** `UPDATED`, `DELETED`, `RESTORED`, `ROLLED_BACK`
-und `RENAMED` (dieses mit dem neuen Titel im Klartext).
+**Änderungstypen im Feed:** `CREATED`, `UPDATED`, `DELETED`, `RESTORED`,
+`ROLLED_BACK` — und später `RENAMED` (mit dem neuen Titel im Klartext), sobald
+es `PATCH /title` gibt; solange das fehlt, wäre der Typ eine Zusage ohne
+Deckung.
 
 - **`RESTORED` heißt ausschließlich: ein gelöschtes Dokument ist wieder da** —
   der Client hebt seine Sperre auf.
@@ -277,12 +280,16 @@ Diff-Format und Konfliktlogik bleiben identisch.
   Snapshots (Myers oder eine einfache LCS-Implementierung).
 - **Rebase** (siehe PATCH): Ops einer veralteten Basis gegen die
   zwischenzeitlichen verschieben, sofern sie sich nicht überschneiden.
-- **Long Polling**: Spring MVC `DeferredResult` + ein In-Process-Notifier
-  (pro Dokument eine Warteliste; Zustellung bei akzeptiertem Update **und**
-  beim Löschen). Kein zusätzliches Framework nötig. **Das setzt eine
-  Einzelinstanz voraus** — hinter einem Load Balancer erführe ein Beobachter
-  auf der zweiten Instanz nichts und liefe in den Timeout. Bewusste Annahme,
-  für die genannte Last angemessen.
+- **Long Polling**: ein In-Process-Notifier (Stempel je Dokument; Zustellung
+  bei akzeptiertem Update **und** beim Löschen) — die Anfrage **blockiert**
+  ihren Thread, und der ist ein **virtueller** (`spring.threads.virtual`).
+  Kein `DeferredResult`, kein zusätzliches Framework: Der Endpunkt behält
+  damit die synchrone Signatur, die die OpenAPI-Generierung erzeugt, und
+  API-First bleibt für ihn unangetastet (Begründung: D76-Nachtrag 5).
+  Geweckt wird **nach dem Commit**, nie davor. **Das setzt eine Einzelinstanz
+  voraus** — hinter einem Load Balancer erführe ein Beobachter auf der zweiten
+  Instanz nichts und liefe in den Timeout. Bewusste Annahme, für die genannte
+  Last angemessen.
 - **Serialisierung**: Updates pro Dokument strikt sequenziell
   (Locking pro Dokument-UUID), damit Prüfung, Rebase und Anwenden atomar sind.
 
@@ -402,9 +409,12 @@ verworfen.
   „derselbe PATCH zweimal gesendet ändert das Dokument nur einmal",
   „falsche Prüfsumme liefert 422", „Feed meldet DELETED und danach RESTORED",
   „zu altes since liefert Volltext", „Umbenennen erscheint als RENAMED".
-  Long Polling braucht dafür **Nebenläufigkeit im Test** (zwei Threads oder
-  asynchrones MockMvc) und einen klein konfigurierbaren `wait`-Wert — der
-  heutige synchrone `TestRestTemplate`-Stil allein reicht nicht.
+  Long Polling braucht dafür **Nebenläufigkeit im Test** und einen klein
+  konfigurierbaren `wait`-Wert (in den Tests 5 s). Umgesetzt als
+  Hintergrund-Abruf per `CompletableFuture`; das Szenario misst zusätzlich die
+  **Dauer** — ohne das bestünde es auch dann, wenn der Wartende gar nicht
+  geweckt würde, sondern bloß in den Timeout liefe und danach die Änderung
+  vorfände.
 - **Unit-Tests**: Diff-Anwendung (alle drei Ops, Randfälle: leeres Dokument,
   Anhängen, letzte Zeile), Diff-Berechnung, Index-Verschiebung, die
   Überlappungsregeln für `insert` (untereinander verträglich, mit `delete`
@@ -417,8 +427,8 @@ verworfen.
 2. ~~Historie in zwei Ebenen + gezielter Repository-Zugriff~~ — gebaut
 3. ~~`PATCH /content` inkl. Rebase, Idempotenz, Prüfsumme und 409 (Spec +
    Cucumber)~~ — gebaut, `LiveEditingService`
-4. `GET /changes` mit Long Polling, Volltext-Fall und Ereignistypen
-   (Spec + Cucumber)
+4. ~~`GET /changes` mit Long Polling, Volltext-Fall und Ereignistypen
+   (Spec + Cucumber)~~ — gebaut, `ChangeNotifier` + `LiveEditingService`
 5. Master-Passwort für `GET /documents` (Spring Security)
 6. Client-Anpassung (Feed-Schleife, lokales Anwenden, Konfliktdialog)
 

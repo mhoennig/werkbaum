@@ -244,6 +244,64 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
 
+  /documents/{documentId}/changes:
+    parameters:
+      - name: documentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Documents]
+      operationId: getDocumentChanges
+      summary: Aenderungsfeed (Long Polling)
+      description: >
+        Liefert alles, was seit `since` geschehen ist. Gibt es nichts, haelt
+        der Server die Anfrage bis zu `wait` Sekunden offen und antwortet
+        sofort, sobald eine Aenderung eintrifft; sonst 204.
+
+
+        Der Feed arbeitet auf der **Historie**, nicht am Dokument: Ein
+        geloeschtes Dokument muss sein DELETED-Ereignis noch zustellen koennen.
+        404 gibt es deshalb nur bei gaenzlich unbekannter UUID.
+
+
+        Ist `since` bereits verdichtet, kann kein exaktes Diff mehr geliefert
+        werden - dann enthaelt die Antwort statt `ops` den **Volltext**, und
+        `fromVersion` fehlt. Der Client ersetzt seinen Stand.
+      parameters:
+        - name: since
+          in: query
+          required: true
+          description: Zuletzt gesehene Version; 0 fuer "noch nichts".
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: wait
+          in: query
+          required: false
+          description: >
+            Wartezeit in Sekunden. Serverseitig geklemmt - ein Client darf
+            keine beliebig lange Verbindung binden.
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 25
+      responses:
+        "200":
+          description: Aenderungen seit `since`
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChangeFeed"
+        "204":
+          description: Nichts Neues innerhalb der Wartezeit
+        "404":
+          $ref: "#/components/responses/NotFound"
+
 components:
   responses:
     NotFound:
@@ -447,6 +505,54 @@ components:
           description: Diff von der eingereichten Basis bis zur aktuellen Version.
           items:
             $ref: "#/components/schemas/LineOperation"
+
+    ChangeEvent:
+      description: Was an einer Version geschehen ist und wer sie eingereicht hat.
+      type: object
+      required: [version, changeType]
+      properties:
+        version:
+          type: integer
+          format: int64
+        changeType:
+          type: string
+          enum: [CREATED, UPDATED, DELETED, RESTORED, ROLLED_BACK]
+        clientId:
+          type: string
+          description: Fehlt bei Aenderungen ohne Absender (etwa ueber PUT).
+        displayName:
+          type: string
+          description: >
+            Selbstgewaehlt und ohne Anmeldung eine Behauptung - in der
+            Oberflaeche nicht wie ein Nachweis darstellen.
+
+    ChangeFeed:
+      type: object
+      required: [currentVersion, events]
+      properties:
+        fromVersion:
+          type: integer
+          format: int64
+          description: >
+            Basis des mitgelieferten Diffs. Fehlt, wenn stattdessen `content`
+            geliefert wird.
+        currentVersion:
+          type: integer
+          format: int64
+        ops:
+          type: array
+          description: Kumuliertes Diff von `fromVersion` bis `currentVersion`.
+          items:
+            $ref: "#/components/schemas/LineOperation"
+        content:
+          type: string
+          description: >
+            Volltext statt Diff - wenn `since` bereits verdichtet ist oder der
+            Client noch gar nichts hat (`since=0`).
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChangeEvent"
 
     ProblemDetail:
       type: object

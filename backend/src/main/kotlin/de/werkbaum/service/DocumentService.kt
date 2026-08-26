@@ -8,6 +8,8 @@ import de.werkbaum.repository.DocumentHistoryRepository
 import de.werkbaum.repository.DocumentRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionSynchronization
+import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.time.Clock
 import java.time.Duration
 import java.time.OffsetDateTime
@@ -20,6 +22,7 @@ class DocumentService(
     private val historyRepository: DocumentHistoryRepository,
     private val clock: Clock,
     private val properties: LiveEditingProperties,
+    private val notifier: ChangeNotifier,
 ) {
 
     fun findAll(): List<Document> = repository.findAll()
@@ -202,6 +205,26 @@ class DocumentService(
         historyRepository.compact(
             document.id,
             document.updatedAt.minus(properties.syncRetention),
+        )
+
+        publishAfterCommit(document.id)
+    }
+
+    /**
+     * Weckt die Beobachter am Änderungsfeed – **nach** dem Commit. Vorher
+     * geweckt läse ein Beobachter einen Stand, der noch nicht steht, und
+     * bekäme das Ereignis nie wieder. Ohne laufende Transaktion (Tests) wird
+     * sofort gemeldet.
+     */
+    private fun publishAfterCommit(documentId: UUID) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            notifier.published(documentId)
+            return
+        }
+        TransactionSynchronizationManager.registerSynchronization(
+            object : TransactionSynchronization {
+                override fun afterCommit() = notifier.published(documentId)
+            }
         )
     }
 

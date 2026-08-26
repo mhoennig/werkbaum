@@ -24,6 +24,11 @@ interface DocumentHistoryJpaRepository : JpaRepository<DocumentHistoryEntity, Lo
 
     fun findByDocumentIdAndMilestoneTrueOrderByIdAsc(documentId: UUID): List<DocumentHistoryEntity>
 
+    fun findByDocumentIdAndVersionGreaterThanOrderByIdAsc(
+        documentId: UUID,
+        version: Long,
+    ): List<DocumentHistoryEntity>
+
     @Query("select max(e.version) from DocumentHistoryEntity e where e.documentId = :documentId")
     fun maxVersion(@Param("documentId") documentId: UUID): Long?
 

@@ -7,10 +7,10 @@ Status-Sync), später Tenzu-Adapter.
 **Stand:** Gerüst steht — Dokumenten-CRUD mit Historie und Wiederherstellung,
 API-First aus `src/main/resources/openapi/api.yaml`, H2 mit Liquibase.
 Kommandos in README.md hier. Live-Editing (D76,
-`docs/live-editing-proposal.md`) ist in Arbeit: Schritte 1–3 der Reihenfolge
+`docs/live-editing-proposal.md`) ist in Arbeit: Schritte 1–4 der Reihenfolge
 dort sind gebaut (Zeilen-Diff in `de.werkbaum.diff`, Historie in zwei Ebenen,
-`PATCH /content` im `LiveEditingService`), ab Schritt 4 (`GET /changes` per
-Long Polling) steht es aus.
+`PATCH /content` und der Änderungsfeed im `LiveEditingService`); offen sind
+`PATCH /title`, das Master-Passwort und der Client.
 
 ## Konventionen
 - Kotlin, **Spring Boot 4**, Gradle (Kotlin DSL), JDK 21.

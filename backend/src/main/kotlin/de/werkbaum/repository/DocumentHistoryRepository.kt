@@ -29,6 +29,9 @@ interface DocumentHistoryRepository {
     /** Höchste vergebene Versionsnummer, auch wenn deren Eintrag verdichtet wurde. */
     fun maxVersion(documentId: UUID): Long?
 
+    /** Alle Einträge mit einer Version größer [version], älteste zuerst. */
+    fun findAfterVersion(documentId: UUID, version: Long): List<DocumentHistoryEntry>
+
     /** Die nutzersichtbare Historie, älteste zuerst. */
     fun findMilestones(documentId: UUID): List<DocumentHistoryEntry>
 

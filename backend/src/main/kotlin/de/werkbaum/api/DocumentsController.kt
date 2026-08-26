@@ -2,6 +2,8 @@ package de.werkbaum.api
 
 import de.werkbaum.generated.api.DocumentsApi
 import de.werkbaum.generated.model.Document as ApiDocument
+import de.werkbaum.generated.model.ChangeEvent as ApiChangeEvent
+import de.werkbaum.generated.model.ChangeFeed as ApiChangeFeed
 import de.werkbaum.generated.model.ContentPatchRequest
 import de.werkbaum.generated.model.ContentPatchResult
 import de.werkbaum.generated.model.DocumentCreateRequest
@@ -9,15 +11,19 @@ import de.werkbaum.generated.model.DocumentHistoryEntry as ApiHistoryEntry
 import de.werkbaum.generated.model.DocumentUpdateRequest
 import de.werkbaum.generated.model.RestoreRequest
 import de.werkbaum.domain.ChangeAuthor
+import de.werkbaum.domain.ChangeEvent
+import de.werkbaum.domain.ChangeFeed
 import de.werkbaum.domain.ContentPatch
 import de.werkbaum.domain.Document
 import de.werkbaum.domain.DocumentHistoryEntry
 import de.werkbaum.service.DocumentService
 import de.werkbaum.service.LiveEditingService
+import org.springframework.http.CacheControl
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.time.Duration
 import java.util.UUID
 
 /**
@@ -89,6 +95,24 @@ class DocumentsController(
         )
     }
 
+    /**
+     * Long Polling: Der Server haelt die Anfrage offen, bis sich etwas tut.
+     *
+     * `no-store` ist Pflicht – ein Proxy duerfte sonst eine 204
+     * zwischenspeichern, und der Feed stuende still.
+     */
+    override fun getDocumentChanges(
+        documentId: UUID,
+        since: Long,
+        wait: Int,
+    ): ResponseEntity<ApiChangeFeed> {
+        val feed = liveEditing.changesSince(documentId, since, Duration.ofSeconds(wait.toLong()))
+        return ResponseEntity
+            .status(if (feed == null) HttpStatus.NO_CONTENT else HttpStatus.OK)
+            .cacheControl(CacheControl.noStore())
+            .body(feed?.toApi())
+    }
+
     override fun getDocumentHistory(documentId: UUID): ResponseEntity<List<ApiHistoryEntry>> =
         ResponseEntity.ok(service.history(documentId).map { it.toApi() })
 
@@ -107,6 +131,21 @@ class DocumentsController(
         version = version,
         createdAt = createdAt,
         updatedAt = updatedAt,
+    )
+
+    private fun ChangeFeed.toApi(): ApiChangeFeed = ApiChangeFeed(
+        currentVersion = currentVersion,
+        events = events.map { it.toApi() },
+        fromVersion = fromVersion,
+        ops = ops?.toApi(),
+        content = content,
+    )
+
+    private fun ChangeEvent.toApi(): ApiChangeEvent = ApiChangeEvent(
+        version = version,
+        changeType = ApiChangeEvent.ChangeType.valueOf(changeType.name),
+        clientId = author?.clientId,
+        displayName = author?.displayName,
     )
 
     private fun DocumentHistoryEntry.toApi(): ApiHistoryEntry = ApiHistoryEntry(

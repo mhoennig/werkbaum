@@ -133,6 +133,37 @@ Notation nicht (D14).
 Die Änderung eines Dokuments läuft strikt sequenziell (Sperre je UUID,
 **außerhalb** der Transaktion — innen gäbe der Proxy sie vor dem Commit frei).
 
+## Live-Editing: der Änderungsfeed
+
+`GET /api/v1/documents/{uuid}/changes?since={version}&wait={sekunden}` liefert
+alles, was seit `since` geschehen ist. Gibt es nichts, hält der Server die
+Anfrage offen und antwortet **sofort**, sobald eine Änderung eintrifft; sonst
+**204**, und der Client fragt erneut. Kosten im Leerlauf: eine offene Anfrage
+je Beobachter, rund 2,4 Requests pro Minute.
+
+- **Der Feed arbeitet auf der Historie, nicht am Dokument.** Ein gelöschtes
+  Dokument muss sein `DELETED` noch zustellen können — **404** gibt es deshalb
+  nur bei gänzlich unbekannter UUID.
+- **Ist `since` verdichtet** (oder `0`, also Erstkontakt), kommt statt `ops`
+  der **Volltext**; `fromVersion` fehlt dann. Ein Roundtrip und ein
+  Sonderzustand weniger als ein eigener Fehlerpfad — und über hunderte
+  Versionen hinweg wäre der Cursor ohnehin nicht zu retten.
+- **Ereignisse:** `CREATED`, `UPDATED`, `DELETED`, `RESTORED`, `ROLLED_BACK`,
+  je mit `clientId` und `displayName` des Absenders. (`RENAMED` kommt mit
+  `PATCH /title`; solange es das nicht gibt, wäre der Typ eine Zusage ohne
+  Deckung.)
+- **`Cache-Control: no-store`** ist Pflicht: Ein Proxy dürfte sonst eine 204
+  zwischenspeichern, und der Feed stünde still.
+- `wait` wird serverseitig geklemmt (`werkbaum.live-editing.max-wait`, 25 s).
+
+Umgesetzt **blockierend auf virtuellen Threads** (`spring.threads.virtual`),
+nicht mit `DeferredResult`: So behält der Endpunkt die aus der Spezifikation
+generierte Signatur, und ein Wartender kostet trotzdem fast nichts.
+Geweckt wird **nach dem Commit** — davor läse ein Beobachter einen Stand, der
+noch nicht steht. Voraussetzung ist eine **Einzelinstanz**; hinter einem Load
+Balancer erführe ein Beobachter auf der zweiten Instanz nichts. Begründung:
+D76-Nachtrag 5.
+
 ## Vorbereitete Erweiterungen
 
 **Autorisierung**
@@ -143,8 +174,8 @@ Die Änderung eines Dokuments läuft strikt sequenziell (Sperre je UUID,
   („Angenommen ich bin als … angemeldet").
 
 **Live-Editing** (Konzept: `docs/live-editing-proposal.md`, Entscheidung: D76)
-- **Offen:** der Änderungsfeed per Long Polling (`GET /changes`),
-  Master-Passwort für `GET /documents`, Client-Anpassung.
+- **Offen:** Umbenennen per `PATCH /title` (und damit das Ereignis
+  `RENAMED`), Master-Passwort für `GET /documents`, Client-Anpassung.
 - `DocumentUpdateRequest.expectedVersion` ist im Vertrag vorgesehen, wird aber
   noch nicht ausgewertet.
 

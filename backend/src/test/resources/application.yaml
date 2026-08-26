@@ -10,3 +10,12 @@ spring:
     open-in-view: false
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.sql
+
+  threads:
+    virtual:
+      enabled: true
+
+werkbaum:
+  live-editing:
+    # Kurz, damit die Behavior-Tests nicht auf die Produktionswerte warten.
+    max-wait: 5s

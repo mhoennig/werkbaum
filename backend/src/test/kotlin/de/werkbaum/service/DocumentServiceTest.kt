@@ -38,7 +38,9 @@ class DocumentServiceTest {
 
     private val repository = mockk<DocumentRepository>()
     private val historyRepository = mockk<DocumentHistoryRepository>(relaxed = true)
-    private val service = DocumentService(repository, historyRepository, clock, properties)
+    private val notifier = ChangeNotifier()
+    private val service =
+        DocumentService(repository, historyRepository, clock, properties, notifier)
 
     private fun sampleDocument(
         id: UUID = UUID.randomUUID(),
