@@ -23,6 +23,7 @@ repositories {
 
 val cucumberVersion = "7.23.0"
 val mockkVersion = "1.13.16"
+val kotestVersion = "5.9.1"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -41,6 +42,8 @@ dependencies {
     // Auslaufmodell; die BDD-Tests nutzen den Nachfolger aus spring-test.
     testImplementation("org.springframework.boot:spring-boot-resttestclient")
     testImplementation("io.mockk:mockk:$mockkVersion")
+    // Nur die Assertions - Testrunner bleibt JUnit 5 (backend/CLAUDE.md)
+    testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
 
     // Behavior-Tests (BDD) mit Cucumber
     testImplementation("io.cucumber:cucumber-java:$cucumberVersion")

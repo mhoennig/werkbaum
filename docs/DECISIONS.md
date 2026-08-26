@@ -5994,6 +5994,14 @@ Kern-Artefakt in eigene Module gewandert ist:
    `spring-boot-starter-liquibase` läuft keine Migration, und die Tests
    scheitern erst spät mit „Schema validation: missing table".
 
+Die Zusicherungen sind auf **Kotest** umgestellt (`shouldBe`,
+`shouldContain`, `shouldThrow`) — `backend/CLAUDE.md` hatte das vorgesehen,
+der Code benutzte aber JUnit-Assertions. Bei 25 Aufrufen war es billig, und
+Test-Abhängigkeiten sind unkritisch, weil sie in keinem Artefakt landen.
+Gegenprobe per Mutation: eine falsche Erwartung im Service-Test und eine im
+BDD-Schritt lassen genau die danach benannten Tests fallen — die
+Zusicherungen greifen also, statt nur gut auszusehen.
+
 Die BDD-Tests nutzen jetzt **`RestTestClient`** (aus `spring-test`) statt
 `TestRestTemplate`, das in Boot 4 als Auslaufmodell gilt. Umgestellt bei
 fünfzehn Aufrufen in einer Datei — die Zahl wächst von hier an nur. Weil

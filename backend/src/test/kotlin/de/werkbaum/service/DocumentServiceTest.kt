@@ -5,14 +5,14 @@ import de.werkbaum.domain.Document
 import de.werkbaum.domain.DocumentHistoryEntry
 import de.werkbaum.repository.DocumentHistoryRepository
 import de.werkbaum.repository.DocumentRepository
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verify
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
@@ -65,10 +65,10 @@ class DocumentServiceTest {
 
         val result = service.create(title = "Notizen", content = "Hallo")
 
-        assertEquals(1, result.version)
-        assertEquals(ChangeType.CREATED, historyEntry.captured.changeType)
-        assertEquals(result.id, historyEntry.captured.documentId)
-        assertEquals("Hallo", historyEntry.captured.content)
+        result.version shouldBe 1
+        historyEntry.captured.changeType shouldBe ChangeType.CREATED
+        historyEntry.captured.documentId shouldBe result.id
+        historyEntry.captured.content shouldBe "Hallo"
     }
 
     @Test
@@ -82,9 +82,9 @@ class DocumentServiceTest {
 
         val result = service.update(doc.id, title = "Neu", content = "Neuer Inhalt")
 
-        assertEquals(4, result.version)
-        assertEquals(ChangeType.UPDATED, historyEntry.captured.changeType)
-        assertEquals(4, historyEntry.captured.version)
+        result.version shouldBe 4
+        historyEntry.captured.changeType shouldBe ChangeType.UPDATED
+        historyEntry.captured.version shouldBe 4
     }
 
     @Test
@@ -98,8 +98,8 @@ class DocumentServiceTest {
         service.delete(doc.id)
 
         verify(exactly = 1) { repository.deleteById(doc.id) }
-        assertEquals(ChangeType.DELETED, historyEntry.captured.changeType)
-        assertEquals(3, historyEntry.captured.version)
+        historyEntry.captured.changeType shouldBe ChangeType.DELETED
+        historyEntry.captured.version shouldBe 3
     }
 
     @Test
@@ -107,7 +107,7 @@ class DocumentServiceTest {
         val id = UUID.randomUUID()
         every { repository.findById(id) } returns null
 
-        assertThrows(DocumentNotFoundException::class.java) { service.delete(id) }
+        shouldThrow<DocumentNotFoundException> { service.delete(id) }
     }
 
     @Test
@@ -119,7 +119,7 @@ class DocumentServiceTest {
         )
         every { historyRepository.findByDocumentId(id) } returns entries
 
-        assertEquals(entries, service.history(id))
+        service.history(id) shouldBe entries
     }
 
     @Test
@@ -127,7 +127,7 @@ class DocumentServiceTest {
         val id = UUID.randomUUID()
         every { historyRepository.findByDocumentId(id) } returns emptyList()
 
-        assertThrows(DocumentNotFoundException::class.java) { service.history(id) }
+        shouldThrow<DocumentNotFoundException> { service.history(id) }
     }
 
     @Test
@@ -146,11 +146,11 @@ class DocumentServiceTest {
 
         val result = service.restore(id)
 
-        assertEquals(id, result.id)
-        assertEquals("Titel v2", result.title)
-        assertEquals("Inhalt v2", result.content)
-        assertEquals(4, result.version)
-        assertEquals(ChangeType.RESTORED, historyEntry.captured.changeType)
+        result.id shouldBe id
+        result.title shouldBe "Titel v2"
+        result.content shouldBe "Inhalt v2"
+        result.version shouldBe 4
+        historyEntry.captured.changeType shouldBe ChangeType.RESTORED
     }
 
     @Test
@@ -169,8 +169,8 @@ class DocumentServiceTest {
 
         val result = service.restore(id, targetVersion = 1)
 
-        assertEquals("Titel v1", result.title)
-        assertEquals(4, result.version)
+        result.title shouldBe "Titel v1"
+        result.version shouldBe 4
     }
 
     @Test
@@ -181,7 +181,7 @@ class DocumentServiceTest {
         )
         every { repository.findById(id) } returns sampleDocument(id = id)
 
-        assertThrows(DocumentConflictException::class.java) { service.restore(id) }
+        shouldThrow<DocumentConflictException> { service.restore(id) }
     }
 
     @Test
@@ -189,7 +189,7 @@ class DocumentServiceTest {
         val id = UUID.randomUUID()
         every { historyRepository.findByDocumentId(id) } returns emptyList()
 
-        assertThrows(DocumentNotFoundException::class.java) { service.restore(id) }
+        shouldThrow<DocumentNotFoundException> { service.restore(id) }
     }
 
     @Test
@@ -197,7 +197,7 @@ class DocumentServiceTest {
         val id = UUID.randomUUID()
         every { repository.findById(id) } returns null
 
-        assertThrows(DocumentNotFoundException::class.java) { service.findById(id) }
+        shouldThrow<DocumentNotFoundException> { service.findById(id) }
     }
 
     @Test
@@ -205,6 +205,6 @@ class DocumentServiceTest {
         val docs = listOf(sampleDocument(), sampleDocument())
         every { repository.findAll() } returns docs
 
-        assertEquals(docs, service.findAll())
+        service.findAll() shouldBe docs
     }
 }

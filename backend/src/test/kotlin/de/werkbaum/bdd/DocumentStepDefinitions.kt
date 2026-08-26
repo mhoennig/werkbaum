@@ -4,9 +4,10 @@ import io.cucumber.java.de.Angenommen
 import io.cucumber.java.de.Dann
 import io.cucumber.java.de.Und
 import io.cucumber.java.de.Wenn
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import io.kotest.assertions.withClue
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.client.EntityExchangeResult
@@ -31,7 +32,7 @@ class DocumentStepDefinitions {
 
     private fun status(): Int? = lastResponse?.status?.value()
 
-    private fun body(): String? = lastResponse?.responseBody
+    private fun body(): String = lastResponse?.responseBody.orEmpty()
 
     private fun createDocument(title: String, content: String): EntityExchangeResult<String> =
         client.post()
@@ -41,18 +42,17 @@ class DocumentStepDefinitions {
             .exchange()
             .returnResult(String::class.java)
 
-    private fun extractId(body: String?): String {
-        val match = Regex("\"id\"\\s*:\\s*\"([^\"]+)\"").find(body ?: "")
-        assertNotNull(match, "Antwort enthält keine ID: $body")
-        return match!!.groupValues[1]
-    }
+    private fun extractId(body: String?): String =
+        withClue("Antwort enthält keine ID: $body") {
+            Regex("\"id\"\\s*:\\s*\"([^\"]+)\"").find(body ?: "").shouldNotBeNull()
+        }.groupValues[1]
 
     // ---------------- Angenommen ----------------
 
     @Angenommen("es existiert ein Dokument mit dem Titel {string}")
     fun `es existiert ein Dokument`(titel: String) {
         val response = createDocument(titel, "Initialer Inhalt")
-        assertEquals(201, response.status.value(), "Testdatenanlage fehlgeschlagen")
+        withClue("Testdatenanlage fehlgeschlagen") { response.status.value() shouldBe 201 }
         currentDocumentId = extractId(response.responseBody)
     }
 
@@ -62,7 +62,7 @@ class DocumentStepDefinitions {
     fun `ich lege ein Dokument an`(titel: String, inhalt: String) {
         lastResponse = createDocument(titel, inhalt)
         currentDocumentId = Regex("\"id\"\\s*:\\s*\"([^\"]+)\"")
-            .find(body() ?: "")?.groupValues?.get(1)
+            .find(body())?.groupValues?.get(1)
     }
 
     @Wenn("ich alle Dokumente abrufe")
@@ -110,30 +110,24 @@ class DocumentStepDefinitions {
     // ---------------- Dann / Und ----------------
 
     @Dann("erhalte ich den Status {int}")
-    fun `erhalte ich den Status`(status: Int) {
-        assertEquals(status, status())
+    fun `erhalte ich den Status`(erwartet: Int) {
+        status() shouldBe erwartet
     }
 
     @Und("die Antwort enthält den Titel {string}")
     fun `die Antwort enthaelt den Titel`(titel: String) {
-        assertTrue(
-            body()?.contains("\"title\":\"$titel\"") == true,
-            "Erwarteter Titel '$titel' nicht in Antwort: ${body()}",
-        )
+        body() shouldContain "\"title\":\"$titel\""
     }
 
     @Und("die Antwort enthält {int} Dokumente")
     fun `die Antwort enthaelt n Dokumente`(anzahl: Int) {
-        val count = Regex("\"id\"").findAll(body() ?: "").count()
-        assertEquals(anzahl, count, "Antwort: ${body()}")
+        val count = Regex("\"id\"").findAll(body()).count()
+        withClue("Antwort: ${body()}") { count shouldBe anzahl }
     }
 
     @Und("die Antwort enthält die Version {long}")
     fun `die Antwort enthaelt die Version`(version: Long) {
-        assertTrue(
-            body()?.contains("\"version\":$version") == true,
-            "Erwartete Version $version nicht in Antwort: ${body()}",
-        )
+        body() shouldContain "\"version\":$version"
     }
 
     @Und("das Dokument ist nicht mehr abrufbar")
@@ -142,7 +136,7 @@ class DocumentStepDefinitions {
             .uri("/api/v1/documents/$currentDocumentId")
             .exchange()
             .returnResult(String::class.java)
-        assertEquals(404, response.status.value())
+        response.status.value() shouldBe 404
     }
 
     // ---------------- Historie & Wiederherstellung ----------------
@@ -167,16 +161,13 @@ class DocumentStepDefinitions {
 
     @Und("die Antwort enthält {int} Historieneinträge")
     fun `die Antwort enthaelt n Historieneintraege`(anzahl: Int) {
-        val count = Regex("\"changeType\"").findAll(body() ?: "").count()
-        assertEquals(anzahl, count, "Antwort: ${body()}")
+        val count = Regex("\"changeType\"").findAll(body()).count()
+        withClue("Antwort: ${body()}") { count shouldBe anzahl }
     }
 
     @Und("die Antwort enthält den Änderungstyp {string}")
     fun `die Antwort enthaelt den Aenderungstyp`(typ: String) {
-        assertTrue(
-            body()?.contains("\"changeType\":\"$typ\"") == true,
-            "Erwarteter Änderungstyp '$typ' nicht in Antwort: ${body()}",
-        )
+        body() shouldContain "\"changeType\":\"$typ\""
     }
 
     @Und("das Dokument ist wieder abrufbar")
@@ -185,6 +176,6 @@ class DocumentStepDefinitions {
             .uri("/api/v1/documents/$currentDocumentId")
             .exchange()
             .returnResult(String::class.java)
-        assertEquals(200, response.status.value())
+        response.status.value() shouldBe 200
     }
 }
