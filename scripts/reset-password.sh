@@ -81,23 +81,38 @@ if [ "${#PASSWORT}" -lt 8 ]; then
   exit 1
 fi
 
-# Das Passwort geht über **stdin** an den Server, nie als Argument: Argumente
-# stehen in der Prozessliste, die auf einem geteilten Host jeder lesen kann.
-echo "==> hashen und speichern"
-printf '%s' "$PASSWORT" | ssh "$SSH_TARGET" DIR="$DIR_SH" RESTART="$RESTART" 'bash -s' <<'REMOTE'
+# Ein Zeilenumbruch im Passwort ginge unten beim `read` verloren — lieber hier
+# ablehnen als dort still abschneiden.
+# `$'\n'` und nicht `"$(printf '\n')"`: Die Kommandosubstitution schneidet
+# Zeilenumbrüche am Ende ab, das Muster wäre also leer — und `*""*` passt auf
+# jede Zeichenkette. Die erste Fassung lehnte damit jedes Passwort ab.
+if [[ "$PASSWORT" == *$'\n'* ]]; then
+  echo "Zeilenumbruch im Passwort — nicht unterstützt." >&2
+  exit 1
+fi
+
+# Der Fernteil als Text, NICHT als Heredoc am ssh-Aufruf. Der Grund ist eine
+# Falle, die lautlos zuschlägt: Kommt das Skript über stdin (`bash -s` mit
+# Heredoc), dann frisst ein `cat`/`read` DARIN den Rest des eigenen Skripts.
+# Die erste Fassung endete so nach drei Zeilen — ohne etwas zu schreiben und
+# ohne Fehlermeldung.
+#
+# Deshalb geht beides über **einen** Strom: erst die Passwortzeile, dann das
+# Skript. Die äußere Kommandozeile liest die erste Zeile weg und reicht sie
+# als Umgebungsvariable weiter; `bash -s` bekommt den Rest als Skript.
+# Das Passwort steht damit nie in `argv` (das liest auf einem geteilten Host
+# jeder); in der Umgebung des kurzlebigen Prozesses steht es — dort kommt nur
+# derselbe Benutzer heran, und `htpasswd` bekommt es über eine Pipe.
+FERN=$(cat <<'REMOTE'
 set -euo pipefail
 DIR="$(eval echo "$DIR")"
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 
-PASSWORT="$(cat)"
-[ -n "$PASSWORT" ] || { echo "Kein Passwort angekommen." >&2; exit 1; }
-
+[ -n "${WERKBAUM_PW:-}" ] || { echo "Kein Passwort angekommen." >&2; exit 1; }
 command -v htpasswd >/dev/null || {
   echo "htpasswd fehlt auf dem Server (Paket apache2-utils)." >&2; exit 1; }
 
-# htpasswd -i liest das Passwort von stdin - es steht also weder in der
-# Prozessliste noch in einer History.
-HASH="$(printf '%s' "$PASSWORT" | htpasswd -niBC 12 '' | tr -d ':\n')"
+HASH="$(printf '%s' "$WERKBAUM_PW" | htpasswd -niBC 12 '' | tr -d ':\n')"
 case "$HASH" in
   \$2*) : ;;
   *) echo "htpasswd hat keinen bcrypt-Hash geliefert." >&2; exit 1 ;;
@@ -110,14 +125,14 @@ mv "$DIR/env.neu" "$DIR/env"
 chmod 600 "$DIR/env"
 echo "    gespeichert in $DIR/env (Modus 600)"
 
-# Gegenprobe, bevor irgendjemand sich wundert: Passen Hash und Passwort?
+# Gegenprobe, bevor sich jemand wundert: Passen Hash und Passwort zueinander?
 CHK="$(mktemp)"
 trap 'rm -f "$CHK"' EXIT
 printf 'werkbaum:%s\n' "$HASH" > "$CHK"
-if printf '%s' "$PASSWORT" | htpasswd -vi "$CHK" werkbaum >/dev/null 2>&1; then
+if printf '%s' "$WERKBAUM_PW" | htpasswd -vi "$CHK" werkbaum >/dev/null 2>&1; then
   echo "    Gegenprobe: Hash und Passwort passen zueinander."
 else
-  echo "    ! Gegenprobe FEHLGESCHLAGEN - der Hash passt nicht zum Passwort." >&2
+  echo "    ! Gegenprobe FEHLGESCHLAGEN — der Hash passt nicht zum Passwort." >&2
   exit 1
 fi
 
@@ -126,10 +141,19 @@ if [ "$RESTART" = "1" ]; then
     systemctl --user restart werkbaum-backend.service
     echo "    Dienst neu gestartet."
   else
-    echo "    ! Dienst noch nicht eingerichtet - scripts/deploy-backend.sh ausführen."
+    echo "    ! Dienst noch nicht eingerichtet — scripts/deploy-backend.sh ausführen."
   fi
 fi
 REMOTE
+)
+
+echo "==> hashen und speichern"
+{ printf '%s\n' "$PASSWORT"; printf '%s\n' "$FERN"; } \
+  | ssh "$SSH_TARGET" "DIR='$DIR_SH'; RESTART='$RESTART'; \
+      IFS= read -r WERKBAUM_PW; export WERKBAUM_PW DIR RESTART; bash -s"
+# Semikolons, keine Zuweisungen als Kommando-Präfix: `DIR=… read …` setzt DIR
+# nur für das `read` und danach ist es wieder weg — das `export` exportierte
+# eine leere Variable, und der Fernteil brach mit „unbound variable" ab.
 
 unset PASSWORT PASSWORT2
 

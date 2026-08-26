@@ -6448,6 +6448,33 @@ Host jeder lesen kann), hasht dort mit `htpasswd -i` und prüft anschließend
 selbst mit `htpasswd -vi`, ob Hash und Passwort zueinander passen. Genau diese
 Gegenprobe fehlte, als das erste 401 wie ein Konfigurationsfehler aussah.
 
+**Drei Anläufe hat das Skript gebraucht, und alle drei Fehler waren lautlos.**
+Sie sind es wert, benannt zu werden, weil sie dieselbe Bauform haben — der
+Fehler meldet sich nicht, er tut einfach nichts:
+
+1. **Skript per Heredoc UND Daten per Pipe geht nicht.** Kommt das Skript über
+   `stdin` (`ssh … 'bash -s' <<'REMOTE'`), dann frisst ein `cat`/`read` darin
+   den **Rest des eigenen Skripts**. Die erste Fassung endete nach drei Zeilen,
+   schrieb nichts und meldete Erfolg. Gemessen: Pipe + Heredoc → 0 Zeichen
+   kommen an, Skript als Argument → alles kommt an. Jetzt geht beides über
+   **einen** Strom: erste Zeile Passwort, danach das Skript; die äußere
+   Kommandozeile liest die Zeile weg und reicht sie als Umgebungsvariable
+   weiter.
+2. **`case "$PW" in *"$(printf '\n')"*` lehnt alles ab.** Die
+   Kommandosubstitution schneidet Zeilenumbrüche am Ende ab — das Muster ist
+   leer, und `*""*` passt auf jede Zeichenkette. Richtig ist `[[ "$PW" ==
+   *$'\n'* ]]`.
+3. **`DIR=… read …` setzt `DIR` nur für das `read`.** Eine Zuweisung als
+   Kommando-Präfix gilt für dieses eine Kommando; das nachfolgende `export`
+   exportierte eine leere Variable. Semikolons statt Präfix.
+
+Gefunden hat sie ein Testlauf gegen ein **Wegwerf-Verzeichnis** auf dem echten
+Server (`BACKEND_DIR=opt/werkbaum-probe`, Terminal per `script -qec`, Passwort
+mit `$` und `!`), gefolgt von einer **unabhängigen** Gegenprobe: den
+gespeicherten Hash mit `htpasswd -vi` gegen das richtige *und* ein falsches
+Passwort halten. Dem Skript zu glauben, dass es funktioniert hat, wäre nach
+drei stillen Fehlschlägen die falsche Sorte Vertrauen gewesen.
+
 **Nicht getestet, weil es nicht zu testen war:** Alles bis zur SSH-Grenze ist
 gemessen — die erzeugte Unit ist mit `systemd-analyze verify` gültig, das Jar
 startet mit **genau** den Flags der Unit in einer Sekunde, antwortet auf die
