@@ -107,23 +107,23 @@
       - [^] #bld.pwa.sw: A service worker that serves the app offline (S)  %% network-first, cache as fallback
       - [^] #bld.pwa.update: The reload notice stays truthful under the worker (S)  %% see D45/D73
       - [^] #bld.pwa.files: Double-click a .werkbaum file, save without any dialog (S) :#ed.files.inplace  %% file_handlers + launchQueue
-    - [x] #bld.backend: Ship the backend as a service of its own (M)
-      - [x] #bld.backend.jdk: Its own JDK 21 in the server's home (S)  %% only 17 is installed there
-      - [x] #bld.backend.unit: A systemd user unit that survives the session (S)
-      - [x] #bld.backend.proxy: Apache passes /api/ on, in .htaccess (XS)  %% measured: the P flag is allowed
+    - [^] #bld.backend: Ship the backend as a service of its own (M)
+      - [^] #bld.backend.jdk: Its own JDK 21 in the server's home (S)  %% only 17 is installed there
+      - [^] #bld.backend.unit: A systemd user unit that survives the session (S)
+      - [^] #bld.backend.proxy: Apache passes /api/ on, in .htaccess (XS)  %% measured: the P flag is allowed
     - [-] #bld.ghpages: Deploy through a gh-pages branch (S)  %% GitHub Actions instead
     - [-] #bld.gfonts: Fonts from Google (XS)  %% self-hosted, no third-party request
   - [ ] #be: Backend (XL)
     - [/] #be.scaffold: Kotlin and Spring Boot scaffold (M)
-      - [x] #be.scaffold.gradle: Gradle Kotlin DSL, JDK 21 (S)
+      - [^] #be.scaffold.gradle: Gradle Kotlin DSL, JDK 21 (S)
       - [ ] #be.scaffold.ci: Health endpoint and CI (S)
-    - [x] #be.docs: Documents on the server (L) :#be.scaffold
-      - [x] #be.docs.model: Text plus metadata, no structure format (M)
-        - [x] #be.docs.rest: REST endpoints (S)
-        - [x] #be.docs.db: Persistence (S)
-        - [x] #be.docs.history: History in two layers, and restore (S)
-      - [x] #be.docs.share: Share by link (S)
-      - [x] #be.docs.list: Master password for the document list (S)
+    - [^] #be.docs: Documents on the server (L) :#be.scaffold
+      - [^] #be.docs.model: Text plus metadata, no structure format (M)
+        - [^] #be.docs.rest: REST endpoints (S)
+        - [^] #be.docs.db: Persistence (S)
+        - [^] #be.docs.history: History in two layers, and restore (S)
+      - [^] #be.docs.share: Share by link (S)
+      - [^] #be.docs.list: Master password for the document list (S)
     - [?] #be.auth: Accounts and permissions (L) :#be.docs
       | [?] #be.auth.token: Single user, one token (S)
       | [?] #be.auth.oidc: Log in with OIDC (L)
@@ -160,14 +160,14 @@
           - [?] #col.git.blame: Who changed this line (S)
         - [?] #col.git.branch: A branch per scenario (S)
     - [/] #col.live: Live editing, several people at once (XL) :#be.docs
-      - [x] #col.live.http: Transport over plain HTTP (M) :#be.docs  %% no websocket needed
-        - [x] #col.live.patch: Submit a change as a line diff (S)
-        - [x] #col.live.feed: Long polling holds the other direction open (S)
-      - [x] #col.live.merge: Merging simultaneous edits (L)  %% the actual work
-        | [x] #col.live.diff: Line diffs against a base version; the server rebases (L)
+      - [^] #col.live.http: Transport over plain HTTP (M) :#be.docs  %% no websocket needed
+        - [^] #col.live.patch: Submit a change as a line diff (S)
+        - [^] #col.live.feed: Long polling holds the other direction open (S)
+      - [^] #col.live.merge: Merging simultaneous edits (L)  %% the actual work
+        | [^] #col.live.diff: Line diffs against a base version; the server rebases (L)
         | [?] #col.live.crdt: Text CRDT — the plan is plain text, so it fits (L)
         | [?] #col.live.ot: Operational transformation (XL)
-      - [x] #col.live.ask: On a real overlap, ask whose version wins (S)
+      - [^] #col.live.ask: On a real overlap, ask whose version wins (S)
       - [?] #col.live.cursors: Cursors and who else is here (S)
       - [-] #col.live.ws: Transport over a websocket (S)  %% plain HTTP turned out to be enough
       - [-] #col.live.own: A merge algorithm of our own (XL)  %% solved problem, do not reinvent
