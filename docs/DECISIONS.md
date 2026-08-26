@@ -5744,3 +5744,196 @@ und 0 Kanten im exportierten SVG, an → 3/3; `depLinks` überlebt den Reload.
 inkl. des per `:#…` gezogenen Ziels unter einer Zugabe; `data-sub-*` in
 Dokumentreihenfolge, dedupliziert, nie an offenen Knoten, nie für
 ausgeblendete verworfene).
+
+## D76 — Live-Editing über HTTP: die offenen Punkte der beiden Konzepte entschieden
+Zu `backend/docs/live-editing-proposal.md` und
+`backend/docs/client-live-editing-instructions.md` (beide Entwurf, nichts
+implementiert). Die Konzepte sind in ihrem Kern schlüssig — zeilenbasierte
+Diffs gegen eine Basisversion, Optimistic Locking auf Dokumentebene, Long
+Polling statt WebSocket. Offen waren die Ränder: Löschen und
+Wiederherstellen, Wiederholungen nach Netzwerkfehlern, das Verhältnis zum
+tatsächlichen Frontend — und die Frage, was im Werkbaum-Editor überhaupt
+eine Textänderung ist. Die Antworten, jeweils mit dem Grund:
+
+**Faltung wird geteilt.** Nach D38-Nachtrag 2 schreibt jedes Klappen eine
+Faltmarke in den Text zurück; unter Live-Editing wird daraus ein PATCH, der
+bei allen ankommt. Erwogen war, sie bei geteilten Dokumenten wie bei Pads
+(D31) nur sitzungsweise zu überlagern. Entschieden ist das Gegenteil: Der
+Text bleibt die eine Quelle der Wahrheit (D14), und „was du siehst, steht
+geschrieben" gilt uneingeschränkt. Auch der Falt-Durchschalter (D75)
+bekommt **keine** Sonderbehandlung, obwohl ein Druck den ganzen Baum
+umbaut. Sollte sich das im Betrieb als störend erweisen, ist die ehrliche
+Antwort, Faltung insgesamt persönlich zu machen — nicht eine Ausnahme für
+einen einzelnen Knopf.
+
+**Zugriff über die unerratbare UUID, wie ein Pad-Link.** Kein Login, kein
+Rechtemodell; das Protokoll bleibt davon unberührt, echte Authentifizierung
+kann später als Schicht davor. Das kollidierte mit dem vorhandenen
+`GET /documents`, das sämtliche Dokumente samt Inhalt auflistet und damit
+jede UUID auffindbar macht — der Schutz wäre hinfällig gewesen. Dieser
+Endpunkt verlangt deshalb ein **Master-Passwort**, dessen Hash serverseitig
+in einer Umgebungsvariable liegt; geprüft wird mit **Spring Security**
+(erste Abhängigkeit dieser Art, bewusst: sie ist zugleich der Platz für die
+spätere richtige Authentifizierung). Ein einzelnes Passwort auf einem
+offenen Endpunkt braucht eine Sperre nach Fehlversuchen, und die
+Übertragung setzt HTTPS voraus.
+
+**Identität pseudonym: Client-ID plus selbstgewählter Anzeigename** — das
+Etherpad-Modell (D31). Ohne Anmeldung ist der Name nur eine Behauptung und
+darf nicht wie ein Nachweis aussehen; er trägt aber vier Dinge zugleich:
+Wiedererkennung beim Retry, „geändert von" in der Historie, eine
+deterministische Reihenfolge bei gleichzeitigen Einfügungen und spätere
+Präsenz.
+
+**Der Feed arbeitet auf der Historie, nicht am Dokument.** `delete()`
+entfernt das Dokument und lässt nur den Tombstone stehen — ein Feed am
+Dokument müsste danach 404 liefern, ausgerechnet für das DELETED-Ereignis,
+das er zustellen soll. Solange es Historieneinträge zur UUID gibt,
+antwortet der Feed also; 404 nur bei gänzlich unbekannter UUID, dieselbe
+Regel wie `history()` sie schon anwendet. Wartende Long-Polls müssen beim
+Löschen zugestellt bekommen, bevor die Warteliste verworfen wird.
+
+**Die Historie bekommt zwei Ebenen.** Mit 1,5 s Debounce wird sie sonst zum
+Transaktionslog: hunderte Volltext-Snapshots eines 40-kB-Dokuments je
+Sitzung. Getrennt werden kurzlebige **Sync-Versionen** (tragen das
+Protokoll) und nutzersichtbare **Meilensteine**. Letztere entstehen nach
+einer Schreibpause und auf Knopfdruck — dasselbe Muster wie die „Früheren
+Stände" im Editor (D54), erprobt und den Nutzern vertraut. Bei
+Server-Dokumenten zeigt der Verlaufs-Knopf künftig die **Server**-Meilensteine
+statt der lokalen Stände: gleiche Bedienung, bessere Quelle (geteilt,
+überlebt Geräte- und Browserwechsel). Lokale Stände wären dort sogar
+irreführend, weil „mein Stand von vorhin" fremde Änderungen enthält, die man
+nie gesehen hat.
+
+**Nachzügler bekommen den Volltext.** Ist `since` bereits verdichtet, kann
+der Server kein exaktes Diff mehr liefern. Statt eines eigenen Fehlerpfads
+enthält die Feed-Antwort dann den kompletten Inhalt samt Version — ein
+Roundtrip und ein Zustand weniger im Client, und der Cursor-Erhalt ist über
+hunderte Versionen hinweg ohnehin nicht zu retten. Deckt zugleich den
+PWA-Fall nach längerer Offline-Zeit ab.
+
+**Der Server rebased selbst; 409 nur bei echter Überlappung.** Das Proposal
+lehnte jeden veralteten PATCH ab. Das führt zu **Starvation**: Ein Client
+mit höherer Latenz kommt bei fleißigen Mitschreibern womöglich nie durch,
+weil jeder Versuch beim Eintreffen wieder veraltet ist — genau deswegen hat
+CodeMirror sein `rebaseUpdates` nachgerüstet. Überschneiden sich die Ops
+nicht mit den zwischenzeitlichen, verschiebt der Server sie also selbst und
+antwortet mit 200; die Antwort liefert die fremden Ops mit, damit der Client
+seine Schattenkopie nachzieht. Nebengewinn: Der aufwendigste Teil der
+Client-Instruktion (§4, Rebase) wird nur noch für echte Konflikte gebraucht.
+
+**Wiederholte Patches werden erkannt.** Geht die Antwort verloren — im
+Mobilnetz der Normalfall —, weiß der Client nicht, ob seine Änderung ankam;
+ein Retry würde sie über den Rebase ein zweites Mal anwenden. Der PATCH
+trägt deshalb Client-ID und eine **laufende Nummer**, und der Server
+beantwortet eine Wiederholung mit dem Ergebnis von damals.
+
+**Einfügungen kollidieren untereinander nicht, mit Löschungen schon.** Die
+Client-Instruktion definierte den Bereich einer Op halboffen als
+`[index, index+count)`, für insert aber `[index, index]` — das ist die leere
+Menge und schneidet nichts, Einfüge-Konflikte wären nie erkannt worden. Zwei
+Einfügungen an derselben Stelle sind kein Konflikt: Beide Zeilen bleiben, die
+bereits bestätigte fremde steht oben. Eine Einfügung in einen Bereich, den
+ein anderer löscht, ist einer.
+
+**Rollback bekommt einen eigenen Änderungstyp.** `restore()` tut zweierlei —
+ein gelöschtes Dokument wiederherstellen und ein lebendes auf eine alte
+Version zurücksetzen —, beides bisher als `RESTORED`. Der Client soll bei
+`RESTORED` die Sperre aufheben; beim Rollback gab es nie eine Sperre, dort
+ändert sich nur der Inhalt. Ein Typ, der zwei Dinge bedeutet, ist die
+Unschärfe, aus der später Fehler werden.
+
+**Der Titel läuft mit.** Er ist ein Metadatum, kein Zeileninhalt, und bekommt
+einen eigenen Weg mit Versionsprüfung; das Feed-Ereignis führt den neuen
+Titel im Klartext mit. Bisher hätte ein Umbenennen eine Version erzeugt, von
+der niemand etwas erfährt.
+
+**Prüfsumme als Pflichtfeld.** Das Proposal sah sie optional vor, die
+Client-Instruktion kannte sie gar nicht. Optional ist die schlechteste
+Variante — die Kosten der Spezifikation ohne den Nutzen. Die Versionsnummer
+bestätigt nur, dass die Basis dieselbe Version ist, nicht dass beide Seiten
+sie gleich lesen; ein Index-Versatz zerstört Text sonst unbemerkt, und dieses
+Projekt zieht durchweg den lauten Fehler dem stillen vor (D59, SPEC §4).
+Damit beide dasselbe hashen, normalisiert der **Server** Zeilenenden beim
+Speichern autoritativ auf LF (SPEC §12), der Client beim Laden ebenfalls.
+
+**Der Client bleibt bei der Textarea.** Die Instruktion nennt CodeMirror 6
+oder Monaco als bevorzugten Weg und die Textarea als Fallback — bei Werkbaum
+ist sie der einzige Fall (D49), und `dependencies` ist leer. Gemessen kostet
+CodeMirror **120 kB gzip** für den Einstieg (Editor, Zeilennummern, Undo),
+voll ausgestattet 138 kB, gegen aktuell 294 kB Bundle. Bemerkenswert: Der
+Einstieg ist teuer, alles Weitere danach fast umsonst — Syntax-Hervorhebung
+und Autovervollständigung kosten zusammen 18 kB. Es gäbe echte Gewinne (die
+`execCommand`-Altlast aus D53/D55 verschwände, Zeilennummern und
+Autovervollständigung wären eingebaut, der Spiegel-Div entfiele), aber der
+Umbau berührt ein Dutzend Entscheidungen und darf nicht die Nebenwirkung
+eines anderen Features sein. CodeMirror bleibt eine **eigene Frage**.
+`@codemirror/collab` hilft dabei ohnehin nicht: Es arbeitet mit
+CodeMirror-ChangeSets und rebased **serverseitig**, setzt also JavaScript auf
+dem Server voraus.
+
+**Die Diff-Berechnung wird selbst implementiert**, nicht per jsdiff — rund
+hundert Zeilen über die längste gemeinsame Teilfolge, in derselben
+Größenordnung wie der Zeilenumbruch aus D64. Dieselbe Grenze wie bei
+CodeMirror: keine Laufzeit-Abhängigkeit (D11/D19/D20).
+
+**Adressiert wird über einen URL-Parameter**, wie `?sourceUrl=` (D23) und
+`?etherpad=` (D31): Die Identität leitet sich aus der URL ab, derselbe Link
+führt immer in dasselbe Dokument, der Name ist die URL. Angelegt wird über
+einen Menüeintrag „Auf den Server legen", analog zu „Als Datei speichern"
+(D72). Kein neues Bedienkonzept, und ein geteiltes Dokument wird ohnehin per
+Link geteilt.
+
+**Debounce bleibt bei 1,5 s.** Die Rate-Limit-Disziplin des Proposals stammt
+von Etherpad — einem fremden Server mit 10 Abrufen je 90 s (D31). Am eigenen
+Backend gelten die eigenen Grenzen, und die Last ist gering: ein Request alle
+1,5 s ausschließlich während aktiven Tippens. Kleine Diffs und seltene
+Überschneidungen sind das wert.
+
+**Im Konfliktfall zwei klar benannte Knöpfe** — fremde Fassung übernehmen
+oder eigene durchsetzen, jeweils nur für die überlappenden Zeilen; alles
+übrige wird ohnehin rebased. Einer gewinnt dort vollständig, aber nichts geht
+endgültig verloren: Jede Version steht in der Historie.
+
+**Der Betrieb wird gemessen, bevor er festgeschrieben wird.** Long Polling
+hält je Beobachter eine Verbindung offen; hinter dem Apache der stabilen
+Instanz (D43) sind `ProxyTimeout`, Pufferung und das Worker-Modell offene
+Fragen, ebenso das Browser-Limit von sechs Verbindungen je Herkunft bei
+mehreren Tabs. Der `wait`-Wert von 25 s steht erst fest, wenn die
+Zielumgebung vermessen ist — die Lehre aus D17-Nachtrag 4: Was die Umgebung
+stellt, stellt der Emulator nicht.
+
+**Ohne eigene Entscheidung festgehalten**, weil alternativlos: Gepufferte
+Feed-Antworten werden nur angewendet, wenn ihr `fromVersion` zur aktuellen
+Schattenkopie passt — sonst wendet ein Client dieselben Ops doppelt an, wenn
+Feed und 409-Antwort sie beide liefern. Der In-Process-Notifier setzt eine
+**Einzelinstanz** voraus. Der Feed braucht `Cache-Control: no-store` und eine
+serverseitige Obergrenze für `wait`. PATCH braucht ein Größenlimit für
+Dokument und Op-Anzahl. `DocumentHistoryRepository` braucht gezielten Zugriff
+auf eine einzelne Version, statt wie heute stets alle Einträge zu laden. Und
+die im Proposal zitierte „Speicher-Evaluation" existiert im Repo nicht — sie
+gehört nachgeliefert oder der Verweis aufgelöst.
+
+**Nachtrag — die Zielumgebung ist vermessen (2026-08-26).** Gemessen auf
+`mih00.hostsharing.net`: Apache 2.4.68 mit **MPM event** und
+MaxRequestWorkers **1024**, `Timeout 300` und kein gesetztes `ProxyTimeout`,
+mod_proxy_http und mod_rewrite geladen, systemd-`Linger=yes` (ein eigener
+Dienst darf also dauerhaft laufen), PostgreSQL auf 5432 vorhanden.
+**Long Polling trägt dort**: Die Zeitgrenzen sind großzügig, zehn offene
+Verbindungen sind bei 1024 Workern unkritisch, und die Sorge vor einem
+Prozess je Verbindung war unbegründet — sie gilt mpm_prefork, hier läuft
+event. Auch Pufferung ist kein Thema: Anders als bei SSE kommt genau eine
+Antwort am Ende des Wartens.
+
+Drei Befunde bleiben als Arbeit stehen. **Kein HTTP/2** — damit gilt das
+Browser-Limit von sechs Verbindungen je Herkunft, und mehrere Tabs derselben
+Person binden je eine dauerhaft; zu beheben serverseitig oder clientseitig
+über einen SharedWorker, der allen Tabs eine gemeinsame Feed-Verbindung gibt.
+**Nur Java 17** installiert, während `build.gradle.kts`
+`JavaLanguageVersion.of(21)` verlangt. Und der **Weg vom Apache zum Backend
+ist ungeklärt**: `ProxyPass` ist in `.htaccess` nicht zulässig,
+`~/doms/<domain>/etc/` ist leer; bliebe `RewriteRule … [P]` oder eine
+Rückfrage beim Hoster. Dieser letzte Punkt ist bewusst **nicht** getestet —
+dafür hätte eine Proxy-Regel in der Produktionsumgebung eingerichtet werden
+müssen. Details in `backend/docs/live-editing-proposal.md`, Abschnitt
+„Betrieb".
