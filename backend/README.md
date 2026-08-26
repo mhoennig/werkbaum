@@ -227,6 +227,29 @@ export WERKBAUM_MASTER_PASSWORD_HASH="{bcrypt}$(htpasswd -bnBC 12 "" geheim | tr
 - Service-Methoden sind `@Transactional`: Dokument-Änderung und
   Historieneintrag werden atomar geschrieben.
 
+## Betrieb auf der stabilen Instanz
+
+`scripts/deploy-backend.sh` (im Repo-Wurzelordner) baut das Fat-Jar, legt es
+samt systemd-User-Unit ins Home des Servers und startet den Dienst neu;
+`scripts/install-jdk.sh` bringt einmalig ein JDK 21 dorthin. Der Dienst lauscht
+nur auf `127.0.0.1` — von außen kommt man über die Proxy-Regel in
+`scripts/prod.htaccess`, die der Frontend-Deploy mitspiegelt.
+
+- **Speicher:** `-Xmx192m -Xms48m` plus Freiraum-Verhältnisse; gemessen rund
+  174 MB RSS gegen 291 MB ohne Angaben. Nach einem GC leben ~45 MB. Zu wenig
+  Luft? `BACKEND_XMX` in `.env`.
+- **Master-Passwort:** `<BACKEND_DIR>/env` auf dem Server, Modus 600. Ohne
+  Hash bleibt `GET /documents` gesperrt.
+- **Datenbank:** H2 im Dateimodus unter `<BACKEND_DIR>/data/`. Ein Deploy
+  fasst das Verzeichnis nicht an (kein `--delete`). Umstieg auf das dort
+  laufende PostgreSQL: JDBC-URL in der `application.yaml` tauschen und den
+  Treiber ergänzen — Schema und Code bleiben.
+- **Nachsehen:** `systemctl --user status werkbaum-backend`,
+  `tail -f <BACKEND_DIR>/backend.log`.
+
+Begründungen: docs/DECISIONS.md D77 (und D76-Nachträge 1–3 zur Vermessung der
+Zielumgebung).
+
 ## Hinweise
 
 - Versionsnummern in `build.gradle.kts` (Spring Boot, OpenAPI Generator,

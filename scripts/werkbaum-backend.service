@@ -1,0 +1,81 @@
+[Unit]
+# Werkbaum — Backend als systemd-User-Unit (D77).
+#
+# Vorlage: scripts/deploy-backend.sh setzt __JAVA__, __DIR__, __XMX__ und
+# __PORT__ ein und legt die Datei als ~/.config/systemd/user/werkbaum-backend.service
+# ab. Ein User-Unit braucht kein root; dass er auch ohne offene Sitzung
+# weiterläuft, liegt an `Linger=yes` — auf der Zielumgebung gemessen gesetzt
+# (D76-Nachtrag 1). Fehlt es, hilft `loginctl enable-linger`.
+#
+# Die Pfade kommen als `%h/…` herein, nicht als `$HOME/…`: systemd expandiert
+# in `WorkingDirectory` und `EnvironmentFile` **keine** Shell-Variablen. Ein
+# `$HOME` stünde dort wörtlich, und der Dienst startete nicht — der Fehler
+# säße in einer Datei, die man nur auf dem Server zu sehen bekommt.
+Description=Werkbaum backend
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=__DIR__
+
+# Zugangsdaten kommen aus einer Datei mit Modus 600, nie aus dem Repository
+# und nie aus der Unit selbst (`systemctl --user show` gäbe sie sonst preis).
+EnvironmentFile=__DIR__/env
+
+# Speicher ist auf diesem Host die knappe Größe, nicht die Rechenzeit
+# (D76-Nachtrag 3): 3,9 GB gesamt, davon rund 300 MB frei, ein weiteres GB
+# liegt schon im Swap. Die cgroup-Grenze des Pakets (3147 MB) ist eine
+# Erlaubnis, keine Reservierung; bemessen wird am Freien.
+#
+# Gemessen mit 30 angelegten Dokumenten und anschließendem GC (D77):
+#
+#   ohne Angaben               RSS 291 MB   (Heap belegt 359 MB)
+#   nur -Xmx384m               RSS 254 MB   (Heap belegt 359 MB)
+#   -Xmx192m -Xms48m + Ratios  RSS 174 MB   (Heap belegt  46 MB)
+#   dito mit G1 statt Serial   RSS 194 MB
+#
+# Der große Hebel sind NICHT die Obergrenzen, sondern die
+# Freiraum-Verhältnisse: Ohne sie behält der Kollektor den einmal gewachsenen
+# Heap, obwohl nach einem GC nur ~45 MB leben. Mit ihnen gibt er ihn zurück.
+# SerialGC statt G1 spart weitere 20 MB und kostet bei zehn Beobachtern nichts,
+# was auffiele.
+#
+# ExitOnOutOfMemoryError: lieber ein sauberer Neustart durch systemd als ein
+# Dienst, der noch läuft und nichts mehr beantwortet.
+ExecStart=__JAVA__ \
+  -Xmx__XMX__ \
+  -Xms48m \
+  -XX:MinHeapFreeRatio=20 \
+  -XX:MaxHeapFreeRatio=40 \
+  -Xss512k \
+  -XX:MaxMetaspaceSize=192m \
+  -XX:ReservedCodeCacheSize=64m \
+  -XX:MaxDirectMemorySize=64m \
+  -XX:+UseSerialGC \
+  -XX:+ExitOnOutOfMemoryError \
+  -Dserver.port=__PORT__ \
+  -Dserver.address=127.0.0.1 \
+  -jar __DIR__/werkbaum-backend.jar
+
+# Der Dienst lauscht nur auf 127.0.0.1 (siehe -Dserver.address): Von außen
+# kommt man ausschließlich über den Apache-Proxy, und damit gilt dessen
+# HTTPS — das Master-Passwort geht nie im Klartext über das Netz.
+
+Restart=on-failure
+RestartSec=10
+# Beim Stoppen erst freundlich fragen; ein laufender Long-Poll hält bis zu
+# 25 s, deshalb darf das Beenden etwas dauern.
+TimeoutStopSec=40
+KillSignal=SIGTERM
+
+# Bewusst ohne die Sandbox-Optionen (`PrivateTmp`, `ProtectHome` und
+# Verwandte): In einem User-Unit brauchen sie unprivilegierte
+# Benutzer-Namensräume, und wo die abgeschaltet sind, startet der Dienst
+# gar nicht erst. `NoNewPrivileges` ist ein schlichtes prctl und geht immer.
+NoNewPrivileges=true
+
+StandardOutput=append:__DIR__/backend.log
+StandardError=append:__DIR__/backend.log
+
+[Install]
+WantedBy=default.target

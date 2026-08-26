@@ -97,7 +97,7 @@
     - [?] #ed.dates: Dates and milestones (M)
       | [?] #ed.dates.attr: An attribute in the line (S)
       | [?] #ed.dates.view: A separate timeline view (L)
-  - [^] #bld: Build and delivery (L)
+  - [^] #bld: Build and delivery (XL)
     - [^] #bld.bundle: One self-contained file, bundled by Vite (S)
     - [^] #bld.tests: Unit tests (S)
     - [^] #bld.pages: Published on every push (S)
@@ -107,6 +107,10 @@
       - [^] #bld.pwa.sw: A service worker that serves the app offline (S)  %% network-first, cache as fallback
       - [^] #bld.pwa.update: The reload notice stays truthful under the worker (S)  %% see D45/D73
       - [^] #bld.pwa.files: Double-click a .werkbaum file, save without any dialog (S) :#ed.files.inplace  %% file_handlers + launchQueue
+    - [x] #bld.backend: Ship the backend as a service of its own (M)
+      - [x] #bld.backend.jdk: Its own JDK 21 in the server's home (S)  %% only 17 is installed there
+      - [x] #bld.backend.unit: A systemd user unit that survives the session (S)
+      - [x] #bld.backend.proxy: Apache passes /api/ on, in .htaccess (XS)  %% measured: the P flag is allowed
     - [-] #bld.ghpages: Deploy through a gh-pages branch (S)  %% GitHub Actions instead
     - [-] #bld.gfonts: Fonts from Google (XS)  %% self-hosted, no third-party request
   - [ ] #be: Backend (XL)
@@ -722,6 +726,26 @@
   hold, editing becomes open, type, save — no dialog at all. The saving
   mechanics existed already; this added the manifest entry and the
   launch-queue receiver. Chromium only.
+
+#bld.backend
+  The editor is files, the backend is a service: a Java runtime, something that
+  keeps it running, and a way in from outside. Its own deploy script, because
+  none of that is rsync.
+
+#bld.backend.jdk
+  The measured target has Java 17 while the build asks for 21. Lowering the
+  toolchain would be shorter and worse — development and production would run
+  on different versions, and the difference would only show in operation. The
+  archive's checksum is verified before anything is unpacked.
+
+#bld.backend.unit
+  Restart after a crash and a defined state, for free. The service listens on
+  127.0.0.1 only; from outside there is exactly one way in.
+
+#bld.backend.proxy
+  A rewrite rule with the P flag, because ProxyPass is not allowed in an
+  .htaccess and the vhost directory is out of reach. Measured on the target: a
+  request is held open for 30 seconds, which is what the change feed needs.
 
 #bld.ghpages
   Rejected: the official Actions route needs no extra branch and no deploy

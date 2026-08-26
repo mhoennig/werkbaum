@@ -6262,3 +6262,96 @@ alles Übrige zu sehen.
 
 **Offen bleibt** `PATCH /title` (und damit das Ereignis `RENAMED`), ein
 Eingabefeld für den Anzeigenamen und die Präsenz-Anzeige.
+
+## D77 — Backend-Deploy: JDK im Home, systemd-User-Unit, Proxy in der `.htaccess`
+Das Frontend geht seit D16 per rsync auf die stabile Instanz. Das Backend
+braucht mehr als Dateien: eine Java-Laufzeit, einen dauerhaft laufenden Dienst
+und einen Weg von außen nach innen. Die Zielumgebung ist vermessen
+(D76-Nachträge 1–3), hier stehen die Entscheidungen, die daraus folgen.
+
+**Ein eigenes JDK 21 im Home, nicht die installierte 17.** Der Server hat nur
+Java 17, `build.gradle.kts` verlangt 21. Die Toolchain zu senken wäre der
+kürzere Weg und der schlechtere: Entwicklung und Produktion liefen dann auf
+verschiedenen Versionen, und der Unterschied fiele erst im Betrieb auf. Ein
+JDK im Home braucht kein root; `scripts/install-jdk.sh` holt es von Adoptium
+und **prüft die Prüfsumme aus deren API, bevor es auspackt** — ohne das wäre es
+„lade ein Archiv aus dem Netz und führe es aus". Getauscht wird erst, wenn
+alles heil ist: Ein abgebrochener Download darf kein halbes JDK hinterlassen,
+das der Dienst beim nächsten Start vorfindet.
+
+**Ein systemd-User-Unit, kein nohup.** `Linger=yes` ist auf der Zielumgebung
+gesetzt (gemessen), der Dienst überlebt also die Sitzung; Neustart nach einem
+Absturz, Logrotation und ein definierter Zustand kommen kostenlos dazu. Zwei
+Fallen sind eingebaut, weil beide nur am Ziel auffielen:
+
+- Die Pfade stehen als **`%h/…`**, nicht als `$HOME/…`. In
+  `WorkingDirectory` und `EnvironmentFile` expandiert systemd keine
+  Shell-Variablen; ein `$HOME` stünde dort wörtlich und der Dienst startete
+  nicht — in einer Datei, die man nur auf dem Server zu sehen bekommt.
+- Das Skript setzt **`XDG_RUNTIME_DIR`**, bevor es `systemctl --user` ruft.
+  Über eine nicht-interaktive SSH-Sitzung ist die Variable oft nicht gesetzt,
+  und `systemctl --user` findet seinen Manager dann nicht.
+
+**Ohne Sandbox-Optionen.** `PrivateTmp` und Verwandte brauchen in einem
+User-Unit unprivilegierte Benutzer-Namensräume; wo die abgeschaltet sind,
+startet der Dienst gar nicht. Auf einem fremden Host ist das kein Risiko, das
+sich lohnt — `NoNewPrivileges` ist ein schlichtes prctl und bleibt.
+
+**Der Dienst lauscht nur auf 127.0.0.1.** Von außen kommt man ausschließlich
+über den Apache, und damit gilt dessen HTTPS: Das Master-Passwort geht nie im
+Klartext über das Netz. Der Weg hinein ist `RewriteRule … [P]` in der
+`.htaccess` — `ProxyPass` ist dort nicht zulässig, und `~/doms/<domain>/etc/`
+ist leer. Dass das P-Flag auf diesem Hoster **erlaubt** ist, war die offene
+Frage und ist gemessen (D76-Nachtrag 2), samt der 30 s gehaltenen Verbindung,
+auf die das Long Polling angewiesen ist.
+
+**Die Portnummer steht an genau einer Stelle.** `BACKEND_PORT` in der
+`.env`; `deploy-prod.sh` setzt sie in die Proxy-Regel ein, `deploy-backend.sh`
+in die Unit. Zwei Zahlen, die zueinander passen müssen, sind eine Zahl zu
+viel — und der Fehler zeigte sich als 503, ohne zu sagen, warum.
+
+**Der Speicher: gemessen, nicht geschätzt.** Der erste Entwurf setzte
+`-Xmx384m` mit der Begründung, die Voreinstellung (¼ des RAM) sei zu viel.
+Nachgemessen — 30 Dokumente angelegt, dann GC — stimmte die Richtung, aber
+nicht der Hebel:
+
+| Flags | RSS | Heap belegt |
+|---|---|---|
+| ohne Angaben | 291 MB | 359 MB |
+| nur `-Xmx384m` | 254 MB | 359 MB |
+| **`-Xmx192m -Xms48m` + Freiraum-Verhältnisse** | **174 MB** | 46 MB |
+| dito mit G1 statt Serial | 194 MB | 48 MB |
+
+Nach einem GC leben rund **45 MB**. Der große Hebel sind deshalb nicht die
+Obergrenzen, sondern `MinHeapFreeRatio`/`MaxHeapFreeRatio`: Ohne sie behält
+der Kollektor den einmal gewachsenen Heap, mit ihnen gibt er ihn zurück. Das
+sind 80 MB gegenüber dem Entwurf — auf einem Host mit rund 300 MB frei ist das
+der Unterschied zwischen „passt" und „drängt die Datenbank weiter in den Swap".
+SerialGC statt G1 bringt weitere 20 MB und kostet bei zehn Beobachtern nichts,
+was auffiele.
+
+**Das Master-Passwort steht in einer Datei am Ziel, nie im Repository und nie
+in der Unit.** `<BACKEND_DIR>/env` mit Modus 600; `systemctl --user show`
+gäbe ein `Environment=` sonst preis. Das Deploy legt die Datei beim ersten Mal
+leer an und sagt, was zu tun ist — solange kein Hash drinsteht, bleibt die
+Dokumentenliste gesperrt, und das ist Absicht (D76-Nachtrag 6).
+
+**Ein Deploy tauscht das Jar, er räumt nicht auf.** Anders als beim Frontend
+(`rsync --delete`, dort ist das Zielverzeichnis exklusiv) liegen im
+Backend-Verzeichnis die Datenbank, das Log und die Passwortdatei. Ohne
+`--delete` ist ein Deploy wiederholbar, ohne dass jemand vorher nachdenken muss.
+
+**Die Lebendprobe ist eine Anfrage nach einem Dokument, das es nicht gibt.**
+HTTP 404 heißt: Die Anwendung ist oben und beantwortet Anfragen. Ein
+Health-Endpunkt wäre die sauberere Antwort, kostet aber eine weitere
+Laufzeit-Abhängigkeit (Actuator) — er steht als eigener Knoten im Plan
+(`#be.scaffold.ci`), und bis dahin ist die 404 die ehrlichste Probe, die ohne
+ihn zu haben ist.
+
+**Nicht getestet, weil es nicht zu testen war:** Alles bis zur SSH-Grenze ist
+gemessen — die erzeugte Unit ist mit `systemd-analyze verify` gültig, das Jar
+startet mit **genau** den Flags der Unit in einer Sekunde, antwortet auf die
+Probe mit 404 und ist von außen nicht erreichbar (`server.address=127.0.0.1`,
+gegengeprüft über die LAN-Adresse). Der Deploy selbst — SSH, `systemctl`, die
+Proxy-Regel im Betrieb — läuft erst, wenn jemand ihn startet. Das ist dieselbe
+Grenze wie in D25 und D72: Was die Umgebung stellt, stellt der Emulator nicht.

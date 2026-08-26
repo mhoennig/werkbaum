@@ -263,6 +263,40 @@ keeps the "what's new" highlighting meaningful. Skip it with `--no-promote`; see
 The commit is **not** pushed automatically — run `git push` afterwards, or the
 footer version link points at a commit GitHub does not know yet.
 
+### Backend on the stable instance
+
+The backend is a separate deploy, because it is a service rather than files:
+
+```bash
+scripts/install-jdk.sh          # once: a JDK 21 into the server's home
+scripts/deploy-backend.sh       # build, upload, systemd user unit, restart
+scripts/deploy-prod.sh          # the editor — also writes the /api/ proxy rule
+```
+
+Configuration lives in the git-ignored `.env` (template `.env.example`):
+`BACKEND_SSH`, and optionally `BACKEND_DIR`, `BACKEND_JDK_DIR`, `BACKEND_PORT`,
+`BACKEND_XMX`.
+
+- **A JDK of our own**, because the measured target has only Java 17 while the
+  build asks for 21. `install-jdk.sh` fetches it from Adoptium and **verifies
+  the checksum from their API before unpacking**.
+- **A systemd user unit** (`scripts/werkbaum-backend.service`, a template with
+  placeholders). It survives the session because `Linger=yes` is set on that
+  host; paths are written as `%h/…`, since systemd expands no shell variables
+  there.
+- **The service listens on 127.0.0.1 only.** The way in is a
+  `RewriteRule … [P]` in `.htaccess` — measured to be permitted on this host,
+  and measured to hold a request open for 30 s, which is what the change feed
+  needs. `BACKEND_PORT` is the single number Apache and the service must agree
+  on; both scripts read it from the same place.
+- **The master password never leaves the server.** It goes into
+  `<BACKEND_DIR>/env` (mode 600), which the deploy creates empty on the first
+  run. Until a hash is in it, the document list stays locked — deliberately.
+- **Memory is the scarce resource on that host**, not CPU. The JVM flags are
+  measured, not guessed: `-Xmx192m -Xms48m` plus heap free ratios lands at
+  ~174 MB RSS, where the defaults take 291 MB. See
+  [docs/DECISIONS.md](docs/DECISIONS.md) D77 for the table.
+
 ## License
 
 MIT — see [LICENSE](LICENSE). © 2026 Michael Hönnig. The bundled IBM Plex fonts

@@ -24,3 +24,25 @@
   # ohne Content-Type aus, und Chromium verwirft das Manifest dann still.
   AddType application/manifest+json .webmanifest
 </IfModule>
+
+# --- Backend: /api/ an den eigenen Dienst weiterreichen (D77) ---------------
+# Der Editor spricht das Backend unter derselben Herkunft an (`?live=…`,
+# D76). Der Weg dorthin ist mod_rewrite mit dem P-Flag: `ProxyPass` ist in
+# einer `.htaccess` nicht zulässig, und `~/doms/<domain>/etc/` ist auf diesem
+# Hoster leer.
+#
+# Dass das P-Flag hier ERLAUBT ist, war die offene Frage — manche Hoster
+# sperren es. Gemessen am 26.08.2026 auf mih00.hostsharing.net: sofortige
+# Antwort HTTP 200 nach 0,13 s, absichtlich um 30 s verzögerte Antwort
+# HTTP 200 nach 30,1 s. Apache hält die Verbindung also durch und puffert
+# nichts weg — Long Polling mit `wait=25` trägt dort nachweislich (D76,
+# Nachtrag 2).
+#
+# Die Portnummer setzt scripts/deploy-prod.sh aus BACKEND_PORT ein; hier steht
+# ein Platzhalter, damit Port und Dienst nur an EINER Stelle vereinbart sind.
+# Läuft kein Backend, antwortet /api/ mit 503 — das ist die Wahrheit, und der
+# Rest der Seite bleibt unberührt.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^api/(.*)$ http://127.0.0.1:__BACKEND_PORT__/api/$1 [P,L]
+</IfModule>

@@ -59,16 +59,10 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 # ---- Ziel: Argument hat Vorrang, sonst DEPLOY_TARGET aus .env (git-ignoriert) ----
-ENV_FILE="$ROOT/.env"
-if [ -z "$TARGET" ] && [ -f "$ENV_FILE" ]; then
-  # Bewusst NICHT via `source` lesen: bash würde bei `host:~/pfad` das ~ nach dem
-  # ':' LOKAL expandieren. Stattdessen roh auslesen (letzte Definition gewinnt),
-  # trailing Whitespace/CR und umgebende Quotes strippen — das ~ bleibt so für
-  # die Remote-Seite erhalten.
-  TARGET="$(sed -n -E 's/^[[:space:]]*DEPLOY_TARGET[[:space:]]*=[[:space:]]*//p' "$ENV_FILE" \
-            | tail -1 | sed -E 's/[[:space:]]+$//')"
-  TARGET="${TARGET#\"}"; TARGET="${TARGET%\"}"
-  TARGET="${TARGET#\'}"; TARGET="${TARGET%\'}"
+# shellcheck source=/dev/null
+. "$ROOT/scripts/lib-env.sh"
+if [ -z "$TARGET" ]; then
+  TARGET="$(env_value DEPLOY_TARGET)"
   [ -n "$TARGET" ] && echo "==> Ziel aus .env: ${TARGET}"
 fi
 
@@ -145,7 +139,13 @@ cp frontend/dist/icon-192.png frontend/dist/icon-512.png frontend/dist/icon-mask
 cp frontend/dist/sw.js "$STAGE/sw.js"
 # Ohne diese Zuordnung liefert Apache `.md` ohne Content-Type aus und der
 # Browser rät windows-1252 (D43-Nachtrag 2). Pages braucht sie nicht.
-cp scripts/prod.htaccess "$STAGE/.htaccess"
+#
+# Dieselbe Datei trägt die Proxy-Regel für das Backend (D77). Die Portnummer
+# steht dort als Platzhalter und wird hier eingesetzt — Apache und Dienst
+# müssen sich über genau eine Zahl einig sein, und die steht in `.env`.
+BACKEND_PORT="$(env_value BACKEND_PORT)"; BACKEND_PORT="${BACKEND_PORT:-9080}"
+echo "==> /api/ -> 127.0.0.1:${BACKEND_PORT} (BACKEND_PORT)"
+sed -e "s/__BACKEND_PORT__/${BACKEND_PORT}/g" scripts/prod.htaccess > "$STAGE/.htaccess"
 
 # ---- 3) Spiegeln (--delete: nichts Altes bleibt am Ziel) ----
 # --chmod=D755,F644 erzwingt web-taugliche Rechte am Ziel, unabhängig von den
