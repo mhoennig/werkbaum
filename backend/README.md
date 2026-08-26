@@ -171,8 +171,14 @@ auffindbar — das Zugriffsmodell „unerratbarer Link" wäre hinfällig. Dieser
 Endpunkt verlangt deshalb HTTP Basic mit dem Benutzer `werkbaum`:
 
 ```bash
-export WERKBAUM_MASTER_PASSWORD_HASH="{bcrypt}$(htpasswd -bnBC 12 "" geheim | tr -d ':\n')"
+export WERKBAUM_MASTER_PASSWORD_HASH="{bcrypt}$(htpasswd -nBC 12 '' | tr -d ':\n')"
 ```
+
+**Ohne `-b`, also mit Eingabeaufforderung.** Ein Passwort auf der Kommandozeile
+landet in der Shell-History — und schlimmer: Die Shell fasst es vorher an.
+`ge$heim` wird zu `ge`, `ge heim` zu `geheim`. Gehasht wird dann etwas anderes
+als das, was man später eintippt, und der Server antwortet mit 401, obwohl
+alles richtig aussieht.
 
 - **Ohne gesetzten Hash ist die Liste gesperrt** (401), nicht offen. Ein
   vergessener Konfigurationsschritt darf nichts preisgeben; beim Start warnt

@@ -22,7 +22,10 @@ data class MasterPasswordProperties(
 
     /**
      * Hash **mit Verfahrens-Präfix**, in Produktion `{bcrypt}$2a$…`
-     * (z. B. `htpasswd -bnBC 12 "" geheim | tr -d ':\n'`, davor `{bcrypt}`).
+     * Erzeugt mit `htpasswd -nBC 12 '' | tr -d ':\n'`, davor `{bcrypt}`.
+     * Bewusst **ohne** `-b`: Ein Passwort auf der Kommandozeile fasst die
+     * Shell an (`ge${'$'}heim` wird zu `ge`), und gehasht würde etwas anderes
+     * als das, was später eingetippt wird.
      */
     val hash: String = "",
 

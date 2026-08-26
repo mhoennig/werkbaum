@@ -6192,6 +6192,23 @@ Securitys `DelegatingPasswordEncoder`). So steht in der Konfiguration, womit
 gehasht wurde, ein Wechsel des Verfahrens bricht nichts — und die Tests dürfen
 `{noop}` benutzen, ohne dass dafür eine zweite Code-Bahn nötig wäre.
 
+**Nachtrag beim ersten Einrichten: der Hash wird interaktiv erzeugt, nie mit
+dem Passwort auf der Kommandozeile.** Die erste Anleitung schrieb
+`htpasswd -bnBC 12 "" PASSWORT` — und lieferte prompt ein 401, obwohl Hash und
+Konfiguration nachweislich in Ordnung waren (68 Zeichen, `{bcrypt}`, drei `$`,
+im Prozess angekommen). Die Ursache liegt vor dem Hashen: Das Passwort steht
+dort ungeschützt in einer Kommandozeile, und die Shell fasst es an —
+`ge$heim` wird zu `ge`, `ge heim` zu `geheim`. Gehasht wird dann etwas anderes
+als das, was man später eintippt.
+
+Richtig ist `htpasswd -nBC 12 ''` **ohne `-b`**: Es fragt zweimal nach, das
+Passwort geht nie durch eine Shell und landet nicht in der History. Der Fehler
+ist besonders unangenehm, weil er wie ein Konfigurationsfehler aussieht — alles
+Prüfbare stimmt, nur der Vergleich schlägt fehl. Zum Auseinanderhalten gehört
+deshalb eine direkte Probe in die Anleitung: `htpasswd -v` gegen den
+gespeicherten Hash sagt in einem Schritt, ob Hash und Passwort zueinander
+passen, ohne den Dienst zu befragen.
+
 **Die neue Laufzeit-Abhängigkeit** (`spring-boot-starter-security`) ist in D76
 ausdrücklich vorgesehen („geprüft über Spring Security") und damit von der
 Rückfragepflicht der Wurzel-CLAUDE.md gedeckt. Sie ist zugleich der Platz für

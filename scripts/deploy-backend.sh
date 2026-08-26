@@ -151,9 +151,19 @@ if [ ! -f "$DIR/env" ]; then
   cat > "$DIR/env" <<'ENV'
 # Werkbaum-Backend — Umgebung des Dienstes. Modus 600, nie im Repository.
 #
-# Hash MIT Verfahrens-Praefix, z. B.:
-#   WERKBAUM_MASTER_PASSWORD_HASH={bcrypt}$(htpasswd -bnBC 12 "" geheim | tr -d ':\n')
-# Solange er leer ist, bleibt GET /api/v1/documents gesperrt (D76-Nachtrag 6).
+# Hash MIT Verfahrens-Praefix. Erzeugen - INTERAKTIV, damit das Passwort weder
+# in der Shell-History landet noch von der Shell veraendert wird:
+#
+#   umask 077
+#   printf 'WERKBAUM_MASTER_PASSWORD_HASH={bcrypt}%s\n' \
+#     "$(htpasswd -nBC 12 '' | tr -d ':\n')" > ~/opt/werkbaum/env
+#
+# Pruefen, ob Hash und Passwort zueinander passen:
+#   printf 'werkbaum:%s\n' "$(sed 's/^[^=]*={bcrypt}//' ~/opt/werkbaum/env)" > /tmp/chk
+#   htpasswd -v /tmp/chk werkbaum; rm -f /tmp/chk
+#
+# Solange der Hash leer ist, bleibt GET /api/v1/documents gesperrt
+# (D76-Nachtrag 6).
 WERKBAUM_MASTER_PASSWORD_HASH=
 ENV
   chmod 600 "$DIR/env"

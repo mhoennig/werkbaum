@@ -292,6 +292,10 @@ Configuration lives in the git-ignored `.env` (template `.env.example`):
 - **The master password never leaves the server.** It goes into
   `<BACKEND_DIR>/env` (mode 600), which the deploy creates empty on the first
   run. Until a hash is in it, the document list stays locked — deliberately.
+  Generate it **interactively** (`htpasswd -nBC 12 ''`, no `-b`): a password on
+  a command line lands in the shell history, and the shell mangles it on the
+  way — `ge$heim` becomes `ge`. What gets hashed is then not what you type
+  later, and the server answers 401 while everything looks right.
 - **Memory is the scarce resource on that host**, not CPU. The JVM flags are
   measured, not guessed: `-Xmx192m -Xms48m` plus heap free ratios lands at
   ~174 MB RSS, where the defaults take 291 MB. See
