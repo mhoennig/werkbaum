@@ -309,11 +309,22 @@ Gemessen auf `mih00.hostsharing.net`, wo die stabile Instanz
 | Java | **nur 17** | Backend verlangt 21 |
 | systemd `Linger` | **yes** | Ein eigener Dienst darf dauerhaft laufen |
 | PostgreSQL | lauscht auf 5432 | Der in `application.yaml` angedachte Umstieg wäre möglich |
+| Speicher | 3,9 GB im Host, davon ~300 MB frei | `-Xmx` ist Pflicht, siehe unten |
+| Webspace-Grenze | `MemoryMax=3147M` (cgroup) | Erlaubnis, keine Reservierung |
 
 **Long Polling trägt dort.** Die Zeitgrenzen sind großzügig, und der
 Worker-Pool ist groß genug. **Pufferung ist bei Long Polling ohnehin kein
 Thema** — anders als bei SSE kommt genau eine Antwort am Ende des Wartens,
 kein Strom von Teilstücken.
+
+**Der Speicher ist die knappe Größe, nicht die Verbindungen.** Der Host hat
+3,9 GB und ist überbucht (`Committed_AS` 12,0 GB gegen `CommitLimit` 5,9 GB);
+frei sind rund 300 MB, ein weiteres GB liegt bereits im Swap. Unser Webspace
+darf laut cgroup 3147 MB nehmen — das ist aber eine Erlaubnis, kein
+reservierter Speicher. Die JVM braucht deshalb ein ausdrückliches `-Xmx`,
+bemessen am tatsächlich Freien: Ihre Voreinstellung von ¼ des physischen RAM
+(≈ 980 MB) ist genau die Größenordnung, die auf diesem Host schon MariaDBs
+Puffer in den Swap gedrängt hat. Zahlen und Herleitung: D76-Nachtrag 3.
 
 **Der einzige echte Einwand ist das fehlende HTTP/2.** Damit gilt im Browser
 das Limit von sechs Verbindungen je Herkunft. Ein Long-Poll belegt eine

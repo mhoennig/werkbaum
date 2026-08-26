@@ -5963,8 +5963,8 @@ zu senken — Entwicklung und Produktion laufen dann auf derselben Version, und
 `Linger=yes` erlaubt den dauerhaften Dienst ohne Root. Erwogen und
 **vorgemerkt statt verworfen** war ein natives Binary via GraalVM: Es löste
 das Problem vollständig (kein Java auf dem Server) und spart den Großteil des
-knappen RAM — gemessen sind dort nur **832 MB frei** bei 3,9 GB gesamt, es ist
-ein geteilter Server. Dagegen stehen derzeit drei Dinge: die glibc-Differenz
+Speichers — der geteilte Host ist eng (berichtigte Zahlen in Nachtrag 3).
+Dagegen stehen derzeit drei Dinge: die glibc-Differenz
 zwischen Ubuntu 24.04 (2.39) und Debian 12 (2.36), die einen Container-Build
 erzwingt; Liquibase braucht Metadaten aus einem Native-Agent-Lauf und
 Hibernate das Enhancement-Plugin; und ein offener Fehler in Spring Boot 4
@@ -5974,6 +5974,45 @@ und JDBC sind JVM-Bibliotheken; das wäre kein Umbau, sondern ein Neubau auf
 einem anderen Stack. Unabhängig davon: Beim Deployment gehört ein `-Xmx`
 gesetzt, statt der JVM auf einem geteilten Server die Voreinstellung zu
 überlassen.
+
+**Nachtrag 3 — die Speicherzahlen berichtigt, und die Zuordnung geht doch
+(2026-08-26).** Nachtrag 2 nennt „nur **832 MB frei** bei 3,9 GB gesamt“ als
+Argument für das native Image. Die Zahl war ein Schnappschuss und dazu
+mehrdeutig: `free` und `available` sind verschiedene Dinge. Nachgemessen
+schwankt es zwischen **326–358 MB `free`** und **978–1004 MB `available`**
+von 3915 MB; dazu 4 GB Swap, davon rund **1 GB belegt**.
+
+**Die Annahme, ein Managed Webspace könne den Verbrauch nicht zuordnen, war
+falsch.** `/proc` trägt zwar `hidepid=invisible`, aber es gibt zwei Wege
+daran vorbei: das **systemd-cgroup-Accounting** (`systemctl status
+pacs-<paket>.slice` — so nennt es auch das Hostsharing-Wiki, „RAM Belegung“)
+und die **world-readable atop-Aufzeichnungen** unter `/var/log/atop/`, die
+als root geschrieben werden und vier Wochen Historie im 10-Minuten-Takt
+enthalten.
+
+**Es sind nicht die Datenbanken.** Gemessen je Dienst: `clamav-daemon`
+**988 MB**, `apache2` 580 MB, `systemd-journald` 310 MB, `spamd` 224 MB,
+`dovecot` 173 MB, `mariadb` **150 MB**, `postgresql@15-main` **111 MB**.
+Beide Datenbanken zusammen sind gut 8 % dessen, was im `system.slice` steht;
+der Virenscanner allein ist das Vierfache (atop, prozessgenau: `clamd`
+RSIZE 969,5 MB = 25 % des Maschinenspeichers). **Alle Webspaces zusammen
+belegen 100 MB**, unserer davon 30 MB.
+
+Die Datenbanken sind trotzdem beteiligt — als Verlierer: `mariadbd` hat laut
+atop **602 MB im Swap**, also den größten Teil des belegten Gigabytes.
+Provisioniert sind sie üppig (`shared_buffers` 979 MB, `innodb_buffer_pool_size`
+979 MB, `key_buffer_size` 489 MB — 979 MB sind exakt 25 % von 3915 MB, eine
+automatische Sizing-Regel, zweimal angewandt), residieren aber nur zu einem
+Zehntel davon. `Committed_AS` 12,0 GB gegen `CommitLimit` 5,9 GB: Der Host
+ist chronisch überbucht. **Das ist das schärfere GraalVM-Argument** als die
+Momentaufnahme aus Nachtrag 2 — nicht „gerade wenig frei“, sondern „hier
+gewinnt beim nächsten Engpass, wer zuerst da war“.
+
+**Das Budget fürs Deployment steht in `/etc/systemd/system/pacs-mih00.slice`:
+`MemoryMax=3147M`.** Das ist eine **Erlaubnis, keine Reservierung** — frei
+sind rund 300 MB. Ein `-Xmx` gehört also gegen das Freie bemessen, nicht
+gegen die Grenze; und die JVM-Voreinstellung (¼ des physischen RAM ≈ 980 MB)
+ist genau die Größenordnung, die MariaDBs Puffer in den Swap gedrängt hat.
 
 **Nachtrag zu D13 — Paketwurzel `de.werkbaum`, und drei Fallen von Spring
 Boot 4 (2026-08-26).** Das Backend-Gerüst kam zunächst unter der
