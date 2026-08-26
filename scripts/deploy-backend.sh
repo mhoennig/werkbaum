@@ -205,8 +205,25 @@ if [ "$RESTART" -eq 1 ]; then
       echo '    ! antwortet nicht.'; exit 1"; then
     :
   else
-    echo "==> Letzte Zeilen des Logs:" >&2
-    ssh "$SSH_TARGET" "export XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR:-/run/user/\$(id -u)}; tail -30 \"$DIR_SH/backend.log\" 2>/dev/null || systemctl --user status werkbaum-backend --no-pager -l | tail -30" >&2
+    # Nicht `tail`: Am Ende eines Stacktrace steht die Rahmenliste, also
+    # gerade das, was nichts erklärt. Gezeigt wird der **letzte Startversuch**
+    # und daraus die Ursachenkette — die tiefste Zeile ist die Antwort.
+    echo "==> Warum er nicht startet (letzter Versuch):" >&2
+    ssh "$SSH_TARGET" "
+      log=\"$DIR_SH/backend.log\"
+      if [ -r \"\$log\" ]; then
+        awk '/Starting EditorBackendApplication/ {n=NR} {z[NR]=\$0}
+             END {for(i=n;i<=NR;i++) print z[i]}' \"\$log\" \
+          | grep -E 'Caused by|ERROR' | cut -c1-200
+      else
+        export XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR:-/run/user/\$(id -u)}
+        systemctl --user status werkbaum-backend --no-pager -l | tail -20
+      fi" >&2
+    echo >&2
+    echo "   Steht dort \"Schema \\\"public\\\" not found\" oder \"databasechangelog already" >&2
+    echo "   exists\", stammt die Datenbank aus der Zeit mit MODE=PostgreSQL und passt" >&2
+    echo "   nicht mehr (D77). Sie muss einmal weg:" >&2
+    echo "     ssh $SSH_TARGET 'rm -rf $DIR_SH/data'" >&2
     exit 1
   fi
 fi

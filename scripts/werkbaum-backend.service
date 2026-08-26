@@ -14,6 +14,13 @@
 Description=Werkbaum backend
 After=network.target
 
+# Nach fuenf Fehlstarts in fuenf Minuten gibt systemd auf. Ohne diese Grenze
+# laeuft ein kaputtes Deployment endlos im Kreis: `is-active` sagt dann
+# dauerhaft „activating", das Log waechst, und der eigentliche Fehler steht
+# irgendwo weit oben. Mit ihr endet es sichtbar in „failed".
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
 [Service]
 Type=simple
 WorkingDirectory=__DIR__
