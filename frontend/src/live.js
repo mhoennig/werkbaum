@@ -144,6 +144,48 @@ export function applyOps(base, ops){
   return out;
 }
 
+/* ------------------------------------------------------------ Rebasen */
+
+/* Überschneiden sich zwei Operationen derselben Basis? Dieselbe Regel wie im
+   Backend: `replace`/`delete` belegen `[index, index+count)`, `insert` ist ein
+   Punkt **zwischen** den Zeilen und kollidiert nur mit dem Inneren eines
+   fremden Bereichs. Zwei Einfügungen an derselben Stelle vertragen sich. */
+export function conflicts(a, b){
+  const ai = a.index, ae = ai + removedCount(a);
+  const bi = b.index, be = bi + removedCount(b);
+  if(a.op === 'insert' && b.op === 'insert') return false;
+  if(a.op === 'insert') return bi < ai && ai < be;
+  if(b.op === 'insert') return ai < bi && bi < ae;
+  return ai < be && bi < ae;
+}
+
+/* Verschiebt [ops] auf den Stand, der durch [onto] aus derselben Basis
+   entstanden ist. `null` heißt echte Überschneidung — dann darf nichts
+   angewendet werden, und der Mensch entscheidet.
+
+   Der Client braucht das an zwei Stellen: um die eigene Schattenkopie
+   nachzuziehen, nachdem der Server verschoben hat, und um fremde Änderungen in
+   einen Text einzublenden, in dem schon ungesendet getippt wurde. */
+export function rebaseOps(ops, onto){
+  if(!onto || !onto.length || !ops.length) return ops;
+  for(const mine of ops){
+    for(const theirs of onto){
+      if(conflicts(mine, theirs)) return null;
+    }
+  }
+  return ops.map(op => {
+    let delta = 0;
+    for(const other of onto){
+      /* Eine fremde Einfügung an derselben Stelle zählt dazu: Sie ist bereits
+         bestätigt und steht deshalb oben. */
+      if(other.index + removedCount(other) <= op.index){
+        delta += insertedLines(other).length - removedCount(other);
+      }
+    }
+    return delta ? Object.assign({}, op, {index: op.index + delta}) : op;
+  });
+}
+
 /* ------------------------------------------------------------ Cursor */
 
 /* Wohin wandert eine Zeile, wenn fremde Operationen angewendet werden?

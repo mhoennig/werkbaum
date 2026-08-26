@@ -4,6 +4,7 @@ import { computeCheapPlan, overloadedAssignee, freshProdSet, initialCollapsed, n
 import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning, warningText } from './warnings.js';
 import { padUrls } from './remote.js';
+import * as live from './live.js';
 import { depFragment, collectIds, matchIds, depIdAt, idLine } from './autocomplete.js';
 import { LS_SNAPS, SNAP_EVERY, parseSnaps, addSnapshot, persistSnaps, snapLabel }
   from './snapshots.js';
@@ -913,6 +914,7 @@ src.addEventListener('keydown', e => {
 
 src.addEventListener('input', render);
 src.addEventListener('input', saveSrc);
+src.addEventListener('input', scheduleLivePush);   /* Server-Dokument: Diff nach 1,5 s Ruhe (D76) */
 
 /* ---------- Sprung zwischen Diagramm und Text (D25) ----------
    Jeder Knoten trägt seine Zeilennummer als `data-line` (render.js).
@@ -2222,6 +2224,11 @@ const I18N = {
     padReadonly:"Wird im Pad bearbeitet — hier nur lesen.",
     padEdit:"Pad zum Bearbeiten öffnen",
     padRefresh:"Vom Pad neu laden",
+    liveLoadWarn:"Server-Dokument nicht geladen: {url} ({error}). Läuft das Backend, und ist die Adresse eine Dokument-Adresse (…/documents/&lt;uuid&gt;)?",
+    liveStaleWarn:"Deine Änderung war nicht mehr anwendbar ({error}) — der Stand wurde einmal frisch geholt.",
+    liveConflictText:"Jemand hat dieselben Zeilen geändert. Wessen Fassung soll gelten?",
+    liveConflictTheirs:"Fremde übernehmen",
+    liveConflictMine:"Eigene durchsetzen",
     padWait:"Noch {seconds} s — Etherpad begrenzt die Abrufe",
     padRateLimitWarn:"Noch nicht neu geladen: Etherpad erlaubt nur wenige Abrufe je Zeitfenster (serienmäßig 10 pro 90 s), so häufiges Nachladen ist leider nicht möglich. In {seconds} s geht es wieder.",
     padViewTooltip:"Ansicht: {state} — klicken zum Wechseln",
@@ -2335,6 +2342,11 @@ const I18N = {
     padReadonly:"Edited in the pad — read-only here.",
     padEdit:"Open the pad to edit",
     padRefresh:"Reload from the pad",
+    liveLoadWarn:"Server document not loaded: {url} ({error}). Is the backend running, and is the address a document address (…/documents/&lt;uuid&gt;)?",
+    liveStaleWarn:"Your change no longer applied ({error}) — the document was fetched afresh once.",
+    liveConflictText:"Someone changed the same lines. Whose version should win?",
+    liveConflictTheirs:"Take theirs",
+    liveConflictMine:"Keep mine",
     padWait:"{seconds} s to go — Etherpad limits how often we may fetch",
     padRateLimitWarn:"Not reloaded yet: Etherpad only allows a few fetches per time window (10 per 90 s by default), so syncing this often is unfortunately not possible. Try again in {seconds} s.",
     padViewTooltip:"View: {state} — click to switch",
@@ -2447,6 +2459,11 @@ const I18N = {
     padReadonly:"Se edita en el pad — aquí solo lectura.",
     padEdit:"Abrir el pad para editar",
     padRefresh:"Recargar desde el pad",
+    liveLoadWarn:"Documento del servidor no cargado: {url} ({error}). ¿Está el backend en marcha y es la dirección la de un documento (…/documents/&lt;uuid&gt;)?",
+    liveStaleWarn:"Tu cambio ya no era aplicable ({error}): se volvió a cargar el estado una vez.",
+    liveConflictText:"Alguien cambió las mismas líneas. ¿Qué versión debe prevalecer?",
+    liveConflictTheirs:"Tomar la ajena",
+    liveConflictMine:"Mantener la mía",
     padWait:"Faltan {seconds} s — Etherpad limita la frecuencia",
     padRateLimitWarn:"Aún no se ha recargado: Etherpad solo permite unas pocas descargas por ventana de tiempo (10 por 90 s de forma predeterminada), así que sincronizar tan a menudo no es posible. Vuelve a intentarlo en {seconds} s.",
     padViewTooltip:"Vista: {state} — clic para cambiar",
@@ -2559,6 +2576,11 @@ const I18N = {
     padReadonly:"Modifié dans le pad — lecture seule ici.",
     padEdit:"Ouvrir le pad pour modifier",
     padRefresh:"Recharger depuis le pad",
+    liveLoadWarn:"Document du serveur non chargé : {url} ({error}). Le backend tourne-t-il, et l'adresse est-elle celle d'un document (…/documents/&lt;uuid&gt;) ?",
+    liveStaleWarn:"Ta modification n'était plus applicable ({error}) — l'état a été rechargé une fois.",
+    liveConflictText:"Quelqu'un a modifié les mêmes lignes. Quelle version doit l'emporter ?",
+    liveConflictTheirs:"Prendre la sienne",
+    liveConflictMine:"Garder la mienne",
     padWait:"Encore {seconds} s — Etherpad limite la fréquence",
     padRateLimitWarn:"Pas encore rechargé : Etherpad n’autorise que quelques récupérations par fenêtre de temps (10 par 90 s par défaut), une synchronisation aussi fréquente n’est donc pas possible. Réessaie dans {seconds} s.",
     padViewTooltip:"Vue : {state} — cliquer pour changer",
@@ -2671,6 +2693,11 @@ const I18N = {
     padReadonly:"Edytowane w padzie — tu tylko do czytania.",
     padEdit:"Otwórz pad do edycji",
     padRefresh:"Wczytaj ponownie z padu",
+    liveLoadWarn:"Nie wczytano dokumentu z serwera: {url} ({error}). Czy backend działa i czy adres wskazuje dokument (…/documents/&lt;uuid&gt;)?",
+    liveStaleWarn:"Twoja zmiana nie dała się już zastosować ({error}) — stan pobrano raz od nowa.",
+    liveConflictText:"Ktoś zmienił te same wiersze. Która wersja ma obowiązywać?",
+    liveConflictTheirs:"Przyjmij cudzą",
+    liveConflictMine:"Zachowaj własną",
     padWait:"Jeszcze {seconds} s — Etherpad ogranicza częstość",
     padRateLimitWarn:"Jeszcze nie wczytano ponownie: Etherpad dopuszcza tylko kilka pobrań w okresie (domyślnie 10 na 90 s), więc tak częsta synchronizacja nie jest możliwa. Spróbuj za {seconds} s.",
     padViewTooltip:"Widok: {state} — kliknij, aby zmienić",
@@ -2783,6 +2810,11 @@ const I18N = {
     padReadonly:"Редактируется в паде — здесь только чтение.",
     padEdit:"Открыть пад для редактирования",
     padRefresh:"Обновить из пада",
+    liveLoadWarn:"Документ с сервера не загружен: {url} ({error}). Запущен ли бэкенд и является ли адрес адресом документа (…/documents/&lt;uuid&gt;)?",
+    liveStaleWarn:"Ваше изменение больше не применялось ({error}) — состояние загружено заново.",
+    liveConflictText:"Кто-то изменил те же строки. Чья версия должна остаться?",
+    liveConflictTheirs:"Принять чужую",
+    liveConflictMine:"Оставить свою",
     padWait:"Ещё {seconds} с — Etherpad ограничивает частоту",
     padRateLimitWarn:"Пока не обновлено: Etherpad разрешает лишь несколько загрузок за окно времени (по умолчанию 10 за 90 с), поэтому столь частая синхронизация невозможна. Повторите через {seconds} с.",
     padViewTooltip:"Вид: {state} — нажмите для переключения",
@@ -2895,6 +2927,11 @@ const I18N = {
     padReadonly:"पैड में संपादित होता है — यहाँ केवल पढ़ें।",
     padEdit:"संपादित करने के लिए पैड खोलें",
     padRefresh:"पैड से फिर लोड करें",
+    liveLoadWarn:"सर्वर दस्तावेज़ लोड नहीं हुआ: {url} ({error})। क्या बैकएंड चल रहा है और क्या पता दस्तावेज़ का पता है (…/documents/&lt;uuid&gt;)?",
+    liveStaleWarn:"आपका बदलाव अब लागू नहीं हो सका ({error}) — स्थिति एक बार नए सिरे से ली गई।",
+    liveConflictText:"किसी और ने वही पंक्तियाँ बदली हैं। किसका संस्करण रहे?",
+    liveConflictTheirs:"दूसरे का लें",
+    liveConflictMine:"अपना रखें",
     padWait:"{seconds} स॰ बाकी — Etherpad बार-बार लेने की सीमा रखता है",
     padRateLimitWarn:"अभी दोबारा लोड नहीं किया: Etherpad प्रति समय-खिड़की केवल कुछ ही बार लेने देता है (डिफ़ॉल्ट रूप से 90 स॰ में 10 बार), इसलिए इतनी बार सिंक करना संभव नहीं है। {seconds} स॰ में फिर कोशिश करें।",
     padViewTooltip:"दृश्य: {state} — बदलने के लिए क्लिक करें",
@@ -3018,6 +3055,11 @@ const I18N = {
     padReadonly:"在 Pad 中编辑 — 此处只读。",
     padEdit:"打开 Pad 进行编辑",
     padRefresh:"从 Pad 重新加载",
+    liveLoadWarn:"未能加载服务器文档：{url}（{error}）。后端在运行吗？该地址是文档地址（…/documents/&lt;uuid&gt;）吗？",
+    liveStaleWarn:"你的更改已无法应用（{error}）——已重新获取一次当前状态。",
+    liveConflictText:"有人改动了同样的行。以谁的版本为准？",
+    liveConflictTheirs:"采用对方的",
+    liveConflictMine:"保留我的",
     padWait:"还需 {seconds} 秒 — Etherpad 限制获取频率",
     padRateLimitWarn:"尚未重新加载：Etherpad 每个时间窗口只允许少量获取（默认每 90 秒 10 次），因此无法如此频繁地同步。请在 {seconds} 秒后再试。",
     padViewTooltip:"视图：{state} — 点击切换",
@@ -3130,6 +3172,11 @@ const I18N = {
     padReadonly:"パッドで編集します — ここでは読み取り専用です。",
     padEdit:"編集するにはパッドを開く",
     padRefresh:"パッドから再読み込み",
+    liveLoadWarn:"サーバー文書を読み込めませんでした: {url}（{error}）。バックエンドは動いていますか。アドレスは文書のアドレス（…/documents/&lt;uuid&gt;）ですか。",
+    liveStaleWarn:"あなたの変更はもう適用できませんでした（{error}）。状態を一度取り直しました。",
+    liveConflictText:"同じ行が他の人にも変更されました。どちらの版を採りますか。",
+    liveConflictTheirs:"相手の版",
+    liveConflictMine:"自分の版",
     padWait:"あと {seconds} 秒 — Etherpad は取得頻度を制限します",
     padRateLimitWarn:"まだ再読み込みしていません: Etherpad は一定時間内の取得回数を制限します（既定で 90 秒あたり 10 回）。これほど頻繁な同期はできません。{seconds} 秒後にもう一度お試しください。",
     padViewTooltip:"表示: {state} — クリックで切り替え",
@@ -3970,6 +4017,7 @@ function deleteDoc(){
   if(!d) return;
   if(!window.confirm(t('docDeleteConfirm', {name: d.name}))) return;
   if(padSource && padSource.id === d.id) stopPad();   /* danach gibt es nichts mehr zu holen (D31) */
+  if(liveState && liveState.id === d.id) stopLive();  /* dito fürs Server-Dokument (D76) */
   if(fileHandles.has(d.id)){ fileHandles.delete(d.id); idbDeleteHandle(d.id); }   /* mit dem Dokument geht sein Datei-Handle (D72) */
   docs = docs.filter(x => x.id !== d.id);
   if(snaps[d.id]){ delete snaps[d.id]; persistSnaps(snaps, localStorage); }   /* mit dem Dokument gehen seine Stände (D54) */
@@ -4333,6 +4381,375 @@ async function loadRemoteSource(){
   }finally{
     if(s.live) padBusy = false;
   }
+}
+
+/* ---------- Gemeinsam am selben Dokument arbeiten: ?live= (D76) ----------
+   Der dritte Eingang für Text von außen — und der einzige, in den auch
+   zurückgeschrieben wird. Adressiert wird die Dokument-URL des Backends
+   (`…/api/v1/documents/<uuid>`); Identität und Endpunkte leitet live.js daraus
+   ab, dort steht auch die Begründung.
+
+   Der Ablauf in drei Sätzen: Beim Laden holen wir Text und Version und merken
+   uns beides als **Schattenkopie** — den Stand, den der Server kennt. Wer tippt,
+   schickt nach 1,5 s Ruhe das **Diff** von der Schattenkopie zum jetzigen Text.
+   Ein **Feed** hält die Gegenrichtung offen und wendet fremde Änderungen an,
+   ohne das Dokument neu zu laden — dafür wandert die Schreibmarke mit
+   (live.js, `mapLine`).
+
+   Was hier NICHT passiert: Zusammenführen. Überschneiden sich zwei Änderungen
+   wirklich, entscheidet der Mensch (Konflikt-Band unten). Alles andere
+   verschiebt der Server selbst. */
+const LIVE_PARAM = 'live';
+const LIVE_DEBOUNCE_MS = 1500;   /* Ruhe vor dem Senden; D76 */
+const LIVE_WAIT_S = 25;          /* Wartezeit des Feeds; der Server klemmt sie ohnehin */
+const LIVE_RETRY_MS = 5000;      /* nach einem Netzfehler, bevor der Feed erneut fragt */
+
+/* Zufällige, pseudonyme Kennung dieses Clients — samt laufender Nummer.
+   Beide zusammen machen das Einreichen wiederholbar: Geht die Antwort
+   unterwegs verloren, erkennt der Server die Wiederholung und wendet sie nicht
+   ein zweites Mal an (D76).
+
+   Beide liegen im **sessionStorage**, also je Tab:
+   - Über den Tab hinaus geteilt wären sie falsch. Zwei Tabs desselben Browsers
+     sind zwei Schreiber; mit gemeinsamer Nummer schickte der eine bald eine
+     kleinere `seq` als der andere — für den Server eine veraltete Nummer (422).
+   - Innerhalb des Tabs müssen sie das Neuladen überleben. Sonst finge die
+     Nummer wieder bei 1 an, und der Server hielte die erste echte Änderung für
+     die Wiederholung der letzten von vorhin und täte **nichts** — im Live-Test
+     genau so passiert. */
+const SS_CLIENT = 'werkbaum-client';
+const SS_SEQ = 'werkbaum-seq';
+function clientId(){
+  let id = null;
+  try{ id = sessionStorage.getItem(SS_CLIENT); }catch(_){}
+  if(!id){
+    id = 'c-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    try{ sessionStorage.setItem(SS_CLIENT, id); }catch(_){}
+  }
+  return id;
+}
+function nextSeq(){
+  let n = 0;
+  try{ n = parseInt(sessionStorage.getItem(SS_SEQ) || '0', 10) || 0; }catch(_){}
+  n++;
+  try{ sessionStorage.setItem(SS_SEQ, String(n)); }catch(_){}
+  return n;
+}
+
+let liveState = null;      /* {urls, id, version, shadow, seq, pushTimer, feedAbort, busy} */
+let liveConflict = null;   /* offener Konflikt: bis der Mensch entscheidet, ruht alles */
+
+function liveActive(){ return !!liveState && activeId === liveState.id; }
+
+/* Wer das Live-Dokument löscht, meint es (wie beim Pad, D31). */
+function stopLive(){
+  if(!liveState) return;
+  if(liveState.pushTimer) clearTimeout(liveState.pushTimer);
+  if(liveState.feedAbort) liveState.feedAbort.abort();
+  liveState = null;
+  liveConflict = null;
+  hideConflictBanner();
+}
+
+async function loadLive(){
+  const raw = urlParam(LIVE_PARAM);
+  if(!raw) return;
+  const urls = live.liveUrls(raw, location.href);
+  if(!urls){
+    sourceWarning = {type:'liveLoad', url: raw, error: 'not a Werkbaum document URL'};
+    render();
+    return;
+  }
+  liveState = {urls, id: 'live:' + urls.doc, version: 0, shadow: [''],
+               pushTimer: null, feedAbort: null, busy: false};
+  try{
+    const doc = await fetchJson(urls.doc);
+    adoptLive(doc);
+    runFeed();
+  }catch(err){
+    sourceWarning = {type:'liveLoad', url: urls.doc, error: (err && err.message) || String(err)};
+    render();
+  }
+}
+
+async function fetchJson(url, options){
+  const resp = await fetch(url, Object.assign({cache:'no-store', credentials:'omit'}, options));
+  if(resp.status === 204) return null;
+  if(!resp.ok){
+    const err = new Error('HTTP ' + resp.status);
+    err.status = resp.status;
+    try{ err.body = await resp.json(); }catch(_){}
+    throw err;
+  }
+  return await resp.json();
+}
+
+/* Server-Stand übernehmen: Text ins Dokument, Schattenkopie und Version merken.
+   Der Name ist der **Titel des Servers**, nicht die URL wie bei ?sourceUrl= und
+   ?etherpad= — anders als eine Datei oder ein Pad hat ein Server-Dokument einen
+   Namen, und alle sehen denselben. Die volle Adresse steht im Tooltip
+   (D76-Nachtrag 7). */
+function adoptLive(doc){
+  const content = live.normalize(doc.content || '');
+  liveState.version = doc.version;
+  liveState.shadow = live.lines(content);
+  flushActive();
+  let d = docs.find(x => x.id === liveState.id);
+  if(d){ d.text = content; d.name = doc.title || liveState.urls.doc; }
+  else { d = {id: liveState.id, name: doc.title || liveState.urls.doc, text: content}; docs.push(d); }
+  d.source = liveState.urls.doc;
+  activeId = liveState.id;
+  sourceWarning = null;
+  computeFresh(liveState.id, content);
+  loadActiveIntoEditor();
+  persistDocs();
+}
+
+/* ---------- Hinschicken ---------- */
+
+/* Nach jeder Eingabe neu gestartet: Gesendet wird erst, wenn 1,5 s Ruhe ist.
+   Ohne den Takt entstünde je Tastendruck eine Version — die Historie wäre ein
+   Transaktionslog, und das Netz hätte zu tun. */
+function scheduleLivePush(){
+  if(!liveActive() || liveConflict) return;
+  if(liveState.pushTimer) clearTimeout(liveState.pushTimer);
+  liveState.pushTimer = setTimeout(() => { liveState.pushTimer = null; pushLive(); },
+                                   LIVE_DEBOUNCE_MS);
+}
+
+async function pushLive(){
+  if(!liveActive() || liveConflict || liveState.busy) return;
+  const now = live.lines(live.normalize(src.value));
+  const ops = live.computeOps(liveState.shadow, now);
+  if(!ops.length) return;
+
+  liveState.busy = true;
+  const seq = nextSeq();
+  try{
+    const body = {
+      baseVersion: liveState.version,
+      checksum: await live.checksum(live.text(liveState.shadow)),
+      clientId: clientId(),
+      displayName: displayName(),
+      seq,
+      ops,
+    };
+    const result = await fetchJson(liveState.urls.content, {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+    });
+    /* Angenommen. Hat der Server verschoben, stehen die fremden Operationen in
+       `opsSinceBase`: Die Schattenkopie zieht erst darüber nach, dann kommt
+       unsere eigene Änderung darauf — verschoben um die fremde. Genau diese
+       Rechnung hat der Server auch gemacht; wir kommen deshalb auf denselben
+       Text, ohne ihn abholen zu müssen. */
+    const foreign = (result.opsSinceBase || []);
+    const alt = liveState.shadow;
+    const meine = foreign.length ? live.rebaseOps(ops, foreign) : ops;
+    if(meine == null){ await reloadLive(); return; }   /* kann nicht sein - dann lieber neu */
+    liveState.shadow = live.applyOps(
+      foreign.length ? live.applyOps(alt, foreign) : alt, meine);
+    liveState.version = result.version;
+    if(foreign.length) applyForeign(alt, foreign, liveState.shadow, liveState.version);
+  }catch(err){
+    handlePushError(err);
+  }finally{
+    liveState.busy = false;
+  }
+}
+
+function handlePushError(err){
+  if(err && err.status === 409 && err.body){
+    /* Der andere Weg in denselben Zustand: Unser Senden hat das Rennen gegen
+       den Feed gewonnen, und der Server hat die Überschneidung gesehen. */
+    let serverLines;
+    try{ serverLines = live.applyOps(liveState.shadow, err.body.opsSinceBase || []); }
+    catch(_){ reloadLive(); return; }
+    openConflict(err.body.currentVersion, serverLines);
+    return;
+  }
+  if(err && (err.status === 422 || err.status === 404)){
+    /* Nicht anwendbar oder weg: einmal neu laden ist der vereinbarte Ausweg. */
+    sourceWarning = {type:'liveStale', error: (err.body && err.body.detail) || err.message};
+    render();
+    reloadLive();
+    return;
+  }
+  sourceWarning = {type:'liveLoad', url: liveState.urls.doc,
+                   error: (err && err.message) || String(err)};
+  render();
+}
+
+async function reloadLive(){
+  if(!liveState) return;
+  try{ adoptLive(await fetchJson(liveState.urls.doc)); }catch(_){ /* der Feed versucht es weiter */ }
+}
+
+/* ---------- Herbekommen: der Feed ---------- */
+
+/* Eine offene Anfrage, die der Server beantwortet, sobald sich etwas tut.
+   Läuft **nur im sichtbaren Tab** (D76-Nachtrag 1): Ein Hintergrund-Tab braucht
+   keinen Live-Feed, niemand schaut hin, und ohne HTTP/2 belegt jeder Tab eine
+   der sechs Verbindungen zur Herkunft. Beim Zurückkommen holt ein einziger
+   Abruf den Rückstand. */
+async function runFeed(){
+  while(liveState){
+    if(document.hidden || liveConflict){ await sleep(500); continue; }
+    const ctl = new AbortController();
+    liveState.feedAbort = ctl;
+    try{
+      const url = liveState.urls.changes +
+        '?since=' + liveState.version + '&wait=' + LIVE_WAIT_S;
+      const feed = await fetchJson(url, {signal: ctl.signal});
+      if(feed) applyFeed(feed);
+    }catch(err){
+      if(!liveState) return;
+      if(err && err.name === 'AbortError') continue;
+      if(err && err.status === 404){ stopLive(); return; }
+      await sleep(LIVE_RETRY_MS);
+    }finally{
+      if(liveState) liveState.feedAbort = null;
+    }
+  }
+}
+
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+/* Beim Wegschalten die offene Verbindung **schließen**, nicht bloß die Antwort
+   ignorieren: Ohne HTTP/2 belegt jeder Tab eine der sechs Verbindungen zur
+   Herkunft, und ein Hintergrund-Tab braucht keinen Feed (D76-Nachtrag 1). Beim
+   Zurückkommen holt der nächste Durchlauf den Rückstand in einem Zug. */
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden && liveState && liveState.feedAbort) liveState.feedAbort.abort();
+});
+
+function applyFeed(feed){
+  const what = live.feedAction(feed, liveState.version);
+  if(what === 'skip') return;
+  if(what === 'replace'){
+    /* Volltext: die Basis ist verdichtet, ein Diff gibt es nicht mehr. */
+    liveState.version = feed.currentVersion;
+    liveState.shadow = live.lines(live.normalize(feed.content));
+    setLiveText(live.text(liveState.shadow), null);
+    return;
+  }
+  const alt = liveState.shadow;
+  liveState.shadow = live.applyOps(alt, feed.ops);
+  liveState.version = feed.currentVersion;
+  applyForeign(alt, feed.ops, liveState.shadow, liveState.version);
+}
+
+/* Fremde Operationen auf den **sichtbaren** Text anwenden.
+   Hat der Nutzer inzwischen selbst getippt, ist sein Text nicht mehr die alte
+   Schattenkopie: Dann wird die fremde Änderung auf seinen Stand angewendet und
+   sein eigenes Diff beim nächsten Senden neu gebildet. Passt das nicht (die
+   Zeilen sind unter ihm weggezogen), bleibt sein Text stehen — das nächste
+   Senden klärt es, notfalls über einen Konflikt. */
+function applyForeign(oldShadow, ops, serverLines, version){
+  const editor = live.lines(live.normalize(src.value));
+  /* Was der Server noch nicht kennt: alles, was seit der Schattenkopie
+     getippt wurde. Die fremden Operationen zählen gegen die Schattenkopie -
+     um sie auf den getippten Text anzuwenden, müssen sie daran vorbei. */
+  const ungesendet = live.computeOps(oldShadow, editor);
+  const verschoben = live.rebaseOps(ops, ungesendet);
+  if(verschoben == null){
+    /* Überschneidung mit dem, was gerade getippt wird — **hier** entsteht der
+       Konflikt, nicht erst beim Senden. Ohne diese Stelle bliebe er praktisch
+       aus: Der Feed zieht die Schattenkopie nach, das nächste Senden hätte
+       eine aktuelle Basis, und die fremde Zeile wäre stillschweigend
+       überschrieben. Der Server kann das nicht sehen — er kennt den
+       ungesendeten Text nicht. */
+    openConflict(version, serverLines);
+    return;
+  }
+  let after;
+  try{ after = live.applyOps(editor, verschoben); }catch(_){ return; }
+  const caret = live.caretToLineCol(src.value, src.selectionStart);
+  const line = live.mapLine(caret.line, verschoben);
+  setLiveText(live.text(after), live.lineColToCaret(after, line, caret.col));
+}
+
+/* Text setzen, ohne die eigene Änderungslogik erneut auszulösen.
+   Bewusst **nicht** undo-fähig geschrieben: Eine fremde Änderung ist nicht
+   meine Eingabe, und ein Strg+Z, das den Beitrag eines anderen zurücknimmt,
+   wäre eine Lüge über die Herkunft. */
+function setLiveText(text, caret){
+  src.value = text;
+  if(caret != null){ src.selectionStart = src.selectionEnd = caret; }
+  const d = activeDoc();
+  if(d) d.text = text;
+  persistDocs();
+  render();
+}
+
+/* ---------- Konflikt ---------- */
+
+/* Echte Überschneidung: Der Server hat abgelehnt, und jetzt entscheidet der
+   Mensch. Bis dahin ruhen Senden und Feed — sonst zöge der Stand unter der
+   Frage weg, die gerade gestellt ist. */
+function openConflict(version, serverLines){
+  if(liveConflict) return;            /* eine Frage zur Zeit */
+  liveConflict = {version, serverLines};
+  showConflictBanner();
+}
+
+/* Fremde Fassung übernehmen: Der eigene Text weicht. Verloren ist er nicht —
+   er steht in den früheren Ständen (D54), und jede Version steht in der
+   Historie des Servers. */
+function takeTheirs(){
+  const c = liveConflict;
+  liveConflict = null;
+  hideConflictBanner();
+  liveState.version = c.version;
+  liveState.shadow = c.serverLines;
+  setLiveText(live.text(c.serverLines), null);
+}
+
+/* Eigene durchsetzen: Die Schattenkopie zieht auf den Server-Stand nach, der
+   eigene Text bleibt stehen. Das nächste Senden bildet das Diff dagegen — es
+   überschneidet sich dann per Konstruktion nicht mehr. */
+function keepMine(){
+  const c = liveConflict;
+  liveConflict = null;
+  hideConflictBanner();
+  liveState.version = c.version;
+  liveState.shadow = c.serverLines;
+  pushLive();
+}
+
+function showConflictBanner(){
+  hideConflictBanner();
+  const bar = document.createElement('div');
+  bar.id = 'liveConflict';
+  bar.className = 'live-conflict';
+  bar.setAttribute('role', 'alertdialog');
+  bar.innerHTML = '<span></span>' +
+    '<div class="live-conflict-actions">' +
+    '<button type="button" class="theirs"></button>' +
+    '<button type="button" class="mine"></button></div>';
+  bar.querySelector('span').textContent = t('liveConflictText');
+  const theirs = bar.querySelector('.theirs');
+  const mine = bar.querySelector('.mine');
+  theirs.textContent = t('liveConflictTheirs');
+  mine.textContent = t('liveConflictMine');
+  theirs.addEventListener('click', takeTheirs);
+  mine.addEventListener('click', keepMine);
+  document.body.appendChild(bar);
+  theirs.focus();
+}
+
+function hideConflictBanner(){
+  const el = document.getElementById('liveConflict');
+  if(el) el.remove();
+}
+
+/* Anzeigename: ohne Anmeldung eine Behauptung (D76) — die Oberfläche darf ihn
+   nicht wie einen Nachweis aussehen lassen. Vorerst der gemerkte Name oder
+   nichts; ein Eingabefeld dafür kommt mit der Präsenz-Anzeige. */
+const LS_NAME = 'werkbaum-name';
+function displayName(){
+  try{ return localStorage.getItem(LS_NAME) || undefined; }catch(_){ return undefined; }
 }
 
 /* ---------- Pad: auf Knopfdruck neu holen (D31) ----------
@@ -4796,6 +5213,7 @@ if('launchQueue' in window){
 }
 applyMobile();   /* Mobil-Verhalten (nach Sprache/Restore) anwenden */
 loadRemoteSource();    /* ?sourceUrl= / ?etherpad= nachladen (asynchron, D23/D31) */
+loadLive();            /* ?live= — Server-Dokument samt Feed (asynchron, D76) */
 
 /* ---------- PWA: Service Worker (D73) ----------
    Ein reiner Offline-Mantel (public/sw.js): Navigationen network-first, der

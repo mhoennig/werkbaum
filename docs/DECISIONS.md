@@ -6196,3 +6196,69 @@ gehasht wurde, ein Wechsel des Verfahrens bricht nichts — und die Tests dürfe
 ausdrücklich vorgesehen („geprüft über Spring Security") und damit von der
 Rückfragepflicht der Wurzel-CLAUDE.md gedeckt. Sie ist zugleich der Platz für
 die spätere richtige Authentifizierung.
+
+**Nachtrag 7 — der Client: was der Live-Test gefunden hat (2026-08-26).**
+Schritt 6 steht: `?live=<Dokument-URL>` führt ein Server-Dokument, schickt nach
+1,5 s Ruhe das Diff und hält einen Feed offen. Die entscheidbare Hälfte liegt
+headless in `frontend/src/live.js`, die I/O in `app.js` (Hausregel,
+D54-Nachtrag 3). Fünf Festlegungen und zwei Funde:
+
+**Der Name ist der Titel des Servers, nicht die URL.** Das weicht vom
+Haupttext ab („der Name ist die URL", wie bei `?sourceUrl=` und `?etherpad=`),
+und zwar mit Grund: Anders als eine Datei oder ein Pad **hat** ein
+Server-Dokument einen Namen, und alle sehen denselben. Die vollständige
+Adresse steht wie dort im Tooltip. Identität und Wiederfinden hängen
+unverändert an der URL.
+
+**Konflikte entstehen beim Tippen, nicht erst beim Senden — und das war der
+erste Fund.** Der Server sieht nur, was eingereicht wird; den ungesendeten
+Text im Editor kennt er nicht. Mit laufendem Feed zieht die Schattenkopie
+ständig nach, die eigene Basis ist also nie veraltet — ein 409 käme praktisch
+nie zustande, und die fremde Zeile wäre **stillschweigend überschrieben**.
+Deshalb prüft der Client beim Einblenden fremder Änderungen selbst, ob sie
+sich mit dem gerade Getippten überschneiden, und stellt dann dieselbe Frage.
+Ein Zustand, zwei Wege hinein: lokal erkannt oder vom Server gemeldet.
+
+**Die Frage lautet „wessen Fassung", nicht „welche Zeile".** Zwei Knöpfe,
+ganzes Dokument: *Fremde übernehmen* setzt den Text auf den Server-Stand,
+*Eigene durchsetzen* zieht nur die Schattenkopie nach und schickt den eigenen
+Text darauf. Zeilenweises Zusammenführen im Konfliktfall wäre eine eigene
+Oberfläche; verloren geht dabei ohnehin nichts — der verworfene Stand liegt in
+den früheren Ständen (D54) und jede Version in der Historie des Servers.
+Solange die Frage offen ist, ruhen Senden **und** Feed: Sonst zöge der Stand
+unter der Frage weg, die gerade gestellt ist.
+
+**Kennung und laufende Nummer liegen im sessionStorage, also je Tab — das war
+der zweite Fund.** Erst lag beides im localStorage. Nach einem Neuladen begann
+`seq` wieder bei 1, die Kennung blieb — und der Server hielt die erste echte
+Änderung für die Wiederholung der letzten von vorhin und tat **nichts**. Im
+Live-Test sofort sichtbar, in keinem Unit-Test: Genau die Naht zwischen Modul
+und Verdrahtung, vor der D54-Nachtrag 3 warnt. Je Tab ist zugleich die
+richtige Aussage: Zwei Tabs sind zwei Schreiber; mit gemeinsamer Nummer
+schickte der eine bald eine kleinere `seq` als der andere.
+
+**Fremde Änderungen werden nicht undo-fähig eingespielt.** Ein Strg+Z, das den
+Beitrag eines anderen zurücknimmt, wäre eine Lüge über die Herkunft. Die
+Schreibmarke wandert dagegen mit (`mapLine`) — ohne das spränge sie bei jeder
+fremden Änderung weiter oben im Dokument, und „kein Neuladen" wäre nichts
+wert.
+
+**CORS steht auf `*`, und das ist hier keine Nachlässigkeit.** Der Editor läuft
+je nach Installation überall (Pages, eigene Domain, Dev-Server); Zugriff regelt
+die unerratbare UUID, nicht die Herkunft, und Cookies werden nie mitgesendet
+(`credentials: omit`). CORS schützt Anmeldedaten — die es hier nicht gibt. Wer
+es enger will, setzt `werkbaum.cors.allowed-origins`.
+
+**Nachgemessen im Browser gegen das laufende Backend**, weil das der einzige
+Ort ist, an dem sich das beweisen lässt: Ein Server-Dokument lädt und rendert;
+eine fremde Änderung erscheint ohne Neuladen; Getipptes erreicht nach 1,5 s
+den Server; zwei Änderungen an derselben Zeile öffnen das Konflikt-Band, und
+beide Knöpfe tun, was sie sagen; die Schreibmarke steht nach zwei fremd
+eingefügten Zeilen darüber unverändert bei Zeile+2, Spalte 8. **Werkzeuggrenze,
+wie in D25 und D17-Nachtrag 4:** Der Automatisierungs-Tab meldet sich dauerhaft
+als `document.hidden` — die Sichtbarkeits-Sperre des Feeds (Nachtrag 1) greift
+also nachweislich, ließ sich aber nur mit gestellter Sichtbarkeit umgehen, um
+alles Übrige zu sehen.
+
+**Offen bleibt** `PATCH /title` (und damit das Ereignis `RENAMED`), ein
+Eingabefeld für den Anzeigenamen und die Präsenz-Anzeige.

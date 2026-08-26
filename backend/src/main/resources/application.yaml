@@ -37,6 +37,12 @@ werkbaum:
     # haelt einen Long-Poll 30 s durch, seine Zeitgrenzen liegen bei 300 s.
     max-wait: 25s
 
+  # Von welchen Herkuenften darf der Editor die API ansprechen? "*" ist die
+  # Voreinstellung: Zugriff regelt die unerratbare UUID, nicht die Herkunft,
+  # und Cookies werden nie mitgesendet. Enger geht ueber eine Liste.
+  cors:
+    allowed-origins: "*"
+
   # Schutz der Dokumentenliste. BCrypt-Hash, NIE im Repository - er kommt aus
   # der Umgebung. Ohne ihn bleibt GET /documents gesperrt.
   master-password:

@@ -818,6 +818,29 @@ Export- oder `/timeslider`-Pfad wird abgeschnitten.
 
 Siehe D31.
 
+### Gemeinsam an einem Server-Dokument arbeiten (`?live=`)
+Liegt der Plan auf einem Werkbaum-Backend, nimmt der Editor dessen
+Dokument-Adresse: `…?live=https://example.org/api/v1/documents/<uuid>`.
+Anders als beim Pad (`?etherpad=`) wird hier **im Editor selbst geschrieben**,
+und alle sehen die Änderungen der anderen, ohne neu zu laden.
+
+- **Das Textfeld bleibt beschreibbar.** Nach kurzer Ruhe (1,5 s) schickt der
+  Editor die Änderung als Zeilen-Diff; ein offener Abruf hält die Gegenrichtung
+  bereit und spielt fremde Änderungen ein. Die **Schreibmarke wandert mit** —
+  fügt jemand oberhalb Zeilen ein, bleibt sie an ihrer Stelle im Text.
+- **Der Name ist der Titel des Dokuments** (alle sehen denselben), die
+  vollständige Adresse steht im Tooltip.
+- **Überschneiden sich zwei Änderungen wirklich** — dieselben Zeilen —, fragt
+  ein Band oben, wessen Fassung gelten soll: *Fremde übernehmen* oder *Eigene
+  durchsetzen*. Alles andere führt der Server selbst zusammen, ohne zu fragen.
+  Verloren geht nichts: Der verworfene Stand bleibt in den früheren Ständen,
+  jede Version in der Historie des Servers.
+- Der Abruf läuft **nur im sichtbaren Tab**; im Hintergrund ruht er und holt
+  beim Zurückkommen den Rückstand.
+
+Siehe D76 (Protokoll und Begründung) und
+`backend/docs/live-editing-proposal.md`.
+
 ### Legende im Editor-Panel
 Neben dem Textfeld steht eine aufklappbare **Legende** (Notation in Kurzform,
 abschließend eine Bedienungs-Zeile). Sie ist **scrollbar**, wenn ihr Inhalt

@@ -75,6 +75,10 @@ class SecurityConfiguration {
         properties: MasterPasswordProperties,
     ): SecurityFilterChain =
         http
+            // CORS-Regeln gelten auch fuer die Preflight-Anfrage - die traegt
+            // keine Anmeldedaten und darf deshalb nicht an der Kette haengen
+            // bleiben.
+            .cors { }
             // Zustandslose API: keine Sitzung, kein CSRF-Token. Der Schutz
             // hängt am Passwort, nicht an einem Cookie – ein CSRF-Token
             // schützte hier nichts und bräche jeden Client.

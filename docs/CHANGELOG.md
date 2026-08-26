@@ -17,6 +17,12 @@ the git history of `docs/examples/werkbaum.werkbaum`. A day can therefore carry
 a link without having a note (someone forgot to write one) — but never the
 reverse.
 
+## 2026-08-26
+
+- Plans can live on a Werkbaum backend now: open `?live=<document URL>` and everyone edits the same text, seeing each other's changes without reloading
+- When two people change the same lines, a bar asks whose version should win — everything else the server merges by itself
+- The caret stays where you put it when someone else inserts lines above you
+
 ## 2026-08-25
 
 - The fold button cycles through four presets now: size M and smaller, everything off the cheapest path, everything, all open

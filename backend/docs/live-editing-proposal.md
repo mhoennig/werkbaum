@@ -1,9 +1,10 @@
 # Live-Editing über HTTP (Variante „Simpel")
 
-Status: **Konzept entschieden** (D76), **Schritte 1–5 der Umsetzungsreihenfolge
-gebaut** (Zeilen-Diff, zweistufige Historie, `PATCH /content`, Änderungsfeed,
-Master-Passwort); der Client steht aus, ebenso das Umbenennen per
-`PATCH /title` und damit das Ereignis `RENAMED`. Die offenen
+Status: **umgesetzt** — alle sechs Schritte der Umsetzungsreihenfolge stehen
+(Zeilen-Diff, zweistufige Historie, `PATCH /content`, Änderungsfeed,
+Master-Passwort, Client). Offen bleiben das Umbenennen per `PATCH /title`
+(und damit das Ereignis `RENAMED`), ein Eingabefeld für den Anzeigenamen und
+die Präsenz-Anzeige. Die offenen
 Punkte des ersten Entwurfs sind beantwortet; die Begründungen stehen in
 `docs/DECISIONS.md` unter D76 und werden hier nicht wiederholt, sondern nur
 verwiesen. Was beim Bauen zusätzlich zu entscheiden war, steht dort in
@@ -24,7 +25,9 @@ Nachtrag 4.
   deshalb ausschließlich auf **physischen Zeilen** und braucht keine IDs.
 - Bei echtem Gleichzeitig-Konflikt: Update ablehnen, **der Client
   entscheidet** (rebase, neu laden, verwerfen). Das Dokument darf nie
-  kaputtgehen.
+  kaputtgehen. **Der Client erkennt den Konflikt zusätzlich selbst**, wenn eine
+  fremde Änderung die Zeilen trifft, an denen gerade getippt wird — der Server
+  kann das nicht sehen, er kennt den ungesendeten Text nicht (D76-Nachtrag 7).
 
 ### Zugriff und Identität
 
@@ -433,7 +436,8 @@ verworfen.
 4. ~~`GET /changes` mit Long Polling, Volltext-Fall und Ereignistypen
    (Spec + Cucumber)~~ — gebaut, `ChangeNotifier` + `LiveEditingService`
 5. ~~Master-Passwort für `GET /documents` (Spring Security)~~ — gebaut
-6. Client-Anpassung (Feed-Schleife, lokales Anwenden, Konfliktdialog)
+6. ~~Client-Anpassung (Feed-Schleife, lokales Anwenden, Konfliktdialog)~~ —
+   gebaut, `frontend/src/live.js` + `app.js`; Befunde in D76-Nachtrag 7
 
 **Vor Schritt 4** steht die Vermessung der Zielumgebung (siehe „Betrieb") —
 sie bestimmt den `wait`-Wert und im Extremfall, ob Long Polling dort

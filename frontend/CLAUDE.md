@@ -114,7 +114,18 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Knoten-Eigenschaften dort in `nodeAria()` mitpflegen und dafür a11y-i18n-Keys
   (`a11y*`) in **allen 9 Sprachen** anlegen. Knoten sind `tabindex="0"`
   (Fokus = Lesereihenfolge), `#warn` ist eine Live-Region.
-- Zustand wird im `localStorage` gehalten (noch kein Backend): `werkbaum-lang`
+- **Server-Dokumente (`?live=`, D76):** `live.js` hält die entscheidbare Hälfte
+  (Adressen, Zeilen-Diff, Rebasen, Cursor-Rechnung, Feed-Regel), `app.js` die
+  Verdrahtung: `loadLive()` holt Text und Version und merkt beides als
+  **Schattenkopie**, `scheduleLivePush()` schickt nach 1,5 s Ruhe das Diff,
+  `runFeed()` hält einen Abruf offen (nur im sichtbaren Tab). Zwei Fallen, beide
+  im Live-Test gefunden (D76-Nachtrag 7): `clientId` **und** `seq` gehören in den
+  `sessionStorage` (je Tab, überlebt Neuladen — sonst hält der Server die erste
+  Änderung nach einem Reload für eine Wiederholung und tut nichts), und der
+  **Konflikt entsteht beim Tippen**, nicht erst beim Senden — der Server kennt
+  den ungesendeten Text nicht. Fremde Änderungen werden bewusst **nicht**
+  undo-fähig eingespielt.
+- Zustand wird im `localStorage` gehalten (Server-Dokumente ausgenommen): `werkbaum-lang`
   (Sprache), `werkbaum-docs` (JSON-Array der Dokumente `[{id,name,text}]`),
   `werkbaum-active` (id des aktiven Dokuments), `werkbaum-src` (Spiegel des
   aktiven Texts, Abwärtskompatibilität), `werkbaum-ui` (JSON: Modus, verworfene,

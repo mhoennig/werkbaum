@@ -1544,3 +1544,27 @@
     .node:not(.folded) .fold{display:none!important}
     @page{margin:12mm}
   }
+
+/* ---------- Konflikt beim gemeinsamen Bearbeiten (D76) ----------
+   Band oben, wie der Update-Hinweis: Es unterbricht nicht die Arbeit, steht
+   aber über allem, bis jemand entscheidet. In `--warn`, nicht in Petrol — es
+   ist keine Einladung, sondern eine Sache, die geklärt werden muss. */
+.live-conflict{
+  position: fixed; inset: 0 0 auto 0; z-index: 1200;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 10px 16px;
+  background: var(--warn, #B45309); color: #fff;
+  font: 500 14px/1.4 'IBM Plex Sans', system-ui, sans-serif;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.live-conflict-actions{ display: flex; gap: 8px; flex: 0 0 auto; }
+.live-conflict button{
+  font: 500 13px/1 'IBM Plex Sans', system-ui, sans-serif;
+  padding: 6px 10px; border-radius: 4px; cursor: pointer;
+  border: 1px solid #fff; background: transparent; color: #fff;
+}
+/* „Eigene durchsetzen" ist die Antwort, die nichts von der eigenen Arbeit
+   kostet - sie steht deshalb gefüllt da, ohne die andere zu verstecken. */
+.live-conflict button.mine{ background: #fff; color: var(--warn, #B45309); border-color: #fff; }
+.live-conflict button:focus-visible{ outline: 2px solid #fff; outline-offset: 2px; }
+@media print{ .live-conflict{ display: none; } }

@@ -42,6 +42,11 @@
    - padRateLimit  { seconds }      — zu früh nachgeladen; Werkbaum hat gar nicht
                                       erst geholt, um Etherpads Grenze nicht
                                       auszulösen (D31)
+   - liveLoad      { url, error }   — Server-Dokument (?live=, D76) nicht
+                                      erreichbar oder keine Dokument-Adresse
+   - liveStale     { error }        — eigene Änderung nicht anwendbar
+                                      (Prüfsumme, Index, Basis verdichtet);
+                                      der Client hat einmal neu geladen (D76)
    - sourceTimeout { url, seconds } — Abruf abgebrochen, Gegenseite zu langsam
                                       (D31). Eigener Typ, weil `sourceLoad` auf
                                       CORS zeigt — bei einem Zeitablauf schickt
@@ -92,6 +97,10 @@ function build(w, t, esc){
       return t('sourceLoadWarn', {url: esc(w.url), error: esc(w.error)});
     case 'padRateLimit':
       return t('padRateLimitWarn', {seconds: w.seconds});
+    case 'liveLoad':
+      return t('liveLoadWarn', {url: esc(w.url), error: esc(w.error)});
+    case 'liveStale':
+      return t('liveStaleWarn', {error: esc(w.error)});
     case 'sourceTimeout':
       return t('sourceTimeoutWarn', {url: esc(w.url), seconds: w.seconds});
     default:
