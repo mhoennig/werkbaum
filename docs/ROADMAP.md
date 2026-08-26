@@ -112,7 +112,7 @@ Tastendruck ein Commit); und wer bei einem Backend eigentlich was darf
   Zu klären ist das Zusammenspiel mit der Update-Anzeige (D45): Sitzt ein
   Worker vor der Seite, entscheidet **er**, was ausgeliefert wird — „der
   laufende Build gegen den, den der Server schickt" ist dann nicht mehr
-  dasselbe. Dokumente aus `?sourceUrl=`/`?etherpad=` bleiben naturgemäß
+  dasselbe. Dokumente aus `?sourceUrl=`/`?live=` bleiben naturgemäß
   online. Im Plan: `#bld.pwa`.
 - Schlagworte `&tag` mit einer Filter-/Hervorheben-Linse im Diagramm: Der Baum
   ist genau eine Zerlegung — ein Tag benennt eine Menge von Knoten quer dazu

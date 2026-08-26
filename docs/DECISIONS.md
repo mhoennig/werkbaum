@@ -6660,3 +6660,87 @@ Version), `frontend info` (1.1.162, Commit = HEAD), `backend status`,
 `backend restart`, `backend backup` samt lokalem Wiederanlauf,
 `frontend preview` (nichts geschrieben, HEAD unverändert) und die
 Fehlerpfade (Exit-Code 2 bei unbekanntem Ziel und fehlender Aktion).
+
+## D78 — Die Etherpad-Anbindung ist ausgebaut
+D31 lieh sich für die Echtzeit-Zusammenarbeit ein **Etherpad**: Das Pad war die
+Schreibfläche, Werkbaum die Ansicht. Das war die richtige Entscheidung für den
+Zeitpunkt — die schwere Arbeit (gleichzeitige Änderungen zusammenführen) war
+dort seit Jahren getan, und Werkbaum hatte kein Backend. **Jetzt hat es eins**
+(D76), und das kann dasselbe besser und im Editor selbst. Also raus damit,
+statt zwei Wege zur selben Sache zu pflegen.
+
+**D31 bleibt stehen** — Entscheidungen werden nicht gelöscht, sondern
+fortgeschrieben. Was dort gemessen wurde, gilt weiter und ist der Grund, warum
+die Anbindung nie gut wurde: Etherpad **drosselt den Export** (serienmäßig 10
+Abrufe je 90 s und IP), ein Hintergrund-Takt erzeugt die Drosselung, statt sie
+zu umgehen; das Autoren-Cookie ist `SameSite=Lax` und kommt im eingebetteten
+Rahmen nicht an, also ist man bei jedem Laden ein neuer Autor; und ein eigener
+Socket zum Pad wurde von der Gegenseite abgelehnt (D31-Nachtrag, Code 1006).
+Übrig blieb ein Neu-laden-Knopf und ein schreibgeschütztes Textfeld — die
+Rückmeldung „funktioniert sowieso nicht gut" ist die ehrliche Zusammenfassung.
+
+**Was `?live=` besser macht**, in derselben Reihenfolge: Es wird **im Editor
+geschrieben** statt in einem fremden Rahmen; die Gegenrichtung ist ein offener
+Abruf statt eines Takts gegen ein fremdes Limit; der Konflikt wird benannt
+statt versteckt; und der Plantext liegt auf **eigener** Infrastruktur statt auf
+einem Pad, das jeder lesen kann, der die Adresse kennt.
+
+**Ein alter Link meldet sich, statt still nichts zu tun.** `?etherpad=` bleibt
+als **erkannter** Parameter stehen und ergibt die zeilenlose Warnung `padGone`,
+die auf `?live=` zeigt — in allen neun Sprachen. Der Parameter war geteilt: Wer
+ihn irgendwo stehen hat (in einer Mail, einem Wiki, einem Lesezeichen), bekäme
+sonst ein leeres Werkbaum ohne Erklärung. Genau der stille Fehler, den dieses
+Projekt sonst überall ablehnt (SPEC §4, D59). Es ist bewusst **kein**
+Rest-Feature: Geholt wird nichts, der Pad-Host sieht keine Anfrage mehr
+(nachgemessen).
+
+**Vorhandene Pad-Dokumente bleiben liegen — und werden dabei besser.** Sie sind
+im localStorage gewöhnliche Dokumente (`{id, name, text, source}`); ohne den
+Schreibschutz sind sie ab jetzt **bearbeitbar**, sammeln frühere Stände (D54)
+und lassen sich falten. Ihr Text ist der zuletzt geholte. Nichts wird gelöscht,
+niemand verliert seinen Plan.
+
+**Der Schreibschutz verschwindet ganz, nicht nur seine Ursache.** `src.readOnly`
+wurde ausschließlich von Pad-Dokumenten gesetzt; danach hätten sieben Wächter
+in Falten, Kurz-IDs, Autovervollständigung und Ständen auf eine Bedingung
+geprüft, die nie mehr wahr wird — mit Kommentaren, die auf D31 zeigen. Tote
+Wächter mit veralteter Begründung sind schlechter als keine; ein künftiger
+Lesemodus braucht ohnehin seine eigene Entscheidung. Mit ihm fällt
+`updateSnapBtn()` weg: Der Knopf ist jetzt immer da.
+
+**Eine Layout-Ebene weniger.** `#srcArea` gab es nur, damit Pad-Rahmen und
+Textspiegel sich einen Bereich teilen konnten, ohne die Legenden-Aufteilung
+(D26) anzufassen. Ohne Rahmen ist es ein Kasten mit einem Kind. Nachgemessen
+nach dem Entfernen: `.editor-body` trägt jetzt direkt `srcWrap` · `hintGutter` ·
+`agenda`, und die drei kacheln die Breite exakt (954 + 10 + 300 px) — der
+Legenden-Splitter arbeitet unverändert.
+
+**Mit ausgebaut**, weil sie nur der Anbindung dienten: `remote.js` samt seinen
+Tests (die Pad-Adressen normalisieren), der Ansichts-Wähler und sein Splitter
+(`--pcol`/`--prow`), der Neu-laden-Knopf samt Drosselungs-Zähler, die Warnungen
+`sourceTimeout` und `padRateLimit`, elf i18n-Schlüssel × 9 Sprachen und der
+Timeout-Parameter von `fetchRemote()`. **`?sourceUrl=` bleibt unangetastet**
+(D23) — beide teilten sich einen Fetch-Pfad, und das war die eine Stelle, an der
+beim Schneiden nichts verrutschen durfte.
+
+**Der Plan sagt es auch.** Im mitgelieferten `werkbaum.werkbaum` wird aus dem
+`#col.pad`-Zweig (14 Knoten samt der ganzen „Update by itself"-Gruppe, die nur
+Etherpads Grenze umgehen wollte) **ein** verworfener Knoten `[-] #col.pad` mit
+Begründung — dieselbe Form, in der dort schon `#bld.ghpages` und `#not.store`
+stehen. Der eine Knoten, der weiterlebt, wandert heraus: `#col.pad.point` wird
+`#col.point`, denn der gemeinsame Zeigefinger `!!!` gilt jedem geteilten
+Dokument, nicht nur einem Pad. Danach 196 Knoten, 0 Warnungen.
+
+**Nebengewinn: Der README bekommt endlich den Abschnitt zu `?live=`.** Den gab
+es nie — D76 ist gebaut und dokumentiert (SPEC §9, DECISIONS), aber die
+Einstiegs-Beschreibung stand weiter beim Pad. Das Ausbauen hätte sonst ein Loch
+hinterlassen; jetzt steht dort in beiden Sprachen, wie man ein Server-Dokument
+anlegt, teilt und was bei einem Konflikt passiert.
+
+**Nachgemessen** im Browser: `?etherpad=…` zeigt die Warnung, und im
+Netzwerk-Mitschnitt geht **keine** Anfrage an den Pad-Host; `?sourceUrl=` lädt
+unverändert und das Dokument ist beschreibbar (früher: schreibgeschützt); das
+Textfeld liegt mit dem Zahlenstreifen bündig (1151 + 20 px), die Zeilennummern
+sitzen auf ihren Höhen, Pfad und Stationen werden gezeichnet; der
+Legenden-Splitter teilt wie zuvor. 501 Tests (die 24 Pad-Adress-Tests sind mit
+`remote.js` gegangen, `padGone` ist dazugekommen).

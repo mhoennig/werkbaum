@@ -76,7 +76,7 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   (verworfene einblenden, Pfad an/aus) als **Parameter** — keine Globals; nur
   `cheapPathOn` lebt als UI-State in `app.js`. Tests: `tests/*.test.js`.
 - **Was entscheidbar ist, gehört in ein eigenes Modul** — auch bei Features, die
-  wie reine UI aussehen: `remote.js` (Pad-URLs normalisieren, D31),
+  wie reine UI aussehen:
   `live.js` (Server-Dokumente: Adressen, Zeilen-Diff, Cursor-Rechnung, wann eine
   Feed-Antwort angewendet werden darf — D76),
   `warnings.js` (Warnung → Text), `snapshots.js` (frühere Stände: wann entsteht
@@ -201,47 +201,18 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Endung `.werkbaum` ist reine Konvention (D24, SPEC §12). Beispieldateien zum
   Ausprobieren: `docs/examples/*.werkbaum` (nacheinander geöffnet ergeben sie
   mehrere Dokumente im Wähler).
-- `?etherpad=` (D31): `remoteSource()` liefert **einen** Beschreiber für beide
-  Eingänge (`?sourceUrl=` und `?etherpad=`), `loadRemoteSource()` holt und legt
-  das Dokument an — ein Fetch-Pfad, ein Warnkanal. Die Normalisierung der
-  Pad-Adresse steht headless in **`remote.js`** (`padUrls`, Tests in
-  `tests/remote.test.js`): Export-/Timeslider-Pfad, Query, Fragment und
-  Schrägstriche fallen weg, verlangt wird `/p/<name>` am Ende. Name und id sind
-  die **vollständige** Pad-URL (Pad-Namen sind nur pro Instanz eindeutig).
-  `padSource` muss **vor** dem ersten Abruf und vor `loadActiveIntoEditor()`
-  gesetzt werden: Es trägt den Schreibschutz, und scheitert der erste Abruf
-  (Normalfall bei dieser Gegenseite), bleibt so der Neu-laden-Knopf erreichbar
-  statt das Dokument tot liegen zu lassen. Geholt wird **nur auf Knopfdruck**
-  (`refreshPad`) — **kein Hintergrund-Takt wieder einbauen**: Etherpads
-  `importExportRateLimiting` lässt serienmäßig 10 Abrufe je 90 s und IP zu, und
-  jenseits davon hält die Gegenseite die Verbindung ohne Antwort offen (kein
-  `429`), bis der eigene Abbruch sie abreißt — gemessen: zwei Minuten tot, danach
-  0,4 s. Ein Takt gewinnt dagegen nicht, er erzeugt die Drosselung. Deshalb auch
-  `setPadBusy()` (Symbol dreht, bis zu 20 s) und ein **eigener** Warnungstyp
-  `sourceTimeout` für den Abbruch — `sourceLoad` zeigt auf CORS und schickte hier
-  auf die falsche Fährte. `deleteDoc()` ruft `stopPad()`, sonst legte ein späterer
-  Abruf das gelöschte Dokument wieder an und aktivierte es auch gleich.
-  Beim Prüfen im Vorschau-Browser: HMR lädt bei jeder Quelländerung neu, und ein
-  Reload holt den Text beim Erstabruf — sieht wie eine geglückte Übernahme aus.
-  Marker auf `window` setzen und hinterher prüfen, sonst beweist der Test nichts.
-- Pad einbetten, drei Ansichten (D31): `padView` ('both'|'pad'|'text') +
-  `applyPadView()`. Der Rahmen bekommt **nur sichtbar** ein `src`, sonst
-  `about:blank` — ein geladenes Pad verbindet sich per Socket und zeigt dich in
-  dessen Anwesenden-Liste. `PAD_VIEWS`/`padView` stehen **oben** bei
-  `cheapPathOn`, nicht beim übrigen Pad-Code: `saveUI()` liest sie und kann schon
-  aus `applySplit()` heraus laufen, weiter unten stünden sie noch in der
-  temporalen Todeszone. Der Splitter Pad|Spiegel (`#padGutter`, `--pcol`/`--prow`)
-  ist eine Kopie des Legenden-Splitters (D26) samt getrennter Persistenz.
-  `revealEditor()` schaltet 'pad' → 'both', sonst zeigte der Sprung (D25) ins
-  Nichts. Das Markup: `#srcArea` umschließt Rahmen + Splitter + `#src`, damit die
-  Legenden-Aufteilung unberührt bleibt — `.editor-body textarea` ist ein
-  Nachfahren-Selektor und greift weiter. Nebenwirkung, die als Behelf taugt:
-  Einmal durch die Ansichten schalten **lädt den Rahmen neu** (über
-  `about:blank`) — das ist der Ausweg, wenn ein eingebettetes Pad nicht mehr
-  beschreibbar ist. Nicht in den Neu-laden-Knopf legen: der zieht nach dem Tippen
-  Spiegel und Diagramm nach, und ein Rahmen-Reload dabei kostete jedes Mal die
-  Schreibmarke im Pad. **Umhängen im DOM lädt jeden `<iframe>` neu** — wer
-  Container um `#srcArea` herum neu aufbaut, wirft die Pad-Sitzung weg.
+- **Etherpad ist ausgebaut (D78).** `?etherpad=` bleibt als **erkannter**
+  Parameter stehen und ergibt die zeilenlose Warnung `padGone`, die auf `?live=`
+  zeigt — ein geteilter Link soll nicht still ins Leere laufen. Geholt wird
+  nichts. Mit gegangen sind `remote.js`, der Ansichts-Wähler samt Splitter
+  (`--pcol`/`--prow`), der Neu-laden-Knopf, die Warnungen `sourceTimeout`/
+  `padRateLimit` und **der Schreibschutz**: `src.readOnly` wurde nur von
+  Pad-Dokumenten gesetzt, also sind die Wächter in Falten, Kurz-IDs,
+  Autovervollständigung und Ständen weg (und mit ihnen `updateSnapBtn()`).
+  Wer einen Lesemodus wieder einführt, braucht dafür eine eigene Entscheidung.
+  Ebenfalls weg: `#srcArea` — es gab den Kasten nur, damit sich Pad-Rahmen und
+  Spiegel einen Bereich teilen; `.editor-body` trägt jetzt direkt
+  `srcWrap` · `hintGutter` · `agenda`.
 - Fokusmarke `!!!` (D32, SPEC §1): Parser setzt `focus`, Renderer die Klasse
   `focusmark`, CSS gibt ihr einen **eigenen Strahlenkranz in Petrol** (Nachtrag zu
   D32; der geteilte Ring mit `.current` war zu leise). Schein in **hellem** Teal
@@ -253,7 +224,7 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Lookbehind (Safari erst ab 16.4), sonst verlöre `Achtung!!!` seine
   Ausrufezeichen. Extraktion **nach** den Tags; der Kommentar fällt vorher weg,
   eine Marke hinter `%%` wirkt also nicht. `revealFocusMark()` scrollt **nur bei
-  Änderung** (Schlüssel = Label-Text, nicht Zeilennummer — Umsortieren im Pad soll
+  Änderung** (Schlüssel = Label-Text, nicht Zeilennummer — Umsortieren soll
   nicht neu scrollen), sonst zöge jeder Neubau den Blick zurück. Die Regel braucht
   den `#out`-Präfix wie `.current` (`ul.or .node{box-shadow:none}` ist
   spezifischer) **und** die Ausnahme
@@ -317,10 +288,9 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   diesen Versatz (`drop`) nach oben, sonst stehen sie durchgehend zu tief.
   Aufgerufen wird aus `render()` (dort kommt auch die Warnungsmenge her) und aus
   einem `ResizeObserver` auf `#src` (Umbruch hängt an der Breite). Markup:
-  `#srcWrap` umschließt Streifen + Textfeld; die Pad-Regeln (D31) teilen gegen
-  **diese Spalte** (`.src-area.pv-both>.src-wrap`), nicht gegen das nackte
-  Textfeld. `caretLine` steht deshalb **oben** bei `padView` — der Streifen liest
-  sie und hängt an `render()` (temporale Todeszone, siehe D31).
+  `#srcWrap` umschließt Streifen + Textfeld. `caretLine` steht **oben** bei den
+  übrigen Ansichts-Variablen — der Streifen liest sie und hängt an `render()`
+  (temporale Todeszone).
 - Touch-Langdruck (D25): Der Timer (500 ms) setzt **nur** die Klasse `armed`
   (Petrol-Ring); `jumpToLine()` läuft im `touchend`-Handler. Nicht zurück in den
   Timer verlegen — **`focus()` aus einem Timer gilt in mobilen Browsern nicht als
@@ -396,10 +366,8 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `setRangeText` zerstören die Undo-Historie (gemessen). Zwei Fallen: Ein
   Textfeld mit `display:none`-Vorfahr nimmt **kein** `execCommand` an (Klasse
   `writing-fold` schaltet es kurz sichtbar), und der nötige Fokus zieht auf
-  Mobil die Tastatur hoch (`keyboardOnJump(true)`). Bei `src.readOnly` (Pad,
-  D31) wird nicht geschrieben, dort trägt weiter `foldOverrides` — die
-  Überlagerungen werden nach erfolgreichem Schreiben geleert, sonst maskieren
-  sie den Text. Der **Umschalter** im Diagramm-Kopf (`applyFoldPreset`, D44)
+  Mobil die Tastatur hoch (`keyboardOnJump(true)`). Die Überlagerungen werden
+  nach erfolgreichem Schreiben geleert, sonst maskieren sie den Text. Der **Umschalter** im Diagramm-Kopf (`applyFoldPreset`, D44)
   geht denselben Weg: Überlagerungen für ALLE faltbaren Knoten setzen
   (`atMostM(n)` bzw. `false`), dann `writeAllFoldMarks()` — der aus
   `writeFoldToText()` herausgelöste Voll-Rewrite; einen minimalen Patch gibt es
@@ -551,7 +519,7 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   im Textbereich die Pfad-Linie weg (gemessen). Die Sprünge (D25) schalten den
   Bereich selbst um: `revealEditor()` auf Text, `focusNodeOfCaret()` aufs
   Diagramm — **vor** dem Zentrieren. Zustand in `werkbaum-ui` (`mobilePane`),
-  Variable oben bei `padView` deklariert (saveUI liest sie).
+  Variable oben deklariert (saveUI liest sie).
   `applyLayout` ruft auf Mobil **kein** `applySplit`.
   **Inhalte ~25 % kleiner** (D17-Nachtrag 2): `MOBILE_ZOOM = 0.75` als **Faktor**
   auf den Nutzer-Zoom — `effZoom()` ist die Wahrheit, die `applyZoom()` setzt und
@@ -647,7 +615,7 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   **aktuellen** Dokuments geht deshalb über `execCommand('insertText')`
   (`replaceTextUndoable()` für ganze Texte, `writeAt()` für Bereiche).
   `src.value =` ist nur beim **Laden eines anderen** Dokuments richtig
-  (`loadActiveIntoEditor`, Dokumentwechsel, Pad-Abruf) — dorthin gibt es nichts
+  (`loadActiveIntoEditor`, Dokumentwechsel, URL-Abruf) — dorthin gibt es nichts
   zurückzunehmen.
 - **ID-Vorschläge `:#` (D63):** Die Regeln stehen headless in `autocomplete.js`
   (`depFragment`/`collectIds`/`matchIds`, Tests); app.js verdrahtet nur Popup,

@@ -3,7 +3,6 @@ import { parse, setFoldMark, expandShortIds, shortIdClosed } from './parser.js';
 import { computeCheapPlan, overloadedAssignee, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, presetFoldSet, lineTargets } from './model.js';
 import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning, warningText } from './warnings.js';
-import { padUrls } from './remote.js';
 import * as live from './live.js';
 import { depFragment, collectIds, matchIds, depIdAt, idLine } from './autocomplete.js';
 import { LS_SNAPS, SNAP_EVERY, parseSnaps, addSnapshot, persistSnaps, snapLabel }
@@ -69,18 +68,14 @@ let showIds = false;   /* Knoten-IDs im Diagramm einblenden (D56) */
    Der Faltzustand steht im Text (D38), die Position ist nur der Zeiger darin. */
 const FOLD_CYCLE = ['small', 'path', 'closed', 'open'];
 let foldCycleNext = 0, foldCycleApplied = -1;
-/* Ansicht bei einem Pad-Dokument (D31): beide | nur Pad | nur Spiegel. Hier oben
-   deklariert, weil saveUI() sie liest und schon aus applySplit() heraus laufen
-   kann — weiter unten stünde sie dann noch in der temporalen Todeszone. */
-const PAD_VIEWS = ['both', 'pad', 'text'];
-let padView = 'both';
 /* Sichtbarer Bereich auf kleinem Bildschirm (D17-Nachtrag): dort ist immer
-   genau einer zu sehen. Aus demselben Grund hier oben deklariert wie `padView`
-   — saveUI() liest ihn und läuft schon aus applySplit() heraus. */
+   genau einer zu sehen. Hier oben deklariert, weil saveUI() ihn liest und schon
+   aus applySplit() heraus laufen kann — weiter unten stünde er dann noch in der
+   temporalen Todeszone. */
 let mobilePane = 'diagram';
 /* Cursor-Zeile (D25) — bleibt `null`, bis der Cursor das erste Mal bewegt wurde,
-   sonst wäre nach dem Laden ungefragt die Wurzel markiert. Hier oben deklariert
-   wie `padView`: der Zeilennummern-Streifen (D33) liest sie, und der hängt an
+   sonst wäre nach dem Laden ungefragt die Wurzel markiert. Aus demselben Grund
+   hier oben: der Zeilennummern-Streifen (D33) liest sie, und der hängt an
    render(). */
 let caretLine = null, currentNodeEl = null;
 /* Warnung des ?sourceUrl-Ladens (D23) — zeilenlos und persistent, siehe render(). */
@@ -242,7 +237,7 @@ function render(){
 /* Fokusmarke `!!!` (SPEC §1): Der erste markierte Knoten wird ins Bild geholt —
    aber nur, wenn sich die Marke **geändert** hat. Sonst zöge jeder Neubau des
    Baums den Blick zurück und man käme nicht weg. Verglichen wird das Label des
-   Knotens, nicht die Zeilennummer: Umsortieren im Pad soll nicht als neue Marke
+   Knotens, nicht die Zeilennummer: Umsortieren soll nicht als neue Marke
    gelten. Die Hervorhebung selbst macht die Klasse `focusmark` aus dem Renderer,
    hier geht es nur ums Scrollen. */
 let lastFocusMark = null;
@@ -1074,14 +1069,6 @@ function scrollEditorToOffset(offset){
 
 /* Ist das Editor-Panel zugeklappt, muss der Sprung es erst öffnen. */
 function revealEditor(){
-  /* In der Ansicht „nur Pad" (D31) ist der Spiegel ausgeblendet — dann gibt es
-     keine Zeile zum Markieren. Der Sprung holt ihn deshalb zurück, genau wie er
-     ein zugeklapptes Editor-Panel aufklappt (D25). */
-  if(padView === 'pad' && padSource && activeId === padSource.id){
-    padView = 'both';
-    applyPadView();
-    saveUI();
-  }
   if(isMobile()){
     /* Auf Mobil ist der Text womöglich gar nicht vorn — dann holt der Sprung
        ihn nach vorn, so wie er auf dem Desktop ein zugeklapptes Panel aufklappt
@@ -1133,7 +1120,7 @@ function nodeFromEvent(e){
    Umklappen im Diagramm ändert den Notationstext. Der Text ist damit auch für
    die Faltung die eine Quelle der Wahrheit (D14) — die Sitzungs-Überlagerung
    `foldOverrides` bleibt nur für Dokumente, in die nicht geschrieben werden
-   kann (Pad, schreibgeschützt nach D31). */
+   kann. */
 
 /* Der Sollzustand als Menge von Label-Pfad-Schlüsseln: heutiger Anfangszustand
    aus dem Text, überlagert von den Eingriffen — dieselbe Rechnung wie in
@@ -1222,7 +1209,6 @@ function withEditorWritable(fn){
 /* Schreibt den Faltzustand in den Text. Liefert false, wenn nicht geschrieben
    werden konnte — dann bleibt die Sitzungs-Überlagerung stehen. */
 function writeFoldToText(line, collapsed){
-  if(src.readOnly) return false;             /* Pad-Dokument (D31) */
   const roots = parse(src.value).roots;
   if(!roots.length) return false;
   const want = desiredFoldKeys(roots);
@@ -1273,8 +1259,8 @@ function applyFoldPreset(mode){
     if(!n.children.length) return;           /* nur faltbare Knoten */
     foldOverrides.set(key, want.has(n));
   });
-  if(!src.readOnly && writeAllFoldMarks(roots, desiredFoldKeys(roots))) foldOverrides.clear();
-  else render();                             /* Pad o. nicht ausdrückbar: Überlagerung trägt */
+  if(writeAllFoldMarks(roots, desiredFoldKeys(roots))) foldOverrides.clear();
+  else render();                             /* nicht ausdrückbar: Überlagerung trägt */
 }
 
 /* Faltung umklappen (SPEC §9, D38). Gelingt das Zurückschreiben, ist der Text
@@ -1620,7 +1606,7 @@ function resolveShortId(line){
   writeShortId(line);
 }
 function writeShortId(line){
-  if(src.readOnly || line == null) return;
+  if(line == null) return;
   /* **Nicht** sofort schreiben: Beide Wege hierher hängen am
      `input`-Ereignis — der Doppelpunkt unmittelbar, der Zeilenwechsel über die
      Enter-Taste —, und `execCommand` verweigert den Dienst, wenn es
@@ -1751,7 +1737,7 @@ function closeAc(){
   acCtx = null;
 }
 function updateAc(){
-  if(src.readOnly || document.activeElement !== src ||
+  if(document.activeElement !== src ||
      src.selectionStart !== src.selectionEnd){ closeAc(); return; }
   const ctx = depFragment(src.value, src.selectionStart);
   if(!ctx){ acSuppress = null; closeAc(); return; }
@@ -2221,21 +2207,11 @@ const I18N = {
     acHint:"{n} ID-Vorschläge – ↑/↓ wählt, Enter übernimmt",
     tipClose:"Schließen",
     tipOpenLink:"Link öffnen",
-    padReadonly:"Wird im Pad bearbeitet — hier nur lesen.",
-    padEdit:"Pad zum Bearbeiten öffnen",
-    padRefresh:"Vom Pad neu laden",
     liveLoadWarn:"Server-Dokument nicht geladen: {url} ({error}). Läuft das Backend, und ist die Adresse eine Dokument-Adresse (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Deine Änderung war nicht mehr anwendbar ({error}) — der Stand wurde einmal frisch geholt.",
     liveConflictText:"Jemand hat dieselben Zeilen geändert. Wessen Fassung soll gelten?",
     liveConflictTheirs:"Fremde übernehmen",
     liveConflictMine:"Eigene durchsetzen",
-    padWait:"Noch {seconds} s — Etherpad begrenzt die Abrufe",
-    padRateLimitWarn:"Noch nicht neu geladen: Etherpad erlaubt nur wenige Abrufe je Zeitfenster (serienmäßig 10 pro 90 s), so häufiges Nachladen ist leider nicht möglich. In {seconds} s geht es wieder.",
-    padViewTooltip:"Ansicht: {state} — klicken zum Wechseln",
-    padView_both:"Pad und Text",
-    padView_pad:"nur Pad",
-    padView_text:"nur Text",
-    padGutterAria:"Pad und Texteditor größenverändern",
     riskTooltip:"High Risk – Aufwand noch unklar.",
     discardedTooltip:"Verworfene Knoten samt Teilbaum ein-/ausblenden",
     cheapTooltip:"Günstigsten Pfad hervorheben – nicht benötigte Alternativen treten zurück",
@@ -2307,7 +2283,7 @@ const I18N = {
     st_fertig:"fertig", st_prod:"in Produktion", st_highrisk:"High Risk", st_verworfen:"verworfen",
     unknownStatusWarn:"Zeile {line}: unbekanntes Statuszeichen „{code}“ — als neutral dargestellt.",
     sourceLoadWarn:"„{url}“ konnte nicht geladen werden ({error}). Die Datei muss per http(s) erreichbar sein und CORS erlauben (Access-Control-Allow-Origin).",
-    sourceTimeoutWarn:"„{url}“ hat innerhalb von {seconds} s nicht geantwortet — der Abruf wurde abgebrochen. Etherpad begrenzt, wie oft der Export geholt werden darf (serienmäßig 10-mal pro 90 s); warte einen Moment und lade dann erneut.",
+    padGoneWarn:"Dieser Link zeigt auf ein Etherpad-Pad. Die Etherpad-Anbindung gibt es nicht mehr — gemeinsames Arbeiten läuft jetzt über ein Werkbaum-Backend (?live=…). Der Text des Pads lässt sich dort einmal einfügen und dann zu zweit bearbeiten.",
     a11yStatus:"Status: {status}", a11ySize:"Aufwand: {size}", a11ySizeImplicit:"Aufwand: mindestens {size} (angenommen)", a11yTags:"Zuständig: {names}", a11yId:"ID: #{id}", a11yDeps:"hängt ab von: {ids}", a11yFolded:"eingeklappt, {n} verborgen", a11yEffective:"effektiv: {status}", heldTooltip:"effektiv {eff} — selbst schon {own}, wartet auf Abhängigkeiten", a11yOptional:"optional", a11yFocusMark:"hierhin schauen", a11yLink:"verlinkt",
     hint_indent:"Einrückung (2 Leerzeichen oder Tab) definiert die Hierarchie.",
     hint_all:"Teilpaket, alle erforderlich", hint_any:"Alternative, eine wählen",
@@ -2343,21 +2319,11 @@ const I18N = {
     acHint:"{n} id suggestions – ↑/↓ to choose, Enter to insert",
     tipClose:"Close",
     tipOpenLink:"Open link",
-    padReadonly:"Edited in the pad — read-only here.",
-    padEdit:"Open the pad to edit",
-    padRefresh:"Reload from the pad",
     liveLoadWarn:"Server document not loaded: {url} ({error}). Is the backend running, and is the address a document address (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Your change no longer applied ({error}) — the document was fetched afresh once.",
     liveConflictText:"Someone changed the same lines. Whose version should win?",
     liveConflictTheirs:"Take theirs",
     liveConflictMine:"Keep mine",
-    padWait:"{seconds} s to go — Etherpad limits how often we may fetch",
-    padRateLimitWarn:"Not reloaded yet: Etherpad only allows a few fetches per time window (10 per 90 s by default), so syncing this often is unfortunately not possible. Try again in {seconds} s.",
-    padViewTooltip:"View: {state} — click to switch",
-    padView_both:"pad and text",
-    padView_pad:"pad only",
-    padView_text:"text only",
-    padGutterAria:"Resize pad and text editor",
     riskTooltip:"High risk – effort still unclear.",
     discardedTooltip:"Show/hide discarded nodes and their subtree",
     cheapTooltip:"Highlight the cheapest path – unneeded alternatives recede",
@@ -2428,7 +2394,7 @@ const I18N = {
     st_fertig:"done", st_prod:"in production", st_highrisk:"high risk", st_verworfen:"discarded",
     unknownStatusWarn:"Line {line}: unknown status code “{code}” — shown as neutral.",
     sourceLoadWarn:"Could not load “{url}” ({error}). The file must be reachable via http(s) and allow CORS (Access-Control-Allow-Origin).",
-    sourceTimeoutWarn:"“{url}” did not answer within {seconds} s — the request was aborted. Etherpad limits how often the export may be fetched (10 times per 90 s by default); wait a moment, then reload.",
+    padGoneWarn:"This link points at an Etherpad pad. The Etherpad connection is gone — collaboration now runs through a Werkbaum backend (?live=…). Paste the pad’s text there once, then edit it together.",
     a11yStatus:"Status: {status}", a11ySize:"Effort: {size}", a11ySizeImplicit:"Effort: at least {size} (assumed)", a11yTags:"Assigned: {names}", a11yId:"ID: #{id}", a11yDeps:"depends on: {ids}", a11yFolded:"collapsed, {n} hidden", a11yEffective:"effective: {status}", heldTooltip:"effectively {eff} — itself already {own}, waiting on dependencies", a11yOptional:"optional", a11yFocusMark:"look here", a11yLink:"has link",
     hint_indent:"Indentation (2 spaces or a tab) defines the hierarchy.",
     hint_all:"sub-task, all required", hint_any:"alternative, choose one",
@@ -2464,21 +2430,11 @@ const I18N = {
     acHint:"{n} sugerencias de ID – ↑/↓ elige, Intro inserta",
     tipClose:"Cerrar",
     tipOpenLink:"Abrir enlace",
-    padReadonly:"Se edita en el pad — aquí solo lectura.",
-    padEdit:"Abrir el pad para editar",
-    padRefresh:"Recargar desde el pad",
     liveLoadWarn:"Documento del servidor no cargado: {url} ({error}). ¿Está el backend en marcha y es la dirección la de un documento (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Tu cambio ya no era aplicable ({error}): se volvió a cargar el estado una vez.",
     liveConflictText:"Alguien cambió las mismas líneas. ¿Qué versión debe prevalecer?",
     liveConflictTheirs:"Tomar la ajena",
     liveConflictMine:"Mantener la mía",
-    padWait:"Faltan {seconds} s — Etherpad limita la frecuencia",
-    padRateLimitWarn:"Aún no se ha recargado: Etherpad solo permite unas pocas descargas por ventana de tiempo (10 por 90 s de forma predeterminada), así que sincronizar tan a menudo no es posible. Vuelve a intentarlo en {seconds} s.",
-    padViewTooltip:"Vista: {state} — clic para cambiar",
-    padView_both:"pad y texto",
-    padView_pad:"solo pad",
-    padView_text:"solo texto",
-    padGutterAria:"Redimensionar pad y editor de texto",
     riskTooltip:"Alto riesgo – esfuerzo aún incierto.",
     discardedTooltip:"Mostrar u ocultar los nodos descartados y su subárbol",
     cheapTooltip:"Resaltar la ruta más económica: las alternativas no necesarias se atenúan",
@@ -2549,7 +2505,7 @@ const I18N = {
     st_fertig:"terminado", st_prod:"en producción", st_highrisk:"alto riesgo", st_verworfen:"descartado",
     unknownStatusWarn:"Línea {line}: código de estado desconocido «{code}» — mostrado como neutral.",
     sourceLoadWarn:"No se pudo cargar «{url}» ({error}). El archivo debe ser accesible por http(s) y permitir CORS (Access-Control-Allow-Origin).",
-    sourceTimeoutWarn:"«{url}» no respondió en {seconds} s — se canceló la petición. Etherpad limita la frecuencia de descarga del export (10 veces por 90 s de forma predeterminada); espera un momento y vuelve a cargar.",
+    padGoneWarn:"Este enlace apunta a un pad de Etherpad. La conexión con Etherpad ya no existe: ahora se colabora a través de un backend de Werkbaum (?live=…). Pega allí el texto del pad una vez y editadlo juntos.",
     a11yStatus:"Estado: {status}", a11ySize:"Esfuerzo: {size}", a11ySizeImplicit:"Esfuerzo: al menos {size} (asumido)", a11yTags:"Responsable: {names}", a11yId:"ID: #{id}", a11yDeps:"depende de: {ids}", a11yFolded:"plegado, {n} ocultos", a11yEffective:"efectivo: {status}", heldTooltip:"efectivamente {eff} — por sí mismo ya {own}, espera dependencias", a11yOptional:"opcional", a11yFocusMark:"mirar aquí", a11yLink:"con enlace",
     hint_indent:"La sangría (2 espacios o un tabulador) define la jerarquía.",
     hint_all:"subtarea, todas obligatorias", hint_any:"alternativa, elige una",
@@ -2585,21 +2541,11 @@ const I18N = {
     acHint:"{n} suggestions d'ID – ↑/↓ pour choisir, Entrée pour insérer",
     tipClose:"Fermer",
     tipOpenLink:"Ouvrir le lien",
-    padReadonly:"Modifié dans le pad — lecture seule ici.",
-    padEdit:"Ouvrir le pad pour modifier",
-    padRefresh:"Recharger depuis le pad",
     liveLoadWarn:"Document du serveur non chargé : {url} ({error}). Le backend tourne-t-il, et l'adresse est-elle celle d'un document (…/documents/&lt;uuid&gt;) ?",
     liveStaleWarn:"Ta modification n'était plus applicable ({error}) — l'état a été rechargé une fois.",
     liveConflictText:"Quelqu'un a modifié les mêmes lignes. Quelle version doit l'emporter ?",
     liveConflictTheirs:"Prendre la sienne",
     liveConflictMine:"Garder la mienne",
-    padWait:"Encore {seconds} s — Etherpad limite la fréquence",
-    padRateLimitWarn:"Pas encore rechargé : Etherpad n’autorise que quelques récupérations par fenêtre de temps (10 par 90 s par défaut), une synchronisation aussi fréquente n’est donc pas possible. Réessaie dans {seconds} s.",
-    padViewTooltip:"Vue : {state} — cliquer pour changer",
-    padView_both:"pad et texte",
-    padView_pad:"pad seul",
-    padView_text:"texte seul",
-    padGutterAria:"Redimensionner le pad et l’éditeur de texte",
     riskTooltip:"Risque élevé – effort encore incertain.",
     discardedTooltip:"Afficher/masquer les nœuds abandonnés et leur sous-arbre",
     cheapTooltip:"Mettre en évidence le chemin le moins coûteux – les alternatives inutiles s'estompent",
@@ -2670,7 +2616,7 @@ const I18N = {
     st_fertig:"terminé", st_prod:"en production", st_highrisk:"risque élevé", st_verworfen:"abandonné",
     unknownStatusWarn:"Ligne {line} : code de statut inconnu « {code} » — affiché comme neutre.",
     sourceLoadWarn:"Impossible de charger « {url} » ({error}). Le fichier doit être accessible en http(s) et autoriser CORS (Access-Control-Allow-Origin).",
-    sourceTimeoutWarn:"« {url} » n’a pas répondu en {seconds} s — la requête a été interrompue. Etherpad limite la fréquence de récupération de l’export (10 fois par 90 s par défaut) ; attends un instant, puis recharge.",
+    padGoneWarn:"Ce lien pointe vers un pad Etherpad. La connexion Etherpad n’existe plus — la collaboration passe désormais par un backend Werkbaum (?live=…). Collez-y une fois le texte du pad, puis modifiez-le à plusieurs.",
     a11yStatus:"Statut : {status}", a11ySize:"Effort : {size}", a11ySizeImplicit:"Effort : au moins {size} (supposé)", a11yTags:"Responsable : {names}", a11yId:"ID : #{id}", a11yDeps:"dépend de : {ids}", a11yFolded:"replié, {n} masqués", a11yEffective:"effectif : {status}", heldTooltip:"effectivement {eff} — lui-même déjà {own}, en attente de dépendances", a11yOptional:"facultatif", a11yFocusMark:"regarder ici", a11yLink:"avec lien",
     hint_indent:"L'indentation (2 espaces ou une tabulation) définit la hiérarchie.",
     hint_all:"sous-tâche, toutes requises", hint_any:"alternative, en choisir une",
@@ -2706,21 +2652,11 @@ const I18N = {
     acHint:"{n} podpowiedzi ID – ↑/↓ wybiera, Enter wstawia",
     tipClose:"Zamknij",
     tipOpenLink:"Otwórz link",
-    padReadonly:"Edytowane w padzie — tu tylko do czytania.",
-    padEdit:"Otwórz pad do edycji",
-    padRefresh:"Wczytaj ponownie z padu",
     liveLoadWarn:"Nie wczytano dokumentu z serwera: {url} ({error}). Czy backend działa i czy adres wskazuje dokument (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Twoja zmiana nie dała się już zastosować ({error}) — stan pobrano raz od nowa.",
     liveConflictText:"Ktoś zmienił te same wiersze. Która wersja ma obowiązywać?",
     liveConflictTheirs:"Przyjmij cudzą",
     liveConflictMine:"Zachowaj własną",
-    padWait:"Jeszcze {seconds} s — Etherpad ogranicza częstość",
-    padRateLimitWarn:"Jeszcze nie wczytano ponownie: Etherpad dopuszcza tylko kilka pobrań w okresie (domyślnie 10 na 90 s), więc tak częsta synchronizacja nie jest możliwa. Spróbuj za {seconds} s.",
-    padViewTooltip:"Widok: {state} — kliknij, aby zmienić",
-    padView_both:"pad i tekst",
-    padView_pad:"tylko pad",
-    padView_text:"tylko tekst",
-    padGutterAria:"Zmień rozmiar padu i edytora tekstu",
     riskTooltip:"Wysokie ryzyko – nakład jeszcze niejasny.",
     discardedTooltip:"Pokaż/ukryj odrzucone węzły wraz z poddrzewem",
     cheapTooltip:"Wyróżnij najtańszą ścieżkę – niepotrzebne alternatywy są przygaszone",
@@ -2791,7 +2727,7 @@ const I18N = {
     st_fertig:"gotowe", st_prod:"w produkcji", st_highrisk:"wysokie ryzyko", st_verworfen:"odrzucone",
     unknownStatusWarn:"Wiersz {line}: nieznany znak statusu „{code}” — pokazany jako neutralny.",
     sourceLoadWarn:"Nie udało się wczytać „{url}” ({error}). Plik musi być dostępny przez http(s) i zezwalać na CORS (Access-Control-Allow-Origin).",
-    sourceTimeoutWarn:"„{url}” nie odpowiedział w ciągu {seconds} s — żądanie przerwano. Etherpad ogranicza częstość pobierania eksportu (domyślnie 10 razy na 90 s); odczekaj chwilę i wczytaj ponownie.",
+    padGoneWarn:"Ten link prowadzi do pada Etherpad. Połączenia z Etherpadem już nie ma — wspólna praca odbywa się teraz przez backend Werkbaum (?live=…). Wklej tam raz tekst pada i edytujcie go razem.",
     a11yStatus:"Status: {status}", a11ySize:"Nakład: {size}", a11ySizeImplicit:"Nakład: co najmniej {size} (założony)", a11yTags:"Przypisano: {names}", a11yId:"ID: #{id}", a11yDeps:"zależy od: {ids}", a11yFolded:"zwinięte, ukrytych: {n}", a11yEffective:"efektywnie: {status}", heldTooltip:"efektywnie {eff} — sam już {own}, czeka na zależności", a11yOptional:"opcjonalny", a11yFocusMark:"spójrz tutaj", a11yLink:"z linkiem",
     hint_indent:"Wcięcie (2 spacje lub tabulator) definiuje hierarchię.",
     hint_all:"podzadanie, wszystkie wymagane", hint_any:"alternatywa, wybierz jedną",
@@ -2827,21 +2763,11 @@ const I18N = {
     acHint:"{n} подсказок ID – ↑/↓ выбирает, Enter вставляет",
     tipClose:"Закрыть",
     tipOpenLink:"Открыть ссылку",
-    padReadonly:"Редактируется в паде — здесь только чтение.",
-    padEdit:"Открыть пад для редактирования",
-    padRefresh:"Обновить из пада",
     liveLoadWarn:"Документ с сервера не загружен: {url} ({error}). Запущен ли бэкенд и является ли адрес адресом документа (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Ваше изменение больше не применялось ({error}) — состояние загружено заново.",
     liveConflictText:"Кто-то изменил те же строки. Чья версия должна остаться?",
     liveConflictTheirs:"Принять чужую",
     liveConflictMine:"Оставить свою",
-    padWait:"Ещё {seconds} с — Etherpad ограничивает частоту",
-    padRateLimitWarn:"Пока не обновлено: Etherpad разрешает лишь несколько загрузок за окно времени (по умолчанию 10 за 90 с), поэтому столь частая синхронизация невозможна. Повторите через {seconds} с.",
-    padViewTooltip:"Вид: {state} — нажмите для переключения",
-    padView_both:"пад и текст",
-    padView_pad:"только пад",
-    padView_text:"только текст",
-    padGutterAria:"Изменить размер пада и текстового редактора",
     riskTooltip:"Высокий риск – оценка ещё не ясна.",
     discardedTooltip:"Показать/скрыть отклонённые узлы вместе с поддеревом",
     cheapTooltip:"Выделить самый дешёвый путь — ненужные альтернативы приглушаются",
@@ -2912,7 +2838,7 @@ const I18N = {
     st_fertig:"готово", st_prod:"в эксплуатации", st_highrisk:"высокий риск", st_verworfen:"отклонено",
     unknownStatusWarn:"Строка {line}: неизвестный код статуса «{code}» — показан как нейтральный.",
     sourceLoadWarn:"Не удалось загрузить «{url}» ({error}). Файл должен быть доступен по http(s) и разрешать CORS (Access-Control-Allow-Origin).",
-    sourceTimeoutWarn:"«{url}» не ответил за {seconds} с — запрос прерван. Etherpad ограничивает частоту загрузки экспорта (по умолчанию 10 раз за 90 с); подождите немного и обновите снова.",
+    padGoneWarn:"Эта ссылка ведёт на пад Etherpad. Подключения к Etherpad больше нет — совместная работа теперь идёт через бэкенд Werkbaum (?live=…). Вставьте туда текст пада один раз и редактируйте вместе.",
     a11yStatus:"Статус: {status}", a11ySize:"Оценка: {size}", a11ySizeImplicit:"Оценка: не меньше {size} (предполагается)", a11yTags:"Ответственные: {names}", a11yId:"ID: #{id}", a11yDeps:"зависит от: {ids}", a11yFolded:"свёрнуто, скрыто: {n}", a11yEffective:"фактически: {status}", heldTooltip:"фактически {eff} — сам уже {own}, ждёт зависимости", a11yOptional:"необязательно", a11yFocusMark:"смотрите здесь", a11yLink:"со ссылкой",
     hint_indent:"Отступ (2 пробела или табуляция) задаёт иерархию.",
     hint_all:"подзадача, все обязательны", hint_any:"альтернатива, выберите одну",
@@ -2948,21 +2874,11 @@ const I18N = {
     acHint:"{n} आईडी सुझाव – ↑/↓ से चुनें, Enter से डालें",
     tipClose:"बंद करें",
     tipOpenLink:"लिंक खोलें",
-    padReadonly:"पैड में संपादित होता है — यहाँ केवल पढ़ें।",
-    padEdit:"संपादित करने के लिए पैड खोलें",
-    padRefresh:"पैड से फिर लोड करें",
     liveLoadWarn:"सर्वर दस्तावेज़ लोड नहीं हुआ: {url} ({error})। क्या बैकएंड चल रहा है और क्या पता दस्तावेज़ का पता है (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"आपका बदलाव अब लागू नहीं हो सका ({error}) — स्थिति एक बार नए सिरे से ली गई।",
     liveConflictText:"किसी और ने वही पंक्तियाँ बदली हैं। किसका संस्करण रहे?",
     liveConflictTheirs:"दूसरे का लें",
     liveConflictMine:"अपना रखें",
-    padWait:"{seconds} स॰ बाकी — Etherpad बार-बार लेने की सीमा रखता है",
-    padRateLimitWarn:"अभी दोबारा लोड नहीं किया: Etherpad प्रति समय-खिड़की केवल कुछ ही बार लेने देता है (डिफ़ॉल्ट रूप से 90 स॰ में 10 बार), इसलिए इतनी बार सिंक करना संभव नहीं है। {seconds} स॰ में फिर कोशिश करें।",
-    padViewTooltip:"दृश्य: {state} — बदलने के लिए क्लिक करें",
-    padView_both:"पैड और टेक्स्ट",
-    padView_pad:"केवल पैड",
-    padView_text:"केवल टेक्स्ट",
-    padGutterAria:"पैड और टेक्स्ट संपादक का आकार बदलें",
     riskTooltip:"उच्च जोखिम – प्रयास अभी अस्पष्ट।",
     discardedTooltip:"अस्वीकृत नोड्स और उनके उप-वृक्ष दिखाएँ/छिपाएँ",
     cheapTooltip:"सबसे किफ़ायती पथ को उजागर करें – अनावश्यक विकल्प मंद हो जाते हैं",
@@ -3033,7 +2949,7 @@ const I18N = {
     st_fertig:"पूर्ण", st_prod:"उत्पादन में", st_highrisk:"उच्च जोखिम", st_verworfen:"अस्वीकृत",
     unknownStatusWarn:"पंक्ति {line}: अज्ञात स्थिति कोड „{code}“ — तटस्थ रूप में दिखाया गया।",
     sourceLoadWarn:"„{url}“ लोड नहीं हो सका ({error})। फ़ाइल http(s) से उपलब्ध होनी चाहिए और CORS की अनुमति देनी चाहिए (Access-Control-Allow-Origin)।",
-    sourceTimeoutWarn:"„{url}“ ने {seconds} स॰ में उत्तर नहीं दिया — अनुरोध रद्द कर दिया गया। Etherpad सीमित करता है कि एक्सपोर्ट कितनी बार लिया जा सके (डिफ़ॉल्ट रूप से 90 स॰ में 10 बार); कुछ क्षण रुकें, फिर दोबारा लोड करें।",
+    padGoneWarn:"यह लिंक एक Etherpad पैड की ओर इशारा करता है। Etherpad कनेक्शन अब नहीं है — साझा काम अब Werkbaum बैकएंड (?live=…) से होता है। पैड का टेक्स्ट वहाँ एक बार चिपकाएँ और मिलकर संपादित करें।",
     a11yStatus:"स्थिति: {status}", a11ySize:"आकार: {size}", a11ySizeImplicit:"आकार: कम से कम {size} (अनुमानित)", a11yTags:"जिम्मेदार: {names}", a11yId:"आईडी: #{id}", a11yDeps:"निर्भर: {ids}", a11yFolded:"समेटा हुआ, {n} छिपे", a11yEffective:"प्रभावी: {status}", heldTooltip:"प्रभावी रूप से {eff} — स्वयं {own} है, निर्भरताओं की प्रतीक्षा में", a11yOptional:"वैकल्पिक", a11yFocusMark:"यहाँ देखें", a11yLink:"लिंक सहित",
     hint_indent:"इंडेंट (2 स्पेस या टैब) पदानुक्रम तय करता है।",
     hint_all:"उप-कार्य, सभी आवश्यक", hint_any:"विकल्प, एक चुनें",
@@ -3080,21 +2996,11 @@ const I18N = {
     acHint:"{n} 个 ID 建议 – ↑/↓ 选择，Enter 插入",
     tipClose:"关闭",
     tipOpenLink:"打开链接",
-    padReadonly:"在 Pad 中编辑 — 此处只读。",
-    padEdit:"打开 Pad 进行编辑",
-    padRefresh:"从 Pad 重新加载",
     liveLoadWarn:"未能加载服务器文档：{url}（{error}）。后端在运行吗？该地址是文档地址（…/documents/&lt;uuid&gt;）吗？",
     liveStaleWarn:"你的更改已无法应用（{error}）——已重新获取一次当前状态。",
     liveConflictText:"有人改动了同样的行。以谁的版本为准？",
     liveConflictTheirs:"采用对方的",
     liveConflictMine:"保留我的",
-    padWait:"还需 {seconds} 秒 — Etherpad 限制获取频率",
-    padRateLimitWarn:"尚未重新加载：Etherpad 每个时间窗口只允许少量获取（默认每 90 秒 10 次），因此无法如此频繁地同步。请在 {seconds} 秒后再试。",
-    padViewTooltip:"视图：{state} — 点击切换",
-    padView_both:"Pad 和文本",
-    padView_pad:"仅 Pad",
-    padView_text:"仅文本",
-    padGutterAria:"调整 Pad 与文本编辑器大小",
     riskTooltip:"高风险 – 工作量尚不明确。",
     editorTitle:"结构（文本）", diagramTitle:"图表",
     docSwitchTooltip:"选择或管理文档", docMenuAria:"文档",
@@ -3154,7 +3060,7 @@ const I18N = {
     st_fertig:"已完成", st_prod:"已上线", st_highrisk:"高风险", st_verworfen:"已放弃",
     unknownStatusWarn:"第 {line} 行：未知状态代码“{code}”——显示为中性。",
     sourceLoadWarn:"无法加载“{url}”（{error}）。该文件必须可通过 http(s) 访问并允许 CORS（Access-Control-Allow-Origin）。",
-    sourceTimeoutWarn:"“{url}” 在 {seconds} 秒内没有响应 — 请求已中止。Etherpad 会限制导出的获取频率（默认每 90 秒 10 次）；请稍候再重新加载。",
+    padGoneWarn:"此链接指向一个 Etherpad pad。Etherpad 连接已移除——协作现在通过 Werkbaum 后端（?live=…）进行。把 pad 的文本粘贴过去一次，然后一起编辑。",
     a11yStatus:"状态：{status}", a11ySize:"工作量：{size}", a11ySizeImplicit:"工作量：至少 {size}（假定）", a11yTags:"负责人：{names}", a11yId:"ID：#{id}", a11yDeps:"依赖：{ids}", a11yFolded:"已折叠，隐藏 {n} 项", a11yEffective:"实际：{status}", heldTooltip:"实际为 {eff}——自身已是 {own}，等待依赖完成", a11yOptional:"可选", a11yFocusMark:"看这里", a11yLink:"含链接",
     hint_indent:"缩进（2 个空格或制表符）定义层级。",
     hint_all:"子任务，全部必需", hint_any:"备选项，择其一",
@@ -3201,21 +3107,11 @@ const I18N = {
     acHint:"ID候補 {n} 件 – ↑/↓で選択、Enterで挿入",
     tipClose:"閉じる",
     tipOpenLink:"リンクを開く",
-    padReadonly:"パッドで編集します — ここでは読み取り専用です。",
-    padEdit:"編集するにはパッドを開く",
-    padRefresh:"パッドから再読み込み",
     liveLoadWarn:"サーバー文書を読み込めませんでした: {url}（{error}）。バックエンドは動いていますか。アドレスは文書のアドレス（…/documents/&lt;uuid&gt;）ですか。",
     liveStaleWarn:"あなたの変更はもう適用できませんでした（{error}）。状態を一度取り直しました。",
     liveConflictText:"同じ行が他の人にも変更されました。どちらの版を採りますか。",
     liveConflictTheirs:"相手の版",
     liveConflictMine:"自分の版",
-    padWait:"あと {seconds} 秒 — Etherpad は取得頻度を制限します",
-    padRateLimitWarn:"まだ再読み込みしていません: Etherpad は一定時間内の取得回数を制限します（既定で 90 秒あたり 10 回）。これほど頻繁な同期はできません。{seconds} 秒後にもう一度お試しください。",
-    padViewTooltip:"表示: {state} — クリックで切り替え",
-    padView_both:"パッドとテキスト",
-    padView_pad:"パッドのみ",
-    padView_text:"テキストのみ",
-    padGutterAria:"パッドとテキストエディターのサイズを変更",
     riskTooltip:"高リスク – 規模はまだ不明。",
     editorTitle:"構造（テキスト）", diagramTitle:"ダイアグラム",
     docSwitchTooltip:"ドキュメントを選択・管理", docMenuAria:"ドキュメント",
@@ -3275,7 +3171,7 @@ const I18N = {
     st_fertig:"完了", st_prod:"本番稼働", st_highrisk:"高リスク", st_verworfen:"破棄",
     unknownStatusWarn:"{line} 行目: 不明なステータス記号「{code}」— 中立として表示。",
     sourceLoadWarn:"「{url}」を読み込めませんでした（{error}）。ファイルは http(s) でアクセス可能で、CORS（Access-Control-Allow-Origin）を許可する必要があります。",
-    sourceTimeoutWarn:"「{url}」が {seconds} 秒以内に応答しませんでした — 要求を中止しました。Etherpad はエクスポートの取得回数を制限します（既定で 90 秒あたり 10 回）。少し待ってから再読み込みしてください。",
+    padGoneWarn:"このリンクは Etherpad のパッドを指しています。Etherpad 連携は廃止されました。共同編集は Werkbaum バックエンド（?live=…）で行います。パッドの本文を一度貼り付ければ、複数人で編集できます。",
     a11yStatus:"ステータス: {status}", a11ySize:"規模: {size}", a11ySizeImplicit:"規模: 少なくとも {size}（想定）", a11yTags:"担当: {names}", a11yId:"ID: #{id}", a11yDeps:"依存先: {ids}", a11yFolded:"折りたたみ中、{n} 件非表示", a11yEffective:"実効: {status}", heldTooltip:"実効では {eff} — 自身は既に {own}、依存待ち", a11yOptional:"任意", a11yFocusMark:"ここを見る", a11yLink:"リンクあり",
     hint_indent:"インデント（スペース2つまたはタブ）で階層を定義します。",
     hint_all:"サブタスク、すべて必須", hint_any:"選択肢、1つを選ぶ",
@@ -3555,11 +3451,6 @@ function saveUI(){
       agenda: !!document.querySelector('.agenda.open'),
       hcol: app.style.getPropertyValue('--hcol') || null,
       hrow: app.style.getPropertyValue('--hrow') || null,
-      /* Pad-Ansicht + Aufteilung Pad|Spiegel (D31). Global über alle Dokumente,
-         wie der übrige Ansichts-Zustand (D22). */
-      padView: padView,
-      pcol: app.style.getPropertyValue('--pcol') || null,
-      prow: app.style.getPropertyValue('--prow') || null,
       /* Sichtbarer Bereich auf kleinem Bildschirm (D17-Nachtrag) — ebenfalls
          global über alle Dokumente wie der übrige Ansichts-Zustand. */
       mobilePane: mobilePane,
@@ -3609,9 +3500,6 @@ function restoreState(){
   if(ui && ui.hcol) app.style.setProperty('--hcol', ui.hcol);
   if(ui && ui.hrow) app.style.setProperty('--hrow', ui.hrow);
   if(ui && (ui.mobilePane === 'diagram' || ui.mobilePane === 'text')) mobilePane = ui.mobilePane;
-  if(ui && PAD_VIEWS.indexOf(ui.padView) >= 0) padView = ui.padView;
-  if(ui && ui.pcol) app.style.setProperty('--pcol', ui.pcol);
-  if(ui && ui.prow) app.style.setProperty('--prow', ui.prow);
   setAgendaOpen(!!(ui && ui.agenda));
   applyZoom();
   restoring = false;
@@ -3633,7 +3521,6 @@ function updateDocName(){
       ? d.source + '\n' + t('docSwitchTooltip')
       : t('docSwitchTooltip');
   }
-  updatePadLink();   /* Schreibschutz + Pad-Knopf hängen am aktiven Dokument (D31) */
 }
 let renamingId = null;   /* id des gerade inline umbenannten Dokuments (oder null) */
 /* Kam das Umbenennen von einem frisch angelegten Dokument? Dann geht es danach
@@ -3741,9 +3628,8 @@ function flushActive(){ const d = activeDoc(); if(d) d.text = src.value; }
    wer weiter zurück will, hat Git.
 
    Die Regeln stehen in snapshots.js und sind dort getestet; hier bleibt nur,
-   was DOM oder Speicher berührt: welches Dokument aktiv ist, ob sein Text
-   beschreibbar ist (Pad-Dokumente, D31, bleiben außen vor — ein alter Stand
-   ließe sich dort gar nicht einsetzen), und das Nachzeichnen des Menüs. */
+   was DOM oder Speicher berührt: welches Dokument aktiv ist und das
+   Nachzeichnen des Menüs. */
 let snaps = {};        /* {docId: [{t, text}, …]} — ältester zuerst */
 let snapBase = '';     /* Text bei Dokumentwechsel; Vergleich, solange es keinen Stand gibt */
 
@@ -3751,7 +3637,7 @@ function loadSnaps(){ snaps = parseSnaps(localStorage.getItem(LS_SNAPS)); }
 
 function snapshotNow(manuell){
   const d = activeDoc();
-  if(!d || src.readOnly) return false;
+  if(!d) return false;
   const text = src.value;
   if(!addSnapshot(snaps, d.id, text, Date.now(), {base: snapBase, manual: manuell})) return false;
   snapBase = text;
@@ -3796,7 +3682,6 @@ function renderSnapMenu(){
    keine Rückfrage. Der aktuelle Stand wird vorher weggelegt, falls er noch
    nicht drin ist — sonst wäre er das Einzige, was der Griff verlöre. */
 function loadSnapshot(s){
-  if(src.readOnly) return;
   snapshotNow(true);   /* bewusstes Wegleg-Ereignis wie der Knopf, nicht der Takt */
   closeSnapMenu();
   if(!replaceTextUndoable(s.text)) render();
@@ -3810,10 +3695,6 @@ function openSnapMenu(){
 function closeSnapMenu(){
   snapMenu.hidden = true;
   snapBtn.setAttribute('aria-expanded', 'false');
-}
-function updateSnapBtn(){
-  snapBtn.hidden = snapAddBtn.hidden = src.readOnly;
-  if(src.readOnly) closeSnapMenu();
 }
 snapBtn.addEventListener('click', e => {
   e.stopPropagation();
@@ -4010,7 +3891,7 @@ document.addEventListener('pointerdown', e => {
 function loadActiveIntoEditor(){ const d = activeDoc(); src.value = d ? d.text : '';
   /* Vergleichsstand für den nächsten Snapshot (D54): Ohne ihn legte der
      erste Takt nach dem Öffnen auch ein unverändertes Dokument weg. */
-  snapBase = src.value; closeSnapMenu(); updateSnapBtn();
+  snapBase = src.value; closeSnapMenu();
   render(); updateDocName(); updateFreshBtn(); }
 function switchDoc(id){
   if(id === activeId) return;
@@ -4072,7 +3953,6 @@ function deleteDoc(){
   const d = activeDoc();
   if(!d) return;
   if(!window.confirm(t('docDeleteConfirm', {name: d.name}))) return;
-  if(padSource && padSource.id === d.id) stopPad();   /* danach gibt es nichts mehr zu holen (D31) */
   if(liveState && liveState.id === d.id) stopLive();  /* dito fürs Server-Dokument (D76) */
   if(fileHandles.has(d.id)){ fileHandles.delete(d.id); idbDeleteHandle(d.id); }   /* mit dem Dokument geht sein Datei-Handle (D72) */
   docs = docs.filter(x => x.id !== d.id);
@@ -4336,24 +4216,21 @@ function initDocs(){
   src.value = d ? d.text : '';
   snapBase = src.value;
   restoring = false;
-  updateSnapBtn();
   persistDocs();   /* migrierte/geladene Liste festschreiben (stabil über Reload) */
   updateDocName();
   render();
 }
 
-/* ---------- Text von außen: ?sourceUrl= (D23) und ?etherpad= (D31) ----------
-   Beide holen einen Notationstext über http(s) und führen ihn als eigenes
-   Dokument. Die id leitet sich aus der URL ab: derselbe Link aktualisiert dieses
-   Dokument, statt bei jedem Aufruf ein neues anzulegen. Eigene Dokumente des
-   Nutzers bleiben unberührt. Scheitert das Laden (häufigster Fall: das Ziel
-   sendet keinen CORS-Header), bleibt der bisherige Stand stehen und es
-   erscheint eine Warnung.
+/* ---------- Text von außen: ?sourceUrl= (D23) ----------
+   Holt einen Notationstext über http(s) und führt ihn als eigenes Dokument. Die
+   id leitet sich aus der URL ab: derselbe Link aktualisiert dieses Dokument,
+   statt bei jedem Aufruf ein neues anzulegen. Eigene Dokumente des Nutzers
+   bleiben unberührt. Scheitert das Laden (häufigster Fall: das Ziel sendet
+   keinen CORS-Header), bleibt der bisherige Stand stehen und es erscheint eine
+   Warnung. Eine statische Datei, einmal pro Laden geholt.
 
-   Unterschied: `sourceUrl` ist eine statische Datei, einmal pro Laden geholt
-   (D23, unverändert). `etherpad` ist ein lebendes Pad — wiederholt geholt und
-   hier schreibgeschützt, weil das Zusammenführen gleichzeitiger Änderungen
-   Etherpads Aufgabe ist. Ein Fetch-Pfad, zwei Eingänge. */
+   `?etherpad=` gab es hier einmal daneben (D31) und ist ausgebaut (D78) — ein
+   alter Link meldet sich, statt still nichts zu tun. */
 const SOURCE_PARAM = 'sourceUrl';
 const ETHERPAD_PARAM = 'etherpad';
 function urlParam(name){
@@ -4361,16 +4238,14 @@ function urlParam(name){
 }
 function sourceUrlParam(){ return urlParam(SOURCE_PARAM); }
 
-/* Woher kommt der Text? null = kein Parameter, {bad,error} = unbrauchbare
-   Angabe, sonst der Beschreiber für loadRemoteSource(). Die Normalisierung der
-   Pad-Adresse steht headless in remote.js — dort auch ihre Begründung. */
+/* Woher kommt der Text? null = kein Parameter, {gone} = ausgebauter Eingang,
+   {bad,error} = unbrauchbare Angabe, sonst der Beschreiber für
+   loadRemoteSource(). */
 function remoteSource(){
-  const padRaw = urlParam(ETHERPAD_PARAM);
-  if(padRaw){
-    const p = padUrls(padRaw, location.href);
-    if(!p) return {bad: padRaw, error: 'not an Etherpad URL'};
-    return {fetchUrl: p.text, id: 'url:' + p.pad, name: p.pad, source: p.pad, live: true};
-  }
+  /* Ein alter `?etherpad=`-Link soll nicht stillschweigend ein leeres
+     Werkbaum zeigen: Wer ihn irgendwo stehen hat, erfährt hier, wohin die
+     Zusammenarbeit gezogen ist (D78). */
+  if(urlParam(ETHERPAD_PARAM)) return {gone: true};
   const raw = sourceUrlParam();
   if(!raw) return null;
   let url;
@@ -4380,25 +4255,15 @@ function remoteSource(){
      („Failed to fetch", „HTTP 404") — der Rahmentext ist lokalisiert. */
   try{ url = new URL(raw, location.href); }catch(_){ return {bad: raw, error: 'invalid URL'}; }
   if(url.protocol !== 'http:' && url.protocol !== 'https:') return {bad: url.href, error: url.protocol};
-  return {fetchUrl: url.href, id: 'url:' + url.href, name: url.href, source: url.href, live: false};
+  return {fetchUrl: url.href, id: 'url:' + url.href, name: url.href, source: url.href};
 }
 
-/* `timeoutMs` nur beim Pad-Takt (D31): Hängt die Gegenseite, muss der Abruf
-   abbrechen, sonst bliebe der Riegel `padBusy` für immer zu und es käme nie
-   wieder etwas. Der erste Ladeversuch wartet unbegrenzt wie bisher (D23). */
-async function fetchRemote(url, timeoutMs){
-  const ctl = timeoutMs ? new AbortController() : null;
-  const timer = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null;
-  try{
-    const resp = await fetch(url, {cache:'no-store', credentials:'omit',
-                                   signal: ctl ? ctl.signal : undefined});
-    if(!resp.ok) throw new Error('HTTP ' + resp.status);
-    return await resp.text();
-  } finally { if(timer) clearTimeout(timer); }
+async function fetchRemote(url){
+  const resp = await fetch(url, {cache:'no-store', credentials:'omit'});
+  if(!resp.ok) throw new Error('HTTP ' + resp.status);
+  return await resp.text();
 }
-/* Geholten Text als Dokument übernehmen und aktivieren. Gemeinsam genutzt vom
-   ersten Ladeversuch und vom Pad-Takt, wenn dieser einen gescheiterten ersten
-   Versuch nachholt — sonst gäbe es zwei Fassungen derselben sechs Zeilen. */
+/* Geholten Text als Dokument übernehmen und aktivieren. */
 function adoptRemote(s, text){
   flushActive();                       /* laufende Bearbeitung nicht verlieren */
   let d = docs.find(x => x.id === s.id);
@@ -4414,28 +4279,23 @@ function adoptRemote(s, text){
 async function loadRemoteSource(){
   const s = remoteSource();
   if(!s) return;
+  if(s.gone){
+    sourceWarning = {type:'padGone'};
+    render();
+    return;
+  }
   if(s.bad !== undefined){
     sourceWarning = {type:'sourceLoad', url: s.bad, error: s.error};
     render();
     return;
   }
-  /* `padSource` **vor** dem ersten Abruf setzen: Es trägt den Schreibschutz
-     (muss also vor loadActiveIntoEditor() stehen) und macht den Neu-laden-Knopf
-     erreichbar. Scheitert der erste Abruf — die Gegenseite fällt beobachtbar mal
-     aus —, bleibt der Knopf also da und man kommt ohne Neuladen weiter. */
-  if(s.live){ padSource = s; padBusy = true; setPadCooldown(PAD_MIN_GAP_MS); }
   try{
     adoptRemote(s, await fetchRemote(s.fetchUrl));
   }catch(err){
     /* CORS-Fehler melden sich als „TypeError: Failed to fetch" ohne Details —
-       der Warntext nennt CORS daher ausdrücklich als wahrscheinliche Ursache.
-       Bei einem Pad ist das nicht das Ende: der Knopf holt es nach und räumt die
-       Warnung weg, sobald ein Abruf gelingt. */
+       der Warntext nennt CORS daher ausdrücklich als wahrscheinliche Ursache. */
     sourceWarning = {type:'sourceLoad', url: s.fetchUrl, error: (err && err.message) || String(err)};
-    updatePadLink();   /* Knopf zeigen, obwohl kein Dokument entstanden ist */
     render();
-  }finally{
-    if(s.live) padBusy = false;
   }
 }
 
@@ -4886,204 +4746,6 @@ async function putOnServer(){
   }
 }
 
-/* ---------- Pad: auf Knopfdruck neu holen (D31) ----------
-   Kein Hintergrund-Takt. Der erste Entwurf holte alle 2,5 s selbsttätig — und
-   lief damit in Etherpads **Drosselung**: `importExportRateLimiting` ist
-   serienmäßig an und lässt 10 Abrufe je 90 s und IP zu, der Takt wollte 36.
-   Danach hält die Gegenseite die Verbindung einfach offen (kein `429`, keine
-   Kopfzeilen), der Abbruch reißt sie ab — im Netzwerk-Mitschnitt „cancelled",
-   und es kommt kaum je etwas an. Ein Knopf ist ohnehin ehrlicher gegenüber
-   fremder Infrastruktur: geholt wird, wenn jemand es will. Zusammen mit
-   „Was ist neu?" (D28) ergibt das die bessere Geschichte — Knopf drücken, und
-   was seither in Produktion ging, leuchtet auf. */
-const PAD_FETCH_TIMEOUT_MS = 20000;
-/* Mindestabstand zwischen zwei Abrufen. 10 s ergibt höchstens **9** Abrufe je
-   90 s und bleibt damit beweisbar unter Etherpads Voreinstellung (10 je 90 s) —
-   die Drosselung wird also gar nicht erst ausgelöst. Nach einem Abbruch sind wir
-   schon drüber: dann das ganze Fenster abwarten, statt weiter dagegen zu rennen. */
-const PAD_MIN_GAP_MS = 10000;
-const PAD_BACKOFF_MS = 90000;
-let padSource = null;    /* Beschreiber der aktiven Pad-Quelle, oder null */
-let padBusy = false;     /* ein Abruf unterwegs — schützt vor Doppelklick */
-let padNextAllowed = 0;  /* Zeitpunkt (ms), ab dem wieder geholt werden darf */
-let padCoolTimer = null;
-/* Wer das Pad-Dokument löscht, meint es: danach gibt es nichts mehr zu holen. */
-function stopPad(){ padSource = null; }
-function padCoolLeft(){ return Math.max(0, padNextAllowed - Date.now()); }
-function setPadCooldown(ms){ padNextAllowed = Date.now() + ms; tickPadCooldown(); }
-/* Der Sekundenzähler läuft **nur** während der Sperre und hält sich selbst an. */
-function tickPadCooldown(){
-  if(padCoolTimer){ clearInterval(padCoolTimer); padCoolTimer = null; }
-  updatePadRefreshLabel();
-  if(padCoolLeft() <= 0) return;
-  padCoolTimer = setInterval(() => {
-    updatePadRefreshLabel();
-    if(padCoolLeft() <= 0){ clearInterval(padCoolTimer); padCoolTimer = null; }
-  }, 1000);
-}
-/* Sperre sichtbar machen, aber den Knopf **klickbar** lassen: Ein `disabled`
-   erklärt nichts. So kann der Klick den Grund melden (Live-Region `#warn`). */
-function updatePadRefreshLabel(){
-  if(!padRefreshBtn || padRefreshBtn.hidden) return;
-  const left = Math.ceil(padCoolLeft()/1000);
-  padRefreshBtn.classList.toggle('cooling', left > 0);
-  padRefreshBtn.setAttribute('aria-disabled', left > 0 ? 'true' : 'false');
-  const tip = left > 0 ? t('padWait', {seconds: left}) : t('padRefresh');
-  padRefreshBtn.title = tip;
-  padRefreshBtn.setAttribute('aria-label', tip);
-}
-/* Rückmeldung während des Abrufs: Bei einer gedrosselten Gegenseite können das
-   die vollen 20 s sein — ohne Zeichen wirkt der Knopf kaputt. */
-function setPadBusy(on){
-  if(!padRefreshBtn) return;
-  padRefreshBtn.classList.toggle('busy', on);
-  padRefreshBtn.setAttribute('aria-busy', on ? 'true' : 'false');
-}
-async function refreshPad(){
-  const s = padSource;
-  if(!s || padBusy) return;
-  if(padCoolLeft() > 0){
-    /* Nicht heimlich nichts tun: Der Grund ist eine fremde Grenze, und die
-       gehört gesagt — sonst wirkt der Knopf kaputt. Die Meldung landet im
-       Warnbereich, der eine Live-Region ist und deshalb angesagt wird. */
-    sourceWarning = {type:'padRateLimit', seconds: Math.ceil(padCoolLeft()/1000)};
-    render();
-    return;
-  }
-  padBusy = true;
-  setPadBusy(true);
-  setPadCooldown(PAD_MIN_GAP_MS);
-  let text;
-  try{ text = await fetchRemote(s.fetchUrl, PAD_FETCH_TIMEOUT_MS); }
-  catch(err){
-    /* Anders als ein Hintergrund-Takt ist das eine bewusste Handlung — sie
-       braucht eine Antwort, auch wenn sie schiefgeht. Ein Abbruch bekommt einen
-       **eigenen** Warnungstyp: `sourceLoad` zeigt auf CORS, und bei einer
-       Drosselung schickte das den Leser auf die falsche Fährte. */
-    if(err && err.name === 'AbortError'){
-      /* Abbruch heißt: Wir sind schon in der Drosselung. Weiterklicken hilft
-         nicht, also das ganze Fenster abwarten — und das dem Nutzer sagen. */
-      setPadCooldown(PAD_BACKOFF_MS);
-      sourceWarning = {type:'sourceTimeout', url: s.fetchUrl,
-                       seconds: Math.round(PAD_FETCH_TIMEOUT_MS/1000)};
-    } else {
-      sourceWarning = {type:'sourceLoad', url: s.fetchUrl, error: (err && err.message) || String(err)};
-    }
-    render();
-    return;
-  }
-  finally{ padBusy = false; setPadBusy(false); }
-  if(padRefreshBtn) flashBtn(padRefreshBtn);
-  const d = docs.find(x => x.id === s.id);
-  if(!d){
-    /* Kein Dokument: der erste Ladeversuch ist gescheitert. Jetzt nachholen —
-       anlegen und aktivieren wie beim Laden. */
-    adoptRemote(s, text);
-    return;
-  }
-  /* Ein geglückter Abruf räumt die Warnung des ersten Versuchs weg — sonst
-     stünde „konnte nicht geladen werden", während der Text längst da ist. */
-  const hadWarning = !!sourceWarning;
-  sourceWarning = null;
-  if(text === d.text){ if(hadWarning) render(); return; }
-  d.text = text;
-  persistDocs();
-  if(activeId !== d.id) return;        /* im Hintergrund still aktualisiert */
-  /* Auswahl und Scrollstand erhalten — der Sprung aus dem Diagramm (D25) und
-     die Cursor-Zeile sollen einen Abruf überleben. */
-  const top = src.scrollTop, a = src.selectionStart, b = src.selectionEnd;
-  src.value = text;
-  try{ src.setSelectionRange(a, b); }catch(_){}
-  src.scrollTop = top;
-  computeFresh(d.id, text);            /* Basis bleibt die zuletzt bestätigte Fassung */
-  render();
-  updateFreshBtn();
-}
-
-/* ---------- Ansicht bei einem Pad-Dokument: beide | nur Pad | nur Spiegel ----
-   Das Pad lässt sich einbetten (nachgemessen: kein `X-Frame-Options`, keine CSP
-   mit `frame-ancestors`), doch es ersetzt nicht einfach das Textfeld: Alt+Klick
-   und die Cursor-Zeile (D25) arbeiten auf **unserem** `<textarea>`, und in einen
-   fremdstämmigen Rahmen kommt kein DOM-Zugriff. Deshalb drei Ansichten statt
-   einer Entscheidung — in „beide" bleibt der Spiegel schmal ziehbar und trägt
-   weiter die Sprünge.
-
-   Ein **Wähler** statt dreier Knöpfe: Die Editor-Titelzeile ist schon voll
-   (Dokument, Pad, Neu laden, Kopieren, Legende, Fenster), und auf kleinem
-   Bildschirm (D17) ist sie es dreifach. Derselbe Reihum-Griff wie beim
-   Modus-Wähler dort.
-
-   Der Rahmen wird **nur geladen, wenn er sichtbar ist** (`about:blank` sonst).
-   Das ist kein Geiz: Ein geladenes Pad verbindet sich per Socket und macht dich
-   in der Anwesenden-Liste sichtbar. „Nur Spiegel" ist damit die Ansicht, die
-   nichts von dir verrät. */
-const padFrame = document.getElementById('padFrame');
-const srcArea = document.getElementById('srcArea');
-const padGutter = document.getElementById('padGutter');
-const padViewBtn = document.getElementById('padViewBtn');
-function applyPadView(){
-  const d = activeDoc();
-  const isPad = !!(d && padSource && d.id === padSource.id);
-  const show = isPad ? padView : 'text';
-  if(srcArea) srcArea.className = 'src-area pv-' + show;
-  if(padViewBtn){
-    padViewBtn.hidden = !isPad;
-    padViewBtn.dataset.view = show;
-    const tip = t('padViewTooltip', {state: t('padView_' + show)});
-    padViewBtn.title = tip;
-    padViewBtn.setAttribute('aria-label', tip);
-  }
-  if(padGutter) padGutter.hidden = (show !== 'both');
-  if(!padFrame) return;
-  const wantFrame = isPad && show !== 'text';
-  padFrame.hidden = !wantFrame;
-  const wantSrc = wantFrame ? padViewUrl(padSource.source) : 'about:blank';
-  if(padFrame.getAttribute('src') !== wantSrc) padFrame.setAttribute('src', wantSrc);
-}
-/* Zeilennummern und Monospace sind für diese Notation die richtige Darstellung;
-   der Chat kostet in einem schmalen Rahmen nur Platz. */
-function padViewUrl(padUrl){
-  return padUrl + '?showChat=false&showLineNumbers=true&useMonospaceFont=true';
-}
-function cyclePadView(){
-  padView = PAD_VIEWS[(PAD_VIEWS.indexOf(padView) + 1) % PAD_VIEWS.length];
-  applyPadView();
-  saveUI();
-}
-if(padViewBtn) padViewBtn.addEventListener('click', cyclePadView);
-
-/* Ein Pad-Dokument wird im Pad bearbeitet, nicht hier (D31): Textfeld
-   schreibgeschützt, Knopf in der Titelzeile öffnet das Pad im neuen Tab. Ohne
-   den Schutz verschwände getippter Text beim nächsten Abruf. */
-const padLink = document.getElementById('padLink');
-const padRefreshBtn = document.getElementById('padRefresh');
-function updatePadLink(){
-  const d = activeDoc();
-  const isPad = !!(d && padSource && d.id === padSource.id);
-  src.readOnly = isPad;
-  updateSnapBtn();          /* Pad-Dokumente sammeln keine Stände (D54) */
-  src.classList.toggle('readonly', isPad);
-  if(srcWrap) srcWrap.classList.toggle('readonly', isPad);   /* Streifen mit abtönen */
-  if(isPad) src.title = t('padReadonly'); else src.removeAttribute('title');
-  if(padLink){
-    padLink.hidden = !isPad;
-    if(isPad){
-      padLink.href = padSource.source;
-      padLink.title = t('padEdit');
-      padLink.setAttribute('aria-label', t('padEdit'));
-    }
-  }
-  /* Der Neu-laden-Knopf erscheint auch, wenn es das Pad-Dokument noch **nicht**
-     gibt: Dann ist der erste Abruf gescheitert, und genau dieser Knopf ist der
-     Weg zurück — ohne ihn bliebe nur Neuladen der Seite. */
-  if(padRefreshBtn){
-    const pending = !!(padSource && !docs.some(x => x.id === padSource.id));
-    padRefreshBtn.hidden = !(isPad || pending);
-    updatePadRefreshLabel();   /* trägt auch den laufenden Sperr-Zähler */
-  }
-  applyPadView();
-}
-if(padRefreshBtn) padRefreshBtn.addEventListener('click', refreshPad);
 docTrigger.addEventListener('click', e => {
   /* Desktop: ist der Editor minimiert, stellt ein Klick ihn wieder her
      (Bubbling zur Titelzeile) statt das Menü zu öffnen. */
@@ -5228,43 +4890,6 @@ hintGutter.addEventListener('dblclick', () => {
    (D26): gezogen wird von der Spiegelseite aus, Doppelklick setzt zurück,
    Ausrichtung folgt der Panel-Anordnung. Beide Werte werden getrennt gehalten,
    damit ein Moduswechsel die jeweils andere Aufteilung nicht zerstört. */
-const PAD_MIN = 120;          /* schmal darf er werden — aber lesbar bleiben */
-const PAD_MAX_SHARE = 0.85;
-let padDragging = false;
-padGutter.addEventListener('pointerdown', e => {
-  padDragging = true;
-  padGutter.classList.add('dragging');
-  padGutter.setPointerCapture(e.pointerId);
-  document.body.style.userSelect = 'none';
-  e.preventDefault();
-});
-padGutter.addEventListener('pointermove', e => {
-  if(!padDragging) return;
-  const b = srcArea.getBoundingClientRect();
-  if(editorStacked()){
-    const h = Math.min(Math.max(b.bottom - e.clientY, PAD_MIN), b.height * PAD_MAX_SHARE);
-    app.style.setProperty('--prow', Math.round(h) + 'px');
-  } else {
-    const w = Math.min(Math.max(b.right - e.clientX, PAD_MIN), b.width * PAD_MAX_SHARE);
-    app.style.setProperty('--pcol', Math.round(w) + 'px');
-  }
-});
-function endPadDrag(e){
-  if(!padDragging) return;
-  padDragging = false;
-  padGutter.classList.remove('dragging');
-  document.body.style.userSelect = '';
-  try{ padGutter.releasePointerCapture(e.pointerId); }catch(_){}
-  saveUI();
-}
-padGutter.addEventListener('pointerup', endPadDrag);
-padGutter.addEventListener('pointercancel', endPadDrag);
-padGutter.addEventListener('dblclick', () => {
-  app.style.removeProperty('--pcol');
-  app.style.removeProperty('--prow');
-  saveUI();
-});
-
 /* Modus-Wähler auf kleinem Bildschirm: es ist nur das aktive Icon sichtbar,
    Tippen schaltet zum nächsten Modus (reihum). Auf normaler Größe bleibt es
    der Dreier-Umschalter — dort kehrt der Handler sofort zurück. */

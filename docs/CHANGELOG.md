@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-26
 
+- The Etherpad integration is gone: collaboration now runs through a Werkbaum backend, and an old `?etherpad=` link says so instead of doing nothing
 - Plans can live on a Werkbaum backend now: open `?live=<document URL>` and everyone edits the same text, seeing each other's changes without reloading
 - When two people change the same lines, a bar asks whose version should win — everything else the server merges by itself
 - The caret stays where you put it when someone else inserts lines above you

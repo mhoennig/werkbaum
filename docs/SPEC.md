@@ -155,7 +155,7 @@ ab, auch außerhalb seines eigenen Teilbaums.
 
 **Fokusmarke `!!!`** — „schau hier hin": Der Knoten wird im Diagramm
 hervorgehoben und ins Bild geholt (§9). Gedacht für das gemeinsame Arbeiten an
-einem Pad (§9, `?etherpad=`): Weil dort niemand den Cursor der anderen sieht,
+einem Dokument (§9, `?live=`): Weil dort niemand den Cursor der anderen sieht,
 ist eine Marke **im Text** der einzige Weg, auf eine Stelle zu zeigen — und sie
 hat etwas, das ein Cursor nicht hat: **alle** sehen dieselbe Stelle.
 
@@ -770,59 +770,18 @@ Scheitert das Laden (häufigster Fall: das Ziel sendet keinen
 `Access-Control-Allow-Origin`-Header, außerdem 404/Netzfehler), bleibt der
 bisherige Stand stehen und es erscheint eine **Warnung**. Siehe D23.
 
-### Gemeinsam an einem Pad arbeiten (`?etherpad=`)
-Für Zusammenarbeit in Echtzeit nimmt der Editor die Adresse eines
-**Etherpad-Pads** — die Adresse, die im Browser steht, ohne Export-Pfad:
-`…?etherpad=https://pad.example.org/p/mein-plan`. Werkbaum hängt den
-Klartext-Export (`/export/txt`) selbst an; ein versehentlich mitgegebener
-Export- oder `/timeslider`-Pfad wird abgeschnitten.
-
-- **Das Pad ist die Schreibfläche, Werkbaum die Ansicht.** Alle bearbeiten den
-  Notationstext im Pad, jeder Betrachter sieht das Diagramm mitwachsen. Das
-  Zusammenführen gleichzeitiger Änderungen macht Etherpad; Werkbaum tut es
-  nicht.
-- Deshalb ist das Textfeld für ein solches Dokument **schreibgeschützt** — ein
-  Knopf in der Editor-Titelzeile öffnet das Pad im neuen Tab. Ohne den Schutz
-  verschwände getippter Text beim nächsten Abruf.
-- Das Pad kann **im Editor-Panel eingebettet** werden. Ein Wähler in der
-  Titelzeile schaltet reihum zwischen drei Ansichten: **Pad und Text** (beide,
-  durch einen eigenen **Splitter** frei geteilt — Doppelklick setzt zurück),
-  **nur Pad** und **nur Text**. Die Aufteilung wird für nebeneinander und
-  gestapelt getrennt gehalten und bleibt erhalten.
-  - Der schmal gezogene Textspiegel behält seinen Zweck: Der Sprung zwischen
-    Diagramm und Text (§9) arbeitet auf ihm. In „nur Pad" ist er ausgeblendet —
-    ein Sprung holt ihn dann selbst zurück, so wie er ein zugeklapptes
-    Editor-Panel aufklappt.
-  - Der Rahmen wird **nur geladen, wenn er sichtbar ist**. Ein geladenes Pad
-    verbindet sich und zeigt dich in dessen Anwesenden-Liste; „nur Text" ist
-    damit die Ansicht, die nichts von dir verrät.
-- Geholt wird **auf Knopfdruck**, nicht selbsttätig: Ein Neu-laden-Knopf neben
-  dem Pad-Knopf holt den aktuellen Stand. Etherpad **drosselt** den Export
-  (serienmäßig 10 Abrufe je 90 s und IP); ein Hintergrund-Takt läuft dagegen an
-  und bekommt am Ende gar nichts mehr. Läuft ein Abruf, dreht das Symbol — bei
-  gedrosselter Gegenseite kann das bis zum Abbruch (20 s) dauern.
-- Der Knopf greift gut mit „Was ist neu?" (§9) zusammen: drücken, und was seither
-  in Produktion ging, leuchtet auf.
-- **Name ist die vollständige Pad-URL** (nicht der bloße Pad-Name — zwei Pads
-  gleichen Namens auf verschiedenen Hosts wären sonst nicht zu unterscheiden),
-  wie bei `?sourceUrl=`. Identität und Name leiten sich von der **Pad**-Adresse
-  ab, nicht von der Export-Adresse — derselbe Pad ergibt damit genau ein
-  Dokument, gleich in welcher Schreibweise der Link kam.
-- `?sourceUrl=` bleibt unverändert: statische Datei, einmal pro Laden geholt.
-  Der eigene Parameter trägt gerade den Unterschied.
-- Fehler (CORS, 404, Netz) melden sich wie bei `?sourceUrl=`. Ein **Abbruch**
-  wegen Zeitablauf bekommt eine eigene Meldung, die die Drosselung benennt —
-  die `?sourceUrl=`-Meldung zeigt auf CORS und schickte hier auf die falsche
-  Fährte. Scheitert schon der erste Abruf, bleibt der Neu-laden-Knopf sichtbar
-  und holt es nach; ein Neuladen der Seite ist nicht nötig.
-
-Siehe D31.
+### Kein Etherpad mehr (`?etherpad=`, entfallen)
+Der Editor konnte den Notationstext aus einem **Etherpad-Pad** beziehen: Alle
+schrieben im Pad, Werkbaum zeigte das Diagramm dazu. Das ist **ausgebaut** —
+`?live=` (unten) kann dasselbe besser, und zwar im Editor selbst. Ein alter
+`?etherpad=`-Link ergibt heute eine **Warnung**, die auf `?live=` zeigt, statt
+still nichts zu tun. Siehe D78; die frühere Ausführung steht in D31.
 
 ### Gemeinsam an einem Server-Dokument arbeiten (`?live=`)
 Liegt der Plan auf einem Werkbaum-Backend, nimmt der Editor dessen
 Dokument-Adresse: `…?live=https://example.org/api/v1/documents/<uuid>`.
-Anders als beim Pad (`?etherpad=`) wird hier **im Editor selbst geschrieben**,
-und alle sehen die Änderungen der anderen, ohne neu zu laden.
+Geschrieben wird **im Editor selbst**, und alle sehen die Änderungen der
+anderen, ohne neu zu laden.
 
 - **Das Textfeld bleibt beschreibbar.** Nach kurzer Ruhe (1,5 s) schickt der
   Editor die Änderung als Zeilen-Diff; ein offener Abruf hält die Gegenrichtung
@@ -852,8 +811,7 @@ Ausrichtungen getrennt erhalten. Die Legende belegt höchstens 85 % des Panels,
 damit das Textfeld nie ganz verschwindet. Siehe D26.
 
 ### Was ist neu? (Dokumente von außen)
-Bei Dokumenten, die von außen kommen (mitgeliefert, per `?sourceUrl=` oder
-`?etherpad=`), wird
+Bei Dokumenten, die von außen kommen (mitgeliefert oder per `?sourceUrl=`), wird
 gezeigt, was sich seit dem letzten Besuch getan hat. **„Neu" heißt: neu in
 Produktion** — ein Knoten trägt jetzt `[^]` und tat es in der zuletzt gesehenen
 Fassung nicht. Solche Knoten bekommen einen **gelben Strahlenkranz** nach außen
@@ -1018,8 +976,7 @@ eigene ID der Zeile.
   weiter: Sie fängt keine Taste ab, solange sie nichts anzeigt, und Tab rückt
   bei geschlossener Liste unverändert ein.
 - **Kein Vorschlag** bei bloßem `#` (das *definiert* eine ID), im Kommentar
-  (`%%`), im Beschreibungsteil hinter `---` und in schreibgeschützten
-  Pad-Dokumenten (§9).
+  (`%%`) und im Beschreibungsteil hinter `---`.
 - Der Parser sieht nie etwas davon; `llms.md` (§13) bleibt unberührt. Für
   Screenreader meldet eine höfliche Live-Region die Trefferzahl und den
   gewählten Eintrag; das Popup selbst ist `aria-hidden`, normales Tippen
@@ -1099,13 +1056,12 @@ fokussierten Knoten (WAI-ARIA-Baum-Idiom).
   angefasst, solange die übrigen Marken den Zustand noch richtig beschreiben —
   ein von Hand gesetztes `<` bleibt also stehen. Trifft es nicht mehr zu, werden
   alle Marken neu gesetzt und das `<` dabei aufgelöst.
-- Wo der Text **nicht beschreibbar** ist — bei einem Pad-Dokument (§9) —, gilt
-  der Eingriff **je Knoten** (Identität = Label-Pfad, wie bei „Was ist neu?“)
-  und **nur für die Sitzung**; ein Dokumentwechsel setzt ihn zurück. Dasselbe
-  gilt für einen Zustand, der sich in Marken gar nicht ausdrücken lässt (etwa
-  weil eine Fokusmarke `!!!` ihren Knoten immer wieder hervorholt): Dann wird
-  lieber nichts geschrieben, als einen Text zu hinterlassen, der etwas anderes
-  sagt als das Bild.
+- Lässt sich ein Zustand in Marken **gar nicht ausdrücken** (etwa weil eine
+  Fokusmarke `!!!` ihren Knoten immer wieder hervorholt), wird lieber nichts
+  geschrieben, als einen Text zu hinterlassen, der etwas anderes sagt als das
+  Bild. Der Eingriff gilt dann **je Knoten** (Identität = Label-Pfad, wie bei
+  „Was ist neu?“) und **nur für die Sitzung**; ein Dokumentwechsel setzt ihn
+  zurück.
 - **Für den ganzen Baum** gibt es im Diagramm-Kopf einen **Durchschalter**:
   Jeder Druck stellt die **nächste** von vier Voreinstellungen her, reihum —
   1. **ab Größe M abwärts zugeklappt**: jeder Knoten mit Kindern, dessen

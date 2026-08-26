@@ -83,57 +83,46 @@ http(s) regardless of extension or content type.
 do; an arbitrary web server often does not. If loading fails the previous
 content stays and a warning explains why. Only `http`/`https` are allowed.
 
-### Working on one plan together (Etherpad)
+### Working on one plan together (`?live=`)
 
-For real-time collaboration Werkbaum needs no backend of its own — it borrows an
-**Etherpad**. Pass the pad address as it appears in your browser (no export path,
-Werkbaum appends that itself):
+If the plan lives on a Werkbaum backend, everyone edits it **in the editor
+itself** and sees the others' changes without reloading:
 
 ```
-https://werkbaum.javagil.de/?etherpad=https://pad.hostsharing.net/p/my-plan
+https://werkbaum.javagil.de/?live=https://werkbaum.javagil.de/api/v1/documents/<uuid>
 ```
 
-Everyone edits the notation text **in the pad**; a reload button next to the pad
-button fetches the current state. Merging simultaneous edits is Etherpad's job —
-that is the whole point.
+To create such a document, open the document menu and pick **"Put on the
+server"**: it uploads the active plan, switches to it, and puts the link in the
+address bar and on your clipboard. Share that link — the address is the
+invitation, and knowing it is what grants access.
 
-Deliberately **no background polling**: Etherpad rate-limits the export (10
-fetches per 90 s per IP by default), so a timer does not win against it — it
-*causes* the throttling. Measured: after exceeding the budget the server holds
-the connection open with no reply for about two minutes, then answers in 0.4 s.
-The button pairs well with "what's new": press it, and whatever went into
-production since your last look lights up.
+The text area stays **writable**. After 1.5 s of quiet the editor sends the
+change as a line diff; an open request holds the other direction ready and plays
+foreign changes in. **The caret travels with them** — if someone inserts lines
+above you, it stays where it was in the text.
 
-Because the pad is the writing surface, the text area here is **read-only**; a
-button in the editor title bar opens the pad in a new tab. Without that
-protection, anything you typed would vanish on the next fetch.
+The document's **title** is its name (everyone sees the same one), the full
+address sits in the tooltip.
 
-Verified against Etherpad: the plain-text export sends
-`Access-Control-Allow-Origin: *`, and the notation comes back **byte-identical** —
-leading spaces, `-`/`+`/`|`, status boxes and `%%` survive Etherpad's storage
-model, and `-` is not turned into a bullet list.
-
-The pad can also be **embedded** in the editor panel: a selector in the title bar
-cycles through *pad and text* (split by a draggable divider), *pad only* and *text
-only*. The narrow text mirror keeps its purpose — the jump between diagram and
-text works on it, and in *pad only* a jump brings it back by itself. The frame is
-only loaded while it is visible, because a loaded pad connects and shows you in
-the pad's list of people.
+When two changes really overlap — the same lines — a bar at the top asks whose
+version should win: *take theirs* or *keep mine*. Everything else the server
+merges without asking. Nothing is lost either way: the discarded state stays in
+the earlier states, and every version is in the server's history.
 
 **A shared pointer:** write `!!!` on a line and that node is highlighted and
-scrolled into view — for **everyone** looking at the pad, which is something a
-cursor cannot do. Recognised only as a standalone token, so `Careful!!!` stays an
-ordinary label. It stays in the text until someone deletes it.
+scrolled into view — for **everyone** looking at the document, which is
+something a cursor cannot do. Recognised only as a standalone token, so
+`Careful!!!` stays an ordinary label. It stays in the text until someone
+deletes it.
 
-**Be aware:** your plan text then lives on third-party infrastructure, and a pad
-is readable by anyone who knows its address. In an embedded frame Etherpad's
-author cookie (`SameSite=Lax`) is not sent, so you count as a new author on every
-load — fixable only on the server (`cookie.sameSite: "None"`).
+Setting up the backend: see [backend/README.md](backend/README.md) and
+`docs/DECISIONS.md` D76.
 
-For the same reason the **embedded frame is best for reading along**: if editing
-in it ever stops working, cycle the view selector once (that reloads the frame),
-or use the "edit in the pad" button and work in the pad's own tab, where the
-cookie does apply. See `docs/DECISIONS.md` D31 and D32.
+> Werkbaum used to borrow an **Etherpad** for this (`?etherpad=`). That is
+> removed — the backend does the same job better and in the editor itself. An
+> old `?etherpad=` link now shows a note pointing here rather than silently
+> doing nothing; see `docs/DECISIONS.md` D78.
 
 ### Running it locally
 

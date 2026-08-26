@@ -39,18 +39,14 @@
                                       exakte Suche (D42); zeilenlos
    - sourceLoad    { url, error }   — ?sourceUrl= nicht ladbar (D23); ohne
                                       Zeilennummer, erscheint dadurch zuoberst
-   - padRateLimit  { seconds }      — zu früh nachgeladen; Werkbaum hat gar nicht
-                                      erst geholt, um Etherpads Grenze nicht
-                                      auszulösen (D31)
+   - padGone       { }              — ein alter ?etherpad=-Link: die Anbindung
+                                      ist ausgebaut (D78), der Text zeigt auf
+                                      ?live=; zeilenlos
    - liveLoad      { url, error }   — Server-Dokument (?live=, D76) nicht
                                       erreichbar oder keine Dokument-Adresse
    - liveStale     { error }        — eigene Änderung nicht anwendbar
                                       (Prüfsumme, Index, Basis verdichtet);
-                                      der Client hat einmal neu geladen (D76)
-   - sourceTimeout { url, seconds } — Abruf abgebrochen, Gegenseite zu langsam
-                                      (D31). Eigener Typ, weil `sourceLoad` auf
-                                      CORS zeigt — bei einem Zeitablauf schickt
-                                      das den Leser auf die falsche Fährte */
+                                      der Client hat einmal neu geladen (D76) */
 
 import { esc } from './render.js';
 
@@ -95,14 +91,12 @@ function build(w, t, esc){
       return t('cheapApproxWarn');
     case 'sourceLoad':
       return t('sourceLoadWarn', {url: esc(w.url), error: esc(w.error)});
-    case 'padRateLimit':
-      return t('padRateLimitWarn', {seconds: w.seconds});
+    case 'padGone':
+      return t('padGoneWarn');
     case 'liveLoad':
       return t('liveLoadWarn', {url: esc(w.url), error: esc(w.error)});
     case 'liveStale':
       return t('liveStaleWarn', {error: esc(w.error)});
-    case 'sourceTimeout':
-      return t('sourceTimeoutWarn', {url: esc(w.url), seconds: w.seconds});
     default:
       return `${esc(String(w.type))} (${w.line ?? '?'})`;
   }

@@ -10,7 +10,8 @@ Files are UTF-8 with LF line endings; the extension `.werkbaum` is a
 convention (plain `.txt` works too). The editor at
 https://werkbaum.javagil.de renders the notation as a diagram;
 `?sourceUrl=<url>` loads any CORS-readable http(s) text file, and
-`?etherpad=<pad-url>` follows a live Etherpad.
+`?live=<document-url>` opens a document on a Werkbaum backend that several
+people edit at once.
 
 ## Line format
 

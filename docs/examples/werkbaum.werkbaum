@@ -131,30 +131,10 @@
       | [?] #be.auth.token: Single user, one token (S)
       | [?] #be.auth.oidc: Log in with OIDC (L)
   - [~] #col: Collaborating on a Diagram (XXL)
-    " The pad merges concurrent edits, Werkbaum renders the plan.
-    - [^] #col.pad: Watch a shared Etherpad — it merges, we render (L)
-      - [^] #col.pad.export: Load the pad's plain-text export (XS)
-      - [^] #col.pad.reload: Reload on demand (XS)  %% a timer only trips Etherpad's rate limit
-      - [^] #col.pad.embed: Embed the pad, keep the text mirror beside it (M)
-        - [^] #col.pad.views: Three views: pad and text, pad only, text only (S)
-        - [^] #col.pad.split: Splitter between pad and mirror (XS)
-        - [?] #col.pad.cookie: Editing in the frame stops after a while (S)  %% SameSite=Lax, see D31
-          | [?] #col.pad.samesite: Ask the admin for cookie.sameSite = None (XS)
-          | [ ] #col.pad.owntab: Live with it: edit in the pad's own tab (XS)
-      - [^] #col.pad.point: A shared pointer: !!! focuses a node for everyone (XS)
-      - [?] > #col.auto: Update by itself, within about 2 s (M)
-        | [?] #col.own: Our own Etherpad beside Werkbaum (L)  %% then every setting below is ours
-          - [ ] #col.own.db: Node and a real database in userland (S)  %% the flatfile store is not for production
-          - [ ] #col.own.ram: Book the RAM quota for an own daemon (XS)
-          - [ ] #col.own.proxy: Reverse proxy in .htaccess, websockets included (S)  %% Mattermost does it, wiki shows how
-          - [ ] #col.own.unit: systemd user unit so it survives a reboot (XS)
-          - [!] #col.own.patch: Keeping a public service patched (S)  %% indefinitely, that is the real cost
-        | [?] #col.auto.limit: Admin raises the export rate limit (XS)  %% default is 10 per 90 s
-        | [?] #col.auto.plugin: Admin installs a plugin that pushes the text (S)  %% postMessage to the page
-        | [?] #col.auto.relay: Our own backend holds one socket and fans out (XXL) :#be.scaffold
-        | [ ] #col.auto.poll: Poll inside the budget, at best every 9 s (S)  %% legal, but not 2 s
-        | [-] #col.auto.socket: Our own socket straight to the pad (L)  %% measured: upgrade refused
-        | [-] #col.auto.html: Read the pad's HTML instead of the export (M)  %% measured: no CORS header
+    " Reading together is solved, changing together too — typing together at the
+    " same instant is the expensive one.
+    - [^] #col.point: A shared pointer: !!! focuses a node for everyone (XS)
+    - [-] #col.pad: Borrow an Etherpad — it merges, we render (L)  %% built, then removed, see D78
     - [ ] #col.git: Git as the shared store (L)
       | [ ] #col.git.pr: A file in a repository, changed by pull request (S)  %% works today, no code
       | [?] #col.git.auto: The backend commits every change (L) :#be.scaffold
@@ -714,8 +694,8 @@
 #bld.pwa.sw
   A worker lets the editor start without a network. It is deliberately dumb:
   navigations go network-first, and the cache only keeps the last version it
-  has seen of the one self-contained file for the offline case. Texts pulled from a URL
-  or a pad pass through untouched and stay online by their nature.
+  has seen of the one self-contained file for the offline case. Texts pulled from
+  a URL or a server pass through untouched and stay online by their nature.
 
 #bld.pwa.update
   The feared migration turned out unnecessary: because the worker only
@@ -838,96 +818,17 @@
   machinery. Reading together is solved, changing together mostly is, and
   typing together at the same instant is the expensive one.
 
+#col.point
+  Nobody sees anyone else's caret, so a mark in the text is the only way to
+  point at a place — and it has something a caret has not: everyone sees the
+  same spot.
+
 #col.pad
-  Let an Etherpad do the hard part: it merges concurrent edits, and Werkbaum
-  only renders the result. Borrowed rather than rebuilt.
-
-#col.pad.export
-  Every pad offers its content as plain text, with the header that lets a
-  foreign page read it. That one endpoint is the entire integration.
-
-#col.pad.reload
-  Fetching happens on a button press, not on a timer. The export is rate
-  limited, and a timer does nothing but trip it.
-
-#col.pad.embed
-  The pad in a frame inside the editor, with our own text mirror beside it.
-  The mirror keeps the jumps between diagram and text working, because a
-  foreign frame gives up no access to its content.
-
-#col.pad.views
-  Pad and text, pad only, text only. Text only is the view that tells the pad
-  nothing about you — a loaded pad announces you in its list of people.
-
-#col.pad.split
-  A splitter of its own between frame and mirror, remembered separately for
-  side by side and stacked.
-
-#col.pad.cookie
-  In a foreign frame the pad's author cookie is not sent, so a session can
-  turn read-only after a while. Not fixable from this side.
-
-#col.pad.samesite
-  One server setting resolves it. Presumes somebody who can change that
-  setting.
-
-#col.pad.owntab
-  Or live with it: read along in the frame, and write in the pad's own tab
-  where the cookie works.
-
-#col.pad.point
-  Nobody sees anybody else's cursor across two applications, so a mark in the
-  text is the only way to point at something. It has one thing a cursor
-  hasn't: everyone sees the same spot.
-
-#col.auto
-  The view should follow the pad by itself, within a couple of seconds. Every
-  route below was measured rather than guessed at.
-
-#col.own
-  Running the pad ourselves makes every setting below it ours. It also makes
-  every one of them our job.
-
-#col.own.db
-  The default file store is not meant for production, so a real database and a
-  runtime to host it are the price of admission.
-
-#col.own.ram
-  A daemon of one's own needs memory booked for it.
-
-#col.own.proxy
-  Reaching it needs a reverse proxy that passes websockets through as well.
-
-#col.own.unit
-  And something that starts it again after a reboot.
-
-#col.own.patch
-  The real cost is not the setup but keeping a public service patched,
-  indefinitely.
-
-#col.auto.limit
-  The cheapest effective change: raise the export limit on the pad server. Ten
-  fetches per ninety seconds is the default, and the reason a timer fails.
-
-#col.auto.plugin
-  A pad plugin can push the text to the embedding page. Live, no polling, no
-  limit touched — and nothing to install on our side.
-
-#col.auto.relay
-  Our own backend holds one connection to the pad and fans out to every
-  viewer. Solves it for everybody at once, and costs a backend.
-
-#col.auto.poll
-  Staying inside the budget means one fetch every nine seconds at best, shared
-  by everyone behind the same address. Legal, but not two seconds.
-
-#col.auto.socket
-  Measured and rejected: the pad server refuses the websocket upgrade when it
-  comes from another origin.
-
-#col.auto.html
-  Measured and rejected: the pad page carries the full text, but sends no
-  header that would let a foreign page read it.
+  Removed. An Etherpad did the hard part for a while: it merged concurrent
+  edits and Werkbaum only rendered the result, borrowed rather than rebuilt.
+  The borrowing is what it cost — a rate-limited export, no writing from here,
+  and an author cookie that a foreign frame never gets. The backend does it
+  better and in our own editor, so this went out again.
 
 #col.git
   Keep the plan in a repository. Because it is text, diff, blame, review and

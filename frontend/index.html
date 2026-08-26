@@ -103,15 +103,6 @@
         <svg class="ic-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
       </button>
       </span>
-      <button type="button" class="copybtn padview" id="padViewBtn" data-view="text" hidden>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="frame" x="2.5" y="5" width="19" height="14" rx="2"/><line class="ic-both" x1="12" y1="5" x2="12" y2="19"/><rect class="ic-pad" x="3.5" y="6" width="8" height="12" rx="1" fill="currentColor" stroke="none"/><rect class="ic-text" x="12.5" y="6" width="8" height="12" rx="1" fill="currentColor" stroke="none"/></svg>
-      </button>
-      <a class="copybtn padlink" id="padLink" href="#" target="_blank" rel="noopener" hidden>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      </a>
-      <button type="button" class="copybtn padrefresh" id="padRefresh" hidden>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
-      </button>
       <button type="button" class="copybtn" id="copy" data-i18n-title="copyTooltip" data-i18n-aria="copyTooltip" title="Text in die Zwischenablage kopieren" aria-label="Text in die Zwischenablage kopieren">
         <svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <svg class="ic-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
@@ -126,14 +117,7 @@
       </div>
     </div>
     <div class="editor-body">
-    <!-- Pad-Rahmen + interner Spiegel teilen sich einen eigenen Bereich, damit die
-         Legenden-Aufteilung (D26) unberührt bleibt. Reihenfolge: Pad, Splitter,
-         Spiegel — gezogen wird von der Spiegelseite aus, wie bei der Legende. -->
-    <div class="src-area pv-text" id="srcArea">
-    <iframe class="padframe" id="padFrame" title="Etherpad" hidden></iframe>
-    <div class="pad-gutter" id="padGutter" role="separator" data-i18n-title="gutterTooltip" data-i18n-aria="padGutterAria" title="Ziehen zum Verschieben, Doppelklick setzt zurück" aria-label="Pad und Texteditor größenverändern" hidden></div>
-    <!-- Zeilennummern + Textfeld sind eine Spalte: der Splitter oben teilt den
-         Rahmen gegen diese Spalte, nicht gegen das nackte Textfeld. -->
+    <!-- Zeilennummern + Textfeld sind eine Spalte (D33). -->
     <div class="src-wrap" id="srcWrap">
       <div class="lineno" id="lineNos" aria-hidden="true"><div class="lineno-inner"></div></div>
       <!-- `wrap="off"`: Zeilen werden nicht umbrochen, lange Zeilen bekommen
@@ -141,7 +125,6 @@
            Hierarchie — ein weicher Umbruch setzt die Fortsetzung an den linken
            Rand und lässt die Ebene verschwinden. -->
       <textarea id="src" wrap="off" spellcheck="false" data-i18n-aria="editorTitle" aria-label="Struktur (Text)"></textarea>
-    </div>
     </div>
     <div class="hint-gutter" id="hintGutter" role="separator" data-i18n-title="gutterTooltip" data-i18n-aria="hintGutterAria" title="Ziehen zum Verschieben, Doppelklick setzt zurück" aria-label="Editor und Legende größenverändern" hidden></div>
     <div class="agenda" id="agenda">

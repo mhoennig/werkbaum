@@ -88,60 +88,46 @@ GitLab-Raw-Links tun das; ein beliebiger Webserver oft nicht. Scheitert das
 Laden, bleibt der bisherige Stand stehen und eine Warnung nennt die Ursache.
 Zugelassen sind nur `http`/`https`.
 
-### Zusammen an einem Plan arbeiten (Etherpad)
+### Zusammen an einem Plan arbeiten (`?live=`)
 
-Für Zusammenarbeit in Echtzeit braucht Werkbaum kein eigenes Backend — es leiht
-sich ein **Etherpad**. Angegeben wird die Pad-Adresse, wie sie im Browser steht
-(ohne Export-Pfad, den hängt Werkbaum selbst an):
+Liegt der Plan auf einem Werkbaum-Backend, bearbeiten ihn alle **im Editor
+selbst** und sehen die Änderungen der anderen, ohne neu zu laden:
 
 ```
-https://werkbaum.javagil.de/?etherpad=https://pad.hostsharing.net/p/mein-plan
+https://werkbaum.javagil.de/?live=https://werkbaum.javagil.de/api/v1/documents/<uuid>
 ```
 
-Alle bearbeiten den Notationstext **im Pad**; ein Neu-laden-Knopf neben dem
-Pad-Knopf holt den aktuellen Stand. Das Zusammenführen gleichzeitiger Änderungen
-macht Etherpad — genau darum geht es.
+Angelegt wird so ein Dokument über den Eintrag **„Auf den Server legen"** im
+Dokumenten-Menü: Er lädt den aktiven Plan hoch, schaltet dorthin um und schreibt
+den Link in die Adresszeile und in die Zwischenablage. Diesen Link weitergeben —
+die Adresse ist die Einladung, und wer sie kennt, kommt hinein.
 
-Bewusst **kein** Abrufen im Hintergrund: Etherpad drosselt den Export
-(serienmäßig 10 Abrufe je 90 s und IP), ein Takt gewinnt dagegen nicht — er
-*erzeugt* die Drosselung. Nachgemessen: Nach Überschreiten des Budgets hält der
-Server die Verbindung rund zwei Minuten ohne Antwort offen und liefert dann in
-0,4 s. Der Knopf greift gut mit „Was ist neu?" zusammen: drücken, und was seither
-in Produktion ging, leuchtet auf.
+**Das Textfeld bleibt beschreibbar.** Nach 1,5 s Ruhe schickt der Editor die
+Änderung als Zeilen-Diff; ein offener Abruf hält die Gegenrichtung bereit und
+spielt fremde Änderungen ein. **Die Schreibmarke wandert mit** — fügt jemand
+oberhalb Zeilen ein, bleibt sie an ihrer Stelle im Text.
 
-Weil das Pad die Schreibfläche ist, ist das Textfeld hier **schreibgeschützt**;
-ein Knopf in der Editor-Titelzeile öffnet das Pad im neuen Tab. Ohne den Schutz
-verschwände getippter Text beim nächsten Abruf.
+Der **Name** ist der Titel des Dokuments (alle sehen denselben), die vollständige
+Adresse steht im Tooltip.
 
-Getestet gegen Etherpad: Der Klartext-Export sendet
-`Access-Control-Allow-Origin: *`, und die Notation kommt **byte-identisch**
-zurück — führende Leerzeichen, `-`/`+`/`|`, Statusboxen und `%%` überleben
-Etherpads Speichermodell, das `-` wird nicht zur Aufzählung umgedeutet.
+**Überschneiden sich zwei Änderungen wirklich** — dieselben Zeilen —, fragt ein
+Band oben, wessen Fassung gelten soll: *Fremde übernehmen* oder *Eigene
+durchsetzen*. Alles andere führt der Server selbst zusammen, ohne zu fragen.
+Verloren geht nichts: Der verworfene Stand bleibt in den früheren Ständen, jede
+Version in der Historie des Servers.
 
-Das Pad lässt sich auch **im Editor-Panel einbetten**: Ein Wähler in der
-Titelzeile schaltet reihum zwischen *Pad und Text* (durch einen Splitter frei
-geteilt), *nur Pad* und *nur Text*. Der schmal gezogene Textspiegel behält seinen
-Zweck — der Sprung zwischen Diagramm und Text arbeitet auf ihm, und in *nur Pad*
-holt ein Sprung ihn selbst zurück. Der Rahmen wird nur geladen, solange er
-sichtbar ist, denn ein geladenes Pad verbindet sich und zeigt dich in dessen
-Anwesenden-Liste.
+**Ein gemeinsamer Zeigefinger:** `!!!` auf einer Zeile hebt diesen Knoten hervor
+und holt ihn ins Bild — bei **allen**, die das Dokument ansehen. Das kann ein
+Cursor nicht. Erkannt nur als alleinstehendes Token, `Achtung!!!` bleibt also ein
+gewöhnliches Label. Die Marke bleibt stehen, bis jemand sie löscht.
 
-**Der gemeinsame Zeigefinger:** Schreib `!!!` in eine Zeile, und dieser Knoten
-wird hervorgehoben und ins Bild geholt — bei **allen**, die auf das Pad schauen.
-Das kann ein Cursor nicht. Erkannt nur als alleinstehendes Token, `Achtung!!!`
-bleibt also ein gewöhnliches Label. Die Marke bleibt stehen, bis jemand sie
-löscht.
+Das Backend einrichten: siehe [backend/README.md](backend/README.md) und
+`docs/DECISIONS.md` D76.
 
-**Bedenke:** Der Plantext liegt damit auf fremder Infrastruktur, und ein Pad ist
-für jeden lesbar, der die Adresse kennt. Im eingebetteten Rahmen wird Etherpads
-Autoren-Cookie (`SameSite=Lax`) nicht mitgesendet — man gilt bei jedem Laden als
-neuer Autor, was nur serverseitig zu beheben ist (`cookie.sameSite: "None"`).
-
-Aus demselben Grund ist der eingebettete Rahmen vor allem zum **Mitlesen** gut:
-Sollte das Bearbeiten darin einmal aufhören zu funktionieren, den Ansichts-Wähler
-einmal durchschalten (das lädt den Rahmen neu) oder über „im Pad bearbeiten" im
-eigenen Tab weiterarbeiten, wo das Cookie gilt. Siehe `docs/DECISIONS.md` D31
-und D32.
+> Dafür lieh sich Werkbaum früher ein **Etherpad** (`?etherpad=`). Das ist
+> ausgebaut — das Backend kann dasselbe besser und im Editor selbst. Ein alter
+> `?etherpad=`-Link zeigt heute einen Hinweis hierher, statt still nichts zu
+> tun; siehe `docs/DECISIONS.md` D78.
 
 ### Lokal ausführen
 

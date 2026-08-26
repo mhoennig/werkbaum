@@ -6,7 +6,7 @@
    dafür ist reine Logik — sie hing nur an `localStorage`, `Date.now()` und
    dem `<textarea>` fest und war deshalb nicht prüfbar.
 
-   Aufteilung nach dem Vorbild von remote.js (D31): Hier steht, WAS gilt; in
+   Aufteilung wie bei den übrigen Modulen: Hier steht, WAS gilt; in
    app.js bleibt, WOHER die Werte kommen (aktives Dokument, Schreibschutz,
    Menü) und WOHIN sie gehen (`localStorage`). Der Speicher wird als
    `{setItem, removeItem}` hereingereicht, die Uhr als Zahl — beides lässt sich
