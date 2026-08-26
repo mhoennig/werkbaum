@@ -8,11 +8,15 @@
 # `scripts/deploy-prod.sh` mitspiegelt (D76-Nachtrag 2).
 #
 # Verwendung:
-#   scripts/deploy-backend.sh [-y] [--no-build] [--no-restart] [ssh-ziel]
+#   scripts/deploy-backend.sh [-y] [--no-build] [--no-restart] [--unit-only] [ssh-ziel]
 #
 #   -y            ohne Rückfrage spiegeln und neu starten
 #   --no-build    vorhandenes Jar nehmen (z. B. Wiederholung eines Deploys)
 #   --no-restart  nur hochladen, Dienst nicht anfassen
+#   --unit-only   nur die systemd-Unit aus der Vorlage neu schreiben und laden;
+#                 kein Bauen, kein Jar. Für den Fall, dass sich Port, Speicher
+#                 oder die Vorlage selbst geändert haben. Die Platzhalter kennt
+#                 damit weiterhin genau eine Stelle — dieses Skript.
 #
 # Konfiguration aus der git-ignorierten `.env` (Vorlage: .env.example):
 #   BACKEND_SSH       user@host — Pflicht (oder als Argument)
@@ -37,12 +41,14 @@ set -euo pipefail
 YES=0
 BUILD=1
 RESTART=1
+UNIT_ONLY=0
 SSH_TARGET=""
 for arg in "$@"; do
   case "$arg" in
     -y|--yes) YES=1 ;;
     --no-build) BUILD=0 ;;
     --no-restart) RESTART=0 ;;
+    --unit-only) UNIT_ONLY=1; BUILD=0 ;;
     -h|--help)
       awk 'NR>2 { if ($0 ~ /^#/) { sub(/^# ?/, ""); print } else exit }' "$0"
       exit 0 ;;
@@ -90,18 +96,22 @@ echo "==> Ziel ${SSH_TARGET}:~/${DIR#/}, Port ${PORT}, -Xmx${XMX}"
 
 # ---- 1) Bauen ----
 JAR=""
-if [ "$BUILD" -eq 1 ]; then
-  echo "==> ./gradlew bootJar (mit Tests)"
-  (cd backend && ./gradlew --quiet check bootJar)
+if [ "$UNIT_ONLY" -eq 1 ]; then
+  echo "==> Nur die Unit (--unit-only)"
 else
-  echo "==> Build übersprungen (--no-build)"
+  if [ "$BUILD" -eq 1 ]; then
+    echo "==> ./gradlew bootJar (mit Tests)"
+    (cd backend && ./gradlew --quiet check bootJar)
+  else
+    echo "==> Build übersprungen (--no-build)"
+  fi
+  JAR="$(ls -1t backend/build/libs/*.jar 2>/dev/null | grep -v -- '-plain\.jar$' | head -1 || true)"
+  if [ -z "$JAR" ]; then
+    echo "Kein Fat-Jar in backend/build/libs — ohne --no-build versuchen." >&2
+    exit 1
+  fi
+  echo "    ${JAR} ($(du -h "$JAR" | cut -f1))"
 fi
-JAR="$(ls -1t backend/build/libs/*.jar 2>/dev/null | grep -v -- '-plain\.jar$' | head -1 || true)"
-if [ -z "$JAR" ]; then
-  echo "Kein Fat-Jar in backend/build/libs — ohne --no-build versuchen." >&2
-  exit 1
-fi
-echo "    ${JAR} ($(du -h "$JAR" | cut -f1))"
 
 # ---- 2) Unit-Datei aus der Vorlage ----
 # Die Platzhalter werden hier ersetzt, nicht auf dem Server: So steht im
@@ -114,11 +124,11 @@ sed -e "s#__JAVA__#${JAVA_UNIT}#g" \
     -e "s#__XMX__#${XMX}#g" \
     -e "s#__PORT__#${PORT}#g" \
     scripts/werkbaum-backend.service > "$STAGE/werkbaum-backend.service"
-cp "$JAR" "$STAGE/werkbaum-backend.jar"
+[ "$UNIT_ONLY" -eq 1 ] || cp "$JAR" "$STAGE/werkbaum-backend.jar"
 
 if [ "$YES" -ne 1 ]; then
   echo "==> Es werden übertragen:"
-  echo "    werkbaum-backend.jar  -> ${DIR}/"
+  [ "$UNIT_ONLY" -eq 1 ] || echo "    werkbaum-backend.jar  -> ${DIR}/"
   echo "    werkbaum-backend.service -> ~/.config/systemd/user/"
   [ "$RESTART" -eq 1 ] && echo "    und der Dienst neu gestartet."
   printf '==> Weiter? [y/N] '
@@ -132,7 +142,8 @@ fi
 # räumt nicht auf.
 echo "==> Übertragen"
 ssh "$SSH_TARGET" "mkdir -p \"$DIR_SH\" \"\$HOME/.config/systemd/user\""
-rsync -az --chmod=F644 "$STAGE/werkbaum-backend.jar" "$SSH_TARGET:$DIR_RSYNC/werkbaum-backend.jar"
+[ "$UNIT_ONLY" -eq 1 ] || \
+  rsync -az --chmod=F644 "$STAGE/werkbaum-backend.jar" "$SSH_TARGET:$DIR_RSYNC/werkbaum-backend.jar"
 rsync -az --chmod=F644 "$STAGE/werkbaum-backend.service" \
       "$SSH_TARGET:~/.config/systemd/user/werkbaum-backend.service"
 

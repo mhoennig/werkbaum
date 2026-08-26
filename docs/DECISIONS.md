@@ -6516,3 +6516,85 @@ Probe mit 404 und ist von außen nicht erreichbar (`server.address=127.0.0.1`,
 gegengeprüft über die LAN-Adresse). Der Deploy selbst — SSH, `systemctl`, die
 Proxy-Regel im Betrieb — läuft erst, wenn jemand ihn startet. Das ist dieselbe
 Grenze wie in D25 und D72: Was die Umgebung stellt, stellt der Emulator nicht.
+
+**Nachtrag — `tools/remote`: eine Vordertür, Ziel und Aktion (2026-08-26).**
+Die Skripte deckten den Deploy ab und sonst nichts. Alles Übrige — Log
+ansehen, Dienst schalten, fragen was läuft — war ein von Hand getipptes
+`ssh … systemctl --user …`, jedes Mal samt der `XDG_RUNTIME_DIR`-Falle. Nach
+dem Muster eines anderen Projekts des Nutzers gibt es dafür jetzt einen
+Befehl: `remote <ziel> <aktion>`, mit `backend`, `frontend` und `ssh` als
+Zielen. Eine `.envrc` legt `tools/` auf den PATH (direnv), sodass `remote`
+ohne Pfad genügt.
+
+**Die Skripte bleiben die Implementierung, `remote` ist die Vordertür.** Sie
+sind in beiden READMEs und in diesem Eintrag beschrieben, einzeln aufrufbar
+und in Vorbereitung eines CI-Laufs nützlich; sie in das Werkzeug zu ziehen
+hätte einen großen Diff für keinen Gewinn gebracht. `remote` bringt nur mit,
+wofür es bisher gar nichts gab: die systemd-Verben, `log`, `info`,
+`documents`, `backup`. Der Preis ist benannt — zwei Namen für dieselbe Sache,
+deshalb nennen die READMEs jetzt `remote …` zuerst.
+
+**Wo es einen Schalter brauchte, kam der ins Skript, nicht ins Werkzeug.**
+`remote backend setup` schreibt nur die Unit neu; dafür hat
+`deploy-backend.sh` ein `--unit-only` bekommen, statt dass `tools/remote`
+die Platzhalter der Vorlage ein zweites Mal ersetzt. Genau diese Verdopplung
+ist in D16 schon einmal teuer geworden (dieselben `sed`-Regeln in Workflow
+und Skript). Ebenso `remote frontend preview` → `deploy-prod.sh --dry-run`.
+
+**`--dry-run` schaltet die Beförderung ausdrücklich mit ab.** Sie läuft als
+Schritt 0, also **vor** der rsync-Vorschau, und macht einen Commit (D30) —
+ein Probelauf, der etwas schreibt, ist keiner. Gebaut und zusammengestellt
+wird trotzdem, sonst wüsste der Vergleich nicht, wogegen er läuft.
+Nachgemessen: HEAD und der Plan bleiben unangetastet.
+
+**Sichern heißt anhalten.** H2 hält die Datei offen, solange der Dienst
+läuft; eine Kopie im Betrieb kann zerrissen sein, und eine Sicherung, der man
+nicht trauen kann, ist keine. `remote backend backup` hält den Dienst an,
+holt `data/` als Tar-Strom und startet ihn wieder — gemessen rund 8 s Auszeit.
+Zwei Feinheiten, die beide lautlos zuschlagen würden: Der Strom geht über
+stdout in die Datei, **alle** Meldungen müssen deshalb nach stderr (sonst
+landen sie im Archiv), und der Trap fängt `PIPE` mit ab — bricht die lokale
+Seite weg, bliebe der Dienst sonst ausgerechnet dann unten.
+
+**Und der Befehl liest das Archiv, bevor er es behält.** Erst nach
+`tar tzf` und dem Nachweis, dass eine H2-Datei darin liegt, wird aus
+`.teil` die endgültige Datei. Die eigentliche Gegenprobe lief einmal von
+Hand und gehört hierher, weil sie die Zusage prüft und nicht die Mechanik:
+Das Archiv lokal ausgepackt, das Backend mit `--werkbaum.data-dir` dagegen
+gestartet — es kommt hoch und liefert genau die Dokumente, die auch auf dem
+Server stehen. Ein Archiv, das nie jemand geöffnet hat, ist eine Hoffnung.
+
+**`backend info` fragt über die öffentliche Adresse**, nicht am Dienst
+vorbei: So ist die Proxy-Regel mitgeprüft. Die Domain wird aus dem
+rsync-Ziel des Frontends abgelesen (`…/doms/<domain>/…`); ohne sie fragt der
+Befehl direkt an `127.0.0.1` **und sagt, dass er es tut**. `frontend info`
+liest den Versions-Link aus dem ausgelieferten Footer (D16) und vergleicht
+den Commit mit dem eigenen HEAD — die einzige Stelle, an der die Datei
+selbst sagt, was sie ist.
+
+**`documents` bekommt das Passwort nie über die Kommandozeile.** Ohne
+Angabe fragt curl selbst danach; mit `--from-env` kommt es als
+`curl -K -` über stdin. Die Begründung steht schon im
+`reset-password`-Nachtrag oben und gilt hier wörtlich: Argumente stehen in
+der Prozessliste, und die Shell verändert das Passwort vorher.
+
+**Gemessen statt geraten, zwei Kleinigkeiten am Rand:** Ein `frontend log`
+gibt es **nicht** — `~/doms/werkbaum.javagil.de/var/` ist leer, der Managed
+Webspace reicht die Apache-Logs nicht ins Home (nur monatliche
+`~/var/domaintraffic-*.log`); an seine Stelle tritt `frontend info`. Und
+`ssh -t` gehört nur dorthin, wo es ein Terminal gibt: Sonst steht
+„Pseudo-terminal will not be allocated" als erste Zeile mitten im Log
+(beim Bauen gemessen).
+
+**Der Befehl wartet, bis der Dienst wieder antwortet.** Die erste Fassung von
+`backup` meldete „Dienst wieder gestartet" und das nächste `info` bekam ein
+503 — der Start dauert rund 8 s. Ein Werkzeug, das eine Sache meldet, die
+gleich darauf nicht stimmt, ist schlechter als eines, das schweigt.
+
+**Nachgemessen** gegen die produktive Instanz: `backend info` (200 samt
+Version), `frontend info` (1.1.162, Commit = HEAD), `backend status`,
+`backend log`, `backend documents --from-env` (liefert die Dokumente),
+`backend setup -y` (Unit neu, Jar unangetastet — mtime unverändert),
+`backend restart`, `backend backup` samt lokalem Wiederanlauf,
+`frontend preview` (nichts geschrieben, HEAD unverändert) und die
+Fehlerpfade (Exit-Code 2 bei unbekanntem Ziel und fehlender Aktion).

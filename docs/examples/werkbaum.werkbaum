@@ -107,10 +107,12 @@
       - [^] #bld.pwa.sw: A service worker that serves the app offline (S)  %% network-first, cache as fallback
       - [^] #bld.pwa.update: The reload notice stays truthful under the worker (S)  %% see D45/D73
       - [^] #bld.pwa.files: Double-click a .werkbaum file, save without any dialog (S) :#ed.files.inplace  %% file_handlers + launchQueue
-    - [^] #bld.backend: Ship the backend as a service of its own (M)
+    - [^] #bld.backend: Ship the backend as a service of its own (L)
       - [^] #bld.backend.jdk: Its own JDK 21 in the server's home (S)  %% only 17 is installed there
       - [^] #bld.backend.unit: A systemd user unit that survives the session (S)
       - [^] #bld.backend.proxy: Apache passes /api/ on, in .htaccess (XS)  %% measured: the P flag is allowed
+      - [x] #bld.backend.remote: One command for everything on the server (S)  %% remote <target> <action>
+      - [x] #bld.backend.backup: Save the database, and prove it can be read back (XS)
     - [-] #bld.ghpages: Deploy through a gh-pages branch (S)  %% GitHub Actions instead
     - [-] #bld.gfonts: Fonts from Google (XS)  %% self-hosted, no third-party request
   - [ ] #be: Backend (XL)
@@ -748,6 +750,16 @@
   A rewrite rule with the P flag, because ProxyPass is not allowed in an
   .htaccess and the vhost directory is out of reach. Measured on the target: a
   request is held open for 30 seconds, which is what the change feed needs.
+
+#bld.backend.remote
+  Deploying, reading the log, asking what is running and switching the service
+  were four different incantations, three of them typed by hand as ssh plus
+  systemctl. One front door names them all as target and action.
+
+#bld.backend.backup
+  The database is a file in a home directory, and H2 holds it open, so a copy
+  taken while the service runs can be torn. Stop, fetch, start again — and read
+  the archive back before trusting it.
 
 #bld.ghpages
   Rejected: the official Actions route needs no extra branch and no deploy

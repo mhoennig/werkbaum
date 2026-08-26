@@ -9,6 +9,11 @@ Integrations-Backend.
 - `backend/` — Kotlin/Spring-Boot-Anwendung (Taiga-Integration, Persistenz).
   Eigene Regeln: backend/CLAUDE.md
 - `docs/` — Projektdokumente · `brand/` — Marke (brand/BRAND.md)
+- `tools/remote` — alles, was auf dem Server passiert, als Ziel und Aktion
+  (`remote backend deploy`, `remote frontend preview`, …; `remote --help`).
+  Die Arbeit machen weiterhin die Skripte unter `scripts/` — `remote` ist die
+  Vordertür davor. Braucht ein Skript einen neuen Schalter, kommt der **ins
+  Skript**, nicht ins Werkzeug (D77-Nachtrag).
 
 ## Verbindliche Referenzen
 - Sprachdefinition: @docs/SPEC.md — die Notation ist der gemeinsame Vertrag

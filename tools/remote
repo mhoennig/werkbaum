@@ -1,0 +1,354 @@
+#!/usr/bin/env bash
+#
+# Werkbaum — ein Befehl für alles, was auf dem Server passiert.
+#
+# Verwendung:
+#   remote <ziel> <aktion> [ARGS]
+#
+# Backend (systemd-User-Unit werkbaum-backend, Vorgabe ~/opt/werkbaum):
+#   remote backend deploy [-y] [--no-build] [--no-restart]
+#                                   bauen, hochladen, Unit schreiben, neu starten
+#                                   und nachsehen, ob /api/v1/info antwortet
+#   remote backend upload [-y] [--no-build]
+#                                   wie deploy, aber ohne Neustart — das Jar wird
+#                                   erst beim nächsten Start aktiv
+#   remote backend start|stop|restart|status|enable|disable
+#                                   den Dienst schalten (systemctl --user)
+#   remote backend log [ARGS]       backend.log folgen; weitere ARGS gehen an tail
+#   remote backend info             welcher Stand läuft — GET /api/v1/info, wenn
+#                                   möglich über die öffentliche Adresse, also
+#                                   samt Proxy-Regel
+#   remote backend setup            nur die systemd-Unit neu schreiben und laden
+#   remote backend install-jdk [--force]
+#                                   JDK 21 ins Home legen oder erneuern
+#   remote backend reset-password [--from-env] [--no-restart]
+#                                   Master-Passwort der Dokumentenliste setzen
+#   remote backend documents [--from-env]
+#                                   die Dokumentenliste abrufen — die eine Sache,
+#                                   für die es das Master-Passwort gibt
+#   remote backend backup [datei]   Datenbank sichern. H2 hält die Datei offen,
+#                                   also: Dienst anhalten, data/ holen, wieder
+#                                   starten. Vorgabe backups/werkbaum-data-<zeit>.tgz
+#
+# Frontend (statische Site, Vorgabe ~/doms/<domain>/htdocs-ssl):
+#   remote frontend deploy [-y] [--no-promote]
+#                                   befördern (D30), bauen, zusammenstellen,
+#                                   spiegeln
+#   remote frontend preview         nur zeigen, was sich am Ziel änderte —
+#                                   ohne Beförderung und ohne zu schreiben
+#   remote frontend info            welche Version dort liegt (Footer der
+#                                   ausgelieferten index.html)
+#
+# Host:
+#   remote ssh [CMD]                Shell auf dem Server, oder CMD dort ausführen
+#
+# Konfiguration steht in der git-ignorierten `.env` im Repo-Wurzelordner
+# (Vorlage: .env.example) — BACKEND_SSH, BACKEND_DIR, BACKEND_PORT und
+# DEPLOY_TARGET. Anders als im Vorbild gibt es hier nur EIN Konto: derselbe
+# Login trägt die Site und den Dienst.
+#
+# Die eigentliche Arbeit machen weiterhin die Skripte unter `scripts/`; die sind
+# einzeln aufrufbar und in beiden READMEs beschrieben. Dieses Werkzeug ist die
+# Vordertür und bringt nur mit, wofür es bisher kein Skript gab: die
+# systemd-Verben, das Log, die Zustandsabfragen und die Sicherung.
+#
+# Siehe README (Abschnitt Deployment) und docs/DECISIONS.md D77.
+
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+# shellcheck source=../scripts/lib-env.sh
+. "$ROOT/scripts/lib-env.sh"
+
+UNIT=werkbaum-backend.service
+
+usage() {
+  awk 'NR>2 { if ($0 ~ /^#/) { sub(/^# ?/, ""); print } else exit }' "$0"
+}
+
+die() { echo "$*" >&2; exit 1; }
+
+# Das SSH-Ziel: BACKEND_SSH, sonst der user@host-Teil von DEPLOY_TARGET. Beides
+# ist derselbe Login, aber DEPLOY_TARGET trägt zusätzlich einen Pfad — den
+# schneidet das `%%:*` weg.
+sshTarget() {
+  local t; t="$(env_value BACKEND_SSH)"
+  if [ -z "$t" ]; then
+    t="$(env_value DEPLOY_TARGET)"; t="${t%%:*}"
+  fi
+  [ -n "$t" ] || die "Kein SSH-Ziel: BACKEND_SSH (oder DEPLOY_TARGET) in .env setzen."
+  printf '%s' "$t"
+}
+
+backendDir() { local d; d="$(env_value BACKEND_DIR)"; printf '%s' "${d:-opt/werkbaum}"; }
+backendPort() { local p; p="$(env_value BACKEND_PORT)"; printf '%s' "${p:-9080}"; }
+
+# Derselbe Pfad in der Schreibweise, die eine Shell auf dem Server versteht.
+# rsync und systemd brauchen andere — die kennt scripts/deploy-backend.sh.
+backendDirSh() {
+  local d; d="$(backendDir)"
+  case "$d" in /*) printf '%s' "$d" ;; *) printf '$HOME/%s' "$d" ;; esac
+}
+
+# Die öffentliche Adresse steht nirgends ausdrücklich, wohl aber im rsync-Ziel
+# des Frontends (`.../doms/<domain>/htdocs-ssl`). Lässt sie sich nicht ablesen,
+# geben die Aufrufer eine ehrliche Antwort statt zu raten.
+publicBase() {
+  env_value DEPLOY_TARGET | sed -n 's|.*/doms/\([^/]*\)/.*|https://\1|p'
+}
+
+# `systemctl --user` findet seinen Manager ohne XDG_RUNTIME_DIR nicht — über
+# eine nicht-interaktive SSH-Sitzung ist die Variable oft nicht gesetzt. Die
+# klassische Falle bei User-Units aus einem Skript heraus (D77).
+sshSystemctl() {
+  ssh "$(sshTarget)" \
+    "export XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR:-/run/user/\$(id -u)}; systemctl --user $*"
+}
+
+# Ein tty nur, wo es eins gibt — sonst warnt ssh einen skriptenden Aufrufer an.
+sshHost() {
+  local ttyOpt=-t; [ -t 0 ] || ttyOpt=
+  # shellcheck disable=SC2086
+  exec ssh $ttyOpt "$(sshTarget)" "$@"
+}
+
+badAction() {
+  if [ -z "$2" ]; then echo "Ziel '$1' braucht eine Aktion." >&2
+  else echo "Unbekannte Aktion '$2' für Ziel '$1'." >&2; fi
+  usage >&2
+  exit 2
+}
+
+# ---------------------------------------------------------------- backend ----
+
+cmdBackendLog() {
+  # tty nur, wo es eins gibt — sonst warnt ssh und die Warnung landet mitten im
+  # Log. Gemessen: „Pseudo-terminal will not be allocated ...“ als erste Zeile.
+  local ttyOpt=-t; [ -t 0 ] || ttyOpt=
+  # shellcheck disable=SC2086
+  exec ssh $ttyOpt "$(sshTarget)" "tail -f $* \"$(backendDirSh)/backend.log\""
+}
+
+# Wartet, bis der Dienst wieder antwortet. Direkt an ihm gefragt (127.0.0.1),
+# nicht über den Proxy: Hier geht es darum, ob er oben ist — am Proxy hat sich
+# nichts geändert. Ohne dieses Warten sagt ein Befehl „Dienst wieder gestartet",
+# während die nächste Anfrage noch 503 bekommt (beim Bauen gemessen: ~14 s).
+waitForBackend() {
+  ssh "$(sshTarget)" "
+    export XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR:-/run/user/\$(id -u)}
+    systemctl --user is-active --quiet $UNIT || { echo '    Dienst läuft nicht.'; exit 0; }
+    for i in \$(seq 1 60); do
+      case \"\$(curl -s --max-time 3 http://127.0.0.1:$(backendPort)/api/v1/info || true)\" in
+        *'\"version\"'*) echo \"    Antwortet wieder (nach \${i}s).\"; exit 0 ;;
+      esac
+      sleep 1
+    done
+    echo '    ! Antwortet nicht — nachsehen mit: remote backend log' >&2; exit 1"
+}
+
+cmdBackendInfo() {
+  local base; base="$(publicBase)"
+  if [ -n "$base" ]; then
+    echo "==> ${base}/api/v1/info"
+    # --fail, damit ein 502 des Proxys nicht als Erfolg mit leerem Rumpf endet.
+    curl -sS --fail --max-time 10 "${base}/api/v1/info" || {
+      echo >&2
+      echo "    Antwortet nicht über die öffentliche Adresse. Läuft der Dienst?" >&2
+      echo "    Nachsehen: remote backend status · remote backend log" >&2
+      exit 1
+    }
+    echo
+  else
+    # Ohne ablesbare Domain wenigstens direkt am Dienst fragen. Das prüft dann
+    # den Proxy NICHT mit — deshalb wird es auch so gesagt.
+    echo "==> keine Domain aus DEPLOY_TARGET ablesbar — frage direkt am Dienst"
+    ssh "$(sshTarget)" "curl -sS --fail --max-time 10 http://127.0.0.1:$(backendPort)/api/v1/info"
+    echo
+  fi
+}
+
+# Die Dokumentenliste ist der einzige geschützte Endpunkt (D76-Nachtrag 6).
+# Ohne --from-env fragt curl selbst nach dem Passwort; mit --from-env kommt es
+# aus der .env — in beiden Fällen NIE über die Kommandozeile: `curl -u user:pw`
+# stünde in der Prozessliste, die auf einem geteilten Host jeder lesen kann,
+# und die Shell fasst das Passwort vorher an (aus `ge$heim` wird `ge`).
+cmdBackendDocuments() {
+  local fromEnv=0
+  for a in "$@"; do
+    case "$a" in
+      --from-env) fromEnv=1 ;;
+      *) die "Unbekannte Option: $a" ;;
+    esac
+  done
+
+  local base; base="$(publicBase)"
+  [ -n "$base" ] || die "Keine Domain aus DEPLOY_TARGET ablesbar — Adresse unbekannt."
+  local url="${base}/api/v1/documents"
+
+  if [ "$fromEnv" -eq 1 ]; then
+    local pw; pw="$(env_value WERKBAUM_MASTER_PASSWORT)"
+    [ -n "$pw" ] || die "WERKBAUM_MASTER_PASSWORT steht nicht in ${ENV_FILE}."
+    # curl liest die Konfiguration von stdin; in doppelten Anführungszeichen
+    # sind dort `\` und `"` zu escapen, sonst nichts.
+    local esc=${pw//\\/\\\\}; esc=${esc//\"/\\\"}
+    echo "==> ${url} (Passwort aus ${ENV_FILE})"
+    printf 'user = "werkbaum:%s"\n' "$esc" | curl -sS --fail -K - "$url" || {
+      echo >&2; echo "    401? Dann passt der Hash auf dem Server nicht zum" >&2
+      echo "    Passwort in der .env: remote backend reset-password --from-env" >&2
+      exit 1
+    }
+  else
+    echo "==> ${url}"
+    curl -sS --fail -u werkbaum "$url" || { echo >&2; exit 1; }
+  fi
+  echo
+}
+
+# Sichern heißt hier: anhalten, holen, wieder starten. H2 hält die Datei offen,
+# solange der Dienst läuft — eine Kopie im Betrieb kann zerrissen sein, und eine
+# Sicherung, der man nicht trauen kann, ist keine. Die Auszeit dauert Sekunden.
+cmdBackendBackup() {
+  local out="${1:-}"
+  if [ -z "$out" ]; then
+    mkdir -p "$ROOT/backups"
+    out="$ROOT/backups/werkbaum-data-$(date +%Y%m%d-%H%M%S).tgz"
+  fi
+  [ ! -e "$out" ] || die "Gibt es schon: $out"
+
+  echo "==> Sichern von $(sshTarget):$(backendDir)/data nach ${out}"
+  echo "    (der Dienst hält dafür kurz an)"
+
+  # Der Tar-Strom geht über stdout in die Datei — ALLE Meldungen müssen deshalb
+  # nach stderr, sonst landen sie im Archiv. Und der Trap muss auch dann noch
+  # starten, wenn die lokale Seite wegbricht: Ohne PIPE bliebe der Dienst
+  # ausgerechnet dann unten, wenn beim Herunterladen etwas schiefgeht.
+  local tmp="${out}.teil"
+  if ! ssh "$(sshTarget)" DIR="$(backendDirSh)" UNIT="$UNIT" 'bash -s' > "$tmp" <<'REMOTE'
+set -euo pipefail
+DIR="$(eval echo "$DIR")"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+[ -d "$DIR/data" ] || { echo "Kein $DIR/data auf dem Server." >&2; exit 1; }
+
+LIEF=0
+systemctl --user is-active --quiet "$UNIT" && LIEF=1
+wiederAn() {
+  if [ "$LIEF" = 1 ]; then
+    # NICHTS nach stdout: dort liegt der Tar-Strom. Ein einziges Wort darin
+    # macht das Archiv unlesbar, und der Trap kann an jeder Stelle zuschlagen.
+    systemctl --user start "$UNIT" >/dev/null 2>&1 || true
+    echo "    Dienst wieder gestartet." >&2
+  fi
+}
+trap wiederAn EXIT HUP INT TERM PIPE
+
+if [ "$LIEF" = 1 ]; then
+  echo "    Dienst anhalten ..." >&2
+  systemctl --user stop "$UNIT" >&2
+else
+  echo "    Dienst lief nicht — nichts anzuhalten." >&2
+fi
+
+tar czf - -C "$DIR" data
+REMOTE
+  then
+    rm -f "$tmp"
+    die "Sicherung fehlgeschlagen — nichts geschrieben."
+  fi
+
+  # Gegenprobe, bevor jemand der Datei vertraut: Lässt sie sich lesen, und ist
+  # die Datenbank drin? Ein Archiv, das man nie geöffnet hat, ist eine Hoffnung.
+  if ! tar tzf "$tmp" >/dev/null 2>&1; then
+    rm -f "$tmp"
+    die "Das Archiv ist nicht lesbar — nichts geschrieben."
+  fi
+  if ! tar tzf "$tmp" | grep -q 'data/editor.*\.db'; then
+    rm -f "$tmp"
+    die "Im Archiv liegt keine H2-Datenbank (data/editor*.db) — nichts geschrieben."
+  fi
+  mv "$tmp" "$out"
+
+  echo "==> $(du -h "$out" | cut -f1) in ${out}"
+  echo "    Inhalt: $(tar tzf "$out" | tr '\n' ' ')"
+
+  waitForBackend
+
+  echo
+  echo "    Zurückspielen — der Dienst muss dafür stehen:"
+  echo "      remote backend stop"
+  echo "      ssh $(sshTarget) 'rm -rf $(backendDirSh)/data'"
+  echo "      ssh $(sshTarget) 'tar xzf - -C $(backendDirSh)' < ${out}"
+  echo "      remote backend start"
+}
+
+cmdBackend() {
+  local action="${1:-}"; shift || true
+  case "$action" in
+    deploy)     scripts/deploy-backend.sh "$@" ;;
+    upload)     scripts/deploy-backend.sh --no-restart "$@" ;;
+    setup)      scripts/deploy-backend.sh --unit-only "$@" ;;
+    install-jdk) scripts/install-jdk.sh "$@" ;;
+    reset-password) scripts/reset-password.sh "$@" ;;
+    log)        cmdBackendLog "$@" ;;
+    info)       cmdBackendInfo "$@" ;;
+    documents)  cmdBackendDocuments "$@" ;;
+    backup)     cmdBackendBackup "$@" ;;
+    status)     sshSystemctl "status $UNIT --no-pager -l" ;;
+    enable|disable) sshSystemctl "$action --now $UNIT" ;;
+    start|stop|restart) sshSystemctl "$action $UNIT" ;;
+    *)          badAction backend "$action" ;;
+  esac
+}
+
+# --------------------------------------------------------------- frontend ----
+
+# Was liegt am Ziel? Der Footer trägt Version und den Commit, aus dem gebaut
+# wurde (D16) — die einzige Stelle, an der die ausgelieferte Datei sagt, was
+# sie ist. Deshalb wird sie gelesen und nicht der lokale Stand behauptet.
+cmdFrontendInfo() {
+  local base; base="$(publicBase)"
+  [ -n "$base" ] || die "Keine Domain aus DEPLOY_TARGET ablesbar."
+  echo "==> ${base}/"
+  local html
+  html="$(curl -sS --fail --max-time 15 "${base}/")" \
+    || die "    Die Seite antwortet nicht."
+  local ver commit
+  ver="$(printf '%s' "$html" | grep -o '<a class="ver"[^>]*>[^<]*</a>' | head -1)"
+  commit="$(printf '%s' "$ver" | sed -n 's/.*href="\([^"]*\)".*/\1/p')"
+  if [ -z "$ver" ]; then
+    echo "    Kein Versions-Link im Footer — ist das wirklich Werkbaum?"
+    exit 1
+  fi
+  echo "    Version:  $(printf '%s' "$ver" | sed -n 's/.*>\([^<]*\)<.*/\1/p')"
+  echo "    Commit:   ${commit}"
+  # Ob der ausgelieferte Stand der eigene ist, sagt nur der Vergleich.
+  local head; head="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || true)"
+  if [ -n "$head" ]; then
+    case "$commit" in
+      *"$head") echo "    Das ist genau dein HEAD." ;;
+      *)        echo "    Dein HEAD ist ein anderer: ${head}" ;;
+    esac
+  fi
+}
+
+cmdFrontend() {
+  local action="${1:-}"; shift || true
+  case "$action" in
+    deploy)  scripts/deploy-prod.sh "$@" ;;
+    preview) scripts/deploy-prod.sh --dry-run "$@" ;;
+    info)    cmdFrontendInfo "$@" ;;
+    *)       badAction frontend "$action" ;;
+  esac
+}
+
+# ------------------------------------------------------------------ Start ----
+
+target="${1:-}"; shift || true
+case "$target" in
+  backend)          cmdBackend "$@" ;;
+  frontend)         cmdFrontend "$@" ;;
+  ssh)              sshHost "$@" ;;
+  ''|-h|--help)     usage ;;
+  *)                echo "Unbekanntes Ziel '$target'." >&2; usage >&2; exit 2 ;;
+esac

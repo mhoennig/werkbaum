@@ -11,12 +11,17 @@
 # Zielverzeichnis. `--delete`: am Ziel bleibt nichts Altes stehen.
 #
 # Verwendung:
-#   scripts/deploy-prod.sh [-y] [--no-promote] [rsync-ziel]
+#   scripts/deploy-prod.sh [-y] [--no-promote] [--dry-run] [rsync-ziel]
 #
 #   -y             ohne Rückfrage befördern und spiegeln (sonst erst Vorschau
 #                  via --dry-run + Nachfrage)
 #   --no-promote   Beförderungsschritt überspringen (z. B. Wiederholung eines
 #                  Deploys, der schon befördert hat)
+#   --dry-run      nur zeigen, was sich am Ziel änderte, und dann aufhören.
+#                  Schaltet die Beförderung ausdrücklich mit ab: die macht einen
+#                  Commit, und ein Probelauf, der etwas schreibt, ist keiner.
+#                  Gebaut und zusammengestellt wird trotzdem — sonst wüsste der
+#                  Vergleich nicht, wogegen er läuft.
 #
 # Das Ziel ist entweder das Argument ODER — wenn keins angegeben ist — die
 # Variable DEPLOY_TARGET aus der git-ignorierten Datei .env im Repo-Wurzelordner
@@ -38,11 +43,13 @@ set -euo pipefail
 # ---- Argumente ----
 YES=0
 PROMOTE=1
+DRY=0
 TARGET=""
 for arg in "$@"; do
   case "$arg" in
     -y|--yes) YES=1 ;;
     --no-promote) PROMOTE=0 ;;
+    --dry-run) DRY=1; PROMOTE=0 ;;
     -h|--help)
       awk 'NR>2 { if ($0 ~ /^#/) { sub(/^# ?/, ""); print } else exit }' "$0"
       exit 0 ;;
@@ -158,6 +165,12 @@ sed -e "s/__BACKEND_PORT__/${BACKEND_PORT}/g" scripts/prod.htaccess > "$STAGE/.h
 # abräumen. Bedient Hostsharing die Challenge außerhalb des Docroots, ist es ein
 # No-op.
 RSYNC_OPTS=(-avz --delete --chmod=D755,F644 --filter='protect /.well-known/***')
+if [ "$DRY" -eq 1 ]; then
+  echo "==> Probelauf (rsync --dry-run --delete) nach ${TARGET}:"
+  rsync "${RSYNC_OPTS[@]}" --dry-run "$STAGE"/ "$TARGET"
+  echo "==> Nichts geschrieben (--dry-run)."
+  exit 0
+fi
 if [ "$YES" -ne 1 ]; then
   echo "==> Vorschau (rsync --dry-run --delete) nach ${TARGET}:"
   rsync "${RSYNC_OPTS[@]}" --dry-run "$STAGE"/ "$TARGET"

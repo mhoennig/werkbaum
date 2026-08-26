@@ -25,6 +25,7 @@ reverse.
 - The backend can be deployed to a server: its own JDK, a systemd service, and Apache passing `/api/` on
 - "Put on the server" in the document menu turns a local plan into a shared one and puts the link in the address bar
 - A service endpoint `/api/v1/info` says which build is running — for deploys and monitoring
+- One `remote` command drives the server: deploy, log, service state, and a database backup that is read back before it is kept
 
 ## 2026-08-25
 

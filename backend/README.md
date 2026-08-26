@@ -261,25 +261,33 @@ beim Start aus der IDE —, steht dort `unbekannt` statt eines Fehlers.
 
 ## Betrieb auf der stabilen Instanz
 
-`scripts/deploy-backend.sh` (im Repo-Wurzelordner) baut das Fat-Jar, legt es
-samt systemd-User-Unit ins Home des Servers und startet den Dienst neu;
-`scripts/install-jdk.sh` bringt einmalig ein JDK 21 dorthin. Der Dienst lauscht
-nur auf `127.0.0.1` — von außen kommt man über die Proxy-Regel in
-`scripts/prod.htaccess`, die der Frontend-Deploy mitspiegelt.
+`remote backend deploy` (aus dem Repo-Wurzelordner; ohne direnv
+`tools/remote …`) baut das Fat-Jar, legt es samt systemd-User-Unit ins Home des
+Servers und startet den Dienst neu; `remote backend install-jdk` bringt einmalig
+ein JDK 21 dorthin. Der Dienst lauscht nur auf `127.0.0.1` — von außen kommt man
+über die Proxy-Regel in `scripts/prod.htaccess`, die der Frontend-Deploy
+mitspiegelt.
+
+Dahinter stehen unverändert `scripts/deploy-backend.sh` und
+`scripts/install-jdk.sh`; `remote --help` zeigt alle Ziele und Aktionen.
 
 - **Speicher:** `-Xmx192m -Xms48m` plus Freiraum-Verhältnisse; gemessen rund
   174 MB RSS gegen 291 MB ohne Angaben. Nach einem GC leben ~45 MB. Zu wenig
   Luft? `BACKEND_XMX` in `.env`.
-- **Master-Passwort:** `scripts/reset-password.sh` fragt es verdeckt ab, hasht
-  es auf dem Server und prüft selbst nach, ob Hash und Passwort zueinander
-  passen. Gespeichert wird nur der Hash (`<BACKEND_DIR>/env`, Modus 600); ohne
-  ihn bleibt `GET /documents` gesperrt.
+- **Master-Passwort:** `remote backend reset-password` fragt es verdeckt ab,
+  hasht es auf dem Server und prüft selbst nach, ob Hash und Passwort
+  zueinander passen. Gespeichert wird nur der Hash (`<BACKEND_DIR>/env`, Modus
+  600); ohne ihn bleibt `GET /documents` gesperrt. Abrufen lässt sich die Liste
+  mit `remote backend documents`.
 - **Datenbank:** H2 im Dateimodus unter `<BACKEND_DIR>/data/`. Ein Deploy
   fasst das Verzeichnis nicht an (kein `--delete`). Umstieg auf das dort
   laufende PostgreSQL: JDBC-URL in der `application.yaml` tauschen und den
   Treiber ergänzen — Schema und Code bleiben.
-- **Nachsehen:** `systemctl --user status werkbaum-backend`,
-  `tail -f <BACKEND_DIR>/backend.log`.
+- **Sichern:** `remote backend backup`. H2 hält die Datei offen, solange der
+  Dienst läuft — gesichert wird deshalb mit kurzem Anhalten, und das Archiv
+  wird nach dem Herunterladen gelesen, bevor der Befehl es behält.
+- **Nachsehen:** `remote backend status`, `remote backend log`,
+  `remote backend info`.
 
 Begründungen: docs/DECISIONS.md D77 (und D76-Nachträge 1–3 zur Vermessung der
 Zielumgebung).

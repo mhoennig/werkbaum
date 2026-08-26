@@ -246,6 +246,31 @@ repository, while the **version number** links to that exact commit
 "GitHub Actions". The repo must be **public** for this (GitHub Pages via Actions
 is only available for private repos on a paid plan).
 
+### One command for the server: `remote`
+
+Everything that happens on the server is reachable as **target and action**:
+
+```bash
+remote backend deploy            # build, upload, unit, restart, then probe
+remote backend log               # follow backend.log
+remote backend status            # systemctl --user status
+remote backend info              # which build is running, through the proxy
+remote backend backup            # stop, fetch the database, start again
+remote backend reset-password    # asks, hashes it on the server, verifies
+remote frontend deploy           # promote, build, assemble, mirror
+remote frontend preview          # what would change — writes nothing
+remote frontend info             # which version is out there
+remote ssh                       # a shell on the server
+```
+
+`remote --help` lists them all. With [direnv](https://direnv.net) the repo's
+`.envrc` puts `tools/` on `PATH` (once per checkout: `direnv allow`), so the
+command needs no path; otherwise call `tools/remote`.
+
+The scripts under `scripts/` remain the implementation and stay usable on their
+own — `remote` is the front door and brings along only what had no script
+before: the systemd verbs, the log, the state queries and the backup.
+
 ### Stable instance
 
 `scripts/deploy-prod.sh` mirrors a badge-free production build to a server over
@@ -268,11 +293,15 @@ footer version link points at a commit GitHub does not know yet.
 The backend is a separate deploy, because it is a service rather than files:
 
 ```bash
-scripts/install-jdk.sh          # once: a JDK 21 into the server's home
-scripts/deploy-backend.sh       # build, upload, systemd user unit, restart
-scripts/reset-password.sh       # asks for the master password, hashes it there
-scripts/deploy-prod.sh          # the editor — also writes the /api/ proxy rule
+remote backend install-jdk      # once: a JDK 21 into the server's home
+remote backend deploy           # build, upload, systemd user unit, restart
+remote backend reset-password   # asks for the master password, hashes it there
+remote frontend deploy          # the editor — also writes the /api/ proxy rule
 ```
+
+(The same four as `scripts/install-jdk.sh`, `scripts/deploy-backend.sh`,
+`scripts/reset-password.sh` and `scripts/deploy-prod.sh`, if you'd rather call
+them directly.)
 
 `GET /api/v1/info` answers with name, version and build time — that is the
 liveness check, for the deploy and for monitoring. Expecting a **404** from a
