@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { docParam, docSearch, LIVE_PARAM, SOURCE_PARAM } from '../src/docurl.js';
+import { docParam, docSearch, docKind, LIVE_PARAM, SOURCE_PARAM } from '../src/docurl.js';
 
 const LIVE = 'live:https://werkbaum.example/api/v1/documents/44753df1';
 const URLDOC = 'url:https://example.org/plan.werkbaum';
@@ -78,5 +78,29 @@ describe('docSearch — die Adresszeile folgt dem aktiven Dokument', () => {
     const s = '?live=https://werkbaum.example/api/v1/documents/44753df1';
     expect(docSearch(s, LIVE)).toBe(s);
     expect(docSearch('', 'example')).toBe('');
+  });
+});
+
+describe('docKind — welche Gruppe des Dokumenten-Menüs? (D81)', () => {
+  const SHIPPED = ['example', 'werkbaum'];
+
+  it('mitgelieferte Dokumente erkennt die feste id', () => {
+    expect(docKind('example', SHIPPED)).toBe('shipped');
+    expect(docKind('werkbaum', SHIPPED)).toBe('shipped');
+  });
+
+  it('Server- und URL-Dokumente sind Quellen von außen', () => {
+    expect(docKind(LIVE, SHIPPED)).toBe('server');
+    expect(docKind(URLDOC, SHIPPED)).toBe('url');
+  });
+
+  it('alles andere ist ein eigenes Dokument — auch aus Dateien geöffnete', () => {
+    expect(docKind('k3f9x1', SHIPPED)).toBe('own');
+    expect(docKind('Unbenannt', SHIPPED)).toBe('own');
+  });
+
+  it('verträgt fehlende Argumente, ohne zu werfen', () => {
+    expect(docKind(null, SHIPPED)).toBe('own');
+    expect(docKind('example')).toBe('own');   /* ohne Liste ist nichts mitgeliefert */
   });
 });

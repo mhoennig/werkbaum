@@ -71,7 +71,7 @@
       - [^] #ed.mobile.tip: A tap on a node opens its tooltip as a window (XS)  %% no pointer, no tooltip
     - [^] #ed.tipwindow: The same window at the pointer and on keyboard focus (XS)  %% a title has no paragraphs and never shows on focus
     - [^] #ed.docs: Several documents in one editor (M)
-      - [^] #ed.docs.picker: Switcher in the editor title bar (S)
+      - [x] #ed.docs.picker: Breadcrumb picker in the app header (S)  %% Werkbaum › name, see D81
       - [^] #ed.docs.url: Load a document from ?sourceUrl= (S)
       - [^] #ed.docs.restore: Restore a shipped document from the menu (XS)
     - [^] #ed.jump: Jump between diagram and text (S)
@@ -151,7 +151,7 @@
         | [?] #col.live.crdt: Text CRDT — the plan is plain text, so it fits (L)
         | [?] #col.live.ot: Operational transformation (XL)
       - [^] #col.live.ask: On a real overlap, ask whose version wins (S)
-      - [^] #col.live.upload: Put a local plan on the server, from the menu (S)
+      - [x] #col.live.upload: Share: put a local plan on the server (S)  %% a button in the editor title bar, see D81
       - [?] #col.live.cursors: Cursors and who else is here (S)
       - [-] #col.live.ws: Transport over a websocket (S)  %% plain HTTP turned out to be enough
       - [-] #col.live.own: A merge algorithm of our own (XL)  %% solved problem, do not reinvent
@@ -531,8 +531,10 @@
   without changing anything.
 
 #ed.docs.picker
-  The name of the active document replaces the panel title and opens the menu
-  for switching, creating, renaming and deleting.
+  The app header reads "Werkbaum > name": the chip opens the menu, grouped by
+  kind (shipped, yours, sources), with rename, delete and restore on each row.
+  It scrolls as a whole instead of being cut off on small screens, and on the
+  phone it is reachable from both panes.
 
 #ed.docs.url
   A link can carry the address of a text file, which is then fetched on every
@@ -901,10 +903,10 @@
   for the same result.
 
 #col.live.upload
-  Without it the only way onto the server was a curl command. The local plan
-  stays where it is: whoever entrusts their only copy to a server should not
-  lose it in the act. The picker names the host beside a server document, so
-  the two entries are told apart.
+  Without it the only way onto the server was a curl command. A share button
+  in the editor title bar; the local plan stays where it is: whoever entrusts
+  their only copy to a server should not lose it in the act. The picker names
+  the host beside a server document, so the two entries are told apart.
 
 #col.live.cursors
   Seeing where the others are. A by-product of the merge layer rather than a

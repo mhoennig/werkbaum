@@ -92,8 +92,8 @@ itself** and sees the others' changes without reloading:
 https://werkbaum.javagil.de/?live=https://werkbaum.javagil.de/api/v1/documents/<uuid>
 ```
 
-To create such a document, open the document menu and pick **"Put on the
-server"**: it uploads the active plan, switches to it, and puts the link in the
+To create such a document, press the **Share** button in the text editor's
+title bar: it uploads the active plan, switches to it, and puts the link in the
 address bar and on your clipboard. Share that link — the address is the
 invitation, and knowing it is what grants access.
 

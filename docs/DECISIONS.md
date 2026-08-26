@@ -6901,3 +6901,108 @@ getippt und umgeschaltet, kommt beim Server an. 514 Tests, davon 13 neue in
 `tests/docurl.test.js`; Gegenproben: fremde Parameter mitwerfen → genau die
 zwei danach benannten Zusicherungen fallen, `encodeURIComponent` statt der
 sparsamen Maskierung → genau die sieben, die die Lesbarkeit festhalten.
+
+## D81 — Dokumenten-Menü neu: Brotkrume im App-Kopf, Stand-Knöpfe in der Editor-Titelzeile
+Das Dokumenten-Menü war gewachsen, ohne je gestaltet zu sein: Der Dokumentname
+in der Editor-Titelzeile war Auslöser eines Dropdowns, sah aber nicht nach
+Menü aus, und das Menü mischte Dokumentwahl, Dateifunktionen und Verwaltung in
+einem Knopf-Wust am Fuß. Auf dem Telefon (Brave) war es zudem **unten
+abgeschnitten** — sieben Aktions-Knöpfe unter einer Liste, verankert in einer
+Titelzeile in der unteren Bildschirmhälfte. Einer Design-Runde mit vier
+Mockup-Richtungen (Knopf & Menü am Ort, Schublade, Dokument im App-Kopf,
+Palette) folgte die Entscheidung des Nutzers für **C — Dokument im App-Kopf**.
+
+**Der Name gehört über beide Bereiche, nicht in eine Panel-Zeile.** Das
+Dokument bestimmt Text UND Diagramm; im App-Kopf steht es als Brotkrume
+**„Werkbaum › Name"** — ein gerahmter Chip mit Pfeil, der endlich nach Menü
+aussieht und lange URL-Namen mit Ellipse kürzt (voller Name im Tooltip, wie
+gehabt). Nebengewinn auf dem Telefon: Der Kopf ist in beiden Bereichen
+sichtbar, die Dokumentwahl ist also auch bei Diagramm-vorn erreichbar — vorher
+musste man erst in den Textbereich wechseln (D17). Der Name übernimmt dort die
+Zeile des Untertitels; es kommt keine Fläche hinzu (die harte Randbedingung
+der Design-Runde: größerer App-Header und ständige Werkzeugleiste waren in
+einer früheren Runde genau daran gescheitert).
+
+**Die Editor-Titelzeile bekommt ihre Beschriftung zurück — „Text-Editor"**
+(Nutzer-Vorgabe; vorher „Struktur (Text)", zuletzt ganz vom Wähler verdrängt,
+D22) — **und trägt die Stand-Funktionen des aktiven Dokuments** als Knöpfe:
+
+- **Speichern** (Als Datei speichern, Strg+S — der Blitz samt Haken von D74
+  sitzt jetzt hier statt am Dokumentnamen: der Knopf ist die Geste);
+- **Stand jetzt sichern** und **Frühere Stände** (unverändert, D54);
+- **Neu laden** — kontextabhängig: bei mitgelieferten Dokumenten „Original
+  wiederherstellen" (ausgegraut, solange unverändert), bei URL-Dokumenten
+  frisch holen (die URL ist die Quelle der Wahrheit, D23), bei Dateien mit
+  gemerktem Handle neu aus der Datei lesen (D72); sonst verborgen. Die
+  Abweichungs-Prüfung hängt am **input-Ereignis**, nicht nur am
+  Dokumentwechsel — beim Bauen gefunden: Nach dem ersten Tippen blieb der
+  Knopf ausgegraut, weil die Abweichung beim Tippen entsteht;
+- **Teilen** — der neue, kurze Name für „Auf den Server legen"
+  (D76-Nachtrag 8, Nutzer: „prägnanter und kurzer"): legt das Dokument auf
+  einen Werkbaum-Server und startet die gemeinsame Bearbeitung; entfällt, wo
+  es schon liegt (id `live:…`). Aus dem Menü heraus, in die Titelzeile hinein
+  — es ist eine Funktion des aktiven Dokuments, keine Dokumentverwaltung.
+
+**Das Menü selbst: Gruppen nach Dokumentart, Aktionen an der Zeile.** Drei
+Gruppen — **Mitgeliefert · Eigene · Quellen** (Server- und URL-Dokumente);
+die Art steckt in der id und ist als `docKind()` headless in docurl.js
+(Hausregel D54-Nachtrag 3, getestet). Umbenennen, Löschen und — bei
+abweichenden mitgelieferten — Wiederherstellen hängen als **Symbole an der
+Zeile des jeweiligen Dokuments**, immer sichtbar (Touch kennt kein Hover; die
+Hover-only-Variante des Mockups hätte dort versagt). Damit wirken sie auf
+**jedes** Dokument, nicht mehr nur auf das aktive, und das Menü bleibt nach
+einer Verwaltungs-Aktion **offen** — wer aufräumt, räumt meist weiter. Kein
+Knopf im Knopf: Die Zeile ist ein `div`, Wählen-Knopf und Aktions-Knöpfe sind
+Geschwister (verschachtelte interaktive Elemente sind ungültiges HTML). Unten
+bleiben zwei Befehle als gewöhnliche Menüzeilen: „＋ Neues Dokument" und
+„Datei öffnen…".
+
+**Gegen das Abschneiden auf dem Telefon: scrollen, nicht klappen.** Das Menü
+bekommt `max-height` und scrollt **als Ganzes**; die vom Nutzer alternativ
+vorgeschlagenen auf-/zuklappbaren Gruppen sind verworfen — sie brauchten
+einen gemerkten Klapp-Zustand und versteckten Dokumente hinter einem zweiten
+Klick, während das Scrollen zustandslos ist und nichts versteckt. Dazu kommt,
+dass das Menü jetzt **oben** hängt statt in der Mitte des Bildschirms — der
+Platz darunter ist das Mehrfache des alten.
+
+**Drei Messbefunde beim Bauen, alle in derselben Sitzung behoben:**
+
+- **Das Menü spannte auf Mobil nur 155 px** statt der vollen Breite: Bezug
+  war die Marken-Gruppe, und die ist nur so breit, wie die Werkzeuge rechts
+  ihr lassen. Dieselbe Verlegung wie beim Neuigkeiten-Popup (D58): Bezug ist
+  die ganze Kopfzeile; die Marken-Gruppe löst sich auf Mobil per
+  `display:contents` auf, damit die Chip-Zeile per `order` unter Marke und
+  Werkzeuge umbricht — gemessen danach 335 px, `elementFromPoint` trifft
+  (die D50-Prüfung).
+- **Marke und Werkzeuge brachen in zwei Zeilen** (Kopf: drei Zeilen = neue
+  Fläche): 164 + 164 px bei 335 px Breite. Wie in D17-Nachtrag 5 weichen die
+  **Lücken, nicht die Knöpfe** — nachgemessen mit eingeblendetem
+  Neuigkeiten-Zähler UND Build-Hinweis (die D17-Lektion, mit dem versteckten
+  Element zu messen): Worst Case 325 von 335 px, eine Zeile, Kopf 63 px.
+  Bei 320 px bricht es ehrlich um (Marke und Werkzeuge passen physisch nicht
+  nebeneinander) — dieselbe Philosophie wie die 440-px-Schwelle (D50).
+- **Der Neu-laden-Knopf blieb nach dem Tippen ausgegraut** (siehe oben).
+
+**Was mitgeht:** Der Collapsed-Editor zeigt jetzt „TEXT-EDITOR" (senkrecht im
+Seitenmodus) statt des Dokumentnamens; der Klick-Wächter am alten Auslöser
+(minimierter Editor) entfällt — im App-Kopf gibt es nichts wiederherzustellen.
+Ein offenes Menü wechselt die Sprache mit (wie das Neuigkeiten-Popup). Der
+Untertitel-Kurztext (`subtitleShort`, 9 Sprachen) ist ersatzlos ausgebaut —
+seine Zeile gehört jetzt dem Dokumentnamen.
+
+**Werkzeuggrenzen, wieder dieselbe Sorte wie D25/D17-Nachtrag 4:** Nach einem
+programmatischen Resize lieferte das Browser-Pane Miniatur-Screenshots einer
+Seite, die sich selbst nachweislich korrekt maß (1280 × 860), und die
+`matchMedia`-Umschaltung von `body.mobile` feuerte nicht — beides
+Umgebungs-Artefakte, kein Befund; entschieden haben die Messwerte im
+Dokument, nicht die Bilder.
+
+**Nachgemessen** (518 Tests, davon 4 neue für `docKind`; Browser Desktop und
+375/320 px): Chip im Kopf öffnet das gruppierte Menü, `elementFromPoint`
+trifft es auf allen Breiten; Neues Dokument geht in die Inline-Benennung mit
+markiertem Vorschlag und landet unter „Eigene"; ein bearbeitetes Beispiel
+zeigt das Zeilen-Restore-Symbol und aktiviert Neu laden, Wiederherstellen
+stellt Text und Knopfzustände zurück, ohne das Menü zu schließen; Löschen
+eines nicht-aktiven Dokuments lässt den Editor unangetastet; auf dem Telefon
+ist der Wähler aus dem Diagramm-Bereich erreichbar und der Wechsel rendert
+183 Knoten, langer Name füllt die 335-px-Chipzeile mit Ellipse.

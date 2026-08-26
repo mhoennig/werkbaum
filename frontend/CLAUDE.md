@@ -120,7 +120,7 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   **Schattenkopie**, `scheduleLivePush()` schickt nach 0,6 s Ruhe das Diff
   (D79 — die Wartezeit IST die gefuehlte Verzoegerung),
   `runFeed()` hält einen Abruf offen (nur im sichtbaren Tab), `putOnServer()`
-  legt das aktive Dokument an („Auf den Server legen"). Die Basis-Adresse
+  legt das aktive Dokument an („Teilen" in der Editor-Titelzeile, D81). Die Basis-Adresse
   bestimmt `serverBase()` (live.js): `?server=` vor dem offenen Dokument vor
   der eigenen Herkunft — die Vorgabe stimmt damit ohne Konfiguration, weil das
   Backend produktiv hinter derselben Domain liegt. Zwei Fallen, beide
@@ -153,9 +153,20 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   fehlendem `werkbaum-docs` den bestehenden `werkbaum-src` (oder `INITIAL`) in
   **ein** Dokument; `initDocs()` (Aufruf **nach** `applyLang`) holt den aktiven
   Text in den Editor. `saveSrc()` schreibt den Editortext ins aktive Dokument.
-  Der Wähler ist ein Dropdown in der Editor-Titelzeile (`#docTrigger`/`#docMenu`,
-  ersetzt die frühere feste „Struktur (Text)"-Beschriftung); Wechseln/Neu/
-  Umbenennen/Löschen in `switchDoc/newDoc/renameDoc/deleteDoc`. Jedes Dokument ist
+  Der Wähler ist eine **Brotkrume im App-Kopf** (`#docTrigger`/`#docMenu`,
+  „Werkbaum › Name", D81); das Menü gruppiert nach Dokumentart (`docKind()` in
+  docurl.js, headless getestet) und trägt Umbenennen/Löschen/Wiederherstellen
+  als Symbole **je Zeile** — `renameDoc/deleteDoc/restoreDoc` nehmen deshalb
+  eine **id**, nicht das aktive Dokument, und Verwaltungs-Aktionen lassen das
+  Menü offen. Die Editor-Titelzeile heißt wieder „Text-Editor" und trägt die
+  Stand-Knöpfe (`saveBtn`/`snapAddBtn`/`snapBtn`/`reloadBtn`/`shareBtn` in der
+  `.standgroup`); ihren Zustand setzt `updateDocButtons()` — aufgerufen aus
+  `updateDocName()` UND am `input`-Ereignis, denn die Abweichung vom
+  Auslieferungsstand (Neu-laden-Knopf) entsteht beim Tippen. Auf Mobil löst
+  sich die Marken-Gruppe per `display:contents` auf (Menü-Bezug ist die ganze
+  Kopfzeile, wie beim Neuigkeiten-Popup) — wer dort Elemente ergänzt, misst
+  die eine Marken-Zeile mit Neuigkeiten-Zähler UND Build-Badge nach
+  (Worst Case 325 von 335 px). Jedes Dokument ist
   nur Text + Name (kein Strukturformat, D14) — vorwärtskompatibel zum Backend
   (D13). Ansichts-State (`werkbaum-ui`) bleibt global über alle Dokumente. Ein
   leerer Editortext bleibt leer.
@@ -577,8 +588,9 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `docs/CHANGELOG.md` geschieht für den Benutzer unsichtbar (Regel in der
   Wurzel-CLAUDE.md).
 - **Titelzeilen tragen die Aufklapp-Menüs — kein `overflow` daran (D50):**
-  `#docMenu` und `.dlmenu` hängen als absolut positionierte Kinder im
-  `.panel-head`. Ein `overflow` dort macht ihn zum Scroll-Container und klippt
+  `.dlmenu` und das Snapshot-Menü hängen als absolut positionierte Kinder im
+  `.panel-head` (`#docMenu` seit D81 im App-Kopf — dort gilt dasselbe). Ein
+  `overflow` dort macht ihn zum Scroll-Container und klippt
   sie; `overflow-x` hebt dabei das `visible` der **anderen** Achse auf `auto`,
   geklippt wird also nach unten — genau dorthin, wo die Menüs aufklappen. Ein
   Scroll-Container klippt unabhängig davon, ob er überläuft, der Fehler trifft

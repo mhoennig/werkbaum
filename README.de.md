@@ -97,8 +97,8 @@ selbst** und sehen die Änderungen der anderen, ohne neu zu laden:
 https://werkbaum.javagil.de/?live=https://werkbaum.javagil.de/api/v1/documents/<uuid>
 ```
 
-Angelegt wird so ein Dokument über den Eintrag **„Auf den Server legen"** im
-Dokumenten-Menü: Er lädt den aktiven Plan hoch, schaltet dorthin um und schreibt
+Angelegt wird so ein Dokument über den **Teilen-Knopf** in der Titelzeile des
+Text-Editors: Er lädt den aktiven Plan hoch, schaltet dorthin um und schreibt
 den Link in die Adresszeile und in die Zwischenablage. Diesen Link weitergeben —
 die Adresse ist die Einladung, und wer sie kennt, kommt hinein.
 

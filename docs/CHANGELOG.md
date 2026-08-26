@@ -19,6 +19,9 @@ reverse.
 
 ## 2026-08-26
 
+- The document picker moved into the app header: `Werkbaum › name` opens the menu — on the phone it is reachable from both panes, and the name takes over the subtitle line
+- The document menu groups by kind — included, yours, sources — carries rename, delete and restore on each row, and scrolls instead of being cut off on small screens
+- The editor title bar is labelled `Text editor` again and holds the document's own buttons: save, snapshot, history, reload from the source, and a short `Share` button that puts the plan on a server
 - The address bar follows the document you switch to: `?live=` and `?sourceUrl=` name what is in front of you, so a reload brings back the same plan
 - Switching to a server document in the picker now really opens it live — before it only showed its last state
 - Fix: a foreign change to a server document could land in the text of a local document you had switched to

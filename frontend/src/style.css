@@ -78,6 +78,95 @@
   header{max-width:1200px;width:100%;margin:0 auto 16px;flex:0 0 auto}
   .header-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
   .header-tools{display:flex;align-items:center;gap:12px}
+  /* Marke + aktives Dokument als Brotkrume (D81): „Werkbaum › name". Die
+     Gruppe darf schrumpfen (min-width:0), damit der Chip lange Namen mit
+     Ellipse kürzt, statt die Werkzeuge rechts zu verdrängen. */
+  .brandgroup{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto}
+  .crumb-sep{color:var(--muted);opacity:.6;font-size:1.05rem;flex:0 0 auto;user-select:none}
+  .docwrap{position:relative;display:inline-flex;min-width:0}
+  /* Der Auslöser sieht jetzt nach Menü aus: gerahmter Chip mit Pfeil — die
+     frühere nackte Beschriftung in der Panel-Zeile war als Knopf nicht zu
+     erkennen (der Anlass von D81). */
+  .doctrigger{
+    display:inline-flex;align-items:center;gap:6px;cursor:pointer;min-width:0;
+    border:1px solid rgba(36,52,71,.2);border-radius:8px;background:var(--card);
+    padding:4px 10px;color:var(--ink);
+    font-family:'IBM Plex Mono',monospace;font-size:.78rem;letter-spacing:0;
+  }
+  .doctrigger:hover,.doctrigger[aria-expanded="true"]{border-color:var(--or);color:var(--or)}
+  .doctrigger:focus-visible{outline:2px solid var(--or);outline-offset:2px}
+  /* Rückmeldung von „Teilen" (putOnServer, D76/D81): Petrol-Blitz samt Haken
+     am Dokumentnamen — er ist das, was jetzt auf dem Server liegt. */
+  .doctrigger.done{border-color:var(--or);color:var(--or)}
+  .doctrigger.done::before{content:"✓ ";flex:0 0 auto}
+  .docname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;max-width:min(44vw,520px)}
+  .doc-caret{width:13px;height:13px;flex:0 0 auto;opacity:.7}
+  /* Das Dokumenten-Menü hängt am Chip im App-Kopf. Es scrollt als GANZES
+     (max-height), statt nur in der Liste — auf dem Telefon wurde das alte
+     Menü unten abgeschnitten (D81); erwogen waren auf-/zuklappbare Gruppen,
+     das Scrollen ist die zustandslose Antwort. Kein `overflow` am Vorfahren
+     nötig — der App-Kopf ist keiner (D50 gilt hier nicht). */
+  .docmenu{
+    position:absolute;top:calc(100% + 6px);left:0;z-index:60;
+    width:min(360px,calc(100vw - 24px));max-height:min(72vh,560px);overflow:auto;
+    background:var(--card);border:1px solid rgba(36,52,71,.15);border-radius:10px;
+    padding:6px;box-shadow:0 8px 24px rgba(36,52,71,.22);
+    font-family:'IBM Plex Sans',sans-serif;font-weight:400;letter-spacing:0;
+    text-align:left;color:var(--ink);
+  }
+  .docmenu[hidden]{display:none}
+  .docmenu-list{display:flex;flex-direction:column;gap:2px}
+  /* Gruppen nach Dokumentart (docKind, D81): Mitgeliefert · Eigene · Quellen. */
+  .docsec{
+    margin:8px 4px 2px;padding-top:7px;border-top:1px solid rgba(36,52,71,.1);
+    font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .docmenu-list .docsec:first-child{margin-top:2px;padding-top:0;border-top:0}
+  /* Eine Zeile = Wählen-Knopf + Zeilen-Aktionen. Kein Knopf im Knopf
+     (ungültiges HTML) — die Zeile ist ein div, beides sind Geschwister. */
+  .docitem{display:flex;align-items:center;gap:2px;border-radius:7px}
+  .docpick{
+    display:flex;align-items:center;gap:8px;flex:1 1 auto;min-width:0;
+    border:0;background:transparent;cursor:pointer;text-align:left;
+    padding:7px 9px;border-radius:7px;color:var(--ink);
+    font-family:inherit;font-size:.86rem;
+  }
+  .docpick:hover{background:rgba(15,118,110,.08)}
+  .docpick[aria-checked="true"]{color:var(--or);font-weight:600}
+  .docpick .doccheck{flex:0 0 auto;width:14px;text-align:center;opacity:0}
+  .docpick[aria-checked="true"] .doccheck{opacity:1}
+  .docitem-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .docitem.editing{cursor:default;padding:0 0 0 9px;gap:8px}
+  .docrename{
+    flex:1 1 auto;min-width:0;
+    border:1px solid var(--or);border-radius:6px;
+    padding:5px 7px;margin:2px 4px 2px 0;color:var(--ink);background:var(--card);
+    font-family:inherit;font-size:.86rem;outline:none;
+  }
+  /* Zeilen-Aktionen immer sichtbar (Touch kennt kein Hover), aber leise. */
+  .docacts{display:inline-flex;gap:2px;flex:0 0 auto;padding-right:4px}
+  .dociconbtn{
+    display:grid;place-items:center;width:26px;height:26px;padding:0;
+    border:0;border-radius:6px;background:transparent;color:var(--muted);cursor:pointer;
+  }
+  .dociconbtn svg{width:14px;height:14px;display:block}
+  .dociconbtn:hover{background:rgba(36,52,71,.08);color:var(--ink)}
+  .docdelbtn:hover{background:rgba(216,151,168,.28);color:#B4415E}
+  /* Befehle unten: gewöhnliche Menüzeilen statt eines Knopf-Wusts. */
+  .docmenu-cmds{
+    display:flex;flex-direction:column;gap:2px;margin-top:6px;padding-top:6px;
+    border-top:1px solid rgba(36,52,71,.12);
+  }
+  .doccmd{
+    display:flex;align-items:center;gap:8px;width:100%;
+    border:0;background:transparent;cursor:pointer;text-align:left;
+    padding:7px 9px;border-radius:7px;color:var(--ink);
+    font-family:inherit;font-size:.86rem;
+  }
+  .doccmd:hover{background:rgba(15,118,110,.08)}
+  .doccmd svg{width:14px;height:14px;flex:0 0 auto;color:var(--muted)}
+  .doccmd-glyph{width:14px;text-align:center;color:var(--muted);font-weight:600;flex:0 0 auto}
   .fsbtn{
     display:inline-flex;align-items:center;justify-content:center;
     width:30px;height:29px;padding:0;cursor:pointer;
@@ -155,11 +244,10 @@
   body.fullscreen header,
   body.fullscreen .app,
   body.fullscreen .site-footer{max-width:none}
-  h1{font-size:1.25rem;font-weight:600;letter-spacing:-.01em}
+  h1{font-size:1.25rem;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:11px}
   /* Build-Hinweis hinter dem Titel (nur nicht-produktive Builds, siehe app.js) */
   .build-badge{margin-left:-.5em;font-size:.58em;line-height:1;vertical-align:middle;cursor:help;user-select:none;text-decoration:none}
   header p{margin-top:4px;color:var(--muted);font-size:.9rem}
-  .sub-short{display:none}                             /* Kurzfassung nur auf kleinem Bildschirm */
   .langsel{
     display:inline-flex;flex:0 0 auto;
     border:1px solid rgba(36,52,71,.2);border-radius:999px;overflow:hidden;
@@ -444,64 +532,21 @@
     position:absolute!important;left:-10000px!important;top:0!important;
     width:360px!important;height:400px!important;
   }
-  /* Dokument-Wähler: der Name des aktiven Dokuments in der Editor-Titelzeile ist
-     zugleich der Auslöser eines Dropdowns zum Wechseln/Anlegen/Umbenennen/Löschen
-     (localStorage-Dokumente, noch kein Backend). */
-  /* Wähler + Snapshot-Knopf als eine Gruppe: Sie trägt das `margin-right:auto`
-     (schiebt die übrigen Knöpfe nach rechts) und ist der Positionsbezug des
-     Snapshot-Menüs — dadurch klappt es unter seinem Knopf auf, ohne dass JS
-     rechnen muss. Am Wähler selbst darf das auto-Margin nicht mehr stehen,
-     sonst schöbe es den Snapshot-Knopf von ihm weg. */
-  .docgroup{
-    display:inline-flex;align-items:center;gap:4px;
-    margin-right:auto;max-width:62%;min-width:0;
-  }
+  /* Stand-Gruppe (D81): Speichern, Kamera, frühere Stände, Neu laden, Teilen —
+     die Funktionen des AKTIVEN Dokuments, links neben der Beschriftung. Die
+     Gruppe trägt das `margin-right:auto` (schiebt die übrigen Knöpfe nach
+     rechts) und ist über `.snapwrap` der Positionsbezug des Snapshot-Menüs.
+     Der Dokument-Wähler selbst steht seit D81 als Brotkrume im App-Kopf. */
+  .standgroup{display:inline-flex;align-items:center;gap:4px;margin-right:auto}
+  /* Die Beschriftung „Text-Editor" bekommt KEIN auto-Margin (die allgemeine
+     `.panel-head>span`-Regel gäbe ihr eins) — den Platz nimmt die Stand-Gruppe. */
+  .panel-head>span[data-i18n="editorTitle"]{margin-right:0}
   /* Bezug des Menüs ist der KNOPF, nicht die Gruppe: An der Gruppe ausgerichtet
      (`right:0`) begänne es 190 px weiter links und liefe aus dem Panel heraus —
      nachgemessen bei der ersten Fassung. */
   .snapwrap{position:relative;display:inline-flex;flex:0 0 auto}
-  .doctrigger{
-    display:inline-flex;align-items:center;gap:5px;cursor:pointer;
-    min-width:0;color:var(--muted);
-    padding:2px 6px;margin-left:-6px;border-radius:6px;
-    text-transform:none;letter-spacing:0;font-family:'IBM Plex Mono',monospace;
-  }
-  .doctrigger:hover,.doctrigger[aria-expanded="true"]{color:var(--or)}
-  .doctrigger:focus-visible{outline:2px solid var(--or);outline-offset:2px}
-  /* Rückmeldung fürs stille In-Place-Speichern (Strg+S, D74): Petrol-Blitz
-     samt Haken am Dokumentnamen — das Haus-Idiom von flashBtn (D54). */
-  .doctrigger.done{color:var(--or)}
-  .doctrigger.done::before{content:"✓ ";flex:0 0 auto}
-  .docname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
-  .doc-caret{width:13px;height:13px;flex:0 0 auto;opacity:.7}
-  .panel.collapsed .doc-caret{display:none}
-  .docmenu{
-    position:absolute;top:calc(100% + 4px);left:12px;z-index:50;min-width:210px;
-    background:var(--card);border:1px solid rgba(36,52,71,.15);border-radius:10px;
-    padding:6px;box-shadow:0 8px 24px rgba(36,52,71,.22);
-    text-transform:none;letter-spacing:0;font-family:'IBM Plex Sans',sans-serif;
-  }
-  .docmenu[hidden]{display:none}
-  .docmenu-list{display:flex;flex-direction:column;gap:2px;max-height:260px;overflow:auto}
-  .docitem{
-    display:flex;align-items:center;gap:8px;width:100%;
-    border:0;background:transparent;cursor:pointer;text-align:left;
-    padding:7px 9px;border-radius:7px;color:var(--ink);
-    font-family:inherit;font-size:.86rem;
-  }
-  .docitem:hover{background:rgba(15,118,110,.08)}
-  .docitem[aria-checked="true"]{color:var(--or);font-weight:600}
-  .docitem .doccheck{flex:0 0 auto;width:14px;text-align:center;opacity:0}
-  .docitem[aria-checked="true"] .doccheck{opacity:1}
-  .docitem.editing{cursor:default}
-  .docrename{
-    flex:1 1 auto;min-width:0;
-    border:1px solid var(--or);border-radius:6px;
-    padding:5px 7px;color:var(--ink);background:var(--card);
-    font-family:inherit;font-size:.86rem;outline:none;
-  }
-  /* Snapshot-Menü (D54): wie das Dokument-Menü, aber am rechten Rand seiner
-     Gruppe ausgerichtet — also unter dem Knopf. */
+  /* Snapshot-Menü (D54): am linken Rand seiner Gruppe ausgerichtet — also
+     unter dem Knopf. */
   .snapbtn{flex:0 0 auto}
   .snapmenu{
     position:absolute;top:calc(100% + 6px);left:0;z-index:50;min-width:190px;
@@ -521,21 +566,6 @@
   .snapitem:hover{background:rgba(15,118,110,.08)}
   .snapitem .snapsize{margin-left:auto;color:var(--muted);font-size:.74rem}
   .snapempty{padding:7px 9px;color:var(--muted);font-size:.8rem}
-  .docmenu-actions{
-    display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;padding-top:6px;
-    border-top:1px solid rgba(36,52,71,.12);
-  }
-  .docact{
-    flex:1 1 auto;border:1px solid rgba(36,52,71,.2);border-radius:7px;
-    background:var(--card);color:var(--muted);cursor:pointer;
-    padding:5px 8px;font-family:inherit;font-size:.78rem;white-space:nowrap;
-  }
-  .docact:hover{border-color:var(--or);color:var(--or)}
-  /* „Original wiederherstellen" (D22-Nachtrag): sichtbar, sobald ein
-     mitgeliefertes Dokument aktiv ist; ausgegraut, solange es unverändert ist. */
-  .docact:disabled{opacity:.45;cursor:default}
-  .docact:disabled:hover{border-color:rgba(36,52,71,.2);color:var(--muted)}
-  .docdel:hover{border-color:#D897A8;color:#B4415E}
   .togglebtn[aria-pressed="true"]{background:var(--or);color:#fff;border-color:var(--or)}
   .togglebtn[aria-pressed="true"]:hover{color:#fff}
   /* Kein Zeilenumbruch (D49, `wrap="off"` am Element): Die Einrückung trägt die
@@ -1364,7 +1394,7 @@
   body.mobile .panel.right .panel-head>span[data-i18n="diagramTitle"]{display:none}
   /* Umschalter oben links; er übernimmt vom entfallenen Titel das
      `margin-right:auto`, damit die Aktions-Knöpfe rechts stehen bleiben. Im
-     Editor-Kopf tut das weiterhin der Dokumenten-Wähler daneben. */
+     Editor-Kopf tut das die Stand-Gruppe daneben (D81). */
   body.mobile .panetoggle{display:inline-flex}
   body.mobile .panel.right .panetoggle{margin-right:auto}
   /* Die Titelzeile muss EINZEILIG bleiben (D17): Bricht sie um, wächst der
@@ -1409,10 +1439,39 @@
   body.mobile textarea,
   body.mobile .lineno{font-size:.64rem}
   body.mobile textarea{padding:10px 12px}
-  /* Untertitel: Kurzfassung, garantiert einzeilig (Ellipsis als Sicherung) */
-  body.mobile .sub-full{display:none}
-  body.mobile .sub-short{display:inline}
-  body.mobile header p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* Der Dokumentname übernimmt die Untertitel-Zeile (D81): Die Brotkrume
+     bricht unter die Marke um und bekommt dort die volle Breite — lange
+     URL-Namen brauchen sie. Der Untertitel entfällt; es kommt keine Fläche
+     hinzu. Das „›" ohne „Werkbaum" davor sagte nichts und entfällt mit. */
+  body.mobile header p{display:none}
+  /* Die Marken-Gruppe löst sich auf (display:contents): Sie ist nur so breit,
+     wie die Werkzeuge rechts ihr lassen (~170 px) — Chip-Zeile und Menü
+     brauchen aber die volle Kopfbreite. Als direkte Kinder der Kopfzeile
+     bricht der Chip per order:3 unter Marke und Werkzeuge um, und das Menü
+     nimmt die Kopfzeile als Bezug (dieselbe Verlegung wie beim
+     Neuigkeiten-Popup, D58). */
+  body.mobile .brandgroup{display:contents}
+  body.mobile .crumb-sep{display:none}
+  /* Marke und Werkzeuge müssen sich EINE Zeile teilen (sonst wächst der Kopf
+     auf drei Zeilen — neue Fläche, die es nicht geben darf). Wie in den
+     Titelzeilen (D17-Nachtrag 5) weichen die Lücken, nicht die Knöpfe:
+     gemessen 164 px Marke + 164 px Werkzeuge bei 335 px Breite. */
+  body.mobile .header-row{position:relative;flex-wrap:wrap;row-gap:4px;column-gap:8px}
+  body.mobile .header-tools{gap:6px}
+  /* Nachgemessen mit Neuigkeiten-Zähler UND Build-Hinweis (die beiden
+     Gelegenheits-Breiten, D17-Lektion: mit dem versteckten Element messen):
+     ohne diese zwei Handgriffe stand die Summe exakt auf der Kante. Die
+     Sprachpille bleibt über 29 px Fingergröße. */
+  body.mobile .langsel button{padding:5px 8px}
+  body.mobile header h1{gap:8px}
+  body.mobile .docwrap{flex:1 1 100%;order:3;position:static}
+  body.mobile .doctrigger{max-width:100%}
+  body.mobile .docname{max-width:none}
+  body.mobile .docmenu{left:0;right:0;width:auto}
+  /* Die Editor-Beschriftung entfällt wie der Bereichstitel „DIAGRAMM" — die
+     Zeile wird für Umschalter und Stand-Knöpfe gebraucht; das auto-Margin
+     trägt die Stand-Gruppe. */
+  body.mobile .panel.editor .panel-head>span[data-i18n="editorTitle"]{display:none}
   /* Editor immer gestapelt (Textarea oben, Legende darunter) */
   body.mobile .editor-body{flex-direction:column;align-items:stretch}
   body.mobile .agenda{border-left:0;border-top:1px dashed rgba(36,52,71,.18)}
@@ -1526,4 +1585,4 @@
   margin-left: auto; padding-left: 10px;
   font-size: .82em; color: var(--muted); white-space: nowrap;
 }
-.docitem[aria-checked="true"] .docitem-where{ color: inherit; opacity: .75; }
+.docpick[aria-checked="true"] .docitem-where{ color: inherit; opacity: .75; }

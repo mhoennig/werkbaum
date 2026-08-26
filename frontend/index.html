@@ -18,7 +18,13 @@
 
 <header>
   <div class="header-row">
-    <h1 style="display:flex;align-items:center;gap:11px">
+    <!-- Marke und aktives Dokument als Brotkrume (D81): „Werkbaum › name".
+         Das Dokument bestimmt Text UND Diagramm — sein Name gehört über beide
+         Bereiche, nicht in eine Panel-Zeile. Der Chip ist zugleich der
+         Auslöser des Dokumenten-Menüs; die Editor-Titelzeile wird damit frei
+         für die Stand-Funktionen und bekommt ihre Beschriftung zurück. -->
+    <div class="brandgroup">
+    <h1>
       <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
         <rect x="22" y="5" width="20" height="12" rx="3.5" fill="#243447"/>
         <path d="M32 17 V22 M14 22 H50 M14 22 V27 M50 22 V27" fill="none" stroke="#243447" stroke-width="3"/>
@@ -29,6 +35,25 @@
       </svg>
       <span data-i18n-title="brandTooltip" title="„Werkbaum“ bedeutet so viel wie ‚Werk-Baum‘ — der Baum des Projektstrukturplans (WBS).">Werk<span style="color:var(--or)">baum</span></span>
     </h1>
+    <span class="crumb-sep" aria-hidden="true">›</span>
+    <span class="docwrap">
+      <span class="doctrigger" id="docTrigger" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" data-i18n-title="docSwitchTooltip" data-i18n-aria="docSwitchTooltip" title="Dokument wählen oder verwalten" aria-label="Dokument wählen oder verwalten">
+        <span class="docname" id="docName"></span>
+        <svg class="doc-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </span>
+      <!-- Ein Menü, nach Dokumentart gruppiert; Umbenennen/Löschen/
+           Wiederherstellen hängen als Symbole an der Zeile des jeweiligen
+           Dokuments (immer sichtbar — Touch kennt kein Hover). Scrollt als
+           Ganzes, statt auf kleinen Bildschirmen abgeschnitten zu werden. -->
+      <div class="docmenu" id="docMenu" role="menu" data-i18n-aria="docMenuAria" aria-label="Dokumente" hidden>
+        <div class="docmenu-list" id="docList"></div>
+        <div class="docmenu-cmds">
+          <button type="button" class="doccmd" id="docNew"><span class="doccmd-glyph" aria-hidden="true">＋</span><span data-i18n="docNew">Neues Dokument</span></button>
+          <button type="button" class="doccmd" id="docOpenFile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span data-i18n="docOpenFile">Datei öffnen…</span></button>
+        </div>
+      </div>
+    </span>
+    </div>
     <div class="header-tools">
     <!-- Neuigkeiten (D58): der Stern aus dem Diagramm-Kopf, jetzt permanent.
          Sein Popup zeigt die Änderungen der letzten Tage (aus der git-Historie,
@@ -58,49 +83,53 @@
     </div>
     </div>
   </div>
-  <p><span class="sub-full" data-i18n="subtitle">Werkbaum – Ein Text-basierter WBS/Projektstrukturplan/Feature-Tree/Requirements-Baum Diagramm-Editor.</span><span class="sub-short" data-i18n="subtitleShort">WBS, Feature- &amp; Requirements-Bäume als Text</span></p>
+  <!-- Auf dem Telefon entfällt der Untertitel — der Dokumentname übernimmt die Zeile (D81). -->
+  <p class="sub-full" data-i18n="subtitle">Werkbaum – Ein Text-basierter WBS/Projektstrukturplan/Feature-Tree/Requirements-Baum Diagramm-Editor.</p>
 </header>
 
 <div class="app" id="app">
   <div class="panel editor">
     <div class="panel-head">
-      <!-- Gegenstück zum Knopf im Diagramm-Kopf (D17-Nachtrag). Der
-           Dokumenten-Wähler steht direkt daneben und ist damit genau dann zu
-           sehen, wenn der Text vorn ist — er gehört zu diesem Bereich. -->
+      <!-- Gegenstück zum Knopf im Diagramm-Kopf (D17-Nachtrag). -->
       <button type="button" class="copybtn panetoggle" id="paneToDiagram" data-i18n-title="paneToDiagram" data-i18n-aria="paneToDiagram" title="Zum Diagramm wechseln" aria-label="Zum Diagramm wechseln">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="4" rx="1"/><rect x="2.5" y="17" width="6" height="4" rx="1"/><rect x="15.5" y="17" width="6" height="4" rx="1"/><path d="M12 7V13M5.5 13H18.5M5.5 13V17M18.5 13V17"/></svg>
       </button>
-      <!-- Dokument-Wähler und Snapshot-Knopf stehen zusammen; die Gruppe trägt
-           das `margin-right:auto` und ist der Bezug für das Snapshot-Menü. -->
-      <span class="docgroup">
-      <span class="doctrigger" id="docTrigger" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" data-i18n-title="docSwitchTooltip" data-i18n-aria="docSwitchTooltip" title="Dokument wählen oder verwalten" aria-label="Dokument wählen oder verwalten">
-        <span class="docname" id="docName"></span>
-        <svg class="doc-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-      </span>
-      <div class="docmenu" id="docMenu" role="menu" data-i18n-aria="docMenuAria" aria-label="Dokumente" hidden>
-        <div class="docmenu-list" id="docList"></div>
-        <div class="docmenu-actions">
-          <button type="button" class="docact" id="docNew" data-i18n="docNew">Neues Dokument</button>
-          <button type="button" class="docact" id="docOpenFile" data-i18n="docOpenFile">Datei öffnen…</button>
-          <button type="button" class="docact" id="docSaveFile" data-i18n="docSaveFile">Als Datei speichern</button>
-          <button type="button" class="docact" id="docToServer" data-i18n="docToServer">Auf den Server legen</button>
-          <button type="button" class="docact" id="docRename" data-i18n="docRename">Umbenennen</button>
-          <button type="button" class="docact" id="docRestore" data-i18n="docRestore" hidden>Original wiederherstellen</button>
-          <button type="button" class="docact docdel" id="docDelete" data-i18n="docDelete">Löschen</button>
-        </div>
-      </div>
-      <span class="snapwrap">
-      <button type="button" class="copybtn snapbtn" id="snapBtn" aria-haspopup="menu" aria-expanded="false" data-i18n-title="snapTooltip" data-i18n-aria="snapTooltip" title="Frühere Stände dieses Dokuments" aria-label="Frühere Stände dieses Dokuments">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3 4v4h4"/><path d="M12 7.5V12l3 1.8"/></svg>
+      <!-- Die Beschriftung ist zurück (D81) — der Dokument-Wähler steht jetzt
+           als Brotkrume im App-Kopf. -->
+      <span data-i18n="editorTitle">Text-Editor</span>
+      <!-- Stand-Funktionen des AKTIVEN Dokuments (D81): Speichern, Stand jetzt
+           sichern, frühere Stände, aus der Quelle neu laden — dazu Teilen. Die
+           Gruppe trägt das `margin-right:auto` und ist der Bezug für das
+           Snapshot-Menü. -->
+      <span class="standgroup">
+      <button type="button" class="copybtn" id="saveBtn" data-i18n-title="docSaveFile" data-i18n-aria="docSaveFile" title="Als Datei speichern (Strg+S)" aria-label="Als Datei speichern (Strg+S)">
+        <svg class="ic-main" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+        <svg class="ic-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
       </button>
-      <div class="snapmenu" id="snapMenu" role="menu" data-i18n-aria="snapMenuAria" aria-label="Frühere Stände" hidden></div>
-      </span>
       <!-- Von Hand sichern, z. B. vor einer größeren Änderung. Kamera statt
            Plus: ein Plus neben dem Dokument-Namen läse sich als „neues
            Dokument“ (D54-Nachtrag). -->
       <button type="button" class="copybtn snapaddbtn" id="snapAddBtn" data-i18n-title="snapAddTooltip" data-i18n-aria="snapAddTooltip" title="Aktuellen Stand jetzt sichern" aria-label="Aktuellen Stand jetzt sichern">
         <svg class="ic-main" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9a2 2 0 0 1 2-2h2.2l1.3-2h6.9l1.3 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="3.1"/></svg>
         <svg class="ic-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+      </button>
+      <span class="snapwrap">
+      <button type="button" class="copybtn snapbtn" id="snapBtn" aria-haspopup="menu" aria-expanded="false" data-i18n-title="snapTooltip" data-i18n-aria="snapTooltip" title="Frühere Stände dieses Dokuments" aria-label="Frühere Stände dieses Dokuments">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3 4v4h4"/><path d="M12 7.5V12l3 1.8"/></svg>
+      </button>
+      <div class="snapmenu" id="snapMenu" role="menu" data-i18n-aria="snapMenuAria" aria-label="Frühere Stände" hidden></div>
+      </span>
+      <!-- Aus der Quelle neu laden bzw. Original wiederherstellen — sichtbar
+           nur, wo es eine Quelle gibt (mitgeliefert, URL, gemerkte Datei);
+           Tooltip setzt updateDocButtons() je nach Fall. -->
+      <button type="button" class="copybtn" id="reloadBtn" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.7 5v5.5h5.5"/><path d="M4 15a8.5 8.5 0 1 0 .5-7.5L1.7 10.5"/></svg>
+      </button>
+      <!-- „Teilen" (D81, kurz für „Auf den Server legen", D76-Nachtrag 8):
+           legt das Dokument auf einen Werkbaum-Server und startet die
+           gemeinsame Bearbeitung. Entfällt, wo es schon liegt. -->
+      <button type="button" class="copybtn" id="shareBtn" data-i18n-title="docToServer" data-i18n-aria="docToServer" title="Teilen – auf einen Werkbaum-Server legen und gemeinsam bearbeiten" aria-label="Teilen – auf einen Werkbaum-Server legen und gemeinsam bearbeiten" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 16.5l-4-4-4 4M12 13v8"/><path d="M20.4 17.6A5 5 0 0 0 18 8.5h-1.3A8 8 0 1 0 3 15.7"/></svg>
       </button>
       </span>
       <button type="button" class="copybtn" id="copy" data-i18n-title="copyTooltip" data-i18n-aria="copyTooltip" title="Text in die Zwischenablage kopieren" aria-label="Text in die Zwischenablage kopieren">
@@ -124,7 +153,7 @@
            einen waagerechten Balken (D49). Die Einrückung trägt hier die
            Hierarchie — ein weicher Umbruch setzt die Fortsetzung an den linken
            Rand und lässt die Ebene verschwinden. -->
-      <textarea id="src" wrap="off" spellcheck="false" data-i18n-aria="editorTitle" aria-label="Struktur (Text)"></textarea>
+      <textarea id="src" wrap="off" spellcheck="false" data-i18n-aria="editorTitle" aria-label="Text-Editor"></textarea>
     </div>
     <div class="hint-gutter" id="hintGutter" role="separator" data-i18n-title="gutterTooltip" data-i18n-aria="hintGutterAria" title="Ziehen zum Verschieben, Doppelklick setzt zurück" aria-label="Editor und Legende größenverändern" hidden></div>
     <div class="agenda" id="agenda">

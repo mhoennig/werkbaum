@@ -8,7 +8,7 @@ import { depFragment, collectIds, matchIds, depIdAt, idLine } from './autocomple
 import { LS_SNAPS, SNAP_EVERY, parseSnaps, addSnapshot, persistSnaps, snapLabel }
   from './snapshots.js';
 import { FILE_ACCEPT, FILE_TYPES, saveFileName } from './localfile.js';
-import { LIVE_PARAM, SOURCE_PARAM, ETHERPAD_PARAM, docSearch } from './docurl.js';
+import { LIVE_PARAM, SOURCE_PARAM, ETHERPAD_PARAM, docSearch, docKind } from './docurl.js';
 /* Neuigkeiten (D58): die git-Historie, zur BAUZEIT eingelesen (Vite-Plugin in
    vite.config.js). Zur Laufzeit gibt es kein git — und keinen Server, der
    nachliefern könnte (D11/D19). Leer, wo git nicht erreichbar war. */
@@ -918,6 +918,11 @@ src.addEventListener('keydown', e => {
 src.addEventListener('input', render);
 src.addEventListener('input', saveSrc);
 src.addEventListener('input', scheduleLivePush);   /* Server-Dokument: Diff nach 1,5 s Ruhe (D76) */
+/* Der Neu-laden-Knopf (D81) hängt bei mitgelieferten Dokumenten an der
+   Abweichung vom Auslieferungsstand — und die entsteht beim TIPPEN, nicht
+   erst beim Dokumentwechsel. Der Vergleich ist ein String-Vergleich mit
+   frühem Ausstieg, je Tastendruck unbedenklich. */
+src.addEventListener('input', () => updateDocButtons());
 
 /* ---------- Sprung zwischen Diagramm und Text (D25) ----------
    Jeder Knoten trägt seine Zeilennummer als `data-line` (render.js).
@@ -2202,7 +2207,6 @@ document.addEventListener('click', e => {
 const I18N = {
   de: {
     subtitle:"Werkbaum – PSP / Lean Pathfinding · Editor für Projektstrukturpläne (auch Feature-Tree- & Requirements-Editor)",
-    subtitleShort:"PSP-Editor mit Lean Pathfinding",
     imprint:"Impressum",
     privacy:"Datenschutz",
     legendTooltip:"Legende ein-/ausblenden",
@@ -2232,7 +2236,7 @@ const I18N = {
     implicitSizeTooltip:"Keine Größe angegeben – für die Kostenschätzung mindestens {size} angenommen",
     fullscreenTooltip:"Vollbild – Panels nutzen die ganze Fensterbreite",
     brandTooltip:"„Werkbaum“ bedeutet so viel wie ‚Werk-Baum‘ — der Baum des Projektstrukturplans (WBS).",
-    editorTitle:"Struktur (Text)", diagramTitle:"Diagramm",
+    editorTitle:"Text-Editor", diagramTitle:"Diagramm",
     docSwitchTooltip:"Dokument wählen oder verwalten", docMenuAria:"Dokumente",
     /* Frühere Stände (D54) — alle 10 Minuten, nur bei Änderung. */
     snapTooltip:"Frühere Stände dieses Dokuments", snapMenuAria:"Frühere Stände",
@@ -2245,8 +2249,11 @@ const I18N = {
     docDeleteConfirm:"Dokument „{name}“ löschen?",
     docRestore:"Original wiederherstellen",
     docRestoreConfirm:"„{name}“ auf den mitgelieferten Stand zurücksetzen? Eigene Änderungen gehen verloren.",
-    docOpenFile:"Datei öffnen…", docSaveFile:"Als Datei speichern",
-    docToServer:"Auf den Server legen",
+    docOpenFile:"Datei öffnen…", docSaveFile:"Als Datei speichern (Strg+S)",
+    docToServer:"Teilen – auf einen Werkbaum-Server legen und gemeinsam bearbeiten",
+    docReload:"Aus der Quelle neu laden – lokale Änderungen gehen verloren",
+    docReloadConfirm:"„{name}“ aus der Quelle neu laden? Lokale Änderungen gehen verloren.",
+    docGroupShipped:"Mitgeliefert", docGroupOwn:"Eigene", docGroupSources:"Quellen",
     docToServerAsk:"Adresse des Werkbaum-Servers (z. B. https://werkbaum.example):",
     docToServerDone:"Auf dem Server — der Link steht in der Adresszeile und in der Zwischenablage.",
     docToServerFailed:"Nicht auf den Server gelegt: {error}",
@@ -2315,7 +2322,6 @@ const I18N = {
   },
   en: {
     subtitle:"Werkbaum – Work Breakdown Structure / Lean Pathfinding · Project structure editor (also feature-tree & requirements)",
-    subtitleShort:"WBS editor with Lean Pathfinding",
     imprint:"Imprint (Impressum)",
     privacy:"Privacy",
     legendTooltip:"Show/hide legend",
@@ -2344,7 +2350,7 @@ const I18N = {
     implicitSizeTooltip:"No size given – assumed at least {size} for the cost estimate",
     fullscreenTooltip:"Full screen – panels use the full window width",
     brandTooltip:"“Werkbaum” means roughly ‘work tree’ — the tree of the work breakdown structure (WBS).",
-    editorTitle:"Structure (text)", diagramTitle:"Diagram",
+    editorTitle:"Text editor", diagramTitle:"Diagram",
     docSwitchTooltip:"Choose or manage document", docMenuAria:"Documents",
     snapTooltip:"Earlier states of this document", snapMenuAria:"Earlier states",
     snapNone:"No earlier states yet – one is kept on demand and every 10 minutes, once something has changed.",
@@ -2356,8 +2362,11 @@ const I18N = {
     docDeleteConfirm:"Delete document “{name}”?",
     docRestore:"Restore original",
     docRestoreConfirm:"Reset “{name}” to the shipped version? Your changes will be lost.",
-    docOpenFile:"Open file…", docSaveFile:"Save as file",
-    docToServer:"Put on the server",
+    docOpenFile:"Open file…", docSaveFile:"Save as file (Ctrl+S)",
+    docToServer:"Share – put on a Werkbaum server and edit together",
+    docReload:"Reload from the source – local changes are lost",
+    docReloadConfirm:"Reload “{name}” from its source? Local changes are lost.",
+    docGroupShipped:"Included", docGroupOwn:"Yours", docGroupSources:"Sources",
     docToServerAsk:"Address of the Werkbaum server (e.g. https://werkbaum.example):",
     docToServerDone:"On the server — the link is in the address bar and on the clipboard.",
     docToServerFailed:"Not put on the server: {error}",
@@ -2426,7 +2435,6 @@ const I18N = {
   },
   es: {
     subtitle:"Werkbaum – EDT / Lean Pathfinding · Editor de estructura de proyectos (también árboles de características y requisitos)",
-    subtitleShort:"Editor EDT con Lean Pathfinding",
     imprint:"Aviso legal (Impressum)",
     privacy:"Privacidad",
     legendTooltip:"Mostrar u ocultar la leyenda",
@@ -2455,7 +2463,7 @@ const I18N = {
     implicitSizeTooltip:"Sin tamaño indicado: se asume al menos {size} para el cálculo de costes",
     fullscreenTooltip:"Pantalla completa – los paneles usan todo el ancho de la ventana",
     brandTooltip:"«Werkbaum» significa algo así como ‘árbol de trabajo’ — el árbol de la estructura de desglose del trabajo (EDT).",
-    editorTitle:"Estructura (texto)", diagramTitle:"Diagrama",
+    editorTitle:"Editor de texto", diagramTitle:"Diagrama",
     docSwitchTooltip:"Elegir o gestionar documento", docMenuAria:"Documentos",
     snapTooltip:"Estados anteriores de este documento", snapMenuAria:"Estados anteriores",
     snapNone:"Aún no hay estados anteriores: se guarda uno al pulsar el botón y cada 10 minutos, cuando algo ha cambiado.",
@@ -2467,8 +2475,11 @@ const I18N = {
     docDeleteConfirm:"¿Eliminar el documento «{name}»?",
     docRestore:"Restaurar original",
     docRestoreConfirm:"¿Restablecer «{name}» a la versión incluida? Tus cambios se perderán.",
-    docOpenFile:"Abrir archivo…", docSaveFile:"Guardar como archivo",
-    docToServer:"Poner en el servidor",
+    docOpenFile:"Abrir archivo…", docSaveFile:"Guardar como archivo (Ctrl+S)",
+    docToServer:"Compartir – poner en un servidor Werkbaum y editar en conjunto",
+    docReload:"Recargar desde la fuente – los cambios locales se pierden",
+    docReloadConfirm:"¿Recargar «{name}» desde su fuente? Los cambios locales se pierden.",
+    docGroupShipped:"Incluidos", docGroupOwn:"Propios", docGroupSources:"Fuentes",
     docToServerAsk:"Dirección del servidor Werkbaum (p. ej. https://werkbaum.example):",
     docToServerDone:"En el servidor: el enlace está en la barra de direcciones y en el portapapeles.",
     docToServerFailed:"No se pudo poner en el servidor: {error}",
@@ -2537,7 +2548,6 @@ const I18N = {
   },
   fr: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · Éditeur de structure de projet (aussi pour arbres de fonctionnalités et d'exigences)",
-    subtitleShort:"Éditeur WBS avec Lean Pathfinding",
     imprint:"Mentions légales (Impressum)",
     privacy:"Confidentialité",
     legendTooltip:"Afficher/masquer la légende",
@@ -2566,7 +2576,7 @@ const I18N = {
     implicitSizeTooltip:"Aucune taille indiquée – au moins {size} supposé pour l'estimation des coûts",
     fullscreenTooltip:"Plein écran – les panneaux occupent toute la largeur de la fenêtre",
     brandTooltip:"« Werkbaum » signifie à peu près « arbre de travail » — l’arbre de l’organigramme des tâches (WBS).",
-    editorTitle:"Structure (texte)", diagramTitle:"Diagramme",
+    editorTitle:"Éditeur de texte", diagramTitle:"Diagramme",
     docSwitchTooltip:"Choisir ou gérer le document", docMenuAria:"Documents",
     snapTooltip:"États antérieurs de ce document", snapMenuAria:"États antérieurs",
     snapNone:"Pas encore d’état antérieur : un état est conservé sur demande et toutes les 10 minutes, dès que quelque chose a changé.",
@@ -2578,8 +2588,11 @@ const I18N = {
     docDeleteConfirm:"Supprimer le document « {name} » ?",
     docRestore:"Restaurer l’original",
     docRestoreConfirm:"Réinitialiser « {name} » à la version livrée ? Vos modifications seront perdues.",
-    docOpenFile:"Ouvrir un fichier…", docSaveFile:"Enregistrer comme fichier",
-    docToServer:"Mettre sur le serveur",
+    docOpenFile:"Ouvrir un fichier…", docSaveFile:"Enregistrer comme fichier (Ctrl+S)",
+    docToServer:"Partager – déposer sur un serveur Werkbaum et éditer à plusieurs",
+    docReload:"Recharger depuis la source – les modifications locales sont perdues",
+    docReloadConfirm:"Recharger « {name} » depuis sa source ? Les modifications locales seront perdues.",
+    docGroupShipped:"Fournis", docGroupOwn:"Personnels", docGroupSources:"Sources",
     docToServerAsk:"Adresse du serveur Werkbaum (p. ex. https://werkbaum.example) :",
     docToServerDone:"Sur le serveur — le lien est dans la barre d'adresse et dans le presse-papiers.",
     docToServerFailed:"Non déposé sur le serveur : {error}",
@@ -2648,7 +2661,6 @@ const I18N = {
   },
   pl: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · Edytor struktury projektów (również dla drzew funkcji i wymagań)",
-    subtitleShort:"Edytor WBS z Lean Pathfinding",
     imprint:"Nota prawna (Impressum)",
     privacy:"Prywatność",
     legendTooltip:"Pokaż/ukryj legendę",
@@ -2677,7 +2689,7 @@ const I18N = {
     implicitSizeTooltip:"Nie podano rozmiaru – do szacowania kosztów przyjęto co najmniej {size}",
     fullscreenTooltip:"Pełny ekran – panele wykorzystują całą szerokość okna",
     brandTooltip:"„Werkbaum” znaczy mniej więcej ‚drzewo pracy’ — drzewo struktury podziału pracy (WBS).",
-    editorTitle:"Struktura (tekst)", diagramTitle:"Diagram",
+    editorTitle:"Edytor tekstu", diagramTitle:"Diagram",
     docSwitchTooltip:"Wybierz lub zarządzaj dokumentem", docMenuAria:"Dokumenty",
     snapTooltip:"Wcześniejsze stany tego dokumentu", snapMenuAria:"Wcześniejsze stany",
     snapNone:"Brak wcześniejszych stanów – zapisywany jest na żądanie i co 10 minut, gdy coś się zmieni.",
@@ -2689,8 +2701,11 @@ const I18N = {
     docDeleteConfirm:"Usunąć dokument „{name}”?",
     docRestore:"Przywróć oryginał",
     docRestoreConfirm:"Przywrócić „{name}” do dostarczonej wersji? Twoje zmiany zostaną utracone.",
-    docOpenFile:"Otwórz plik…", docSaveFile:"Zapisz jako plik",
-    docToServer:"Umieść na serwerze",
+    docOpenFile:"Otwórz plik…", docSaveFile:"Zapisz jako plik (Ctrl+S)",
+    docToServer:"Udostępnij – umieść na serwerze Werkbaum i edytujcie wspólnie",
+    docReload:"Wczytaj ponownie ze źródła – lokalne zmiany przepadną",
+    docReloadConfirm:"Wczytać „{name}” ponownie ze źródła? Lokalne zmiany przepadną.",
+    docGroupShipped:"Dołączone", docGroupOwn:"Własne", docGroupSources:"Źródła",
     docToServerAsk:"Adres serwera Werkbaum (np. https://werkbaum.example):",
     docToServerDone:"Na serwerze — link jest w pasku adresu i w schowku.",
     docToServerFailed:"Nie umieszczono na serwerze: {error}",
@@ -2759,7 +2774,6 @@ const I18N = {
   },
   ru: {
     subtitle:"Werkbaum – СДР / Lean Pathfinding · Редактор структуры проектов (также для деревьев функций и требований)",
-    subtitleShort:"Редактор СДР с Lean Pathfinding",
     imprint:"Выходные данные (Impressum)",
     privacy:"Конфиденциальность",
     legendTooltip:"Показать/скрыть легенду",
@@ -2788,7 +2802,7 @@ const I18N = {
     implicitSizeTooltip:"Размер не указан — для оценки затрат принят не меньше {size}",
     fullscreenTooltip:"Полный экран – панели занимают всю ширину окна",
     brandTooltip:"«Werkbaum» примерно означает ‚дерево работ’ — дерево структуры декомпозиции работ (СДР).",
-    editorTitle:"Структура (текст)", diagramTitle:"Диаграмма",
+    editorTitle:"Текстовый редактор", diagramTitle:"Диаграмма",
     docSwitchTooltip:"Выбрать документ или управлять им", docMenuAria:"Документы",
     snapTooltip:"Прежние состояния этого документа", snapMenuAria:"Прежние состояния",
     snapNone:"Прежних состояний пока нет — они сохраняются по нажатию кнопки и каждые 10 минут, если что-то изменилось.",
@@ -2800,8 +2814,11 @@ const I18N = {
     docDeleteConfirm:"Удалить документ «{name}»?",
     docRestore:"Восстановить оригинал",
     docRestoreConfirm:"Вернуть «{name}» к поставляемой версии? Ваши изменения будут потеряны.",
-    docOpenFile:"Открыть файл…", docSaveFile:"Сохранить как файл",
-    docToServer:"Положить на сервер",
+    docOpenFile:"Открыть файл…", docSaveFile:"Сохранить как файл (Ctrl+S)",
+    docToServer:"Поделиться – положить на сервер Werkbaum и редактировать вместе",
+    docReload:"Перезагрузить из источника – локальные изменения будут потеряны",
+    docReloadConfirm:"Перезагрузить «{name}» из источника? Локальные изменения будут потеряны.",
+    docGroupShipped:"Встроенные", docGroupOwn:"Свои", docGroupSources:"Источники",
     docToServerAsk:"Адрес сервера Werkbaum (например, https://werkbaum.example):",
     docToServerDone:"На сервере — ссылка в адресной строке и в буфере обмена.",
     docToServerFailed:"Не удалось положить на сервер: {error}",
@@ -2870,7 +2887,6 @@ const I18N = {
   },
   hi: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · परियोजना संरचना संपादक (फ़ीचर और रिक्वायरमेंट ट्री के लिए भी)",
-    subtitleShort:"WBS संपादक Lean Pathfinding के साथ",
     imprint:"प्रकाशन विवरण (Impressum)",
     privacy:"गोपनीयता",
     legendTooltip:"लेजेंड दिखाएँ/छिपाएँ",
@@ -2899,7 +2915,7 @@ const I18N = {
     implicitSizeTooltip:"कोई आकार नहीं दिया गया – लागत अनुमान के लिए कम से कम {size} माना गया",
     fullscreenTooltip:"पूर्ण स्क्रीन – पैनल पूरी विंडो चौड़ाई का उपयोग करते हैं",
     brandTooltip:"„Werkbaum“ का अर्थ लगभग ‚कार्य-वृक्ष‘ है — कार्य विभाजन संरचना (WBS) का वृक्ष।",
-    editorTitle:"संरचना (टेक्स्ट)", diagramTitle:"आरेख",
+    editorTitle:"टेक्स्ट संपादक", diagramTitle:"आरेख",
     docSwitchTooltip:"दस्तावेज़ चुनें या प्रबंधित करें", docMenuAria:"दस्तावेज़",
     snapTooltip:"इस दस्तावेज़ की पिछली स्थितियाँ", snapMenuAria:"पिछली स्थितियाँ",
     snapNone:"अभी कोई पिछली स्थिति नहीं — बटन दबाने पर और कुछ बदलने पर हर 10 मिनट में एक सहेजी जाती है।",
@@ -2911,8 +2927,11 @@ const I18N = {
     docDeleteConfirm:"दस्तावेज़ „{name}“ हटाएँ?",
     docRestore:"मूल पुनर्स्थापित करें",
     docRestoreConfirm:"„{name}“ को मूल संस्करण पर लौटाएँ? आपके परिवर्तन खो जाएँगे।",
-    docOpenFile:"फ़ाइल खोलें…", docSaveFile:"फ़ाइल के रूप में सहेजें",
-    docToServer:"सर्वर पर रखें",
+    docOpenFile:"फ़ाइल खोलें…", docSaveFile:"फ़ाइल के रूप में सहेजें (Ctrl+S)",
+    docToServer:"साझा करें – Werkbaum सर्वर पर रखें और साथ मिलकर संपादित करें",
+    docReload:"स्रोत से फिर लोड करें – स्थानीय बदलाव खो जाएँगे",
+    docReloadConfirm:"“{name}” को स्रोत से फिर लोड करें? स्थानीय बदलाव खो जाएँगे।",
+    docGroupShipped:"साथ आए", docGroupOwn:"आपके", docGroupSources:"स्रोत",
     docToServerAsk:"Werkbaum सर्वर का पता (जैसे https://werkbaum.example):",
     docToServerDone:"सर्वर पर है — लिंक पता-पट्टी में और क्लिपबोर्ड में है।",
     docToServerFailed:"सर्वर पर नहीं रखा जा सका: {error}",
@@ -2981,7 +3000,6 @@ const I18N = {
   },
   zh: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · 项目结构编辑器（也支持功能树和需求树）",
-    subtitleShort:"WBS 编辑器和 Lean Pathfinding",
     imprint:"法律声明（Impressum）",
     privacy:"隐私",
     legendTooltip:"显示/隐藏图例",
@@ -3010,7 +3028,7 @@ const I18N = {
     liveConflictTheirs:"采用对方的",
     liveConflictMine:"保留我的",
     riskTooltip:"高风险 – 工作量尚不明确。",
-    editorTitle:"结构（文本）", diagramTitle:"图表",
+    editorTitle:"文本编辑器", diagramTitle:"图表",
     docSwitchTooltip:"选择或管理文档", docMenuAria:"文档",
     snapTooltip:"此文档的早期状态", snapMenuAria:"早期状态",
     snapNone:"暂无早期状态——可随时手动保存；内容有变动时，也会每 10 分钟保存一次。",
@@ -3022,8 +3040,11 @@ const I18N = {
     docDeleteConfirm:"删除文档“{name}”？",
     docRestore:"恢复原始版本",
     docRestoreConfirm:"将“{name}”重置为随附版本？您的更改将丢失。",
-    docOpenFile:"打开文件…", docSaveFile:"另存为文件",
-    docToServer:"放到服务器上",
+    docOpenFile:"打开文件…", docSaveFile:"另存为文件（Ctrl+S）",
+    docToServer:"共享——放到 Werkbaum 服务器上共同编辑",
+    docReload:"从来源重新加载——本地更改将丢失",
+    docReloadConfirm:"从来源重新加载“{name}”？本地更改将丢失。",
+    docGroupShipped:"自带", docGroupOwn:"自己的", docGroupSources:"来源",
     docToServerAsk:"Werkbaum 服务器地址（例如 https://werkbaum.example）：",
     docToServerDone:"已在服务器上——链接在地址栏和剪贴板中。",
     docToServerFailed:"未能放到服务器上：{error}",
@@ -3092,7 +3113,6 @@ const I18N = {
   },
   ja: {
     subtitle:"Werkbaum – WBS / Lean Pathfinding · プロジェクト構造エディター（フィーチャーツリーと要件ツリーにも対応）",
-    subtitleShort:"WBS エディター & Lean Pathfinding",
     imprint:"運営者情報（Impressum）",
     privacy:"プライバシー",
     legendTooltip:"凡例を表示/非表示",
@@ -3121,7 +3141,7 @@ const I18N = {
     liveConflictTheirs:"相手の版",
     liveConflictMine:"自分の版",
     riskTooltip:"高リスク – 規模はまだ不明。",
-    editorTitle:"構造（テキスト）", diagramTitle:"ダイアグラム",
+    editorTitle:"テキストエディター", diagramTitle:"ダイアグラム",
     docSwitchTooltip:"ドキュメントを選択・管理", docMenuAria:"ドキュメント",
     snapTooltip:"このドキュメントの以前の状態", snapMenuAria:"以前の状態",
     snapNone:"以前の状態はまだありません — ボタンを押したとき、および変更があれば 10 分ごとに保存されます。",
@@ -3133,8 +3153,11 @@ const I18N = {
     docDeleteConfirm:"ドキュメント「{name}」を削除しますか？",
     docRestore:"オリジナルを復元",
     docRestoreConfirm:"「{name}」を同梱版に戻しますか？変更内容は失われます。",
-    docOpenFile:"ファイルを開く…", docSaveFile:"ファイルとして保存",
-    docToServer:"サーバーに置く",
+    docOpenFile:"ファイルを開く…", docSaveFile:"ファイルとして保存 (Ctrl+S)",
+    docToServer:"共有 – Werkbaum サーバーに置いて共同編集",
+    docReload:"ソースから再読み込み – ローカルの変更は失われます",
+    docReloadConfirm:"「{name}」をソースから再読み込みしますか？ローカルの変更は失われます。",
+    docGroupShipped:"同梱", docGroupOwn:"自分の", docGroupSources:"ソース",
     docToServerAsk:"Werkbaum サーバーのアドレス（例: https://werkbaum.example）:",
     docToServerDone:"サーバーにあります — リンクはアドレス欄とクリップボードにあります。",
     docToServerFailed:"サーバーに置けませんでした: {error}",
@@ -3268,6 +3291,9 @@ function applyLang(l){
      offen, muss es die neue Sprache jetzt bekommen (auch die Datumsangaben,
      die `toLocaleDateString` liefert). */
   if(newsMenu && !newsMenu.hidden) renderNewsMenu();
+  /* Dasselbe fürs Dokumenten-Menü (D81): Gruppen-Überschriften und
+     Aktions-Tooltips kommen aus renderDocMenu. */
+  if(docMenu && !docMenu.hidden) renderDocMenu();
   try{ localStorage.setItem('werkbaum-lang', l); }catch(_){}
 }
 const langsel = document.querySelector('.langsel');
@@ -3513,7 +3539,11 @@ function restoreState(){
   restoring = false;
 }
 
-/* ---------- Dokument-Wähler: UI (Dropdown in der Editor-Titelzeile) ---------- */
+/* ---------- Dokument-Wähler: Brotkrume im App-Kopf (D81) ----------
+   „Werkbaum › name" — der Chip öffnet das Menü, das nach Dokumentart gruppiert
+   (docKind, docurl.js) und je Zeile Umbenennen/Löschen/Wiederherstellen trägt.
+   Die Stand-Funktionen des aktiven Dokuments (Speichern, Stände, Neu laden,
+   Teilen) stehen als Knöpfe in der Editor-Titelzeile. */
 const docTrigger = document.getElementById('docTrigger');
 const docMenu = document.getElementById('docMenu');
 const docNameEl = document.getElementById('docName');
@@ -3529,6 +3559,7 @@ function updateDocName(){
       ? d.source + '\n' + t('docSwitchTooltip')
       : t('docSwitchTooltip');
   }
+  updateDocButtons();   /* die Stand-Knöpfe der Titelzeile folgen mit (D81) */
 }
 let renamingId = null;   /* id des gerade inline umbenannten Dokuments (oder null) */
 /* Kam das Umbenennen von einem frisch angelegten Dokument? Dann geht es danach
@@ -3540,24 +3571,57 @@ function serverHostOf(id){
   if(!roh.startsWith('live:')) return null;
   try{ return new URL(roh.slice(5)).host; }catch(_){ return null; }
 }
+/* Kleine Zeilen-Icons (Feather-Stil wie überall): Stift, Papierkorb,
+   Wiederherstellen. Als Konstanten, damit der Renderer lesbar bleibt. */
+const IC_RENAME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>';
+const IC_DELETE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>';
+const IC_RESTORE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.7 5v5.5h5.5"/><path d="M4 15a8.5 8.5 0 1 0 .5-7.5L1.7 10.5"/></svg>';
+/* Eine Menüzeile: Wählen-Knopf + Zeilen-Aktionen als GESCHWISTER — ein Knopf
+   im Knopf wäre ungültiges HTML. Die Aktionen sind immer sichtbar (Touch
+   kennt kein Hover): Umbenennen und Löschen überall, Wiederherstellen nur an
+   einem mitgelieferten Dokument, das vom Auslieferungsstand abweicht. */
+function docRowHtml(d){
+  if(d.id === renamingId){
+    /* Inline-Umbenennen direkt im Menü (kein window.prompt — das ist in
+       manchen Browser-Kontexten unterdrückt). Wert/Handler unten in JS. */
+    return `<div class="docitem editing"><span class="doccheck" aria-hidden="true"></span>` +
+           `<input type="text" class="docrename"></div>`;
+  }
+  /* Bei einem Server-Dokument steht der Host daneben. Ein hochgeladenes
+     Dokument trägt denselben Namen wie das lokale, aus dem es entstand —
+     ohne den Zusatz stünden zwei gleiche Einträge da, und nur der Tooltip
+     verriete den Unterschied. */
+  const host = serverHostOf(d.id);
+  const zusatz = host ? `<span class="docitem-where">${esc(host)}</span>` : '';
+  const shipped = shippedStateOf(d.id);
+  const abweichend = shipped && (d.text !== shipped.text || d.name !== shipped.name);
+  const iconBtn = (act, label, svg, extra) =>
+    `<button type="button" class="dociconbtn${extra || ''}" data-act="${act}" ` +
+    `title="${esc(label)}" aria-label="${esc(label)}">${svg}</button>`;
+  return `<div class="docitem" data-id="${esc(d.id)}">` +
+    `<button type="button" class="docpick" role="menuitemradio" ` +
+    `aria-checked="${d.id === activeId ? 'true' : 'false'}" title="${esc(d.source || '')}">` +
+    `<span class="doccheck" aria-hidden="true">✓</span>` +
+    `<span class="docitem-name">${esc(d.name)}</span>${zusatz}</button>` +
+    `<span class="docacts">` +
+    (abweichend ? iconBtn('restore', t('docRestore'), IC_RESTORE) : '') +
+    iconBtn('rename', t('docRename'), IC_RENAME) +
+    iconBtn('delete', t('docDelete'), IC_DELETE, ' docdelbtn') +
+    `</span></div>`;
+}
 function renderDocMenu(){
-  docList.innerHTML = docs.map(d => {
-    if(d.id === renamingId){
-      /* Inline-Umbenennen direkt im Menü (kein window.prompt — das ist in
-         manchen Browser-Kontexten unterdrückt). Wert/Handler unten in JS. */
-      return `<div class="docitem editing"><span class="doccheck" aria-hidden="true"></span>` +
-             `<input type="text" class="docrename"></div>`;
-    }
-    /* Bei einem Server-Dokument steht der Host daneben. Ein hochgeladenes
-       Dokument trägt denselben Namen wie das lokale, aus dem es entstand —
-       ohne den Zusatz stünden zwei gleiche Einträge da, und nur der Tooltip
-       verriete den Unterschied. */
-    const host = serverHostOf(d.id);
-    const zusatz = host ? `<span class="docitem-where">${esc(host)}</span>` : '';
-    return `<button type="button" class="docitem" role="menuitemradio" data-id="${d.id}" ` +
-      `aria-checked="${d.id === activeId ? 'true' : 'false'}">` +
-      `<span class="doccheck" aria-hidden="true">✓</span>` +
-      `<span class="docitem-name">${esc(d.name)}</span>${zusatz}</button>`;
+  /* Gruppen nach Dokumentart (D81): mitgeliefert · eigene · Quellen (Server
+     und URL). Leere Gruppen erscheinen nicht; die Reihenfolge ist fest. */
+  const GRUPPEN = [
+    {kinds: ['shipped'],       label: t('docGroupShipped')},
+    {kinds: ['own'],           label: t('docGroupOwn')},
+    {kinds: ['server', 'url'], label: t('docGroupSources')},
+  ];
+  docList.innerHTML = GRUPPEN.map(g => {
+    const liste = docs.filter(d => g.kinds.includes(docKind(d.id, SHIPPED_IDS)));
+    if(!liste.length) return '';
+    return `<div class="docsec" aria-hidden="true">${esc(g.label)}</div>` +
+           liste.map(docRowHtml).join('');
   }).join('');
   if(renamingId){
     const inp = docList.querySelector('.docrename');
@@ -3584,42 +3648,92 @@ function shippedStateOf(id){
   if(id === WERKBAUM_ID) return {name: WERKBAUM_NAME, text: WERKBAUM_DOC};
   return null;
 }
-function updateRestoreBtn(){
+const SHIPPED_IDS = [EXAMPLE_ID, WERKBAUM_ID];   /* für docKind (Menü-Gruppen, D81) */
+/* Die Stand-Knöpfe der Editor-Titelzeile folgen dem aktiven Dokument (D81):
+   „Teilen" entfällt, wo es schon auf einem Server liegt (sonst entstünde ein
+   zweites, gleichnamiges Dokument dort — erkennbar an der id `live:…`, nicht
+   am laufenden liveState). „Neu laden" erscheint nur, wo es eine Quelle gibt:
+   mitgeliefert (Original wiederherstellen), URL oder gemerkte Datei. Der
+   Speichern-Tooltip nennt die Zieldatei des gemerkten Handles (D72, Stufe 2)
+   — Dateinamen sind Daten, kein i18n. */
+function updateDocButtons(){
   const d = activeDoc();
-  const shipped = d && shippedStateOf(d.id);
-  const btn = document.getElementById('docRestore');
-  /* Immer zeigen, wenn ein MITGELIEFERTES Dokument aktiv ist — nur ausgegraut,
-     solange es dem Auslieferungsstand entspricht. Ganz versteckt war der
-     Eintrag nicht auffindbar (Nutzer: „ich sehe keinen Reset-Button"). */
-  btn.hidden = !shipped;
-  btn.disabled = !!shipped && d.text === shipped.text && d.name === shipped.name;
-
-  /* „Auf den Server legen" entfällt, wo es schon liegt. Sonst entstünde ein
-     zweites, gleichnamiges Dokument auf demselben Server — im Wähler nicht zu
-     unterscheiden. Erkennbar an der id (`live:…`), nicht am laufenden
-     `liveState`: Auch ein Server-Dokument, das gerade nicht das aktive ist,
-     liegt bereits dort. */
-  const zumServer = document.getElementById('docToServer');
-  if(zumServer) zumServer.hidden = !!d && String(d.id).startsWith('live:');
+  const teilen = document.getElementById('shareBtn');
+  if(teilen) teilen.hidden = !d || String(d.id).startsWith('live:');
+  const neu = document.getElementById('reloadBtn');
+  if(neu){
+    const shipped = d && shippedStateOf(d.id);
+    if(shipped){
+      neu.hidden = false;
+      neu.disabled = d.text === shipped.text && d.name === shipped.name;
+      neu.title = t('docRestore');
+      neu.setAttribute('aria-label', t('docRestore'));
+    } else if(d && (d.source || fileHandles.has(d.id))){
+      neu.hidden = false; neu.disabled = false;
+      neu.title = t('docReload');
+      neu.setAttribute('aria-label', t('docReload'));
+    } else {
+      neu.hidden = true;
+    }
+  }
+  const speichern = document.getElementById('saveBtn');
+  if(speichern && d){
+    const h = fileHandles.get(d.id);
+    speichern.title = t('docSaveFile') + (h ? '\n' + h.name : '');
+  }
 }
-function restoreDoc(){
-  const d = activeDoc();
+/* Wiederherstellen gilt jetzt je Zeile des Menüs UND — für das aktive
+   Dokument — dem Neu-laden-Knopf der Titelzeile. */
+function restoreDoc(id){
+  const d = docs.find(x => x.id === id);
   const shipped = d && shippedStateOf(d.id);
   if(!shipped) return;
   if(!window.confirm(t('docRestoreConfirm', {name: d.name}))) return;
   d.text = shipped.text;
   d.name = shipped.name;
-  foldOverrides.clear();
-  loadActiveIntoEditor();
+  if(d.id === activeId){
+    foldOverrides.clear();
+    loadActiveIntoEditor();
+  }
   persistDocs();
-  closeDocMenu();
+  if(!docMenu.hidden) renderDocMenu();
+  updateDocButtons();
+}
+/* Aus der Quelle neu laden (D81): mitgeliefert → Original wiederherstellen;
+   URL-Dokument → frisch holen (die URL ist die Quelle der Wahrheit, D23);
+   Datei mit gemerktem Handle → neu aus der Datei lesen (Chromium). Scheitert
+   das Datei-Lesen (Berechtigung verweigert, Datei weg), bleibt der Stand
+   stehen — der verweigerte Dialog IST die Antwort. */
+async function reloadDoc(){
+  const d = activeDoc();
+  if(!d) return;
+  if(shippedStateOf(d.id)){ restoreDoc(d.id); return; }
+  if(!window.confirm(t('docReloadConfirm', {name: d.name}))) return;
+  if(d.source){
+    try{
+      d.text = await fetchRemote(d.source);
+      sourceWarning = null;
+      loadActiveIntoEditor();
+      persistDocs();
+    }catch(err){
+      sourceWarning = {type:'sourceLoad', url: d.source, error: (err && err.message) || String(err)};
+      render();
+    }
+    return;
+  }
+  const h = fileHandles.get(d.id);
+  if(!h) return;
+  try{
+    let perm = await h.queryPermission({mode: 'read'});
+    if(perm === 'prompt') perm = await h.requestPermission({mode: 'read'});
+    if(perm !== 'granted') return;
+    d.text = await (await h.getFile()).text();
+    loadActiveIntoEditor();
+    persistDocs();
+  }catch(_){}
 }
 function openDocMenu(){
-  renderDocMenu(); updateRestoreBtn();
-  /* Wohin „Als Datei speichern" schreiben würde: der Dateiname des gemerkten
-     Handles als Tooltip (D72, Stufe 2) — Dateinamen sind Daten, kein i18n. */
-  const h = fileHandles.get(activeId);
-  document.getElementById('docSaveFile').title = h ? h.name : '';
+  renderDocMenu();
   docMenu.hidden = false; docTrigger.setAttribute('aria-expanded', 'true');
 }
 function closeDocMenu(){ renamingId = null; renameIsNew = false; docMenu.hidden = true; docTrigger.setAttribute('aria-expanded', 'false'); }
@@ -3975,9 +4089,9 @@ function finishNewDoc(){
   closeDocMenu();
   src.focus();
 }
-function renameDoc(){
-  if(!activeDoc()) return;
-  renamingId = activeId;   /* aktives Dokument inline umbenennen */
+function renameDoc(id){
+  if(!docs.some(x => x.id === id)) return;
+  renamingId = id;   /* Zeilen-Aktion (D81): jedes Dokument, nicht nur das aktive */
   renameIsNew = false;
   renderDocMenu();
 }
@@ -3992,8 +4106,8 @@ function commitRename(){
   finishNewDoc();
 }
 function cancelRename(){ renamingId = null; renderDocMenu(); finishNewDoc(); }
-function deleteDoc(){
-  const d = activeDoc();
+function deleteDoc(id){
+  const d = docs.find(x => x.id === id);
   if(!d) return;
   if(!window.confirm(t('docDeleteConfirm', {name: d.name}))) return;
   if(liveState && liveState.id === d.id) stopLive();  /* dito fürs Server-Dokument (D76) */
@@ -4001,11 +4115,15 @@ function deleteDoc(){
   docs = docs.filter(x => x.id !== d.id);
   if(snaps[d.id]){ delete snaps[d.id]; persistSnaps(snaps, localStorage); }   /* mit dem Dokument gehen seine Stände (D54) */
   if(!docs.length) docs = [{ id: EXAMPLE_ID, name: EXAMPLE_NAME, text: INITIAL }];
-  activeId = docs[0].id;
-  foldOverrides.clear();
-  loadActiveIntoEditor();
+  /* Zeilen-Aktion (D81): Nur wenn das AKTIVE Dokument geht, wechselt der
+     Editor; das Menü bleibt offen — wer aufräumt, räumt meist weiter. */
+  if(d.id === activeId){
+    activeId = docs[0].id;
+    foldOverrides.clear();
+    loadActiveIntoEditor();
+  }
   persistDocs();
-  closeDocMenu();
+  if(!docMenu.hidden) renderDocMenu();
 }
 /* ---------- Lokale Dateien öffnen und speichern (D72, Stufe 1) ----------
    Der klassische Weg, der in jedem Browser läuft: Datei-Input zum Öffnen,
@@ -4230,12 +4348,12 @@ async function saveLocalFile(){
   } else {
     saveBlob(new Blob([d.text], {type:'text/plain;charset=utf-8'}), saveFileName(d.name));
   }
-  closeDocMenu();
+  updateDocButtons();   /* ein frisch gemerktes Handle gehört in den Tooltip */
   /* Stilles In-Place-Speichern braucht eine sichtbare Antwort — sonst wirkt
-     die Geste tot. Haus-Idiom flashBtn (Petrol-Blitz, D54), am Dokumentnamen:
-     Der ist das, was gespeichert wurde. Dialog und Download sind selbst
-     sichtbar und brauchen keinen. */
-  if(inPlace) flashBtn(docTrigger);
+     die Geste tot. Haus-Idiom flashBtn (Petrol-Blitz samt Haken, D54), am
+     Speichern-Knopf selbst: Er ist die Geste (auch für Strg+S, D74). Dialog
+     und Download sind selbst sichtbar und brauchen keinen. */
+  if(inPlace) flashBtn(document.getElementById('saveBtn'));
 }
 /* Strg+S / Cmd+S speichert als Datei (D74) — die Geste, die jeder zuerst
    versucht. Ohne preventDefault öffnet der Browser „Seite speichern": genau
@@ -4771,7 +4889,6 @@ async function putOnServer(){
   const basis = serverBaseOrAsk();
   if(!basis) return;
 
-  closeDocMenu();
   try{
     const doc = await fetchJson(live.documentsUrl(basis), {
       method: 'POST',
@@ -4804,9 +4921,6 @@ async function putOnServer(){
 }
 
 docTrigger.addEventListener('click', e => {
-  /* Desktop: ist der Editor minimiert, stellt ein Klick ihn wieder her
-     (Bubbling zur Titelzeile) statt das Menü zu öffnen. */
-  if(!isMobile() && editorPanel.classList.contains('collapsed')) return;
   e.stopPropagation();
   toggleDocMenu();
 });
@@ -4814,22 +4928,39 @@ docTrigger.addEventListener('keydown', e => {
   if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleDocMenu(); }
   else if(e.key === 'Escape') closeDocMenu();
 });
+/* Esc IM Menü schließt es und gibt den Fokus an den Chip zurück. */
+docMenu.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && !renamingId){ closeDocMenu(); docTrigger.focus(); }
+});
+/* Eine Delegation für beides: Zeilen-Aktion (data-act am Icon-Knopf) oder
+   Wählen (.docpick). Nach einer Aktion bleibt das Menü offen — wer verwaltet,
+   verwaltet meist weiter; Wählen schließt. */
 docList.addEventListener('click', e => {
-  const btn = e.target.closest('.docitem');
+  const akt = e.target.closest('[data-act]');
+  if(akt){
+    e.stopPropagation();
+    const zeile = akt.closest('.docitem');
+    const id = zeile && zeile.dataset.id;
+    if(!id) return;
+    if(akt.dataset.act === 'rename') renameDoc(id);
+    else if(akt.dataset.act === 'delete') deleteDoc(id);
+    else if(akt.dataset.act === 'restore') restoreDoc(id);
+    return;
+  }
+  const btn = e.target.closest('.docpick');
   if(!btn) return;
   e.stopPropagation();
-  switchDoc(btn.dataset.id);
+  switchDoc(btn.closest('.docitem').dataset.id);
   closeDocMenu();
 });
 /* `newDoc()` zeichnet das Menü selbst neu — es geht direkt ins Umbenennen
    (D51), und ein zweiter Durchlauf baute das Eingabefeld nur noch einmal auf. */
 document.getElementById('docNew').addEventListener('click', e => { e.stopPropagation(); newDoc(); });
 document.getElementById('docOpenFile').addEventListener('click', e => { e.stopPropagation(); openLocalFile(); });
-document.getElementById('docSaveFile').addEventListener('click', e => { e.stopPropagation(); saveLocalFile(); });
-document.getElementById('docToServer').addEventListener('click', e => { e.stopPropagation(); putOnServer(); });
-document.getElementById('docRename').addEventListener('click', e => { e.stopPropagation(); renameDoc(); });
-document.getElementById('docDelete').addEventListener('click', e => { e.stopPropagation(); deleteDoc(); });
-document.getElementById('docRestore').addEventListener('click', e => { e.stopPropagation(); restoreDoc(); });
+/* Die Stand-Knöpfe der Editor-Titelzeile (D81). */
+document.getElementById('saveBtn').addEventListener('click', saveLocalFile);
+document.getElementById('shareBtn').addEventListener('click', putOnServer);
+document.getElementById('reloadBtn').addEventListener('click', reloadDoc);
 /* Klick außerhalb schließt das Menü. */
 document.addEventListener('click', e => {
   if(!docMenu.hidden && !docMenu.contains(e.target) && !docTrigger.contains(e.target)) closeDocMenu();
@@ -5010,6 +5141,9 @@ try{ startLang = localStorage.getItem('werkbaum-lang') || detectLang(); }catch(_
 applyLang(I18N[startLang] ? startLang : 'de');   /* setzt Texte + rendert */
 initDocs();      /* Dokumente laden + aktiven Text in den Editor (nach Sprache) */
 if(hasFsAccess) handlesReady = idbLoadHandles();   /* gemerkte Datei-Handles zurückholen (D72, Stufe 2) */
+/* Erst mit den Handles wissen Speichern-Tooltip und Neu-laden-Knopf, ob das
+   aktive Dokument eine gemerkte Datei hat (D81). */
+handlesReady.then(() => updateDocButtons());
 
 /* PWA-Dateihandling (D73): Die installierte App registriert sich über das
    Manifest (`file_handlers`) für .werkbaum/.txt; ein Doppelklick im

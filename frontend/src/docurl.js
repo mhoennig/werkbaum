@@ -30,6 +30,20 @@ export function docParam(id){
   return null;
 }
 
+/* Zu welcher Gruppe des Dokumenten-Menüs gehört ein Dokument? (D81)
+   Die Art steckt — wie bei docParam — in der id: mitgeliefert (feste ids),
+   Server (`live:`) und URL (`url:`) sind Quellen von außen, alles andere ist
+   ein eigenes Dokument im Browser (Datei-Dokumente eingeschlossen — ohne
+   File-System-Access-Handle sind sie von eigenen nicht zu unterscheiden,
+   und das Handle lebt nur in Chromium). */
+export function docKind(id, shippedIds){
+  const roh = String(id == null ? '' : id);
+  if((shippedIds || []).indexOf(roh) >= 0) return 'shipped';
+  if(roh.startsWith('live:')) return 'server';
+  if(roh.startsWith('url:')) return 'url';
+  return 'own';
+}
+
 /* Der neue Query-String zu `search` (mit oder ohne führendes `?`) für das
    Dokument `id`.
 

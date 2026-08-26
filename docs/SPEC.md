@@ -561,10 +561,12 @@ Ab schmaler Breite (≤ 640 px, z. B. Smartphone) ist **immer genau ein Bereich*
 zu sehen — Diagramm **oder** Text, jeweils über die ganze Fläche. Oben links in
 der Titelzeile schaltet ein **Knopf** auf den anderen um; er zeigt das Ziel
 (Textzeilen bzw. Baum), denn den Zustand hat man ohnehin vor sich. Es gibt hier
-weder Splitter noch Min/Normal/Max-Buttons — es ist nichts zu teilen. Der
-Bereichstitel „DIAGRAMM" entfällt; die Zeile wird für Umschalter und Aktionen
-gebraucht. Der **Dokumenten-Wähler** steht direkt neben dem Umschalter und ist
-damit genau dann zu sehen, wenn der Text vorn ist. Die übrigen
+weder Splitter noch Min/Normal/Max-Buttons — es ist nichts zu teilen. Die
+Bereichstitel („DIAGRAMM", „TEXT-EDITOR") entfallen; die Zeile wird für
+Umschalter und Aktionen gebraucht. Der **Dokumenten-Wähler** steht als
+Brotkrume im App-Kopf („Werkbaum › Name", D81) und ist damit aus **beiden**
+Bereichen erreichbar; sein Name übernimmt hier die Zeile des Untertitels —
+es kommt keine Fläche hinzu. Die übrigen
 **Aktions-Knöpfe** bleiben rechts in der Titelzeile und werden mit
 umgeschaltet — jeder Bereich zeigt seine eigenen, in der unten beschriebenen
 komprimierten Form. Der sichtbare Bereich wird gemerkt; ein Sprung zwischen
