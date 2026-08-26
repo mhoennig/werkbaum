@@ -224,7 +224,17 @@ hält den Ablauf, `app.js` nur die Verdrahtung.
    der Schutz.
 
 Nur **eine** Feed-Anfrage gleichzeitig; `AbortController` benutzen und beim
-Dokumentwechsel/Unmount abbrechen. `status = 'offline'` gilt, sobald ein
+Dokumentwechsel/Unmount abbrechen.
+
+**Der Feed läuft nur im sichtbaren Tab.** Bei `visibilitychange` auf verborgen
+die Verbindung schließen, beim Zurückkommen einmal mit dem eigenen `since`
+nachholen und weiterpollen. Grund: Der Zielserver bietet **kein HTTP/2**
+(gemessen), also gilt das Browser-Limit von sechs Verbindungen je Herkunft —
+ein dauerhaft offener Long-Poll je Tab engt bei mehreren Tabs alles andere
+ein. Ein Tab im Hintergrund braucht ohnehin keinen Live-Feed: Niemand schaut
+hin, und beim Sichtbarwerden holt ein einziger Request den ganzen Rückstand.
+Spart nebenbei Server-Worker und Akku. Der Editor hört für die Höhenmessung
+schon auf `visibilitychange` (D17-Nachtrag 4) — die Stelle gibt es also. `status = 'offline'` gilt, sobald ein
 Request am Netz scheitert, und endet mit der nächsten erfolgreichen Antwort;
 lokale Änderungen bleiben dabei erhalten und werden danach normal geflusht.
 

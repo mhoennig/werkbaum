@@ -5927,8 +5927,15 @@ Antwort am Ende des Wartens.
 
 Drei Befunde bleiben als Arbeit stehen. **Kein HTTP/2** — damit gilt das
 Browser-Limit von sechs Verbindungen je Herkunft, und mehrere Tabs derselben
-Person binden je eine dauerhaft; zu beheben serverseitig oder clientseitig
-über einen SharedWorker, der allen Tabs eine gemeinsame Feed-Verbindung gibt.
+Person binden je eine dauerhaft. **Entschieden: Der Feed läuft nur im
+sichtbaren Tab** — bei `visibilitychange` schließen, beim Zurückkommen einmal
+mit dem eigenen `since` nachholen. Ein Hintergrund-Tab braucht keinen
+Live-Feed, niemand schaut hin, und ein einziger Request holt den Rückstand;
+das spart nebenbei Server-Worker und Akku. Erwogen und verworfen war ein
+**SharedWorker**, der allen Tabs eine gemeinsame Verbindung gibt — technisch
+sauberer und auch für Hintergrund-Tabs aktuell, aber eine eigene Baustelle
+mit Nachrichtenprotokoll, Lebenszyklus und Rückfallpfad, für ein Problem, das
+die einfache Lösung praktisch ganz beseitigt.
 **Nur Java 17** installiert, während `build.gradle.kts`
 `JavaLanguageVersion.of(21)` verlangt. Und der **Weg vom Apache zum Backend
 ist ungeklärt**: `ProxyPass` ist in `.htaccess` nicht zulässig,
