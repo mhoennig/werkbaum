@@ -164,18 +164,44 @@ noch nicht steht. Voraussetzung ist eine **Einzelinstanz**; hinter einem Load
 Balancer erführe ein Beobachter auf der zweiten Instanz nichts. Begründung:
 D76-Nachtrag 5.
 
+## Master-Passwort für die Dokumentenliste
+
+`GET /api/v1/documents` listet **alle** Dokumente und machte damit jede UUID
+auffindbar — das Zugriffsmodell „unerratbarer Link" wäre hinfällig. Dieser eine
+Endpunkt verlangt deshalb HTTP Basic mit dem Benutzer `werkbaum`:
+
+```bash
+export WERKBAUM_MASTER_PASSWORD_HASH="{bcrypt}$(htpasswd -bnBC 12 "" geheim | tr -d ':\n')"
+```
+
+- **Ohne gesetzten Hash ist die Liste gesperrt** (401), nicht offen. Ein
+  vergessener Konfigurationsschritt darf nichts preisgeben; beim Start warnt
+  das Log.
+- Der Hash trägt sein Verfahren als Präfix (`{bcrypt}…`) — so steht in der
+  Konfiguration, womit gehasht wurde.
+- **Nach `max-attempts` Fehlversuchen** (5) ist der Endpunkt für `lockout`
+  (15 min) gesperrt: **429** mit `Retry-After`. Die Sperre ist **global**, nicht
+  je Adresse — es gibt genau ein Passwort, und hinter einem Reverse Proxy sähe
+  der Server ohnehin für alle dieselbe Adresse. Der Preis: Wer falsch rät,
+  sperrt die Liste für alle; die Dokumente selbst bleiben über ihre UUID
+  erreichbar.
+- Die API ist zustandslos: keine Sitzung, kein CSRF-Token (der schützte hier
+  nichts und bräche jeden Client).
+
 ## Vorbereitete Erweiterungen
 
 **Autorisierung**
+- Geschützt ist bisher **genau ein** Endpunkt, siehe unten. Alles andere ist
+  über die unerratbare UUID erreichbar — das ist das Zugriffsmodell, nicht
+  eine Lücke.
 - `bearerAuth` (JWT) ist in der OpenAPI-Spec als Security Scheme definiert,
-  aber noch auf keine Operation angewendet.
-- Später: `spring-boot-starter-security` + `security: [bearerAuth]` in der
-  Spec; die Behavior-Tests erhalten dann einen Auth-Schritt
-  („Angenommen ich bin als … angemeldet").
+  aber noch auf keine Operation angewendet. Später kommt echte
+  Authentifizierung als Schicht davor; am Protokoll ändert sich dadurch
+  nichts.
 
 **Live-Editing** (Konzept: `docs/live-editing-proposal.md`, Entscheidung: D76)
 - **Offen:** Umbenennen per `PATCH /title` (und damit das Ereignis
-  `RENAMED`), Master-Passwort für `GET /documents`, Client-Anpassung.
+  `RENAMED`) sowie die Client-Anpassung im Frontend.
 - `DocumentUpdateRequest.expectedVersion` ist im Vertrag vorgesehen, wird aber
   noch nicht ausgewertet.
 

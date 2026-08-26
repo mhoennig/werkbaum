@@ -28,6 +28,9 @@ val kotestVersion = "5.9.1"
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    // Nur fuer das Master-Passwort der Dokumentenliste (D76); alles andere
+    // bleibt ueber die unerratbare UUID erreichbar.
+    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     // Boot 4: Liquibase-Autokonfiguration liegt im eigenen Starter (zieht liquibase-core mit)
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
@@ -50,6 +53,7 @@ dependencies {
     testImplementation("io.cucumber:cucumber-spring:$cucumberVersion")
     testImplementation("io.cucumber:cucumber-junit-platform-engine:$cucumberVersion")
     testImplementation("org.junit.platform:junit-platform-suite")
+    testImplementation("org.springframework.security:spring-security-test")
 }
 
 // ---------------------------------------------------------------------------

@@ -27,6 +27,13 @@ paths:
       tags: [Documents]
       operationId: listDocuments
       summary: Alle Dokumente auflisten
+      description: >
+        Verlangt das Master-Passwort (HTTP Basic, Benutzer `werkbaum`).
+        Ohne diesen Schutz waere jede Dokument-UUID auflistbar - und das
+        Zugriffsmodell "unerratbare UUID" damit hinfaellig. Nach mehreren
+        Fehlversuchen wird der Endpunkt fuer eine Weile gesperrt (429).
+      security:
+        - masterPassword: []
       responses:
         "200":
           description: Liste aller Dokumente
@@ -36,6 +43,10 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Document"
+        "401":
+          description: Master-Passwort fehlt oder ist falsch
+        "429":
+          description: Zu viele Fehlversuche; `Retry-After` nennt die Restdauer
     post:
       tags: [Documents]
       operationId: createDocument
@@ -570,6 +581,14 @@ components:
           type: string
 
   securitySchemes:
+    masterPassword:
+      type: http
+      scheme: basic
+      description: >
+        Master-Passwort fuer die Dokumentenliste. Der Hash liegt serverseitig
+        in einer Umgebungsvariable (`werkbaum.master-password.hash`); ist er
+        nicht gesetzt, bleibt die Liste gesperrt.
+
     bearerAuth:
       type: http
       scheme: bearer

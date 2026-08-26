@@ -13,9 +13,20 @@ Funktionalität: Dokumente verwalten
   Szenario: Alle Dokumente auflisten
     Angenommen es existiert ein Dokument mit dem Titel "Erstes"
     Und es existiert ein Dokument mit dem Titel "Zweites"
-    Wenn ich alle Dokumente abrufe
+    Wenn ich alle Dokumente mit dem Master-Passwort abrufe
     Dann erhalte ich den Status 200
     Und die Antwort enthält 2 Dokumente
+
+  Szenario: Ohne Master-Passwort bleibt die Liste verschlossen
+    Angenommen es existiert ein Dokument mit dem Titel "Geheim"
+    Wenn ich alle Dokumente ohne Master-Passwort abrufe
+    Dann erhalte ich den Status 401
+
+  Szenario: Nach zu vielen Fehlversuchen ist die Liste gesperrt
+    Angenommen es existiert ein Dokument mit dem Titel "Geheim"
+    Wenn ich 3 mal mit falschem Master-Passwort abrufe
+    Und ich alle Dokumente mit dem Master-Passwort abrufe
+    Dann erhalte ich den Status 429
 
   Szenario: Ein einzelnes Dokument abrufen
     Angenommen es existiert ein Dokument mit dem Titel "Protokoll"

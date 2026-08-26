@@ -37,5 +37,12 @@ werkbaum:
     # haelt einen Long-Poll 30 s durch, seine Zeitgrenzen liegen bei 300 s.
     max-wait: 25s
 
+  # Schutz der Dokumentenliste. BCrypt-Hash, NIE im Repository - er kommt aus
+  # der Umgebung. Ohne ihn bleibt GET /documents gesperrt.
+  master-password:
+    hash: ${WERKBAUM_MASTER_PASSWORD_HASH:}
+    max-attempts: 5
+    lockout: 15m
+
 server:
   port: 8080

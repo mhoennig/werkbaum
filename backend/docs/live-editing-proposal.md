@@ -1,8 +1,8 @@
 # Live-Editing über HTTP (Variante „Simpel")
 
-Status: **Konzept entschieden** (D76), **Schritte 1–4 der Umsetzungsreihenfolge
-gebaut** (Zeilen-Diff, zweistufige Historie, `PATCH /content`, Änderungsfeed);
-das Master-Passwort und der Client stehen aus, ebenso das Umbenennen per
+Status: **Konzept entschieden** (D76), **Schritte 1–5 der Umsetzungsreihenfolge
+gebaut** (Zeilen-Diff, zweistufige Historie, `PATCH /content`, Änderungsfeed,
+Master-Passwort); der Client steht aus, ebenso das Umbenennen per
 `PATCH /title` und damit das Ereignis `RENAMED`. Die offenen
 Punkte des ersten Entwurfs sind beantwortet; die Begründungen stehen in
 `docs/DECISIONS.md` unter D76 und werden hier nicht wiederholt, sondern nur
@@ -31,10 +31,13 @@ Nachtrag 4.
 - **Zugriff über die unerratbare Dokument-UUID**, wie ein Pad-Link: kein
   Login, kein Rechtemodell. Echte Authentifizierung kommt später als Schicht
   davor; das Protokoll bleibt davon unberührt.
-- **`GET /documents` verlangt ein Master-Passwort** (Hash serverseitig in
-  einer Umgebungsvariable, geprüft über Spring Security). Ohne diesen Schutz
-  wäre jede UUID auflistbar und das Modell hinfällig. Der Endpunkt braucht
-  eine **Sperre nach Fehlversuchen**, und die Übertragung setzt HTTPS voraus.
+- **`GET /documents` verlangt ein Master-Passwort** (HTTP Basic, Benutzer
+  `werkbaum`; Hash serverseitig in einer Umgebungsvariable, geprüft über
+  Spring Security). Ohne diesen Schutz wäre jede UUID auflistbar und das
+  Modell hinfällig. **Ohne konfigurierten Hash ist die Liste gesperrt**, nicht
+  offen — ein vergessener Konfigurationsschritt darf nichts preisgeben. Die
+  **Sperre nach Fehlversuchen** ist global statt je Adresse (Begründung:
+  D76-Nachtrag 6). Die Übertragung setzt HTTPS voraus.
 - **Identität ist pseudonym**: Jeder Client führt eine zufällige `clientId`
   und einen selbstgewählten Anzeigenamen (Etherpad-Modell). Ohne Anmeldung
   ist der Name eine Behauptung und darf in der Oberfläche nicht wie ein
@@ -429,7 +432,7 @@ verworfen.
    Cucumber)~~ — gebaut, `LiveEditingService`
 4. ~~`GET /changes` mit Long Polling, Volltext-Fall und Ereignistypen
    (Spec + Cucumber)~~ — gebaut, `ChangeNotifier` + `LiveEditingService`
-5. Master-Passwort für `GET /documents` (Spring Security)
+5. ~~Master-Passwort für `GET /documents` (Spring Security)~~ — gebaut
 6. Client-Anpassung (Feed-Schleife, lokales Anwenden, Konfliktdialog)
 
 **Vor Schritt 4** steht die Vermessung der Zielumgebung (siehe „Betrieb") —

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.client.EntityExchangeResult
 import org.springframework.test.web.servlet.client.RestTestClient
+import java.util.Base64
 
 /**
  * Behavior-Tests gegen die laufende Anwendung (RANDOM_PORT), also echtes
@@ -65,13 +66,33 @@ class DocumentStepDefinitions {
             .find(body())?.groupValues?.get(1)
     }
 
-    @Wenn("ich alle Dokumente abrufe")
+    @Wenn("ich alle Dokumente mit dem Master-Passwort abrufe")
     fun `ich rufe alle Dokumente ab`() {
+        lastResponse = listDocuments("test-geheim")
+    }
+
+    @Wenn("ich alle Dokumente ohne Master-Passwort abrufe")
+    fun `ich rufe alle Dokumente ohne Passwort ab`() {
         lastResponse = client.get()
             .uri("/api/v1/documents")
             .exchange()
             .returnResult(String::class.java)
     }
+
+    @Wenn("ich {int} mal mit falschem Master-Passwort abrufe")
+    fun `ich rufe mehrfach mit falschem Passwort ab`(male: Int) {
+        repeat(male) { lastResponse = listDocuments("falsch") }
+    }
+
+    private fun listDocuments(passwort: String) = client.get()
+        .uri("/api/v1/documents")
+        .header(
+            "Authorization",
+            "Basic " + Base64.getEncoder()
+                .encodeToString("werkbaum:$passwort".toByteArray()),
+        )
+        .exchange()
+        .returnResult(String::class.java)
 
     @Wenn("ich dieses Dokument abrufe")
     fun `ich rufe dieses Dokument ab`() {

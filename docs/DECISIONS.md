@@ -6160,3 +6160,39 @@ durch Entfernen der Benachrichtigung, dann fällt genau dieses Szenario.
 `DELETED`, `RESTORED` und `ROLLED_BACK`. Das Umbenennen bekommt seinen eigenen
 Weg (`PATCH /title` mit `expectedVersion`) und erst damit den Typ — ihn vorher
 zu deklarieren wäre eine Zusage ohne Deckung.
+
+**Nachtrag 6 — das Master-Passwort: gesperrt als Voreinstellung, global
+gesperrt nach Fehlversuchen (2026-08-26).** Drei Festlegungen beim Bauen von
+Schritt 5:
+
+**Ohne konfigurierten Hash ist die Liste versperrt, nicht offen.** Die
+naheliegende Bequemlichkeit — „solange nichts konfiguriert ist, lassen wir
+durch" — kehrt die Beweislast um: Ein vergessener Umgebungswert gäbe jede
+Dokument-UUID preis, und niemandem fiele es auf, weil alles funktioniert.
+Umgekehrt fällt es sofort auf, und das Log sagt beim Start, was fehlt.
+Umgesetzt ausdrücklich mit `denyAll`, nicht bloß über ein zufälliges Passwort,
+das niemand kennt: Was gesperrt sein soll, soll auch gesperrt dastehen —
+nachlesbar und **prüfbar**. Der Unterschied ist nicht theoretisch: Die erste
+Fassung setzte nur das Zufallspasswort, und die Gegenprobe (den Schutz
+mutieren, prüfen ob Tests fallen) blieb stumm. Erst mit `denyAll` fällt genau
+die danach benannte Zusicherung.
+
+**Die Sperre nach Fehlversuchen ist global, nicht je Adresse.** Es gibt genau
+ein Passwort; eine globale Sperre ist damit die passende Aussage und nicht zu
+umgehen, indem jemand die Adresse wechselt. Sie hängt außerdem nicht an
+`X-Forwarded-For` — hinter dem Reverse Proxy der Zielumgebung (Nachtrag 1)
+sähe der Server für alle dieselbe 127.0.0.1, und eine „adressbezogene" Sperre
+wäre unfreiwillig doch global, nur schlechter begründet. Der Preis ist
+benannt: Wer falsch rät, sperrt die Liste für alle, 15 Minuten lang. Die Liste
+ist eine Bequemlichkeit für den Betreiber; die Dokumente selbst bleiben über
+ihre UUID erreichbar.
+
+**Der Hash trägt sein Verfahren als Präfix** (`{bcrypt}$2a$…`, Spring
+Securitys `DelegatingPasswordEncoder`). So steht in der Konfiguration, womit
+gehasht wurde, ein Wechsel des Verfahrens bricht nichts — und die Tests dürfen
+`{noop}` benutzen, ohne dass dafür eine zweite Code-Bahn nötig wäre.
+
+**Die neue Laufzeit-Abhängigkeit** (`spring-boot-starter-security`) ist in D76
+ausdrücklich vorgesehen („geprüft über Spring Security") und damit von der
+Rückfragepflicht der Wurzel-CLAUDE.md gedeckt. Sie ist zugleich der Platz für
+die spätere richtige Authentifizierung.
