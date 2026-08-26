@@ -14,6 +14,14 @@
 #
 #   ssh-ziel      ohne Angabe BACKEND_SSH aus .env (Vorlage: .env.example)
 #   --no-restart  Hash schreiben, Dienst nicht neu starten
+#   --stdin       Passwort aus der ersten Zeile von stdin lesen, statt zu
+#                 fragen. Für Automatisierung — und dafür, dass ein Passwort
+#                 aus einer Datei kommen kann, ohne über ein Terminal (und
+#                 dessen Echo) zu laufen. Ohne Terminal ist das der einzige Weg.
+#   --from-env    Passwort aus WERKBAUM_MASTER_PASSWORT in der .env nehmen.
+#                 Ausdrücklich zu verlangen und nie stillschweigend: Sonst
+#                 setzte ein versehentlicher Aufruf ein Passwort, das in einer
+#                 Datei steht, die man gerade nicht im Kopf hat.
 #
 # Das Passwort verlässt diesen Rechner nur über die SSH-Verbindung und wird
 # **nur als Hash** gespeichert (`<BACKEND_DIR>/env`, Modus 600). Danach prüft
@@ -26,9 +34,13 @@ set -euo pipefail
 
 SSH_TARGET=""
 RESTART=1
+VON_STDIN=0
+AUS_ENV=0
 for arg in "$@"; do
   case "$arg" in
     --no-restart) RESTART=0 ;;
+    --stdin) VON_STDIN=1 ;;
+    --from-env) AUS_ENV=1 ;;
     -h|--help)
       awk 'NR>2 { if ($0 ~ /^#/) { sub(/^# ?/, ""); print } else exit }' "$0"
       exit 0 ;;
@@ -54,21 +66,32 @@ case "$DIR" in /*) DIR_SH="$DIR" ;; *) DIR_SH="\$HOME/$DIR" ;; esac
 echo "==> Master-Passwort für ${SSH_TARGET}"
 echo "    (die Dokumentenliste; alles andere ist über die Dokument-UUID erreichbar)"
 
-# Verdeckt einlesen, zweimal. `read -s` gibt es in bash überall; auf ein
-# Terminal angewiesen ist es nicht, deshalb der Hinweis bei Rohr-Eingabe.
-if [ ! -t 0 ]; then
-  echo "Kein Terminal — dieses Skript fragt nach und braucht eines." >&2
-  exit 2
-fi
-printf '    Neues Passwort: '
-read -rs PASSWORT
-printf '\n    Wiederholen:    '
-read -rs PASSWORT2
-printf '\n'
-
-if [ "$PASSWORT" != "$PASSWORT2" ]; then
-  echo "Die beiden Eingaben sind verschieden — nichts geändert." >&2
-  exit 1
+if [ "$AUS_ENV" -eq 1 ]; then
+  PASSWORT="$(env_value WERKBAUM_MASTER_PASSWORT)"
+  if [ -z "$PASSWORT" ]; then
+    echo "WERKBAUM_MASTER_PASSWORT steht nicht in ${ENV_FILE}." >&2
+    exit 2
+  fi
+  echo "    Passwort aus ${ENV_FILE} (${#PASSWORT} Zeichen)"
+elif [ "$VON_STDIN" -eq 1 ]; then
+  # Erste Zeile von stdin. Keine Wiederholung: Wer es aus einer Datei liefert,
+  # vertippt sich nicht — er hat ein anderes Problem, wenn der Wert falsch ist.
+  IFS= read -r PASSWORT || true
+else
+  # Verdeckt einlesen, zweimal.
+  if [ ! -t 0 ]; then
+    echo "Kein Terminal — mit --stdin geht es auch ohne." >&2
+    exit 2
+  fi
+  printf '    Neues Passwort: '
+  read -rs PASSWORT
+  printf '\n    Wiederholen:    '
+  read -rs PASSWORT2
+  printf '\n'
+  if [ "$PASSWORT" != "$PASSWORT2" ]; then
+    echo "Die beiden Eingaben sind verschieden — nichts geändert." >&2
+    exit 1
+  fi
 fi
 if [ -z "$PASSWORT" ]; then
   echo "Leeres Passwort — nichts geändert." >&2
