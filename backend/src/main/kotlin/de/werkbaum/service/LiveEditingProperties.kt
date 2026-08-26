@@ -22,4 +22,13 @@ data class LiveEditingProperties(
      * ein so altes `since` mit Volltext statt mit einem Diff.
      */
     val syncRetention: Duration = Duration.ofHours(1),
+
+    /**
+     * Höchstzahl der Operationen je Anfrage. Ohne Grenze ist ein einzelner
+     * Request ein Ausfall-Vektor – auch versehentlich, durch einen Client-Bug.
+     */
+    val maxOps: Int = 1_000,
+
+    /** Höchstlänge des Dokuments in Zeichen; der mitgelieferte Plan hat ~40 000. */
+    val maxContentLength: Int = 2_000_000,
 )

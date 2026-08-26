@@ -1,5 +1,6 @@
 package de.werkbaum.service
 
+import de.werkbaum.domain.ChangeAuthor
 import de.werkbaum.domain.ChangeType
 import de.werkbaum.domain.Document
 import de.werkbaum.domain.DocumentHistoryEntry
@@ -24,7 +25,10 @@ class DocumentService(
     fun findAll(): List<Document> = repository.findAll()
 
     fun findById(id: UUID): Document =
-        repository.findById(id) ?: throw DocumentNotFoundException(id)
+        findByIdOrNull(id) ?: throw DocumentNotFoundException(id)
+
+    /** Wie [findById], nur ohne Ausnahme – wenn der Aufrufer selbst unterscheiden will. */
+    fun findByIdOrNull(id: UUID): Document? = repository.findById(id)
 
     fun create(title: String, content: String): Document {
         val now = OffsetDateTime.now(clock)
@@ -50,7 +54,13 @@ class DocumentService(
      * ist dagegen eine bewusste Handlung (Import, Reparatur) und bleibt
      * Meilenstein.
      */
-    fun update(id: UUID, title: String, content: String, milestone: Boolean = true): Document {
+    fun update(
+        id: UUID,
+        title: String,
+        content: String,
+        milestone: Boolean = true,
+        author: ChangeAuthor? = null,
+    ): Document {
         val existing = findById(id)
         val updated = existing.copy(
             title = title,
@@ -59,7 +69,7 @@ class DocumentService(
             updatedAt = OffsetDateTime.now(clock),
         )
         repository.save(updated)
-        recordHistory(updated, ChangeType.UPDATED, milestone)
+        recordHistory(updated, ChangeType.UPDATED, milestone, author)
         return updated
     }
 
@@ -167,6 +177,7 @@ class DocumentService(
         document: Document,
         changeType: ChangeType,
         milestone: Boolean = true,
+        author: ChangeAuthor? = null,
     ) {
         val previous = historyRepository.findLatest(document.id)
         if (previous != null && !previous.milestone &&
@@ -184,6 +195,7 @@ class DocumentService(
                 changeType = changeType,
                 timestamp = document.updatedAt,
                 milestone = milestone || changeType.isStructural,
+                author = author,
             )
         )
 

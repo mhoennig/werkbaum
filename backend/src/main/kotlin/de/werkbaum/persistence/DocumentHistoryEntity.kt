@@ -1,5 +1,6 @@
 package de.werkbaum.persistence
 
+import de.werkbaum.domain.ChangeAuthor
 import de.werkbaum.domain.ChangeType
 import de.werkbaum.domain.DocumentHistoryEntry
 import jakarta.persistence.Column
@@ -42,6 +43,12 @@ class DocumentHistoryEntity(
     /** Meilenstein (nutzersichtbar, bleibt) oder Sync-Version (wird verdichtet) – D76. */
     @Column(nullable = false)
     var milestone: Boolean = true,
+
+    @Column(name = "client_id", length = 64)
+    val clientId: String? = null,
+
+    @Column(name = "display_name", length = 64)
+    val displayName: String? = null,
 ) {
     fun toDomain() = DocumentHistoryEntry(
         documentId = documentId,
@@ -51,6 +58,7 @@ class DocumentHistoryEntity(
         changeType = changeType,
         timestamp = changeTime,
         milestone = milestone,
+        author = clientId?.let { ChangeAuthor(it, displayName) },
     )
 
     companion object {
@@ -62,6 +70,8 @@ class DocumentHistoryEntity(
             changeType = entry.changeType,
             changeTime = entry.timestamp,
             milestone = entry.milestone,
+            clientId = entry.author?.clientId,
+            displayName = entry.author?.displayName,
         )
     }
 }

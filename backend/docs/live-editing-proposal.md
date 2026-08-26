@@ -1,9 +1,12 @@
 # Live-Editing über HTTP (Variante „Simpel")
 
-Status: **Konzept entschieden** (D76), noch nichts implementiert. Die offenen
+Status: **Konzept entschieden** (D76), **Schritte 1–3 der Umsetzungsreihenfolge
+gebaut** (Zeilen-Diff, zweistufige Historie, `PATCH /content`); der
+Änderungsfeed, das Master-Passwort und der Client stehen aus. Die offenen
 Punkte des ersten Entwurfs sind beantwortet; die Begründungen stehen in
 `docs/DECISIONS.md` unter D76 und werden hier nicht wiederholt, sondern nur
-verwiesen.
+verwiesen. Was beim Bauen zusätzlich zu entscheiden war, steht dort in
+Nachtrag 4.
 
 ## Ziel und Rahmenbedingungen
 
@@ -147,18 +150,25 @@ Request: das Diff-Objekt oben.
   aber nichts geht endgültig verloren: Jede Version steht in der Historie.
 
 - **404**: Dokument gelöscht (Restore-Hinweis in der Problem-Detail-Antwort).
-- **422**: Diff nicht anwendbar (Index außerhalb, **Prüfsummenfehler**) —
-  deutet auf einen Client-Bug, Client lädt einmalig neu.
+- **422**: Diff nicht anwendbar (Index außerhalb, **Prüfsummenfehler**,
+  Basisversion bereits verdichtet oder aus der Zukunft, veraltete `seq`) —
+  Client lädt einmalig neu. Der verdichtete Fall ist kein Client-Bug, aber
+  das Mittel ist dasselbe; ein geratenes Diff wäre schlechter.
 
 **Überlappung, genau definiert.** Der betroffene Bereich einer Op ist
 `[index, index+count)` für `replace` und `delete`. Für `insert` ist er ein
 **Punkt** bei `index` — nicht ein leeres Intervall, sonst überschnitte er
-sich mit nichts und Einfüge-Konflikte blieben unerkannt. Daraus folgt:
+sich mit nichts und Einfüge-Konflikte blieben unerkannt. Der Punkt liegt
+**zwischen** den Zeilen und kollidiert nur mit dem **Inneren** eines fremden
+Bereichs (`start < index < end`). Daraus folgt:
 
 - Zwei Einfügungen an derselben Stelle sind **kein** Konflikt. Beide Zeilen
   bleiben; die bereits bestätigte fremde steht oben.
 - Eine Einfügung in einen Bereich, den ein anderer **löscht**, ist einer —
   die neue Zeile landete sonst in einem Abschnitt, den es nicht mehr gibt.
+- An den **Rändern** ist sie dagegen keiner: vor bzw. hinter dem fremden Block
+  ist die Stelle eindeutig. Das ist der häufige Fall — wer eine Zeile über
+  einer gerade geänderten einfügt, bekommt keinen 409.
 
 **Titel:** `PATCH /documents/{id}/title` (mit `expectedVersion`) ändert den
 Titel; er ist ein Metadatum, kein Zeileninhalt. `PUT /documents/{id}` bleibt
@@ -167,7 +177,10 @@ als „Ganzdokument ersetzen" bestehen (Import, Reparatur) und wertet künftig
 
 **Grenzen:** Dokumentgröße und Op-Anzahl je Request sind serverseitig
 begrenzt (sonst ist ein einzelner Request ein Ausfall-Vektor, auch
-versehentlich durch einen Client-Bug).
+versehentlich durch einen Client-Bug); Überschreitung und ein `delete`/
+`replace` ohne `count` sind **400**. Stellschrauben:
+`werkbaum.live-editing.max-ops` (1000) und `max-content-length` (2 Mio.
+Zeichen; der mitgelieferte Plan hat ~40 000).
 
 ### 2. `GET /documents/{id}/changes?since={version}&wait={seconds}` — Änderungsfeed
 
@@ -399,11 +412,11 @@ verworfen.
 
 ## Umsetzungsreihenfolge
 
-1. Diff-Modell + Anwenden/Berechnen/Rebasen als reine Kotlin-Funktionen
-   (Unit-Tests)
-2. Historie in zwei Ebenen + gezielter Repository-Zugriff
-3. `PATCH /content` inkl. Rebase, Idempotenz, Prüfsumme und 409 (Spec +
-   Cucumber)
+1. ~~Diff-Modell + Anwenden/Berechnen/Rebasen als reine Kotlin-Funktionen
+   (Unit-Tests)~~ — gebaut, `de.werkbaum.diff`
+2. ~~Historie in zwei Ebenen + gezielter Repository-Zugriff~~ — gebaut
+3. ~~`PATCH /content` inkl. Rebase, Idempotenz, Prüfsumme und 409 (Spec +
+   Cucumber)~~ — gebaut, `LiveEditingService`
 4. `GET /changes` mit Long Polling, Volltext-Fall und Ereignistypen
    (Spec + Cucumber)
 5. Master-Passwort für `GET /documents` (Spring Security)

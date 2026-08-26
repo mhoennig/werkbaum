@@ -36,3 +36,11 @@ ALTER TABLE document_history ADD COLUMN milestone BOOLEAN DEFAULT TRUE NOT NULL;
 CREATE INDEX idx_document_history_version ON document_history (document_id, version);
 --rollback DROP INDEX idx_document_history_version;
 --rollback ALTER TABLE document_history DROP COLUMN milestone;
+
+--changeset editor:005-history-author
+-- "Geaendert von" (D76): pseudonyme Kennung plus selbstgewaehlter Name. Beide
+-- optional - CRUD ohne Live-Editing kennt keinen Absender.
+ALTER TABLE document_history ADD COLUMN client_id VARCHAR(64);
+ALTER TABLE document_history ADD COLUMN display_name VARCHAR(64);
+--rollback ALTER TABLE document_history DROP COLUMN display_name;
+--rollback ALTER TABLE document_history DROP COLUMN client_id;

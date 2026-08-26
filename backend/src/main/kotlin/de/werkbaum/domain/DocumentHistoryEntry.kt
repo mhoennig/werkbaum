@@ -39,4 +39,6 @@ data class DocumentHistoryEntry(
     val changeType: ChangeType,
     val timestamp: OffsetDateTime,
     val milestone: Boolean = true,
+    /** Wer die Änderung eingereicht hat – „geändert von" (D76); `null` bei den Wegen ohne Identität. */
+    val author: ChangeAuthor? = null,
 )

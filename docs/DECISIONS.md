@@ -6054,3 +6054,63 @@ fünfzehn Aufrufen in einer Datei — die Zahl wächst von hier an nur. Weil
 Cucumber Senden (Wenn) und Prüfen (Dann) trennt, wird die fluent API nicht
 für Zusicherungen genutzt, sondern über `returnResult` das Ergebnis
 festgehalten.
+
+**Nachtrag 4 — beim Bauen entschieden (2026-08-26).** Die Schritte 1–3 der
+Umsetzungsreihenfolge stehen (Zeilen-Diff, zweistufige Historie,
+`PATCH /content`). Sechs Dinge waren dabei zu entscheiden, die das Konzept
+offengelassen hat:
+
+**Eine Einfügung liegt ZWISCHEN den Zeilen.** Das Konzept nennt sie einen
+„Punkt bei `index`" und lässt die Ränder offen. Umgesetzt ist die strikte
+Lesart `start < index < end`: Die Einfügung kollidiert nur mit dem **Inneren**
+eines fremden Bereichs. Beide im Konzept genannten Folgen gelten damit weiter —
+zwei Einfügungen an derselben Stelle vertragen sich, eine Einfügung in einen
+gelöschten Bereich nicht —, aber die Ränder bleiben konfliktfrei. Das ist der
+häufige Fall: Wer eine Zeile über einer gerade geänderten einfügt, meint
+eindeutig „davor" und soll keinen 409 bekommen. Die halboffene Variante
+(`start <= index < end`) hätte genau diesen Alltagsfall zum Konflikt erklärt,
+ohne dass ihm eine Mehrdeutigkeit zugrunde läge.
+
+**Meilensteine entstehen rückwirkend, ohne Zeitgeber.** „Nach einer
+Schreibpause" klingt nach einem Timer; gebaut ist die Umkehrung: Die **nächste**
+Änderung stellt fest, dass eine Pause war, und befördert die Version davor. Das
+braucht keinen Hintergrund-Thread, ist mit fester Uhr prüfbar und trifft
+genau den gemeinten Stand — die letzte vor der Pause, nicht die erste danach.
+Die Lücke am Ende (nach der letzten Änderung kommt keine mehr) schließt die
+Historie-Abfrage, indem sie den jüngsten Stand immer mitliefert.
+
+**Restore liest den Tombstone.** Bisher übersprang die Wiederherstellung den
+`DELETED`-Eintrag und nahm den letzten inhaltlichen davor. Inhaltlich sind
+beide gleich — aber der davor ist womöglich eine Sync-Version und damit
+verdichtet, der Tombstone dagegen ein Meilenstein und bleibt. Verhalten
+unverändert, Verlässlichkeit gewonnen.
+
+**Die Sperre liegt außerhalb der Transaktion.** „Locking pro Dokument-UUID"
+und `@Transactional` an derselben Methode wäre falsch: Der Proxy gibt die
+Sperre vor dem Commit frei, und der nächste Schreiber läse einen Stand, der
+noch nicht steht. Deshalb ist `LiveEditingService` **nicht** transaktional und
+schreibt über die transaktionalen Methoden des `DocumentService`. Die Sperren
+sind ein festes Feld von 64 (Striping über die UUID): Zwei Dokumente können
+sich eine teilen — das kostet Zeit, nie Richtigkeit —, und die Menge wächst
+nie. Eine Sperre je Dokument müsste beim Löschen aufgeräumt werden und wäre
+sonst ein langsames Leck.
+
+**Die Idempotenz lebt im Speicher, gedeckelt.** Je (Dokument, Client) die
+zuletzt verarbeitete `seq` samt Ergebnis, verdrängt wird das am längsten nicht
+benutzte. Persistenz wäre eine weitere Tabelle für ein Fenster von Sekunden;
+die Einzelinstanz ist ohnehin vorausgesetzt (Long Polling). Eine **kleinere**
+`seq` als die zuletzt verarbeitete ist ein eigener Fehler (422): Das Ergebnis
+von damals ist nicht mehr bekannt, und ein zweites Anwenden verdürbe den Text.
+
+**400 gegen 422, sauber getrennt.** 422 heißt „richtig gebaut, aber nicht
+anwendbar" — Prüfsumme, Index, verdichtete Basis, veraltete `seq`; der Client
+lädt einmal neu und es geht weiter. 400 heißt „so nicht gefragt" —
+Grenzüberschreitung oder ein `delete`/`replace` **ohne `count`**. Letzteres
+wird bewusst **nicht** als 0 gelesen: Die Operation täte dann stillschweigend
+nichts bzw. würde zur Einfügung, und ein stiller Fehler ist in diesem Projekt
+durchweg der schlechtere (SPEC §4, D59).
+
+Zahlen: 104 Tests. Gegenproben je Regel — Prüfsumme nicht geprüft, Idempotenz
+entfernt, veraltete Basis abgelehnt statt verschoben, Schreibpause ignoriert,
+Rückfall wieder als `RESTORED`, jüngster Stand aus der Historie genommen: Es
+fallen jeweils genau die danach benannten Zusicherungen.

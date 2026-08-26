@@ -183,6 +183,67 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
 
+  /documents/{documentId}/content:
+    parameters:
+      - name: documentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      tags: [Documents]
+      operationId: patchDocumentContent
+      summary: Zeilen-Diff auf den Inhalt anwenden (Live-Editing)
+      description: >
+        Reicht eine Aenderung als Zeilen-Diff gegen eine Basisversion ein.
+
+
+        Ist die Basis veraltet, ueberschneiden sich die Operationen aber nicht
+        mit den zwischenzeitlichen, verschiebt der Server sie selbst und
+        akzeptiert (200); die fremden Operationen stehen dann in
+        `opsSinceBase`, damit der Client seine Schattenkopie nachzieht. Nur
+        bei echter Ueberschneidung antwortet er mit 409.
+
+
+        `clientId` und `seq` machen den Aufruf wiederholbar: Eine Wiederholung
+        liefert das Ergebnis von damals, statt die Aenderung ein zweites Mal
+        anzuwenden.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContentPatchRequest"
+      responses:
+        "200":
+          description: Aenderung angenommen (ggf. serverseitig verschoben)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentPatchResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: >
+            Echte Ueberschneidung mit einer zwischenzeitlichen Aenderung. Der
+            Client entscheidet - fremde Fassung uebernehmen oder eigene
+            durchsetzen -, ohne neu zu laden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentConflict"
+        "422":
+          description: >
+            Diff nicht anwendbar: Pruefsummenfehler, Index ausserhalb, oder die
+            Basisversion ist nicht mehr verfuegbar. Der Client laedt einmalig neu.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+
 components:
   responses:
     NotFound:
@@ -292,6 +353,100 @@ components:
           description: >
             Optionale Zielversion. Ohne Angabe wird der letzte inhaltliche
             Stand vor dem Loeschen wiederhergestellt.
+
+    LineOperation:
+      description: >
+        Eine Zeilen-Operation relativ zur Basisversion (0-basierter Index).
+        Operationen sind aufsteigend sortiert und ueberschneiden sich nicht.
+      type: object
+      required: [op, index]
+      properties:
+        op:
+          type: string
+          enum: [replace, insert, delete]
+        index:
+          type: integer
+          format: int32
+          minimum: 0
+        count:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Zahl der betroffenen Basiszeilen; bei `insert` ohne Bedeutung.
+        lines:
+          type: array
+          description: Einzusetzende Zeilen; bei `delete` ohne Bedeutung.
+          items:
+            type: string
+
+    ContentPatchRequest:
+      type: object
+      required: [baseVersion, checksum, clientId, seq, ops]
+      properties:
+        baseVersion:
+          type: integer
+          format: int64
+          description: Version, gegen die das Diff gebildet wurde.
+        checksum:
+          type: string
+          description: >
+            Pflicht. `sha256:<hex>` des vollstaendigen Basistexts mit
+            LF-Zeilenenden. Die Versionsnummer bestaetigt nur, dass die Basis
+            dieselbe Version ist, nicht dass beide Seiten sie gleich lesen.
+        clientId:
+          type: string
+          maxLength: 64
+          description: Zufaellige, pseudonyme Kennung des Clients.
+        seq:
+          type: integer
+          format: int64
+          description: Laufende Nummer dieses Clients; macht den Aufruf wiederholbar.
+        displayName:
+          type: string
+          maxLength: 64
+          description: >
+            Selbstgewaehlter Anzeigename. Ohne Anmeldung ist er eine
+            Behauptung und darf in der Oberflaeche nicht wie ein Nachweis
+            aussehen.
+        milestone:
+          type: boolean
+          default: false
+          description: >
+            `true` schreibt einen nutzersichtbaren Stand (Knopfdruck).
+            Der getaktete Strom laesst das Feld weg.
+        ops:
+          type: array
+          items:
+            $ref: "#/components/schemas/LineOperation"
+
+    ContentPatchResult:
+      type: object
+      required: [version, opsSinceBase]
+      properties:
+        version:
+          type: integer
+          format: int64
+          description: Neue Version des Dokuments.
+        opsSinceBase:
+          type: array
+          description: >
+            Leer, wenn die Basis noch aktuell war. Sonst die fremden
+            Operationen, um die der Server verschoben hat.
+          items:
+            $ref: "#/components/schemas/LineOperation"
+
+    ContentConflict:
+      type: object
+      required: [currentVersion, opsSinceBase]
+      properties:
+        currentVersion:
+          type: integer
+          format: int64
+        opsSinceBase:
+          type: array
+          description: Diff von der eingereichten Basis bis zur aktuellen Version.
+          items:
+            $ref: "#/components/schemas/LineOperation"
 
     ProblemDetail:
       type: object

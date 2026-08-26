@@ -2,13 +2,18 @@ package de.werkbaum.api
 
 import de.werkbaum.generated.api.DocumentsApi
 import de.werkbaum.generated.model.Document as ApiDocument
+import de.werkbaum.generated.model.ContentPatchRequest
+import de.werkbaum.generated.model.ContentPatchResult
 import de.werkbaum.generated.model.DocumentCreateRequest
 import de.werkbaum.generated.model.DocumentHistoryEntry as ApiHistoryEntry
 import de.werkbaum.generated.model.DocumentUpdateRequest
 import de.werkbaum.generated.model.RestoreRequest
+import de.werkbaum.domain.ChangeAuthor
+import de.werkbaum.domain.ContentPatch
 import de.werkbaum.domain.Document
 import de.werkbaum.domain.DocumentHistoryEntry
 import de.werkbaum.service.DocumentService
+import de.werkbaum.service.LiveEditingService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RequestMapping
@@ -24,6 +29,7 @@ import java.util.UUID
 @RequestMapping("/api/v1")
 class DocumentsController(
     private val service: DocumentService,
+    private val liveEditing: LiveEditingService,
 ) : DocumentsApi {
 
     override fun listDocuments(): ResponseEntity<List<ApiDocument>> =
@@ -55,6 +61,32 @@ class DocumentsController(
     override fun deleteDocument(documentId: UUID): ResponseEntity<Unit> {
         service.delete(documentId)
         return ResponseEntity.noContent().build()
+    }
+
+    override fun patchDocumentContent(
+        documentId: UUID,
+        contentPatchRequest: ContentPatchRequest,
+    ): ResponseEntity<ContentPatchResult> {
+        val outcome = liveEditing.patchContent(
+            documentId,
+            ContentPatch(
+                baseVersion = contentPatchRequest.baseVersion,
+                checksum = contentPatchRequest.checksum,
+                author = ChangeAuthor(
+                    clientId = contentPatchRequest.clientId,
+                    displayName = contentPatchRequest.displayName,
+                ),
+                seq = contentPatchRequest.seq,
+                ops = contentPatchRequest.ops.map { it.toDomain() },
+                milestone = contentPatchRequest.milestone ?: false,
+            ),
+        )
+        return ResponseEntity.ok(
+            ContentPatchResult(
+                version = outcome.version,
+                opsSinceBase = outcome.opsSinceBase.toApi(),
+            )
+        )
     }
 
     override fun getDocumentHistory(documentId: UUID): ResponseEntity<List<ApiHistoryEntry>> =
