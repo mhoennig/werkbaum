@@ -116,7 +116,7 @@
   - [ ] #be: Backend (XL)
     - [/] #be.scaffold: Kotlin and Spring Boot scaffold (M)
       - [^] #be.scaffold.gradle: Gradle Kotlin DSL, JDK 21 (S)
-      - [x] #be.scaffold.info: An endpoint that says name and version (XS)
+      - [^] #be.scaffold.info: An endpoint that says name and version (XS)
       - [ ] #be.scaffold.ci: Continuous integration for the backend (S)
     - [^] #be.docs: Documents on the server (L) :#be.scaffold
       - [^] #be.docs.model: Text plus metadata, no structure format (M)
@@ -169,7 +169,7 @@
         | [?] #col.live.crdt: Text CRDT — the plan is plain text, so it fits (L)
         | [?] #col.live.ot: Operational transformation (XL)
       - [^] #col.live.ask: On a real overlap, ask whose version wins (S)
-      - [x] #col.live.upload: Put a local plan on the server, from the menu (S)
+      - [^] #col.live.upload: Put a local plan on the server, from the menu (S)
       - [?] #col.live.cursors: Cursors and who else is here (S)
       - [-] #col.live.ws: Transport over a websocket (S)  %% plain HTTP turned out to be enough
       - [-] #col.live.own: A merge algorithm of our own (XL)  %% solved problem, do not reinvent
