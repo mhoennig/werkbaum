@@ -5967,3 +5967,36 @@ und JDBC sind JVM-Bibliotheken; das wäre kein Umbau, sondern ein Neubau auf
 einem anderen Stack. Unabhängig davon: Beim Deployment gehört ein `-Xmx`
 gesetzt, statt der JVM auf einem geteilten Server die Voreinstellung zu
 überlassen.
+
+**Nachtrag zu D13 — Paketwurzel `de.werkbaum`, und drei Fallen von Spring
+Boot 4 (2026-08-26).** Das Backend-Gerüst kam zunächst unter der
+Platzhalter-Wurzel `com.example.editor` herein und widersprach damit
+`backend/CLAUDE.md`. Umgezogen nach **`de.werkbaum`** (17 Kotlin-Dateien,
+Gradle-`group`, `apiPackage`/`modelPackage` der OpenAPI-Generierung, die
+jacoco-Ausschlüsse und das Cucumber-`glue`-Paket) — jetzt war es billig, mit
+jeder Woche Entwicklung wäre es teurer geworden. Nachgemessen: 22 Tests grün,
+`check` inklusive Coverage-Verifikation besteht, 91,7 % Zeilenabdeckung,
+generierter Code weiterhin ausgeschlossen.
+
+Dabei sind drei Eigenheiten von **Spring Boot 4** aufgefallen, die jeweils
+denselben Ursprung haben — die Modularisierung, bei der vieles aus dem
+Kern-Artefakt in eigene Module gewandert ist:
+
+1. **`TestRestTemplate` ist umgezogen** von `org.springframework.boot.test.web.client`
+   nach `org.springframework.boot.resttestclient` und liegt im Modul
+   `spring-boot-resttestclient`, das `spring-boot-starter-test` **nicht**
+   mitbringt.
+2. **`@SpringBootTest` stellt die Test-Client-Bean nicht mehr von selbst
+   bereit** — es braucht `@AutoConfigureTestRestTemplate` bzw.
+   `@AutoConfigureRestTestClient`.
+3. **Liquibase braucht seinen Starter.** Das nackte `org.liquibase:liquibase-core`
+   bringt die Autokonfiguration nicht mehr mit; ohne
+   `spring-boot-starter-liquibase` läuft keine Migration, und die Tests
+   scheitern erst spät mit „Schema validation: missing table".
+
+Die BDD-Tests nutzen jetzt **`RestTestClient`** (aus `spring-test`) statt
+`TestRestTemplate`, das in Boot 4 als Auslaufmodell gilt. Umgestellt bei
+fünfzehn Aufrufen in einer Datei — die Zahl wächst von hier an nur. Weil
+Cucumber Senden (Wenn) und Prüfen (Dann) trennt, wird die fluent API nicht
+für Zusicherungen genutzt, sondern über `returnResult` das Ergebnis
+festgehalten.

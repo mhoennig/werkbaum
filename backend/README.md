@@ -25,7 +25,7 @@ Verschlüsselung.
 
 1. Vertrag ändern: `src/main/resources/openapi/api.yaml`
 2. `./gradlew openApiGenerate` → erzeugt `DocumentsApi` (Interface) und Modelle
-   nach `build/generated/openapi` (Pakete `com.example.editor.generated.*`)
+   nach `build/generated/openapi` (Pakete `de.werkbaum.generated.*`)
 3. `DocumentsController` implementiert das Interface mit
    `skipDefaultInterface=true`: Weicht die Implementierung vom Vertrag ab,
    **bricht der Build** – Spezifikation und Code können nicht auseinanderlaufen.

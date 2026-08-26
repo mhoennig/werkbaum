@@ -8,7 +8,7 @@ plugins {
     jacoco
 }
 
-group = "com.example"
+group = "de.werkbaum"
 version = "0.1.0-SNAPSHOT"
 
 java {
@@ -37,10 +37,9 @@ dependencies {
 
     // --- Tests ---
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    // TestRestTemplate liegt in Boot 4 im eigenen Modul (org.springframework.boot.resttestclient)
-    // und braucht spring-boot-restclient zur Laufzeit
+    // RestTestClient-Autokonfiguration (Boot 4). TestRestTemplate gilt dort als
+    // Auslaufmodell; die BDD-Tests nutzen den Nachfolger aus spring-test.
     testImplementation("org.springframework.boot:spring-boot-resttestclient")
-    testRuntimeOnly("org.springframework.boot:spring-boot-restclient")
     testImplementation("io.mockk:mockk:$mockkVersion")
 
     // Behavior-Tests (BDD) mit Cucumber
@@ -57,8 +56,8 @@ openApiGenerate {
     generatorName.set("kotlin-spring")
     inputSpec.set("$projectDir/src/main/resources/openapi/api.yaml")
     outputDir.set(layout.buildDirectory.dir("generated/openapi").get().asFile.path)
-    apiPackage.set("com.example.editor.generated.api")
-    modelPackage.set("com.example.editor.generated.model")
+    apiPackage.set("de.werkbaum.generated.api")
+    modelPackage.set("de.werkbaum.generated.model")
     configOptions.set(
         mapOf(
             "useSpringBoot4" to "true",
@@ -106,7 +105,7 @@ tasks.jacocoTestReport {
     // Generierter Code zaehlt nicht zur Coverage
     classDirectories.setFrom(
         classDirectories.files.map {
-            fileTree(it) { exclude("com/example/editor/generated/**") }
+            fileTree(it) { exclude("de/werkbaum/generated/**") }
         }
     )
 }
@@ -115,7 +114,7 @@ tasks.jacocoTestCoverageVerification {
     dependsOn(tasks.test)
     classDirectories.setFrom(
         classDirectories.files.map {
-            fileTree(it) { exclude("com/example/editor/generated/**") }
+            fileTree(it) { exclude("de/werkbaum/generated/**") }
         }
     )
     violationRules {
