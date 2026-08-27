@@ -8064,3 +8064,62 @@ ist der Weg nicht gemessen — dafür braucht es echte Zugangsdaten, und die
 gibt niemand einem Werkzeug. Der Plan-Knoten `#trk.create` steht deshalb
 auf `[/]` (funktionsbereit, Feinarbeiten offen) statt `[x]`: Der erste
 echte Login ist der Handtest, der noch aussteht.
+
+**Nachtrag 5 — Ticket-Refs brechen nicht um und öffnen sich per Strg+Klick
+(2026-08-27).** Zwei Nutzerwünsche nach dem bestandenen Handtest („anlegen
+hat funktioniert" — `#trk.create` steht damit auf `[x]`, die
+Nachtrag-4-Grenze ist gefallen):
+
+**1. Eine Ref wie `#US-123` bricht im Knoten nie mehr mitten im Token um.**
+Die Ursache lag nicht in `wrapLabel()` (das bricht nur an Leerzeichen, D64),
+sondern im Browser: `max-width:32ch` misst die Ziffer „0", Buchstaben sind
+breiter — eine zu breit geratene Zeile bricht er dann an jedem
+**Bindestrich**, und aus der Ref wurde `#US-`/`123`. Der Renderer umspannt
+freistehende Ref-Token im escapten Label deshalb mit einer `tref`-Spanne
+(`white-space:nowrap`); die Zitier-Konvention bleibt gewahrt (`(#US-123)`
+ist kein freistehendes Token), und `labelLines()` (Grafikexport) misst die
+Textknoten der Spanne unverändert mit — nachgemessen: beide Refs stehen im
+exportierten SVG als ganze Token. Gegenprobe per Mutation: ohne die Spanne
+fallen genau die zwei danach benannten Zusicherungen.
+
+**2. Strg+Klick öffnet die Ref im Taiga-Frontend** — im Text (freistehendes
+Token, dieselben Ausschlüsse wie der Abhängigkeits-Sprung D67: Kommentar,
+Beschreibungsteil, URL) und auf dem Knoten; Tastatur Strg+Enter. Die
+Entscheidungen:
+
+- **Die Web-Basis ist eine zweite Server-Konfiguration**
+  (`WERKBAUM_TAIGA_WEB_URL`, per `GET /info` als `taigaWeb` gemeldet, ohne
+  Schrägstrich am Ende): Sie ist aus der API-URL **nicht ableitbar** — bei
+  der Zielinstanz liegen Frontend und API auf verschiedenen Hosts
+  (Nachtrag 1). Kein Raten per Namenskonvention; fehlt sie, entfällt nur das
+  Öffnen, die Anlage funktioniert weiter. `deploy-backend.sh` zieht die
+  Zeile idempotent nach wie die API-URL.
+- **Die URL trägt der Typ-Präfix aus**: `US-123` → `/project/<slug>/us/123`,
+  `T-…` → `/task/…` — genau die Auflösung, für die Werkbaum die Präfixe
+  schreibt (Nachtrag 2). Der Slug kommt vom nächsten Vorfahren mit
+  `&taiga.*`-Tag (§1); ohne Slug oder Web-Basis geschieht **still nichts**,
+  das D67-Idiom (eine unbekannte Dep-ID tut auch nichts).
+- **Die Abhängigkeits-Lesart gewinnt:** In einem `:#…`-Token ist die Ref
+  nicht freistehend — dort bleibt Strg+Klick der Sprung zur Zeile (D67).
+  Erst wenn der nichts findet, wird die Ref versucht.
+- **Das Knoten-Fenster trägt an Refs einen Öffnen-Knopf** statt der
+  Anlage-Knöpfe (die Ref ist der Idempotenz-Marker, es gibt dort nichts
+  anzulegen): der Weg auf Touch (kein Strg) und zugleich die
+  Auffindbarkeit der Geste (D25-Lehre). Ein i18n-Schlüssel
+  (`taigaOpenBtn`) in neun Sprachen; keine Erweiterung von `hint_jump` —
+  der sichtbare Knopf sagt mehr als eine weitere Legendenzeile.
+- **Auf einem Link-Knoten ohne Taiga-Adresse bleibt der Browser-Default**
+  (Strg+Klick öffnet die Knoten-URL im Hintergrund-Tab): `preventDefault`
+  nur, wenn wirklich ein Ticket geöffnet wird.
+
+**Nachgemessen** im Browser gegen ein lokales Backend
+(`taigaWeb: https://plan.example.test`): tref-Spannen `nowrap`, je genau
+eine Zeile; der Fenster-Knopf öffnet `/project/mi-kunde/us/123`, Strg+Klick
+auf den Task-Knoten `/task/4567`; im Text öffnen Klick und Strg+Enter, die
+Abhängigkeit springt weiter (kein Öffnen), Kommentar/neutral bleiben still;
+Knoten ohne Ref zeigen unverändert die Anlage-Knöpfe. 576 Frontend-Tests
+(12 neue), Backend-`check` grün. Werkzeug-Lehre am Rande: In einem
+gestapelten Prüfskript setzte der Sprung aus dem Vor-Schritt die Auswahl
+asynchron neu und ließ den Tastaturweg scheinbar die falsche URL öffnen —
+isoliert wiederholt stimmt sie; dieselbe Zustandsvermischung wie beim
+Nachtrag-4-Bau.
