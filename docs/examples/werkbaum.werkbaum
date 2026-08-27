@@ -86,6 +86,7 @@
       - [^] #ed.fold.click: Fold and unfold in the diagram (S)
       - [^] #ed.fold.write: Folding writes the mark back into the text (S)  %% one undo step
       - [^] #ed.fold.preset: The fold button cycles through four presets (S)  %% M-and-smaller, off-path, all, none — see D44/D75
+    + [?] #ed.textfold: Fold regions in the text editor, next to the line numbers  %% view-only, unrelated to the > marks; not sized yet
     - [^] #ed.snaps: Earlier states of a document, every ten minutes (S)  %% only when something changed
       - [^] #ed.snaps.manual: Save a state by hand, before a larger change (XS)  %% ten minutes is the wrong beat for that moment
     - [^] #ed.files: Open and save .werkbaum files (S)
@@ -610,6 +611,13 @@
   closed, everything open. Icon and tooltip show the next step; a manual fold
   restarts the cycle. Size rather than depth — depth only says how finely
   somebody happened to write it down.
+
+#ed.textfold
+  Collapse indentation regions and the --- description part in the text
+  editor itself — pure view state, local to the session, independent of the
+  > fold marks that describe the diagram. A plain textarea cannot hide
+  lines, so this hinges on the parked editor-rebuild question (CodeMirror,
+  D76); deliberately not sized yet.
 
 #ed.snaps
   A safety net against mishaps: the text is put aside every ten minutes, but
