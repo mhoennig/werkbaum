@@ -1304,8 +1304,14 @@ das auch. Begründung und Zusammenhang: D34.
 Beide Rollen vertragen sich: Oft **ist** die Ticket-Kennung die natürliche
 Knoten-ID. Als Ticket-Link behandelt wird ein Token **nicht an seiner Form**
 (die frühere Heuristik „rein numerisch" trägt bei alphanumerischen Kennungen
-nicht), sondern am **Muster des angebundenen Trackers** — konfigurierbar,
-z. B. `US-\d+`/`\d+` bei Taiga; festzulegen im Taiga-Spike (D34-Nachtrag).
+nicht), sondern am **Muster des angebundenen Trackers**. Für Taiga ist es
+festgelegt: **`US-\d+`** (User Story) und **`T-\d+`** (Task) — die Präfixe
+schreibt Werkbaum beim Anlegen selbst (Taiga zeigt nur `#123`; seine Nummern
+laufen **je Projekt** fortlaufend über alle Typen, das Präfix trägt den Typ,
+den die Auflösung braucht). Die Ref wird **zusätzlich zur Knoten-ID** als
+eigenes Token an die Zeile geschrieben: Mit vorhandener ID bleibt sie
+Ticket-Referenz im Label (§1: nur das erste `#`-Token ist die ID), ohne ID
+wird sie von selbst die ID. Siehe D91-Nachtrag 2.
 Freie Schlagworte liegen **nicht** mehr auf `#` — siehe `&tag` unten; damit
 ist die frühere Dreifach-Rolle von `#` aufgelöst (D34).
 

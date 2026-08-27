@@ -200,7 +200,7 @@
         | [?] #idea.drift.js: Run the one JS parser inside the IDE (M)
   - [?] #trk: Tracker integration (XL)  %% exactly one of these, hence =
     = [?] #trk.taiga: Taiga (XL) https://taiga.io
-      - [ ] #trk.resolve: Resolve "#123" over the REST API (M)
+      - [ ] #trk.resolve: Resolve "#US-123" over the REST API (M)
         - [ ] #trk.resolve.read: Read title, link and status (S)
         - [ ] #trk.resolve.map: Map the workflow onto the states (S)
       - [?] #trk.write: Write the status back (M) :#trk.resolve
@@ -209,7 +209,7 @@
         - [ ] #trk.create.login: Log in to Taiga, token stays in the browser (S) :#trk.create.proxy
         - [ ] #trk.create.story: A "create story" action in the node window (S) :#trk.create.login
         - [ ] #trk.create.tasks: Sub-packages become tasks, picked in a dialog (M) :#trk.create.story
-        - [ ] #trk.create.ref: The ticket ref becomes the node id (S) :#trk.create.story
+        - [ ] #trk.create.ref: The ref lands in the line beside the id (S) :#trk.create.story
       - [-] #trk.plugin: A plugin inside Taiga itself (L)  %% legacy frontend, self-hosted only
     = [?] #trk.tenzu: Tenzu, the successor (XXL) https://tenzu.net
     = [ ] #trk.none: No tracker, plain text is enough (XS)
@@ -1180,9 +1180,12 @@
   never appear, finished ones start unchecked.
 
 #trk.create.ref
-  The returned ref (#123, #US-123) is written back into the line as the node
-  id, undoable — the reserved ticket reference of SPEC §11, and the marker
-  that keeps a second click from creating the ticket twice.
+  The returned ref is appended to the line as an extra token — #US-123 for
+  stories, #T-1234 for tasks, prefixes written by Werkbaum since Taiga's own
+  numbers are just per-project counters shared across all types. It never
+  replaces a node id (only the first # token is the id, §1); on a node
+  without one it simply becomes the id. Undoable, and the marker that keeps
+  a second click from creating the ticket twice.
 
 #trk.plugin
   Rejected: a plugin inside Taiga means its legacy frontend and works only in

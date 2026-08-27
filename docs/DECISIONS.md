@@ -7926,3 +7926,33 @@ OIDC-Anpassung ist ein eigener, kleiner Schritt am Login-Endpunkt.
 Offen bleibt nur noch das **Ref-Muster** (`#123` vs. `#US-123`) — das
 braucht einen eingeloggten Blick in ein echtes Projekt und liegt beim
 Bauen.
+
+**Nachtrag 2 — die Ref kommt ZUSÄTZLICH zur Knoten-ID, mit Typ-Präfix
+(2026-08-27).** Der Haupttext sagte „die Ticket-Ref wird als Knoten-ID
+zurückgeschrieben" — korrigiert auf Nutzer-Vorgabe: Die vergebenen IDs
+(`#bereich.task`, D48) bleiben stehen, die Taiga-Nummer kommt **dazu**.
+Zwei Festlegungen:
+
+- **Präfixe `US-`/`T-` schreibt Werkbaum selbst:** `#US-123` für die Story,
+  `#T-1234` für die Task. Taigas eigene Refs sind nackte Nummern, **je
+  Projekt fortlaufend und über alle Typen gemeinsam** (Story `#123` und
+  Task `#123` gibt es im selben Projekt nie zugleich — derselbe Zähler).
+  Das Präfix ist also unsere Konvention, und sie trägt genau das, was die
+  spätere Auflösung (`#trk.resolve`) braucht: den **Typ** — Stories und
+  Tasks haben getrennte `by_ref`-Endpunkte, ohne Präfix müsste der Resolver
+  beide probieren. Damit ist die letzte offene Messfrage aus dem Haupttext
+  (Ref-Muster) durch Festlegung erledigt: `US-\d+` / `T-\d+` (SPEC §11
+  nachgezogen).
+- **Eine Schreibregel, kein Sonderfall:** Die Ref wird als eigenes Token an
+  die Zeile angehängt. Die §1-Semantik erledigt den Rest von selbst — nur
+  das **erste** `#`-Token ist die Knoten-ID, jedes weitere bleibt im Label
+  („dort liegt die reservierte Ticket-Referenz", D36 wörtlich): Mit
+  vorhandener ID steht die Ref also als Referenz im Label, ohne ID wird
+  sie die ID. Der Idempotenz-Marker aus dem Haupttext wechselt damit von
+  „hat eine ID" auf „die Zeile trägt ein Token nach dem Tracker-Muster".
+
+**Benannte Grenze:** Weil das Projekt bei jeder Anlage gewählt wird, kann
+ein Dokument theoretisch Refs aus **mehreren** Projekten mischen — und
+`#US-123` ist nur je Projekt eindeutig. Der spätere Resolver braucht darum
+eine Projekt-Zuordnung; praktisch gehört ein Plan zu einem Projekt, und die
+Frage stellt sich erst bei `#trk.resolve`.
