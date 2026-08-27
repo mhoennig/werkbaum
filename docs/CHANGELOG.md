@@ -19,7 +19,7 @@ reverse.
 
 ## 2026-08-27
 
-- A `pull-doc` script fetches a shared document from the backend and commits it into a git worktree — dated commits, none when nothing changed, so a cron gives the plan a git history
+- A `pull-doc` script fetches a shared document from the backend into a file — with `--git-commit` it also commits it, dated, and only when something changed, so a cron gives the plan a git history
 - A benefit rating per node recorded as planned: a 0-9 digit inside the size token (`M/9`), and a third path mode that picks alternatives by benefit over cost — spelled out in SPEC §11 before it is built
 - A people bar below the diagram shows each `@person` with their share of the open work on the cheapest path — plus an entry for what is assigned to nobody
 - Tapping a person filters the diagram to their nodes: everything else folds, their packages stand collapsed as `▸ n`, their pills turn teal — a view-only lens that never writes into the text

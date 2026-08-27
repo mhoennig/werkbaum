@@ -1,34 +1,39 @@
 #!/usr/bin/env bash
 #
-# Werkbaum — pull-doc: ein Server-Dokument in ein git-Worktree holen und
-# committen. Gedacht als Archiv-Schritt (auch per Cron): Der Notationstext
-# eines geteilten Plans (D76) bekommt so eine Git-Historie.
+# Werkbaum — pull-doc: ein Server-Dokument in eine lokale Datei holen; auf
+# Wunsch committet es dazu. Gedacht als Archiv-Schritt (auch per Cron): Der
+# Notationstext eines geteilten Plans (D76) bekommt so eine Git-Historie.
 #
 # Verwendung:
-#   pull-doc <dokument-url> <zieldatei>
+#   pull-doc [--git-commit] <dokument-url> <zieldatei>
 #
+#   --git-commit    Die Zieldatei zusätzlich committen. Sie muss dann in einem
+#                   git-Worktree liegen; committet wird nur diese eine Datei,
+#                   die Commit-Nachricht nennt Datum, Titel und Version des
+#                   Server-Stands. Ohne den Schalter wird nur geschrieben.
 #   <dokument-url>  Die Dokument-Adresse des Backends
 #                   (https://…/api/v1/documents/<uuid>) — oder gleich der
 #                   geteilte Editor-Link (…?live=<adresse>); der Parameter
 #                   wird erkannt und ausgepackt.
-#   <zieldatei>     Datei, in die der Notationstext geschrieben wird. Sie muss
-#                   in einem git-Worktree liegen. Committet wird nur diese
-#                   eine Datei; die Commit-Nachricht nennt Datum, Titel und
-#                   Version des Server-Stands.
+#   <zieldatei>     Datei, in die der Notationstext geschrieben wird.
 #
-# Unverändert heißt: kein Commit — der Lauf meldet es und endet mit 0.
-# Geschrieben wird byte-getreu, was der Server hält (der Text ist das
-# führende Datenformat, D14); andere vorgemerkte Änderungen im Worktree
+# Unverändert heißt: nichts geschrieben, kein Commit — der Lauf meldet es und
+# endet mit 0. Geschrieben wird byte-getreu, was der Server hält (der Text ist
+# das führende Datenformat, D14); andere vorgemerkte Änderungen im Worktree
 # bleiben unangetastet (Commit mit Pfadangabe).
 #
 # Siehe docs/DECISIONS.md D88.
 
 set -euo pipefail
 
-usage(){ sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; }
+usage(){ sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; }
 
-case "${1:-}" in -h|--help) usage; exit 0;; esac
-[ $# -eq 2 ] || { echo "Fehler: genau zwei Argumente erwartet (URL und Zieldatei)." >&2; echo >&2; usage >&2; exit 2; }
+do_commit=0
+case "${1:-}" in
+  -h|--help) usage; exit 0;;
+  --git-commit) do_commit=1; shift;;
+esac
+[ $# -eq 2 ] || { echo "Fehler: erwartet [--git-commit] URL und Zieldatei." >&2; echo >&2; usage >&2; exit 2; }
 
 url="$1"; target="$2"
 
@@ -50,11 +55,13 @@ case "$url" in http://*|https://*) ;; *) echo "Fehler: keine http(s)-URL: $url" 
 [ -d "$target" ] && { echo "Fehler: $target ist ein Verzeichnis." >&2; exit 2; }
 dir="$(dirname -- "$target")"; base="$(basename -- "$target")"
 [ -d "$dir" ] || { echo "Fehler: Verzeichnis $dir gibt es nicht." >&2; exit 2; }
-if [ "$(git -C "$dir" rev-parse --is-inside-work-tree 2>/dev/null)" != "true" ]; then
-  echo "Fehler: $dir liegt in keinem git-Worktree." >&2; exit 2
-fi
-if [ "$(git -C "$dir" rev-parse --is-inside-git-dir 2>/dev/null)" = "true" ]; then
-  echo "Fehler: $dir liegt im .git-Verzeichnis." >&2; exit 2
+if [ "$do_commit" = 1 ]; then
+  if [ "$(git -C "$dir" rev-parse --is-inside-work-tree 2>/dev/null)" != "true" ]; then
+    echo "Fehler: $dir liegt in keinem git-Worktree (nötig für --git-commit)." >&2; exit 2
+  fi
+  if [ "$(git -C "$dir" rev-parse --is-inside-git-dir 2>/dev/null)" = "true" ]; then
+    echo "Fehler: $dir liegt im .git-Verzeichnis." >&2; exit 2
+  fi
 fi
 
 tmp_json="$(mktemp)"; tmp_doc="$dir/.$base.pull-doc.$$"
@@ -80,13 +87,22 @@ PY
 )"
 title="${meta%$'\t'*}"; version="${meta##*$'\t'}"
 
+# Unveraendert heisst: Datei gleich dem Server-Stand — und im Commit-Modus
+# zusaetzlich in git sauber, sonst bliebe eine liegende Aenderung (etwa aus
+# einem Lauf ohne --git-commit) fuer immer uncommittet.
 if [ -f "$target" ] && cmp -s "$tmp_doc" "$target"; then
-  echo "Unverändert: „$title“ (Version $version) — kein Commit."
-  exit 0
+  if [ "$do_commit" != 1 ] || [ -z "$(git -C "$dir" status --porcelain -- "$base")" ]; then
+    echo "Unverändert: „$title“ (Version $version) — nichts zu tun."
+    exit 0
+  fi
 fi
 
 mv -- "$tmp_doc" "$target"
-msg="Werkbaum-Stand vom $(date '+%Y-%m-%d %H:%M') — „$title“ (Version $version)"
-git -C "$dir" add -- "$base"
-git -C "$dir" commit -q -m "$msg" -- "$base"
-echo "Committet $(git -C "$dir" rev-parse --short HEAD): $msg"
+if [ "$do_commit" = 1 ]; then
+  msg="Werkbaum-Stand vom $(date '+%Y-%m-%d %H:%M') — „$title“ (Version $version)"
+  git -C "$dir" add -- "$base"
+  git -C "$dir" commit -q -m "$msg" -- "$base"
+  echo "Committet $(git -C "$dir" rev-parse --short HEAD): $msg"
+else
+  echo "Geschrieben: $target — „$title“ (Version $version)"
+fi

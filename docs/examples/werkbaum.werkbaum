@@ -142,7 +142,7 @@
     - [-] #col.pad: Borrow an Etherpad — it merges, we render (L)  %% built, then removed, see D78
     - [~] #col.git: Git as the shared store (L)
       | [ ] #col.git.pr: A file in a repository, changed by pull request (S)  %% works today, no code
-      | [x] #col.git.pull: A script pulls the server document and commits it (S)  %% tools/pull-doc, dated commits — see D88
+      | [x] #col.git.pull: A script pulls the server document and commits it (S)  %% tools/pull-doc --git-commit, dated commits — see D88
       | [?] #col.git.auto: The backend commits every change (L) :#be.scaffold
         - [?] #col.git.hist: History and restore (M)
           - [?] #col.git.diff: Diff between two versions (S)
@@ -889,8 +889,9 @@
 
 #col.git.pull
   The tools/pull-doc script fetches a server document (a ?live= link works too)
-  and commits it into a git worktree — date, title and version in the message,
-  no commit when nothing changed. Run from cron, a shared plan archives itself.
+  and writes it to a file; with --git-commit it also commits it into the git
+  worktree — date, title and version in the message, no commit when nothing
+  changed. Run from cron, a shared plan archives itself.
 
 #col.git.auto
   The server turns every change into a commit. History, restore and branches

@@ -122,10 +122,10 @@ something a cursor cannot do. Recognised only as a standalone token, so
 deletes it.
 
 **A git history for a shared plan:** `tools/pull-doc <document-url> <file>`
-fetches the document (a `?live=` link works too) and commits it into the file's
-git worktree — date, title and version in the message, and no commit when
-nothing changed. Run it from cron and the plan archives itself; see
-`docs/DECISIONS.md` D88.
+fetches the document (a `?live=` link works too) and writes it to the file;
+with `--git-commit` it also commits it into the file's git worktree — date,
+title and version in the message, and no commit when nothing changed. Run it
+from cron and the plan archives itself; see `docs/DECISIONS.md` D88.
 
 Setting up the backend: see [backend/README.md](backend/README.md) and
 `docs/DECISIONS.md` D76.

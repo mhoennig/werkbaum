@@ -7575,3 +7575,25 @@ geänderter Inhalt ergibt den zweiten Commit; der prozent-kodierte
 enden mit klarer Meldung und ohne Rückstände. Der echte Backend-Abruf ist
 derselbe GET wie im Mock — dieselbe Werkzeuggrenze wie überall: Der native
 Serverbetrieb ist über D76/D77 abgedeckt.
+
+**Nachtrag — committet wird nur mit `--git-commit`.** Nutzer-Einwand direkt
+nach dem Bauen: „pull ist nur die eine Hälfte, somit ist der Name etwas
+fehlleitend" — der wichtigere Teil sei gerade das Commit. Statt umzubenennen
+wird der Name **wahr gemacht**: Ohne Schalter tut `pull-doc`, was es sagt
+(holen und schreiben), das Commit ist ein ausdrücklicher Zusatz
+(`--git-commit`, als erstes Argument). Damit fällt auch die
+Worktree-Pflicht auf den Commit-Fall zurück — wer nur holen will, darf in
+jedes Verzeichnis schreiben.
+
+**Dabei eine Lücke gefunden, die es vorher nicht geben konnte:** Läuft erst
+der flag-lose Abruf (schreibt die Datei) und dann `--git-commit` bei
+unverändertem Server-Stand, war „Datei gleich Server" wahr — und die
+liegende, nie committete Änderung bliebe **für immer** uncommittet. Im
+Commit-Modus heißt „unverändert" deshalb zusätzlich: die Datei ist in git
+sauber (`git status --porcelain` leer); sonst wird trotz gleichen Inhalts
+committet. Nachgemessen in beiden Richtungen: flaglos geschrieben (` M`),
+dann `--git-commit` → Commit, Worktree sauber; sauber und gleich →
+„nichts zu tun", Commit-Zahl unverändert. Die übrigen Messungen aus dem
+Haupttext gelten fort; neu geprüft außerdem: flaglos außerhalb jedes
+Worktrees schreibt anstandslos, `--git-commit` dort lehnt mit klarer
+Meldung ab.
