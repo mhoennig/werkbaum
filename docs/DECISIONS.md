@@ -7199,3 +7199,12 @@ Löschen räumt ihn ab. Beim Prüfen fiel im Test-Profil das Werkbaum-Dokument
 als fehlend auf — Ursache waren die inszenierten Speicherzustände der
 D82-Prüfung selbst, nicht das neue Schema; der Seed-Merker tat das Richtige
 („gelöscht bleibt gelöscht", D27).
+
+**Nachtrag 4 — die Gruppen heißen jetzt Mitgeliefert · Lokal · Geteilt.**
+Nutzer-Wortwahl statt „Eigene" und „Quellen": „Eigene" sind der Sache nach
+**Lokale** (sie leben nur in diesem Browser), und Server- wie URL-Dokumente
+sind **Geteilte** — beide erreicht man über eine Adresse, die jemand
+weitergegeben hat. Erwogen waren auch „Im Browser · Im Netz" (ortsbasiert)
+und „Lokal · Extern"; die gewählte Form ist die knappste, die alle drei
+Gruppen mit einem Wort trifft. In allen neun Sprachen nachgezogen
+(en: Included · Local · Shared).
