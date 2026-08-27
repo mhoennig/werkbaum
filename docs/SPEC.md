@@ -770,7 +770,9 @@ Arbeit des günstigsten Pfads — dasselbe Maß wie der Zuständigen-Engpass
 Engpass-Person erscheint auch hier. Angezeigt werden **Anteile, keine
 absoluten Zahlen** — die Größen sind ordinal, jede Summe ist eine Näherung.
 Der Rest **ohne Zuständigen** bekommt einen eigenen, gestrichelten Eintrag,
-damit die Anteile auf 100 % summieren. Gerechnet wird auch bei
+damit die Anteile auf 100 % summieren; seine Pille trägt das **Kürzel** der
+Sprache (deutsch „N.N.“ — *nomen nominandum* —, englisch „TBD“, …), die
+Langform steht im Tooltip und im `aria-label`. Gerechnet wird auch bei
 ausgeschaltetem Pfad-Umschalter (wie die `path`-Voreinstellung des
 Falt-Durchschalters: die Frage gilt dem Pfad, nicht seiner Anzeige). Ohne
 Tags gibt es die Leiste nicht.

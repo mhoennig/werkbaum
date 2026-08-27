@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-27
 
+- The unassigned pill in the people bar shows each language's short form now — German `N.N.`, English `TBD` — with the long wording in the tooltip
 - `pull-doc --open` opens the fetched document in IntelliJ IDEA afterwards — also when nothing changed
 - A dead live session now reconnects by itself — unsent text stays in the editor and goes out as a diff once the server answers again
 - The connection state stands next to the document name: disconnected or unsent changes turn the kind label amber, instead of only a warning below the diagram

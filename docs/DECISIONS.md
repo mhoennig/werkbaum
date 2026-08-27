@@ -7806,3 +7806,18 @@ Nachgemessen mit einem Log-Stub im PATH: `--git-commit --open` committet und
 öffnet, `--open` allein öffnet auch den unveränderten Stand, ohne Schalter
 kein Aufruf, ohne `idea` im PATH der Hinweis, `--commit` (Tippfehler) bricht
 mit Meldung ab.
+
+## D87 — Nachtrag: Die Unassigned-Pille trägt ein Kürzel, die Langform den Tooltip
+Nutzerwunsch mit Sprachfrage: In der Personen-Leiste solle im Deutschen
+„n/n" oder „n.n." statt der Langform stehen — und gibt es solche Kürzel auch
+in anderen Sprachen? Die Antwort: Richtig ist **„N.N."** (lateinisch *nomen
+nominandum*, „der noch zu nennende Name" — die etablierte Konvention, groß
+mit Punkten; „n/n" gibt es nicht). Kürzel je Sprache, wo eines etabliert
+ist, sonst das kürzeste übliche Wort: en „TBD", zh „未分配", ja „未割当",
+fr „à pourvoir", es „sin asignar" — dort bewusst NICHT „N.N.", das in
+Lateinamerika für unidentifizierte Personen steht —, pl „nieprzypisane",
+ru „не назначено", hi „तय नहीं". Neuer Schlüssel `peopleUnassignedShort`
+neben der Langform: **Die Pille zeigt das Kürzel, Tooltip und `aria-label`
+die Langform** — ein Kürzel, das nirgends aufgelöst wird, wäre nur ein
+Rätsel. Nachgemessen im Browser: de-Pille „N.N." mit Tooltip
+„ohne Zuständigen: 29 % …", en-Pille „TBD" mit „unassigned: 29% …".

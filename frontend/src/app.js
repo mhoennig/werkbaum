@@ -385,14 +385,18 @@ function renderPeopleBar(roots, docTags, loadSet, overload){
   if(rest > 0) entries.push({tag: null, pct: share(rest)});
   peopleBar.innerHTML = entries.map(e => {
     const active = !!lens && lens.tag === e.tag;
+    /* Die Pille traegt das Kürzel (de „N.N." — nomen nominandum; en „TBD",
+       zh 未分配 …), Tooltip und aria-label die Langform: Ein Kürzel, das
+       niemand aufloest, waere nur ein Raetsel (D87-Nachtrag). */
     const label = e.tag === null ? t('peopleUnassigned') : e.tag;
+    const pill = e.tag === null ? t('peopleUnassignedShort') : e.tag;
     const tip = t('peopleShare', {share: e.pct}) + ' · ' +
                 t(active ? 'peopleLensOff' : 'peopleLensOn');
     const warm = overload && e.tag !== null && overload.tag === e.tag;
     return `<button type="button" class="pbperson" aria-pressed="${active}"` +
       (e.tag === null ? ' data-nobody' : ` data-tag="${esc(e.tag)}"`) +
       ` title="${esc(label)}: ${esc(tip)}" aria-label="${esc(label)}: ${esc(tip)}">` +
-      `<span class="tag${warm ? ' overload' : ''}${e.tag === null ? ' nobody' : ''}" aria-hidden="true">${esc(label)}</span>` +
+      `<span class="tag${warm ? ' overload' : ''}${e.tag === null ? ' nobody' : ''}" aria-hidden="true">${esc(pill)}</span>` +
       `<span class="pbbar" aria-hidden="true"><span class="pbfill" style="width:${e.pct}%"></span></span>` +
       `<span class="pbpct" aria-hidden="true">${e.pct}%</span></button>`;
   }).join('');
@@ -2483,6 +2487,7 @@ const I18N = {
     assigneeOverloadWarn:"@{tag} trägt {share} % der offenen Arbeit auf dem günstigsten Pfad ({stations} von {total} Stationen) — mögliche Engstelle.",
     peopleBarLabel:"Zuständige",
     peopleUnassigned:"ohne Zuständigen",
+    peopleUnassignedShort:"N.N.",
     peopleShare:"{share} % der offenen Arbeit auf dem günstigsten Pfad",
     peopleLensOn:"Klick: nur diese Knoten zeigen, alles andere zuklappen",
     peopleLensOff:"Klick: Filter aufheben",
@@ -2617,6 +2622,7 @@ const I18N = {
     assigneeOverloadWarn:"@{tag} carries {share}% of the open work on the cheapest path ({stations} of {total} stations) — a possible bottleneck.",
     peopleBarLabel:"Assignees",
     peopleUnassigned:"unassigned",
+    peopleUnassignedShort:"TBD",
     peopleShare:"{share}% of the open work on the cheapest path",
     peopleLensOn:"Click: show only these nodes, fold everything else",
     peopleLensOff:"Click: remove the filter",
@@ -2751,6 +2757,7 @@ const I18N = {
     assigneeOverloadWarn:"@{tag} lleva el {share} % del trabajo pendiente en el camino más barato ({stations} de {total} estaciones) — posible cuello de botella.",
     peopleBarLabel:"Responsables",
     peopleUnassigned:"sin responsable",
+    peopleUnassignedShort:"sin asignar",
     peopleShare:"{share} % del trabajo pendiente en el camino más barato",
     peopleLensOn:"Clic: mostrar solo estos nodos y plegar el resto",
     peopleLensOff:"Clic: quitar el filtro",
@@ -2885,6 +2892,7 @@ const I18N = {
     assigneeOverloadWarn:"@{tag} porte {share} % du travail restant sur le chemin le moins cher ({stations} stations sur {total}) — goulot d’étranglement possible.",
     peopleBarLabel:"Responsables",
     peopleUnassigned:"sans responsable",
+    peopleUnassignedShort:"à pourvoir",
     peopleShare:"{share} % du travail restant sur le chemin le moins cher",
     peopleLensOn:"Clic : n’afficher que ces nœuds, replier le reste",
     peopleLensOff:"Clic : retirer le filtre",
@@ -3019,6 +3027,7 @@ const I18N = {
     assigneeOverloadWarn:"@{tag} niesie {share} % otwartej pracy na najtańszej ścieżce ({stations} z {total} stacji) — możliwe wąskie gardło.",
     peopleBarLabel:"Odpowiedzialni",
     peopleUnassigned:"bez odpowiedzialnego",
+    peopleUnassignedShort:"nieprzypisane",
     peopleShare:"{share} % otwartej pracy na najtańszej ścieżce",
     peopleLensOn:"Klik: pokaż tylko te węzły, resztę zwiń",
     peopleLensOff:"Klik: usuń filtr",
@@ -3153,6 +3162,7 @@ const I18N = {
     assigneeOverloadWarn:"@{tag} несёт {share} % открытой работы на самом дешёвом пути ({stations} из {total} станций) — возможное узкое место.",
     peopleBarLabel:"Ответственные",
     peopleUnassigned:"без ответственного",
+    peopleUnassignedShort:"не назначено",
     peopleShare:"{share} % открытой работы на самом дешёвом пути",
     peopleLensOn:"Клик: показать только эти узлы, остальное свернуть",
     peopleLensOff:"Клик: снять фильтр",
@@ -3287,6 +3297,7 @@ const I18N = {
     assigneeOverloadWarn:"@{tag} सबसे सस्ते पथ पर खुले काम का {share}% उठाए हुए है ({total} में से {stations} स्टेशन) — संभावित अड़चन।",
     peopleBarLabel:"ज़िम्मेदार",
     peopleUnassigned:"बिना ज़िम्मेदार",
+    peopleUnassignedShort:"तय नहीं",
     peopleShare:"सबसे सस्ते पथ पर खुले काम का {share}%",
     peopleLensOn:"क्लिक: केवल ये नोड दिखाएँ, बाकी सब समेटें",
     peopleLensOff:"क्लिक: फ़िल्टर हटाएँ",
@@ -3421,6 +3432,7 @@ const I18N = {
     assigneeOverloadWarn:"@{tag} 承担最便宜路径上 {share}% 的未完成工作（{total} 个站点中的 {stations} 个）——可能的瓶颈。",
     peopleBarLabel:"负责人",
     peopleUnassigned:"未分配",
+    peopleUnassignedShort:"未分配",
     peopleShare:"最便宜路径上未完成工作的 {share}%",
     peopleLensOn:"点击：只显示这些节点，折叠其余部分",
     peopleLensOff:"点击：取消筛选",
@@ -3555,6 +3567,7 @@ const I18N = {
     assigneeOverloadWarn:"@{tag} が最安パスの未完了作業の {share}% を担っています（全 {total} 駅中 {stations} 駅）— ボトルネックの可能性。",
     peopleBarLabel:"担当者",
     peopleUnassigned:"担当者なし",
+    peopleUnassignedShort:"未割当",
     peopleShare:"最安パスの未完了作業の {share}%",
     peopleLensOn:"クリック：このノードだけを表示し、他を折りたたむ",
     peopleLensOff:"クリック：フィルターを解除",
