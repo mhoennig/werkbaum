@@ -144,11 +144,22 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
 - Zustand wird im `localStorage` gehalten (Server-Dokumente ausgenommen): `werkbaum-lang`
   (Sprache), `werkbaum-docs` (JSON-Array der Dokumente `[{id,name,text}]`),
   `werkbaum-active` (id des aktiven Dokuments), `werkbaum-src` (Spiegel des
-  aktiven Texts, Abwärtskompatibilität), `werkbaum-ui` (JSON: Modus, verworfene,
+  aktiven Texts), `werkbaum-ui` (JSON: Modus, verworfene,
   günstigster Pfad, Split-Zustand inkl. `--col`/`--drow`, Zoom, Vollbild). Neue
   GUI-Einstellungen in `saveUI()`/`restoreState()` mitführen; `saveUI` liefert
   während `restoring===true` nichts, damit das Wiederherstellen nicht sofort
   zurückschreibt.
+  **Persistenz ist geteilt (D82):** Der Tastendruck schreibt über
+  `persistActiveText()` NUR den Spiegel `werkbaum-src`; das volle Array
+  schreibt `persistDocs()` an Flush-Punkten (Wechseln/Anlegen/Löschen/
+  Umbenennen, `pagehide`, verborgener Tab) — es serialisiert ALLE Dokumente,
+  nie wieder in einen Tastendruck-Pfad hängen. Beim Laden **gewinnt der
+  Spiegel** für das aktive Dokument (`loadDocs`), und zwar zwingend **vor**
+  `seedShippedDocs()` — danach drehte der ältere Spiegel eine frisch
+  nachgezogene Fassung zurück und das Dokument gälte für immer als
+  bearbeitet. Scheitert ein Write (Quota), meldet die persistente Warnung
+  `storeFailed` (`noteStore()`, rendert nur an der Flanke) — nie wieder
+  still schlucken.
 - Dokumente (D22): mehrere umschaltbare Notationstexte. `loadDocs()` migriert bei
   fehlendem `werkbaum-docs` den bestehenden `werkbaum-src` (oder `INITIAL`) in
   **ein** Dokument; `initDocs()` (Aufruf **nach** `applyLang`) holt den aktiven

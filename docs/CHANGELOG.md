@@ -19,6 +19,8 @@ reverse.
 
 ## 2026-08-27
 
+- Typing no longer serializes every document on each keystroke — only the active text is written, the full list on switching, closing or leaving the page
+- When the browser's storage is full, a warning says so instead of silently dropping changes until the next reload
 - Shipped documents are no longer renamable — their name is part of the delivered state, and a renamed but unedited example would still silently receive new versions
 - Fix: sharing from an instance without its own backend (GitHub Pages) failed with HTTP 405 — the share button now probes the default address and asks for the server instead
 

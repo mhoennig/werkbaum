@@ -7084,3 +7084,63 @@ behält seinen Namen; nur das UI bietet es nicht mehr an. Wer das Beispiel
 als Basis für einen eigenen Plan will, ändert den Text (dann stoppt das
 Nachziehen ohnehin) oder legt ein eigenes Dokument an; ein „Duplizieren" im
 Menü wäre die saubere Antwort darauf, ist aber ein eigenes Feature.
+
+## D82 — Persistenz: der Tastendruck schreibt nur noch den Spiegel, und Speicherfehler werden gemeldet
+Zwei Funde aus derselben Nutzerfrage („Was passiert bei sehr vielen
+Dokumenten?"), beide in der Speicherschicht:
+
+**1. `saveSrc()` serialisierte bei jedem Tastendruck ALLE Dokumente.** Alle
+Dokumente liegen als ein JSON-Array unter einem Schlüssel (`werkbaum-docs`,
+D22), und localStorage kennt kein Teil-Update — wer ein Feld ändert, schreibt
+alles. Bei einer Handvoll kleiner Dokumente egal; bei fünfzig großen wäre
+jeder Tastendruck eine Mehrere-MB-Serialisierung. Die Frage des Nutzers
+(„Warum alle und nicht nur das Aktuelle?") benennt die richtige Richtung,
+und der Ausweg lag schon halb im Haus: den Spiegel-Schlüssel `werkbaum-src`
+(nur der aktive Text) gab es seit D22 als Migrations-Fallback.
+
+**Die Arbeitsteilung jetzt:** Der Tastendruck schreibt über
+`persistActiveText()` **nur den Spiegel** — ein Text, ein `setItem`. Das
+volle Array schreibt `persistDocs()` an **Flush-Punkten**: Wechseln,
+Anlegen, Löschen, Umbenennen, Wiederherstellen — und neu beim **Verlassen
+der Seite** (`pagehide` sowie der verborgene Tab: auf Mobil räumt der
+Browser Tabs oft ohne pagehide ab). Beim Laden **gewinnt der Spiegel** für
+das aktive Dokument: Er ist immer mindestens so neu wie das Array, und wurde
+die Seite ohne Flush beendet (Absturz, abgewürgter Tab), holt die Regel die
+letzten Tastendrücke zurück. Das Schema bleibt unverändert — voll vor- und
+rückwärtskompatibel, kein Migrationscode.
+
+**Die eine Reihenfolge, an der es hängt:** Die Spiegel-Regel muss in
+`loadDocs()` **vor** `seedShippedDocs()` laufen. Danach kann das Array die
+frisch nachgezogene Fassung eines mitgelieferten Dokuments tragen, und der
+dann ältere Spiegel drehte sie zurück — das Dokument gälte fortan als
+„bearbeitet" und bekäme **nie wieder** eine neue Fassung. Beim Bauen
+gefunden (die erste Fassung stand dahinter), als Kommentar im Code benannt.
+
+Auch `setLiveText()` (fremde Feed-Änderungen, im Sekundentakt beim
+gemeinsamen Tippen) schreibt nur noch den Spiegel — für Server-Dokumente ist
+ohnehin der Server die Quelle der Wahrheit, das Array nur Vorschau-Cache.
+
+**2. Scheiterte das Speichern, lief der Editor stumm weiter.** `persistDocs`
+schluckte jede Exception (`try/catch(_){}`): Bei voller Quota sah alles
+normal aus, und der Verlust fiel erst beim Neuladen auf — der stillste
+denkbare Fehler, gegen die Haus-Linie (D59, SPEC §4). Jetzt meldet die
+zeilenlose, **persistente** Warnung `storeFailed` (zuoberst, neun Sprachen):
+was passiert ist, was droht und was hilft (Dokumente oder frühere Stände
+löschen). Sie verschwindet, sobald ein Schreiben wieder gelingt; neu
+gezeichnet wird nur an der **Flanke** (Fehler kommt/geht), nicht bei jedem
+Tastendruck. `persistSnaps` (D54) behält sein eigenes Verhalten — es wirft
+bei Platzmangel gezielt alte Stände weg, Dokumente sind wichtiger.
+
+**Nachgemessen** im Browser: Tippen lässt `werkbaum-docs` unangetastet und
+aktualisiert nur `werkbaum-src`; der Dokumentwechsel flusht das Array; nach
+einem inszenierten Absturz (Array alt, Spiegel neu, Abschieds-Flush
+stummgeschaltet — er stürbe beim echten Absturz ja auch mit) zeigt der
+Editor den Spiegel-Stand; ein gestellter Quota-Fehler bringt die Warnung
+zuoberst, und der nächste gelingende Write räumt sie. Zwei Werkzeuggrenzen
+dabei: Das Browser-Profil der Automatisierung nahm 20 MB localStorage an,
+ohne zu werfen — die echte Quota ließ sich dort nicht erreichen, der
+Fehlerpfad wurde deshalb per gestelltem `setItem` geprüft; und ein
+Zwei-Tab-Versuch scheiterte lehrreich daran, dass das Fronten des zweiten
+Tabs im ersten genau den neuen visibilitychange-Flush auslöste, der die
+Inszenierung überschrieb — der Flush bewies sich damit ungefragt selbst.
+519 Tests unverändert grün.

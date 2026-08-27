@@ -81,6 +81,17 @@ let mobilePane = 'diagram';
 let caretLine = null, currentNodeEl = null;
 /* Warnung des ?sourceUrl-Ladens (D23) — zeilenlos und persistent, siehe render(). */
 let sourceWarning = null;
+/* Scheitert das Speichern im Browser (Quota voll), wird das GEMELDET statt
+   geschluckt (D82) — vorher lief der Editor scheinbar normal weiter, und der
+   Verlust fiel erst beim Neuladen auf. Persistent, bis ein Schreiben wieder
+   gelingt; zeilenlos und zuoberst. */
+let storeWarning = null;
+function noteStore(ok){
+  const neu = ok ? null : {type: 'storeFailed'};
+  const wechsel = (!!storeWarning) !== (!!neu);
+  storeWarning = neu;
+  if(wechsel) render();   /* nur an der Flanke — nicht bei jedem Tastendruck */
+}
 /* Steht die App? Erst danach folgt die Adresszeile dem aktiven Dokument (D80)
    und wird eine Live-Sitzung beim Umschalten übernommen. Während des Starts
    dürfen beide nicht laufen: `loadRemoteSource()`/`loadLive()` lesen ihre
@@ -136,6 +147,7 @@ function render(){
      (?sourceUrl nicht ladbar, D23) gehört keiner Zeile und bleibt über
      Neu-Renderings bestehen, bis das Laden gelingt. */
   let warnings = sourceWarning ? [sourceWarning].concat(parsed.warnings) : parsed.warnings;
+  if(storeWarning) warnings = [storeWarning].concat(warnings);   /* Datenverlust droht — zuoberst (D82) */
 
   if(!roots.length){
     out.innerHTML = `<div class="empty">${esc(t('empty'))}</div>`;
@@ -2299,6 +2311,7 @@ const I18N = {
     unknownStatusWarn:"Zeile {line}: unbekanntes Statuszeichen „{code}“ — als neutral dargestellt.",
     sourceLoadWarn:"„{url}“ konnte nicht geladen werden ({error}). Die Datei muss per http(s) erreichbar sein und CORS erlauben (Access-Control-Allow-Origin).",
     padGoneWarn:"Dieser Link zeigt auf ein Etherpad-Pad. Die Etherpad-Anbindung gibt es nicht mehr — gemeinsames Arbeiten läuft jetzt über ein Werkbaum-Backend (?live=…). Der Text des Pads lässt sich dort einmal einfügen und dann zu zweit bearbeiten.",
+    storeFailedWarn:"Speichern im Browser fehlgeschlagen — vermutlich ist der Speicher voll. Änderungen können beim Neuladen verloren gehen; Platz schaffen: nicht mehr gebrauchte Dokumente oder frühere Stände löschen.",
     a11yStatus:"Status: {status}", a11ySize:"Aufwand: {size}", a11ySizeImplicit:"Aufwand: mindestens {size} (angenommen)", a11yTags:"Zuständig: {names}", a11yId:"ID: #{id}", a11yDeps:"hängt ab von: {ids}", a11yFolded:"eingeklappt, {n} verborgen", a11yEffective:"effektiv: {status}", heldTooltip:"effektiv {eff} — selbst schon {own}, wartet auf Abhängigkeiten", a11yOptional:"optional", a11yFocusMark:"hierhin schauen", a11yLink:"verlinkt",
     hint_indent:"Einrückung (2 Leerzeichen oder Tab) definiert die Hierarchie.",
     hint_all:"Teilpaket, alle erforderlich", hint_any:"Alternative, eine wählen",
@@ -2412,6 +2425,7 @@ const I18N = {
     unknownStatusWarn:"Line {line}: unknown status code “{code}” — shown as neutral.",
     sourceLoadWarn:"Could not load “{url}” ({error}). The file must be reachable via http(s) and allow CORS (Access-Control-Allow-Origin).",
     padGoneWarn:"This link points at an Etherpad pad. The Etherpad connection is gone — collaboration now runs through a Werkbaum backend (?live=…). Paste the pad’s text there once, then edit it together.",
+    storeFailedWarn:"Saving in the browser failed — its storage is probably full. Changes may be lost on reload; free space by deleting unused documents or earlier states.",
     a11yStatus:"Status: {status}", a11ySize:"Effort: {size}", a11ySizeImplicit:"Effort: at least {size} (assumed)", a11yTags:"Assigned: {names}", a11yId:"ID: #{id}", a11yDeps:"depends on: {ids}", a11yFolded:"collapsed, {n} hidden", a11yEffective:"effective: {status}", heldTooltip:"effectively {eff} — itself already {own}, waiting on dependencies", a11yOptional:"optional", a11yFocusMark:"look here", a11yLink:"has link",
     hint_indent:"Indentation (2 spaces or a tab) defines the hierarchy.",
     hint_all:"sub-task, all required", hint_any:"alternative, choose one",
@@ -2525,6 +2539,7 @@ const I18N = {
     unknownStatusWarn:"Línea {line}: código de estado desconocido «{code}» — mostrado como neutral.",
     sourceLoadWarn:"No se pudo cargar «{url}» ({error}). El archivo debe ser accesible por http(s) y permitir CORS (Access-Control-Allow-Origin).",
     padGoneWarn:"Este enlace apunta a un pad de Etherpad. La conexión con Etherpad ya no existe: ahora se colabora a través de un backend de Werkbaum (?live=…). Pega allí el texto del pad una vez y editadlo juntos.",
+    storeFailedWarn:"No se pudo guardar en el navegador: su almacenamiento probablemente está lleno. Los cambios pueden perderse al recargar; libera espacio borrando documentos sin uso o estados anteriores.",
     a11yStatus:"Estado: {status}", a11ySize:"Esfuerzo: {size}", a11ySizeImplicit:"Esfuerzo: al menos {size} (asumido)", a11yTags:"Responsable: {names}", a11yId:"ID: #{id}", a11yDeps:"depende de: {ids}", a11yFolded:"plegado, {n} ocultos", a11yEffective:"efectivo: {status}", heldTooltip:"efectivamente {eff} — por sí mismo ya {own}, espera dependencias", a11yOptional:"opcional", a11yFocusMark:"mirar aquí", a11yLink:"con enlace",
     hint_indent:"La sangría (2 espacios o un tabulador) define la jerarquía.",
     hint_all:"subtarea, todas obligatorias", hint_any:"alternativa, elige una",
@@ -2638,6 +2653,7 @@ const I18N = {
     unknownStatusWarn:"Ligne {line} : code de statut inconnu « {code} » — affiché comme neutre.",
     sourceLoadWarn:"Impossible de charger « {url} » ({error}). Le fichier doit être accessible en http(s) et autoriser CORS (Access-Control-Allow-Origin).",
     padGoneWarn:"Ce lien pointe vers un pad Etherpad. La connexion Etherpad n’existe plus — la collaboration passe désormais par un backend Werkbaum (?live=…). Collez-y une fois le texte du pad, puis modifiez-le à plusieurs.",
+    storeFailedWarn:"L'enregistrement dans le navigateur a échoué — son stockage est probablement plein. Les modifications peuvent être perdues au rechargement ; libérez de l'espace en supprimant des documents inutilisés ou des états antérieurs.",
     a11yStatus:"Statut : {status}", a11ySize:"Effort : {size}", a11ySizeImplicit:"Effort : au moins {size} (supposé)", a11yTags:"Responsable : {names}", a11yId:"ID : #{id}", a11yDeps:"dépend de : {ids}", a11yFolded:"replié, {n} masqués", a11yEffective:"effectif : {status}", heldTooltip:"effectivement {eff} — lui-même déjà {own}, en attente de dépendances", a11yOptional:"facultatif", a11yFocusMark:"regarder ici", a11yLink:"avec lien",
     hint_indent:"L'indentation (2 espaces ou une tabulation) définit la hiérarchie.",
     hint_all:"sous-tâche, toutes requises", hint_any:"alternative, en choisir une",
@@ -2751,6 +2767,7 @@ const I18N = {
     unknownStatusWarn:"Wiersz {line}: nieznany znak statusu „{code}” — pokazany jako neutralny.",
     sourceLoadWarn:"Nie udało się wczytać „{url}” ({error}). Plik musi być dostępny przez http(s) i zezwalać na CORS (Access-Control-Allow-Origin).",
     padGoneWarn:"Ten link prowadzi do pada Etherpad. Połączenia z Etherpadem już nie ma — wspólna praca odbywa się teraz przez backend Werkbaum (?live=…). Wklej tam raz tekst pada i edytujcie go razem.",
+    storeFailedWarn:"Zapis w przeglądarce nie powiódł się — jego pamięć jest zapewne pełna. Zmiany mogą przepaść przy przeładowaniu; zwolnij miejsce, usuwając nieużywane dokumenty lub wcześniejsze stany.",
     a11yStatus:"Status: {status}", a11ySize:"Nakład: {size}", a11ySizeImplicit:"Nakład: co najmniej {size} (założony)", a11yTags:"Przypisano: {names}", a11yId:"ID: #{id}", a11yDeps:"zależy od: {ids}", a11yFolded:"zwinięte, ukrytych: {n}", a11yEffective:"efektywnie: {status}", heldTooltip:"efektywnie {eff} — sam już {own}, czeka na zależności", a11yOptional:"opcjonalny", a11yFocusMark:"spójrz tutaj", a11yLink:"z linkiem",
     hint_indent:"Wcięcie (2 spacje lub tabulator) definiuje hierarchię.",
     hint_all:"podzadanie, wszystkie wymagane", hint_any:"alternatywa, wybierz jedną",
@@ -2864,6 +2881,7 @@ const I18N = {
     unknownStatusWarn:"Строка {line}: неизвестный код статуса «{code}» — показан как нейтральный.",
     sourceLoadWarn:"Не удалось загрузить «{url}» ({error}). Файл должен быть доступен по http(s) и разрешать CORS (Access-Control-Allow-Origin).",
     padGoneWarn:"Эта ссылка ведёт на пад Etherpad. Подключения к Etherpad больше нет — совместная работа теперь идёт через бэкенд Werkbaum (?live=…). Вставьте туда текст пада один раз и редактируйте вместе.",
+    storeFailedWarn:"Не удалось сохранить в браузере — его хранилище, вероятно, заполнено. Изменения могут потеряться при перезагрузке; освободите место, удалив ненужные документы или прежние состояния.",
     a11yStatus:"Статус: {status}", a11ySize:"Оценка: {size}", a11ySizeImplicit:"Оценка: не меньше {size} (предполагается)", a11yTags:"Ответственные: {names}", a11yId:"ID: #{id}", a11yDeps:"зависит от: {ids}", a11yFolded:"свёрнуто, скрыто: {n}", a11yEffective:"фактически: {status}", heldTooltip:"фактически {eff} — сам уже {own}, ждёт зависимости", a11yOptional:"необязательно", a11yFocusMark:"смотрите здесь", a11yLink:"со ссылкой",
     hint_indent:"Отступ (2 пробела или табуляция) задаёт иерархию.",
     hint_all:"подзадача, все обязательны", hint_any:"альтернатива, выберите одну",
@@ -2977,6 +2995,7 @@ const I18N = {
     unknownStatusWarn:"पंक्ति {line}: अज्ञात स्थिति कोड „{code}“ — तटस्थ रूप में दिखाया गया।",
     sourceLoadWarn:"„{url}“ लोड नहीं हो सका ({error})। फ़ाइल http(s) से उपलब्ध होनी चाहिए और CORS की अनुमति देनी चाहिए (Access-Control-Allow-Origin)।",
     padGoneWarn:"यह लिंक एक Etherpad पैड की ओर इशारा करता है। Etherpad कनेक्शन अब नहीं है — साझा काम अब Werkbaum बैकएंड (?live=…) से होता है। पैड का टेक्स्ट वहाँ एक बार चिपकाएँ और मिलकर संपादित करें।",
+    storeFailedWarn:"ब्राउज़र में सहेजना विफल रहा — संभवतः उसका संग्रहण भर गया है। पुनः लोड करने पर बदलाव खो सकते हैं; अनुपयोगी दस्तावेज़ या पिछली स्थितियाँ हटाकर जगह बनाएँ।",
     a11yStatus:"स्थिति: {status}", a11ySize:"आकार: {size}", a11ySizeImplicit:"आकार: कम से कम {size} (अनुमानित)", a11yTags:"जिम्मेदार: {names}", a11yId:"आईडी: #{id}", a11yDeps:"निर्भर: {ids}", a11yFolded:"समेटा हुआ, {n} छिपे", a11yEffective:"प्रभावी: {status}", heldTooltip:"प्रभावी रूप से {eff} — स्वयं {own} है, निर्भरताओं की प्रतीक्षा में", a11yOptional:"वैकल्पिक", a11yFocusMark:"यहाँ देखें", a11yLink:"लिंक सहित",
     hint_indent:"इंडेंट (2 स्पेस या टैब) पदानुक्रम तय करता है।",
     hint_all:"उप-कार्य, सभी आवश्यक", hint_any:"विकल्प, एक चुनें",
@@ -3090,6 +3109,7 @@ const I18N = {
     unknownStatusWarn:"第 {line} 行：未知状态代码“{code}”——显示为中性。",
     sourceLoadWarn:"无法加载“{url}”（{error}）。该文件必须可通过 http(s) 访问并允许 CORS（Access-Control-Allow-Origin）。",
     padGoneWarn:"此链接指向一个 Etherpad pad。Etherpad 连接已移除——协作现在通过 Werkbaum 后端（?live=…）进行。把 pad 的文本粘贴过去一次，然后一起编辑。",
+    storeFailedWarn:"无法保存到浏览器——其存储空间可能已满。重新加载时更改可能丢失；请删除不再使用的文档或以前的状态以腾出空间。",
     a11yStatus:"状态：{status}", a11ySize:"工作量：{size}", a11ySizeImplicit:"工作量：至少 {size}（假定）", a11yTags:"负责人：{names}", a11yId:"ID：#{id}", a11yDeps:"依赖：{ids}", a11yFolded:"已折叠，隐藏 {n} 项", a11yEffective:"实际：{status}", heldTooltip:"实际为 {eff}——自身已是 {own}，等待依赖完成", a11yOptional:"可选", a11yFocusMark:"看这里", a11yLink:"含链接",
     hint_indent:"缩进（2 个空格或制表符）定义层级。",
     hint_all:"子任务，全部必需", hint_any:"备选项，择其一",
@@ -3203,6 +3223,7 @@ const I18N = {
     unknownStatusWarn:"{line} 行目: 不明なステータス記号「{code}」— 中立として表示。",
     sourceLoadWarn:"「{url}」を読み込めませんでした（{error}）。ファイルは http(s) でアクセス可能で、CORS（Access-Control-Allow-Origin）を許可する必要があります。",
     padGoneWarn:"このリンクは Etherpad のパッドを指しています。Etherpad 連携は廃止されました。共同編集は Werkbaum バックエンド（?live=…）で行います。パッドの本文を一度貼り付ければ、複数人で編集できます。",
+    storeFailedWarn:"ブラウザーへの保存に失敗しました — ストレージが満杯の可能性があります。再読み込みで変更が失われることがあります。不要なドキュメントや以前の状態を削除して空きを作ってください。",
     a11yStatus:"ステータス: {status}", a11ySize:"規模: {size}", a11ySizeImplicit:"規模: 少なくとも {size}（想定）", a11yTags:"担当: {names}", a11yId:"ID: #{id}", a11yDeps:"依存先: {ids}", a11yFolded:"折りたたみ中、{n} 件非表示", a11yEffective:"実効: {status}", heldTooltip:"実効では {eff} — 自身は既に {own}、依存待ち", a11yOptional:"任意", a11yFocusMark:"ここを見る", a11yLink:"リンクあり",
     hint_indent:"インデント（スペース2つまたはタブ）で階層を定義します。",
     hint_all:"サブタスク、すべて必須", hint_any:"選択肢、1つを選ぶ",
@@ -3375,13 +3396,28 @@ function uniqueName(base){
   while(taken.has(base + ' ' + i)) i++;
   return base + ' ' + i;
 }
+/* Die volle Persistenz: serialisiert ALLE Dokumente — deshalb läuft sie nur
+   an Flush-Punkten (Wechseln/Anlegen/Löschen/Umbenennen, Verlassen der
+   Seite), nicht mehr bei jedem Tastendruck (D82). Ein Fehlschlag (Quota
+   voll) wird gemeldet statt geschluckt. */
 function persistDocs(){
   try{
     localStorage.setItem(LS_DOCS, JSON.stringify(docs));
     localStorage.setItem(LS_ACTIVE, activeId || '');
     const d = activeDoc();
-    if(d) localStorage.setItem(LS_SRC, d.text);   /* Spiegel für Fallback/Migration */
-  }catch(_){}
+    if(d) localStorage.setItem(LS_SRC, d.text);   /* Spiegel, siehe persistActiveText */
+    noteStore(true);
+  }catch(_){ noteStore(false); }
+}
+/* Die Tastendruck-Hälfte (D82): nur der Spiegel des AKTIVEN Texts (LS_SRC).
+   Für das aktive Dokument ist der Spiegel damit immer mindestens so neu wie
+   das Array — beim Laden gewinnt er (loadDocs). */
+function persistActiveText(){
+  try{
+    const d = activeDoc();
+    if(d) localStorage.setItem(LS_SRC, d.text);
+    noteStore(true);
+  }catch(_){ noteStore(false); }
 }
 /* Kurzer, stabiler Fingerabdruck (FNV-1a) — dient nur dem Vergleich „ist das
    noch der ausgelieferte Text?"; keine kryptografische Anforderung. */
@@ -3452,19 +3488,32 @@ function loadDocs(){
     docs[0].id = EXAMPLE_ID;
     docs[0].name = EXAMPLE_NAME;
   }
+  activeId = docs.some(d => d.id === a) ? a : docs[0].id;
+  /* Der Spiegel gewinnt (D82): Beim Tippen wird nur LS_SRC geschrieben, das
+     Array erst an Flush-Punkten — für das aktive Dokument ist der Spiegel
+     also mindestens so neu. Wurde die Seite ohne Flush beendet (Absturz,
+     abgewürgter Tab), holt das hier die letzten Tastendrücke zurück.
+     Zwingend VOR seedShippedDocs(): Danach kann das Array die frisch
+     nachgezogene Fassung tragen, und der (dann ältere) Spiegel würde sie
+     zurückdrehen — das Dokument gälte fortan als „bearbeitet" und bekäme
+     nie wieder eine neue Fassung. */
+  try{
+    const spiegel = localStorage.getItem(LS_SRC);
+    const d = docs.find(x => x.id === activeId);
+    if(d && spiegel !== null && spiegel !== d.text) d.text = spiegel;
+  }catch(_){}
   seedShippedDocs();
   /* Namensfix für die kurzlebige Fassung mit dem Tippfehler — nur, solange der
      ausgelieferte Name unverändert ist; eine eigene Umbenennung bleibt stehen
      (Dokumentnamen sind Nutzerdaten, D22). */
   const wb = docs.find(d => d.id === WERKBAUM_ID);
   if(wb && wb.name === WERKBAUM_NAME_ALT) wb.name = WERKBAUM_NAME;
-  activeId = docs.some(d => d.id === a) ? a : docs[0].id;
 }
 function saveSrc(){
   if(restoring) return;
   const d = activeDoc();
   if(d) d.text = src.value;
-  persistDocs();
+  persistActiveText();   /* nicht persistDocs: das serialisierte ALLE Dokumente je Tastendruck (D82) */
 }
 function saveUI(){
   if(restoring) return;
@@ -4786,7 +4835,7 @@ function setLiveText(text, caret){
   if(caret != null){ src.selectionStart = src.selectionEnd = caret; }
   const d = activeDoc();
   if(d) d.text = text;
-  persistDocs();
+  persistActiveText();   /* fremde Feed-Änderungen kommen im Sekundentakt — kein Voll-Write (D82) */
   render();
 }
 
@@ -5163,6 +5212,12 @@ let startLang = 'de';
 try{ startLang = localStorage.getItem('werkbaum-lang') || detectLang(); }catch(_){ startLang = detectLang(); }
 applyLang(I18N[startLang] ? startLang : 'de');   /* setzt Texte + rendert */
 initDocs();      /* Dokumente laden + aktiven Text in den Editor (nach Sprache) */
+/* Flush-Punkte beim Verlassen (D82): Das Dokument-Array wird beim Tippen
+   nicht mehr geschrieben (nur der Spiegel) — hier holt es den Stand nach.
+   `pagehide` statt `beforeunload` (greift auch beim bfcache), dazu der
+   verborgene Tab: Auf Mobil räumt der Browser Tabs oft ohne pagehide ab. */
+addEventListener('pagehide', () => persistDocs());
+document.addEventListener('visibilitychange', () => { if(document.hidden) persistDocs(); });
 if(hasFsAccess) handlesReady = idbLoadHandles();   /* gemerkte Datei-Handles zurückholen (D72, Stufe 2) */
 /* Erst mit den Handles wissen Speichern-Tooltip und Neu-laden-Knopf, ob das
    aktive Dokument eine gemerkte Datei hat (D81). */

@@ -46,7 +46,12 @@
                                       erreichbar oder keine Dokument-Adresse
    - liveStale     { error }        — eigene Änderung nicht anwendbar
                                       (Prüfsumme, Index, Basis verdichtet);
-                                      der Client hat einmal neu geladen (D76) */
+                                      der Client hat einmal neu geladen (D76)
+   - storeFailed   { }              — Speichern im Browser fehlgeschlagen
+                                      (localStorage-Quota, D82): Datenverlust
+                                      droht beim Neuladen; zeilenlos, steht
+                                      zuoberst und verschwindet, sobald ein
+                                      Schreiben wieder gelingt */
 
 import { esc } from './render.js';
 
@@ -97,6 +102,8 @@ function build(w, t, esc){
       return t('liveLoadWarn', {url: esc(w.url), error: esc(w.error)});
     case 'liveStale':
       return t('liveStaleWarn', {error: esc(w.error)});
+    case 'storeFailed':
+      return t('storeFailedWarn');
     default:
       return `${esc(String(w.type))} (${w.line ?? '?'})`;
   }
