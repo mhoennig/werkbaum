@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-27
 
+- An owner password for shared plans recorded as planned: creating a document returns it once, management will bind to it, an admin can reclaim
 - Shared documents are left, not deleted: their row shows a leave action with its own icon and wording — the document stays on the server, and its link lands on the clipboard
 - The document menu's groups are named Included, Local and Shared now — "yours" and "sources" said less than where a document lives
 - Documents are stored one key each now, with a small index: a full storage no longer blocks every save, and one corrupted entry costs one document instead of all
