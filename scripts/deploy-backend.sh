@@ -176,6 +176,11 @@ if [ ! -f "$DIR/env" ]; then
 # Solange der Hash leer ist, bleibt GET /api/v1/documents gesperrt
 # (D76-Nachtrag 6).
 WERKBAUM_MASTER_PASSWORD_HASH=
+
+# Taiga-Proxy (D91): Basis-URL der Taiga-API — nicht des Frontends; bei der
+# Zielinstanz liegt sie auf einem eigenen Host. Leer = Feature aus;
+# GET /api/v1/info meldet es (taiga).
+#WERKBAUM_TAIGA_API_URL=https://plan-api.hostsharing.net/api/v1
 ENV
   chmod 600 "$DIR/env"
   echo "    ! $DIR/env angelegt — Master-Passwort-Hash dort eintragen,"

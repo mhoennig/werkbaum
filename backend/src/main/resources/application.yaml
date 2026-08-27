@@ -50,6 +50,16 @@ werkbaum:
   cors:
     allowed-origins: "*"
 
+  # Taiga-Proxy (D91): Die Basis-URL der Taiga-API ist SERVER-Konfiguration,
+  # nie Request-Parameter (SSRF-Falle naiver Proxies). Leer = Feature aus;
+  # GET /info meldet es (taiga). Achtung: die API-URL, nicht das Frontend -
+  # bei der Zielinstanz z. B. https://plan-api.hostsharing.net/api/v1
+  taiga:
+    api-url: ${WERKBAUM_TAIGA_API_URL:}
+    # Login-Typ der Instanz fuer POST /taiga/auth: "ldap" (LDAP-Plugin,
+    # plan.hostsharing.net) oder "normal".
+    auth-type: ${WERKBAUM_TAIGA_AUTH_TYPE:ldap}
+
   # Schutz der Dokumentenliste. BCrypt-Hash, NIE im Repository - er kommt aus
   # der Umgebung. Ohne ihn bleibt GET /documents gesperrt.
   master-password:

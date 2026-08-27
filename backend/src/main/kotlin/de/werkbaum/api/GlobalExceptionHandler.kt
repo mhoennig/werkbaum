@@ -8,6 +8,9 @@ import de.werkbaum.service.DocumentDeletedException
 import de.werkbaum.service.DocumentNotFoundException
 import de.werkbaum.service.InvalidPatchException
 import de.werkbaum.service.StalePatchSequenceException
+import de.werkbaum.integration.taiga.TaigaNotConfiguredException
+import de.werkbaum.integration.taiga.TaigaUnavailableException
+import de.werkbaum.integration.taiga.TaigaUpstreamException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.http.ResponseEntity
@@ -75,4 +78,33 @@ class GlobalExceptionHandler {
             HttpStatus.BAD_REQUEST,
             ex.message ?: "Ungültige Anfrage",
         ).apply { title = "Ungültige Anfrage" }
+
+    /* ---- Taiga-Proxy (D91) ---- */
+
+    /** Kein Ziel konfiguriert: 503 — der Editor fragt vorher `GET /info`. */
+    @ExceptionHandler(TaigaNotConfiguredException::class)
+    fun handleTaigaNotConfigured(ex: TaigaNotConfiguredException): ProblemDetail =
+        ProblemDetail.forStatusAndDetail(
+            HttpStatus.SERVICE_UNAVAILABLE,
+            ex.message ?: "Taiga nicht konfiguriert",
+        ).apply { title = "Taiga nicht konfiguriert" }
+
+    @ExceptionHandler(TaigaUnavailableException::class)
+    fun handleTaigaUnavailable(ex: TaigaUnavailableException): ProblemDetail =
+        ProblemDetail.forStatusAndDetail(
+            HttpStatus.BAD_GATEWAY,
+            ex.message ?: "Taiga nicht erreichbar",
+        ).apply { title = "Taiga nicht erreichbar" }
+
+    /**
+     * Taiga hat mit einem Fehler geantwortet: 4xx wird durchgereicht — Taiga
+     * meldet z. B. falsche Zugangsdaten als 400, und der Text hilft dem
+     * Benutzer —, ein fremder 5xx wird zu 502.
+     */
+    @ExceptionHandler(TaigaUpstreamException::class)
+    fun handleTaigaUpstream(ex: TaigaUpstreamException): ProblemDetail =
+        ProblemDetail.forStatusAndDetail(
+            if (ex.status in 400..499) HttpStatus.valueOf(ex.status) else HttpStatus.BAD_GATEWAY,
+            ex.message ?: "Taiga-Fehler",
+        ).apply { title = "Taiga-Fehler" }
 }

@@ -20,6 +20,14 @@ servers:
 tags:
   - name: Documents
     description: Verwaltung von Dokumenten
+  - name: Taiga
+    description: >
+      Schmaler, benannter Proxy zur konfigurierten Taiga-Instanz (D91).
+      Kein Durchreich-Proxy: Die Taiga-Basis-URL ist Server-Konfiguration
+      (`werkbaum.taiga.api-url`), nie Request-Parameter - die SSRF-Falle
+      naiver Proxies. Das Token bleibt im Browser; der Server speichert
+      nichts. Ohne konfigurierte Instanz antworten alle Taiga-Endpunkte
+      mit 503; ob sie konfiguriert ist, meldet `GET /info` (`taiga`).
 
 paths:
   /documents:
@@ -363,6 +371,159 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /taiga/auth:
+    post:
+      tags: [Taiga]
+      operationId: taigaLogin
+      summary: Bei Taiga anmelden (Proxy)
+      description: >
+        Reicht Benutzername und Passwort einmalig an die konfigurierte
+        Taiga-Instanz durch (`POST <api-url>/auth`, mit dem serverseitig
+        konfigurierten Login-Typ, Voreinstellung `ldap` - D91-Nachtrag 1).
+        Der Endpunkt sieht das Passwort nur im Durchflug: Der Server
+        speichert nichts und loggt den Request-Body nie; das Token gehoert
+        dem Browser. Bei der angekuendigten OIDC-Umstellung der Instanz wird
+        dieser Endpunkt durch den Redirect-Flow ersetzt - die uebrigen
+        Taiga-Endpunkte bleiben unveraendert (sie nehmen nur das Token).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaigaAuthRequest"
+      responses:
+        "200":
+          description: Anmeldung gelungen
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaigaSession"
+        "400":
+          description: >
+            Zugangsdaten abgelehnt - Taiga meldet falsche Anmeldedaten als
+            400, der Status wird durchgereicht.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "502":
+          $ref: "#/components/responses/TaigaUnavailable"
+        "503":
+          $ref: "#/components/responses/TaigaNotConfigured"
+
+  /taiga/projects:
+    get:
+      tags: [Taiga]
+      operationId: taigaProjects
+      summary: Projekte des angemeldeten Nutzers auflisten (Proxy)
+      description: >
+        `GET <api-url>/projects?member=<userId>` - die Auswahlliste des
+        Projekt-Dialogs der Ticket-Anlage. Der `slug` ist zugleich der Wert
+        des Schlagworts `&taiga.<slug>` (SPEC par. 1).
+      parameters:
+        - $ref: "#/components/parameters/TaigaToken"
+        - name: member
+          in: query
+          required: true
+          description: Taiga-Benutzer-Id aus der Sitzung; filtert auf die eigenen Projekte.
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Projekte des Nutzers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TaigaProject"
+        "401":
+          description: Token fehlt oder ist abgelaufen
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "502":
+          $ref: "#/components/responses/TaigaUnavailable"
+        "503":
+          $ref: "#/components/responses/TaigaNotConfigured"
+
+  /taiga/userstories:
+    post:
+      tags: [Taiga]
+      operationId: taigaCreateStory
+      summary: User Story anlegen (Proxy)
+      description: >
+        `POST <api-url>/userstories`. Die Antwort traegt die projektweite
+        `ref` - Werkbaum schreibt daraus `#US-<ref>` als Token an die
+        Knotenzeile (SPEC par. 11, D91-Nachtrag 2).
+      parameters:
+        - $ref: "#/components/parameters/TaigaToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaigaStoryCreateRequest"
+      responses:
+        "201":
+          description: Story wurde angelegt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaigaTicket"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Token fehlt oder ist abgelaufen
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "502":
+          $ref: "#/components/responses/TaigaUnavailable"
+        "503":
+          $ref: "#/components/responses/TaigaNotConfigured"
+
+  /taiga/tasks:
+    post:
+      tags: [Taiga]
+      operationId: taigaCreateTask
+      summary: Task unter einer User Story anlegen (Proxy)
+      description: >
+        `POST <api-url>/tasks`. Tasks haengen immer an einer Story
+        (`userStory` ist die Id, nicht die Ref) - storyless Tasks sind im
+        Kanban unsichtbar und werden bewusst nicht angeboten (D91). Die
+        Antwort traegt die `ref`; Werkbaum schreibt daraus `#T-<ref>`.
+      parameters:
+        - $ref: "#/components/parameters/TaigaToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaigaTaskCreateRequest"
+      responses:
+        "201":
+          description: Task wurde angelegt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaigaTicket"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Token fehlt oder ist abgelaufen
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "502":
+          $ref: "#/components/responses/TaigaUnavailable"
+        "503":
+          $ref: "#/components/responses/TaigaNotConfigured"
+
   /info:
     get:
       tags: [Documents]
@@ -383,7 +544,37 @@ paths:
                 $ref: "#/components/schemas/ServiceInfo"
 
 components:
+  parameters:
+    TaigaToken:
+      name: X-Taiga-Token
+      in: header
+      required: true
+      description: >
+        Das Taiga-Token aus `POST /taiga/auth`, nackt (ohne `Bearer `-Praefix).
+        Der Proxy setzt daraus den `Authorization: Bearer <token>`-Header der
+        Weiterleitung. Bewusst ein eigener Header-Name: Einen Header-Parameter
+        namens `Authorization` muessen OpenAPI-Werkzeuge laut Spezifikation
+        ignorieren, und der Name kollidierte mit dem Master-Passwort (Basic).
+      schema:
+        type: string
+        maxLength: 512
+
   responses:
+    TaigaNotConfigured:
+      description: >
+        Keine Taiga-Instanz konfiguriert (`werkbaum.taiga.api-url`) - der
+        Editor fragt vorher `GET /info` (`taiga`) und zeigt die Aktionen
+        dann gar nicht erst.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
+    TaigaUnavailable:
+      description: Taiga-Instanz nicht erreichbar oder antwortet fehlerhaft
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
     NotFound:
       description: Ressource nicht gefunden
       content:
@@ -675,6 +866,106 @@ components:
           type: string
           format: date-time
           description: Fehlt, wenn ohne Build-Informationen gestartet (z. B. aus der IDE).
+        taiga:
+          type: boolean
+          description: >
+            true, wenn eine Taiga-Instanz konfiguriert ist
+            (`werkbaum.taiga.api-url`) - der Editor zeigt die Ticket-Aktionen
+            im Knoten-Fenster nur dann (D91).
+
+    TaigaAuthRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 255
+        password:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Wird nur durchgereicht - nie gespeichert, nie geloggt.
+
+    TaigaSession:
+      type: object
+      required: [authToken, userId, username]
+      properties:
+        authToken:
+          type: string
+          description: >
+            Bearer-Token der Taiga-Sitzung. Es gehoert dem Browser; der
+            Server merkt sich nichts davon.
+        userId:
+          type: integer
+          format: int64
+          description: Taiga-Benutzer-Id - der `member`-Filter der Projektliste.
+        username:
+          type: string
+        fullName:
+          type: string
+
+    TaigaProject:
+      type: object
+      required: [id, name, slug]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        slug:
+          type: string
+          description: >
+            Zugleich der Wert des Schlagworts `&taiga.<slug>` im
+            Notationstext (SPEC par. 1, D91-Nachtrag 3).
+
+    TaigaStoryCreateRequest:
+      type: object
+      required: [project, subject]
+      properties:
+        project:
+          type: integer
+          format: int64
+          description: Taiga-Projekt-Id (aus der Projektliste).
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 500
+
+    TaigaTaskCreateRequest:
+      type: object
+      required: [project, subject, userStory]
+      properties:
+        project:
+          type: integer
+          format: int64
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 500
+        userStory:
+          type: integer
+          format: int64
+          description: Id (nicht Ref) der User Story, unter der die Task haengt.
+
+    TaigaTicket:
+      type: object
+      required: [id, ref, subject]
+      properties:
+        id:
+          type: integer
+          format: int64
+        ref:
+          type: integer
+          format: int64
+          description: >
+            Projektweite Nummer, fortlaufend ueber alle Typen. Werkbaum
+            schreibt daraus `#US-<ref>` bzw. `#T-<ref>` an die Knotenzeile -
+            die Praefixe traegt Werkbaum selbst, Taiga zeigt nur `#<ref>`
+            (D91-Nachtrag 2).
+        subject:
+          type: string
 
     ProblemDetail:
       type: object

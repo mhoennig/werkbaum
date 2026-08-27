@@ -206,7 +206,7 @@
         - [ ] #trk.resolve.map: Map the workflow onto the states (S)
       - [?] #trk.write: Write the status back (M) :#trk.resolve
       - [ ] #trk.create: Create tickets from nodes (XL)
-        - [ ] #trk.create.proxy: Backend proxy with named endpoints (M)
+        - [x] #trk.create.proxy: Backend proxy with named endpoints (M)
         - [ ] #trk.create.login: Log in to Taiga, token stays in the browser (S) :#trk.create.proxy
         - [ ] #trk.create.project: The project comes from the inherited tag (S) :#not.tag.project
         - [ ] #trk.create.story: A "create story" action in the node window (S) :#trk.create.login

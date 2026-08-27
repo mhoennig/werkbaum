@@ -18,6 +18,7 @@ import de.werkbaum.domain.ChangeFeed
 import de.werkbaum.domain.ContentPatch
 import de.werkbaum.domain.Document
 import de.werkbaum.domain.DocumentHistoryEntry
+import de.werkbaum.integration.taiga.TaigaProperties
 import de.werkbaum.service.DocumentService
 import de.werkbaum.service.LiveEditingService
 import org.springframework.boot.info.BuildProperties
@@ -45,6 +46,7 @@ class DocumentsController(
      * nicht — dann fehlt die Zusatzangabe, statt dass der Start scheitert.
      */
     private val buildProperties: BuildProperties? = null,
+    private val taigaProperties: TaigaProperties,
 ) : DocumentsApi {
 
     /**
@@ -60,6 +62,9 @@ class DocumentsController(
             name = buildProperties?.name ?: "werkbaum-backend",
             version = buildProperties?.version ?: "unbekannt",
             builtAt = buildProperties?.time?.atOffset(java.time.ZoneOffset.UTC),
+            // Feature-Meldung des Taiga-Proxys (D91): Der Editor zeigt die
+            // Ticket-Aktionen nur, wo ein konfiguriertes Backend antwortet.
+            taiga = taigaProperties.configured,
         )
     )
 

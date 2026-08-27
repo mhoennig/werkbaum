@@ -33,8 +33,9 @@ class CorsConfiguration(private val properties: CorsProperties) {
         val config = CorsConfiguration().apply {
             allowedOriginPatterns = properties.allowedOrigins
             allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-            // Authorization fuer das Master-Passwort, Content-Type fuer JSON.
-            allowedHeaders = listOf("Authorization", "Content-Type")
+            // Authorization fuer das Master-Passwort, Content-Type fuer JSON,
+            // X-Taiga-Token fuer den Taiga-Proxy (D91).
+            allowedHeaders = listOf("Authorization", "Content-Type", "X-Taiga-Token")
             // Nichts Vertrauliches im Spiel; Cookies werden nie mitgesendet.
             allowCredentials = false
             maxAge = 3600

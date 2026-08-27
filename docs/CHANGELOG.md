@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-27
 
+- The backend proxies Taiga through four named endpoints — login, projects, create story, create task; the Taiga API address is server configuration, the token stays in the browser, and `/api/v1/info` says whether the feature is on
 - Free `&tag` keywords are part of the notation now: free-standing only, quoted mentions like `(&taiga.slug)` stay labels — and `&taiga.slug` names the Taiga project of a subtree, inherited downwards
 - Plans spanning several Taiga projects: a `&taiga.slug` tag names the project per subtree, inherited downwards — the first consumer of the reserved free tags, recorded as planned
 - Creating Taiga tickets from nodes recorded as planned: a story per node from the node window, sub-packages as tasks picked in a dialog, through a backend proxy — the ref lands in the line as `#US-123`/`#T-1234`, beside the node id

@@ -17,6 +17,18 @@ geplante Owner-Passwort binden (`#col.live.owner` im Plan) — Endpunkte so
 schneiden, dass die Berechtigungsprüfung dazukommen kann, ohne die Signatur
 zu brechen.
 
+**Taiga-Proxy (D91):** schmale, benannte Endpunkte unter `/api/v1/taiga/*`
+(auth, projects, userstories, tasks) in `de.werkbaum.integration.taiga`
+(`TaigaClient` + `TaigaProperties`), Controller in `api`. Die Basis-URL der
+Taiga-**API** ist Server-Konfiguration (`werkbaum.taiga.api-url` bzw.
+`WERKBAUM_TAIGA_API_URL`), **nie** Request-Parameter — die SSRF-Falle
+naiver Proxies. Das Token kommt je Aufruf im Header `X-Taiga-Token`
+(eigener Name: `Authorization` müssen OpenAPI-Werkzeuge als Header-Parameter
+ignorieren, und er kollidierte mit dem Master-Passwort) und geht als
+`Authorization: Bearer …` hinaus; der Server speichert nichts und **loggt
+keine Request-Bodies** — der Auth-Endpunkt sieht das Passwort nur im
+Durchflug. Unkonfiguriert: 503, und `GET /info` meldet `taiga: false`.
+
 ## Konventionen
 - Kotlin, **Spring Boot 4**, Gradle (Kotlin DSL), JDK 21.
 - Paketwurzel `de.werkbaum`; Schichten: `api` (Controller), `domain`,
@@ -28,8 +40,10 @@ zu brechen.
 - Tests mit JUnit 5 als Runner + **Kotest-Assertions** (`shouldBe`,
   `shouldContain`, `shouldThrow`) und MockK; Verhalten per Cucumber gegen die
   laufende Anwendung (`RestTestClient`, nicht TestRestTemplate — das ist in
-  Boot 4 Auslaufmodell). Taiga-Client gegen aufgezeichnete Antworten
-  (WireMock), nie gegen Live-Instanzen.
+  Boot 4 Auslaufmodell). Taiga-Client gegen aufgezeichnete Antworten,
+  nie gegen Live-Instanzen — umgesetzt mit dem JDK-eigenen `HttpServer`
+  als Stub (`TaigaClientTest`/`TaigaApiTest`) statt WireMock: keine neue
+  Test-Abhängigkeit, dieselbe Zusicherung.
 - Konfiguration über `application.yaml` + Umgebungsvariablen;
   keine Zugangsdaten im Repository.
 - Keine neuen **Laufzeit**-Abhängigkeiten ohne Rückfrage (Wurzel-CLAUDE.md);
