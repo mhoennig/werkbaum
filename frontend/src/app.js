@@ -1,7 +1,7 @@
 import './style.css';
-import { parse, setFoldMark, expandShortIds, shortIdClosed } from './parser.js';
+import { parse, setFoldMark, setStatusBox, expandShortIds, shortIdClosed } from './parser.js';
 import { computeCheapPlan, overloadedAssignee, assigneeLoads, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, presetFoldSet, personFoldSet, allTags, lineTargets, taigaSlugs } from './model.js';
-import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt, ticketApiPath, mapTaigaStatus } from './taiga.js';
+import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt, ticketApiPath, mapTaigaStatus, taigaStatusName, pickStatus, statusApiPath, statusListPath } from './taiga.js';
 import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning, warningText } from './warnings.js';
 import * as live from './live.js';
@@ -1822,7 +1822,7 @@ function appendTaigaActions(el){
        entfällt nur dessen Hälfte. */
     const slug = taigaSlugs(roots).get(node);
     const url = ticketUrl(taigaWeb, slug, ref);
-    if(slug) nodeTipBody.appendChild(ticketBox(el, slug, ref));
+    if(slug) nodeTipBody.appendChild(ticketBox(el, slug, ref, line));
     /* Als Knopf im Fenster ist der Link auch auf Touch erreichbar (dort gibt
        es kein Strg) und macht die Strg+Klick-Geste nebenbei auffindbar
        (D25-Lehre). */
@@ -1861,12 +1861,12 @@ function appendTaigaActions(el){
 const taigaTickets = new Map();   /* '<slug>/<ref>' -> {kind:'load'|'ok'|'err', data, msg} */
 const TICKET_DELAY = 400;         /* `tipTicket`/`ticketTimer`: oben bei `tipNode` */
 
-function ticketBox(el, slug, ref){
+function ticketBox(el, slug, ref, line){
   const box = document.createElement('div');
   box.className = 'nodetip-ticket';
   const key = slug + '/' + ref;
-  tipTicket = {key, slug, ref, box};
-  paintTicket(box, key, slug, ref);
+  tipTicket = {key, slug, ref, line, box};
+  paintTicket(box, key, slug, ref, line);
   clearTimeout(ticketTimer);
   if(!taigaTickets.has(key) && taigaSession()){
     ticketTimer = setTimeout(() => {
@@ -1876,7 +1876,7 @@ function ticketBox(el, slug, ref){
   return box;
 }
 
-function paintTicket(box, key, slug, ref){
+function paintTicket(box, key, slug, ref, lineNo){
   const st = taigaTickets.get(key) || {kind: 'idle'};
   box.textContent = '';
   const line = (cls, text) => {
@@ -1887,6 +1887,7 @@ function paintTicket(box, key, slug, ref){
     return d;
   };
   if(st.kind === 'load'){ line('tk-line', t('taigaTicketLoading')); return; }
+  if(st.kind === 'write'){ line('tk-line', t('taigaTicketWriting')); return; }
   if(st.kind === 'ok'){
     const head = document.createElement('div');
     head.className = 'tk-head';
@@ -1913,10 +1914,115 @@ function paintTicket(box, key, slug, ref){
     box.appendChild(head);
     if(st.data.subject) line('tk-line', st.data.subject);
     if(st.data.assignee) line('tk-line', t('taigaTicketAssignee', {name: st.data.assignee}));
+    paintDiff(box, line, st, key, slug, ref, lineNo);
     return;
   }
   if(st.kind === 'err') line('tk-err', st.msg);
   box.appendChild(reloadBtn(key, slug, ref, st.kind === 'err'));
+}
+
+/* Die Abweichung und ihre zwei Knöpfe (D91-Nachtrag 7): Sagen Ticket und
+   Statusbox Verschiedenes, wird das **markiert** und beide Richtungen werden
+   ausdrücklich angeboten — von selbst geschieht nichts, in keine Richtung.
+   Verglichen wird nur, was abbildbar ist: Ein unbekannter Spaltenname (oben
+   unabgebildet) sagt nichts über den Plan. */
+function paintDiff(box, line, st, key, slug, ref, lineNo){
+  const ticket = mapTaigaStatus(st.data.status);
+  if(!ticket) return;
+  const eigen = ownStatusOfLine(lineNo);
+  if(eigen && eigen.code === ticket.code) return;   /* einig — nichts zu tun */
+
+  const d = document.createElement('div');
+  d.className = 'tk-diff';
+  d.textContent = t('taigaTicketDiff') + ' ';
+  if(eigen){
+    const c = document.createElement('span');
+    c.className = 'chip st-' + eigen.key;
+    c.textContent = '[' + eigen.code + ']';
+    d.appendChild(c);
+  } else {
+    d.appendChild(document.createTextNode(t('taigaTicketNoBox')));
+  }
+  box.appendChild(d);
+
+  const act = document.createElement('div');
+  act.className = 'tk-act';
+  /* Schreiben geht nur für die fünf abgebildeten Zustände (D91-Nachtrag 7);
+     `[?]`, `[!]`, `[-]` und der neutrale Knoten lassen das Ticket
+     unangetastet — und das Fenster sagt, warum. Ohne gelesene `version`
+     fehlt Taigas Sperre; dann wird nicht angeboten. */
+  const ziel = eigen ? taigaStatusName(eigen.code) : null;
+  if(ziel && st.data.version != null){
+    act.appendChild(mkBtn('→ ' + t('taigaTicketPush'),
+      () => pushStatus(key, slug, ref, ziel, st.data.version)));
+  }
+  act.appendChild(mkBtn('← ' + t('taigaTicketPull'),
+    () => pullStatus(lineNo, ticket.code)));
+  box.appendChild(act);
+  if(!ziel) line('tk-line', t('taigaTicketNoMap'));
+}
+
+function mkBtn(label, onClick){
+  const b = document.createElement('button');
+  b.type = 'button'; b.tabIndex = -1;
+  b.className = 'nodetip-taigabtn';
+  b.textContent = label;
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+/* Der intrinsische Status des Knotens einer Zeile — frisch geparst, denn das
+   Fenster kann eine Weile offen gestanden haben. */
+function ownStatusOfLine(lineNo){
+  const {node} = nodeAndRootsByLine(lineNo);
+  return node && node.status ? node.status : null;
+}
+
+/* „aus Taiga übernehmen": die Statusbox im TEXT setzen — eine gewöhnliche,
+   undo-fähige Textänderung (D53), in einem geteilten Dokument für alle
+   sichtbar. Der Neubau schließt danach das Fenster; die neue Farbe des
+   Knotens ist die Rückmeldung. */
+function pullStatus(lineNo, code){
+  writeLine(lineNo, zeile => setStatusBox(zeile, code));
+}
+
+/* „nach Taiga schreiben": Spalte des Projekts suchen (Taiga schreibt nach Id,
+   die Namen sind je Projekt frei), dann mit der gelesenen `version` patchen —
+   hat jemand dazwischen geändert, lehnt Taiga ab und der Text steht im
+   Fenster, statt dass etwas überschrieben wird. */
+async function pushStatus(key, slug, ref, name, version){
+  const session = await taigaEnsureSession();
+  if(!session || !session.token) return;
+  taigaTickets.set(key, {kind: 'write'});
+  repaintTicket(key);
+  try{
+    const spalten = await taigaStatusList(slug, ref, session);
+    const spalte = pickStatus(spalten, name);
+    if(!spalte){
+      taigaTickets.set(key, {kind: 'err', msg: t('taigaTicketNoColumn', {name})});
+    } else {
+      const neu = await taigaFetch(statusApiPath(ref, slug), {method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({status: spalte.id, version})}, session.token);
+      taigaTickets.set(key, {kind: 'ok', data: neu});
+    }
+  }catch(err){
+    if(err && err.status === 401) storeTaigaSession(null);
+    taigaTickets.set(key, {kind: 'err', msg: taigaErrText(err)});
+  }
+  repaintTicket(key);
+}
+
+/* Die Spalten je Projekt und Typ — einmal je Sitzung, wie der Ticket-Stand
+   selbst (sie ändern sich nur, wenn jemand den Workflow umbaut). */
+const taigaStatusLists = new Map();
+async function taigaStatusList(slug, ref, session){
+  const pfad = statusListPath(ref, slug);
+  if(!taigaStatusLists.has(pfad)){
+    taigaStatusLists.set(pfad, taigaFetch(pfad, null, session.token)
+      .catch(err => { taigaStatusLists.delete(pfad); throw err; }));
+  }
+  return taigaStatusLists.get(pfad);
 }
 
 /* Der Knopf holt den Stand — und meldet dafür bei Bedarf an (`interactive`):
@@ -1953,7 +2059,7 @@ async function loadTicket(key, slug, ref, interactive){
    Fenster wächst dabei, also neu setzen. */
 function repaintTicket(key){
   if(!tipTicket || tipTicket.key !== key || !tipTicket.box.isConnected) return;
-  paintTicket(tipTicket.box, key, tipTicket.slug, tipTicket.ref);
+  paintTicket(tipTicket.box, key, tipTicket.slug, tipTicket.ref, tipTicket.line);
   if(tipNode) placeNodeTip(tipNode);
 }
 
@@ -2066,12 +2172,18 @@ async function taigaProjects(session){
    Schreibmarke; ein nacktes execCommand griffe ohne Fokus nicht und fiele
    auf den Historien-Killer `src.value =` zurück, D53). */
 function writeLineTokens(lineNo, tokens){
+  writeLine(lineNo, zeile => tokens.reduce(appendToken, zeile));
+}
+
+/* Eine einzelne Textzeile ersetzen (Tokens anhängen, Statusbox setzen …).
+   Unverändert heißt: nicht schreiben — sonst entstünde ein leerer
+   Undo-Schritt. */
+function writeLine(lineNo, mapper){
   const zeilen = src.value.split('\n');
   if(lineNo < 1 || lineNo > zeilen.length) return;
-  let zeile = zeilen[lineNo - 1];
-  for(const tok of tokens) zeile = appendToken(zeile, tok);
-  if(zeile === zeilen[lineNo - 1]) return;
-  zeilen[lineNo - 1] = zeile;
+  const neu = mapper(zeilen[lineNo - 1]);
+  if(neu === zeilen[lineNo - 1]) return;
+  zeilen[lineNo - 1] = neu;
   withEditorWritable(() => replaceTextUndoable(zeilen.join('\n')));
 }
 
@@ -2892,7 +3004,7 @@ const I18N = {
     acHint:"{n} ID-Vorschläge – ↑/↓ wählt, Enter übernimmt",
     tipClose:"Schließen",
     tipOpenLink:"Link öffnen",
-    taigaStoryBtn:"Taiga: Story anlegen", taigaTasksBtn:"Taiga: Story + Tasks anlegen", taigaLoginTitle:"Bei Taiga anmelden", taigaUser:"Benutzername", taigaPass:"Passwort", taigaLoginDo:"Anmelden", taigaCancel:"Abbrechen", taigaProjectTitle:"Taiga-Ticket anlegen", taigaProject:"Projekt", taigaTasksPick:"Teilpakete als Tasks anlegen:", taigaCreateDo:"Anlegen", taigaError:"Fehlgeschlagen: {error}", taigaOpenBtn:"{ref} in Taiga öffnen", taigaTicketFetch:"Stand holen", taigaTicketReload:"Stand neu holen", taigaTicketLoading:"Stand wird geholt …", taigaTicketAssignee:"Zuständig: {name}",
+    taigaStoryBtn:"Taiga: Story anlegen", taigaTasksBtn:"Taiga: Story + Tasks anlegen", taigaLoginTitle:"Bei Taiga anmelden", taigaUser:"Benutzername", taigaPass:"Passwort", taigaLoginDo:"Anmelden", taigaCancel:"Abbrechen", taigaProjectTitle:"Taiga-Ticket anlegen", taigaProject:"Projekt", taigaTasksPick:"Teilpakete als Tasks anlegen:", taigaCreateDo:"Anlegen", taigaError:"Fehlgeschlagen: {error}", taigaOpenBtn:"{ref} in Taiga öffnen", taigaTicketDiff:"weicht vom Plan ab:", taigaTicketNoBox:"ohne Statusbox", taigaTicketPush:"nach Taiga schreiben", taigaTicketPull:"aus Taiga übernehmen", taigaTicketWriting:"wird geschrieben …", taigaTicketNoMap:"Dieser Zustand hat in Taiga keine Entsprechung — geschrieben wird nichts.", taigaTicketNoColumn:"Die Spalte „{name}“ gibt es in diesem Projekt nicht.", taigaTicketFetch:"Stand holen", taigaTicketReload:"Stand neu holen", taigaTicketLoading:"Stand wird geholt …", taigaTicketAssignee:"Zuständig: {name}",
     liveLoadWarn:"Server-Dokument nicht geladen: {url} ({error}). Läuft das Backend, und ist die Adresse eine Dokument-Adresse (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Deine Änderung war nicht mehr anwendbar ({error}) — der Stand wurde einmal frisch geholt.",
     liveConflictText:"Jemand hat dieselben Zeilen geändert. Wessen Fassung soll gelten?",
@@ -3029,7 +3141,7 @@ const I18N = {
     acHint:"{n} id suggestions – ↑/↓ to choose, Enter to insert",
     tipClose:"Close",
     tipOpenLink:"Open link",
-    taigaStoryBtn:"Taiga: create story", taigaTasksBtn:"Taiga: create story + tasks", taigaLoginTitle:"Log in to Taiga", taigaUser:"Username", taigaPass:"Password", taigaLoginDo:"Log in", taigaCancel:"Cancel", taigaProjectTitle:"Create Taiga ticket", taigaProject:"Project", taigaTasksPick:"Create sub-packages as tasks:", taigaCreateDo:"Create", taigaError:"Failed: {error}", taigaOpenBtn:"Open {ref} in Taiga", taigaTicketFetch:"Fetch state", taigaTicketReload:"Fetch again", taigaTicketLoading:"Fetching state …", taigaTicketAssignee:"Assigned to: {name}",
+    taigaStoryBtn:"Taiga: create story", taigaTasksBtn:"Taiga: create story + tasks", taigaLoginTitle:"Log in to Taiga", taigaUser:"Username", taigaPass:"Password", taigaLoginDo:"Log in", taigaCancel:"Cancel", taigaProjectTitle:"Create Taiga ticket", taigaProject:"Project", taigaTasksPick:"Create sub-packages as tasks:", taigaCreateDo:"Create", taigaError:"Failed: {error}", taigaOpenBtn:"Open {ref} in Taiga", taigaTicketDiff:"differs from the plan:", taigaTicketNoBox:"no status box", taigaTicketPush:"write to Taiga", taigaTicketPull:"take from Taiga", taigaTicketWriting:"writing …", taigaTicketNoMap:"This state has no counterpart in Taiga — nothing is written.", taigaTicketNoColumn:"There is no column “{name}” in this project.", taigaTicketFetch:"Fetch state", taigaTicketReload:"Fetch again", taigaTicketLoading:"Fetching state …", taigaTicketAssignee:"Assigned to: {name}",
     liveLoadWarn:"Server document not loaded: {url} ({error}). Is the backend running, and is the address a document address (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Your change no longer applied ({error}) — the document was fetched afresh once.",
     liveConflictText:"Someone changed the same lines. Whose version should win?",
@@ -3165,7 +3277,7 @@ const I18N = {
     acHint:"{n} sugerencias de ID – ↑/↓ elige, Intro inserta",
     tipClose:"Cerrar",
     tipOpenLink:"Abrir enlace",
-    taigaStoryBtn:"Taiga: crear historia", taigaTasksBtn:"Taiga: crear historia + tareas", taigaLoginTitle:"Iniciar sesión en Taiga", taigaUser:"Usuario", taigaPass:"Contraseña", taigaLoginDo:"Iniciar sesión", taigaCancel:"Cancelar", taigaProjectTitle:"Crear ticket de Taiga", taigaProject:"Proyecto", taigaTasksPick:"Crear subpaquetes como tareas:", taigaCreateDo:"Crear", taigaError:"Error: {error}", taigaOpenBtn:"Abrir {ref} en Taiga", taigaTicketFetch:"Consultar estado", taigaTicketReload:"Volver a consultar", taigaTicketLoading:"Consultando estado …", taigaTicketAssignee:"Asignado a: {name}",
+    taigaStoryBtn:"Taiga: crear historia", taigaTasksBtn:"Taiga: crear historia + tareas", taigaLoginTitle:"Iniciar sesión en Taiga", taigaUser:"Usuario", taigaPass:"Contraseña", taigaLoginDo:"Iniciar sesión", taigaCancel:"Cancelar", taigaProjectTitle:"Crear ticket de Taiga", taigaProject:"Proyecto", taigaTasksPick:"Crear subpaquetes como tareas:", taigaCreateDo:"Crear", taigaError:"Error: {error}", taigaOpenBtn:"Abrir {ref} en Taiga", taigaTicketDiff:"difiere del plan:", taigaTicketNoBox:"sin casilla de estado", taigaTicketPush:"escribir en Taiga", taigaTicketPull:"tomar de Taiga", taigaTicketWriting:"escribiendo …", taigaTicketNoMap:"Este estado no tiene equivalente en Taiga: no se escribe nada.", taigaTicketNoColumn:"En este proyecto no existe la columna «{name}».", taigaTicketFetch:"Consultar estado", taigaTicketReload:"Volver a consultar", taigaTicketLoading:"Consultando estado …", taigaTicketAssignee:"Asignado a: {name}",
     liveLoadWarn:"Documento del servidor no cargado: {url} ({error}). ¿Está el backend en marcha y es la dirección la de un documento (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Tu cambio ya no era aplicable ({error}): se volvió a cargar el estado una vez.",
     liveConflictText:"Alguien cambió las mismas líneas. ¿Qué versión debe prevalecer?",
@@ -3301,7 +3413,7 @@ const I18N = {
     acHint:"{n} suggestions d'ID – ↑/↓ pour choisir, Entrée pour insérer",
     tipClose:"Fermer",
     tipOpenLink:"Ouvrir le lien",
-    taigaStoryBtn:"Taiga : créer la story", taigaTasksBtn:"Taiga : créer story + tâches", taigaLoginTitle:"Se connecter à Taiga", taigaUser:"Nom d'utilisateur", taigaPass:"Mot de passe", taigaLoginDo:"Se connecter", taigaCancel:"Annuler", taigaProjectTitle:"Créer un ticket Taiga", taigaProject:"Projet", taigaTasksPick:"Créer les sous-lots comme tâches :", taigaCreateDo:"Créer", taigaError:"Échec : {error}", taigaOpenBtn:"Ouvrir {ref} dans Taiga", taigaTicketFetch:"Relever l'état", taigaTicketReload:"Relever à nouveau", taigaTicketLoading:"Relevé de l'état …", taigaTicketAssignee:"Assigné à : {name}",
+    taigaStoryBtn:"Taiga : créer la story", taigaTasksBtn:"Taiga : créer story + tâches", taigaLoginTitle:"Se connecter à Taiga", taigaUser:"Nom d'utilisateur", taigaPass:"Mot de passe", taigaLoginDo:"Se connecter", taigaCancel:"Annuler", taigaProjectTitle:"Créer un ticket Taiga", taigaProject:"Projet", taigaTasksPick:"Créer les sous-lots comme tâches :", taigaCreateDo:"Créer", taigaError:"Échec : {error}", taigaOpenBtn:"Ouvrir {ref} dans Taiga", taigaTicketDiff:"diffère du plan :", taigaTicketNoBox:"sans case d'état", taigaTicketPush:"écrire dans Taiga", taigaTicketPull:"reprendre de Taiga", taigaTicketWriting:"écriture …", taigaTicketNoMap:"Cet état n'a pas d'équivalent dans Taiga — rien n'est écrit.", taigaTicketNoColumn:"La colonne « {name} » n'existe pas dans ce projet.", taigaTicketFetch:"Relever l'état", taigaTicketReload:"Relever à nouveau", taigaTicketLoading:"Relevé de l'état …", taigaTicketAssignee:"Assigné à : {name}",
     liveLoadWarn:"Document du serveur non chargé : {url} ({error}). Le backend tourne-t-il, et l'adresse est-elle celle d'un document (…/documents/&lt;uuid&gt;) ?",
     liveStaleWarn:"Ta modification n'était plus applicable ({error}) — l'état a été rechargé une fois.",
     liveConflictText:"Quelqu'un a modifié les mêmes lignes. Quelle version doit l'emporter ?",
@@ -3437,7 +3549,7 @@ const I18N = {
     acHint:"{n} podpowiedzi ID – ↑/↓ wybiera, Enter wstawia",
     tipClose:"Zamknij",
     tipOpenLink:"Otwórz link",
-    taigaStoryBtn:"Taiga: utwórz historyjkę", taigaTasksBtn:"Taiga: historyjka + zadania", taigaLoginTitle:"Zaloguj się do Taigi", taigaUser:"Nazwa użytkownika", taigaPass:"Hasło", taigaLoginDo:"Zaloguj", taigaCancel:"Anuluj", taigaProjectTitle:"Utwórz zgłoszenie w Taidze", taigaProject:"Projekt", taigaTasksPick:"Utwórz podpakiety jako zadania:", taigaCreateDo:"Utwórz", taigaError:"Niepowodzenie: {error}", taigaOpenBtn:"Otwórz {ref} w Taidze", taigaTicketFetch:"Pobierz stan", taigaTicketReload:"Pobierz ponownie", taigaTicketLoading:"Pobieranie stanu …", taigaTicketAssignee:"Przypisane do: {name}",
+    taigaStoryBtn:"Taiga: utwórz historyjkę", taigaTasksBtn:"Taiga: historyjka + zadania", taigaLoginTitle:"Zaloguj się do Taigi", taigaUser:"Nazwa użytkownika", taigaPass:"Hasło", taigaLoginDo:"Zaloguj", taigaCancel:"Anuluj", taigaProjectTitle:"Utwórz zgłoszenie w Taidze", taigaProject:"Projekt", taigaTasksPick:"Utwórz podpakiety jako zadania:", taigaCreateDo:"Utwórz", taigaError:"Niepowodzenie: {error}", taigaOpenBtn:"Otwórz {ref} w Taidze", taigaTicketDiff:"różni się od planu:", taigaTicketNoBox:"bez pola statusu", taigaTicketPush:"zapisz w Taidze", taigaTicketPull:"pobierz z Taigi", taigaTicketWriting:"zapisywanie …", taigaTicketNoMap:"Ten stan nie ma odpowiednika w Taidze — nic nie zostanie zapisane.", taigaTicketNoColumn:"W tym projekcie nie ma kolumny „{name}”.", taigaTicketFetch:"Pobierz stan", taigaTicketReload:"Pobierz ponownie", taigaTicketLoading:"Pobieranie stanu …", taigaTicketAssignee:"Przypisane do: {name}",
     liveLoadWarn:"Nie wczytano dokumentu z serwera: {url} ({error}). Czy backend działa i czy adres wskazuje dokument (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Twoja zmiana nie dała się już zastosować ({error}) — stan pobrano raz od nowa.",
     liveConflictText:"Ktoś zmienił te same wiersze. Która wersja ma obowiązywać?",
@@ -3573,7 +3685,7 @@ const I18N = {
     acHint:"{n} подсказок ID – ↑/↓ выбирает, Enter вставляет",
     tipClose:"Закрыть",
     tipOpenLink:"Открыть ссылку",
-    taigaStoryBtn:"Taiga: создать историю", taigaTasksBtn:"Taiga: история + задачи", taigaLoginTitle:"Вход в Taiga", taigaUser:"Имя пользователя", taigaPass:"Пароль", taigaLoginDo:"Войти", taigaCancel:"Отмена", taigaProjectTitle:"Создать тикет в Taiga", taigaProject:"Проект", taigaTasksPick:"Создать подпакеты как задачи:", taigaCreateDo:"Создать", taigaError:"Не удалось: {error}", taigaOpenBtn:"Открыть {ref} в Taiga", taigaTicketFetch:"Получить статус", taigaTicketReload:"Обновить статус", taigaTicketLoading:"Получение статуса …", taigaTicketAssignee:"Назначено: {name}",
+    taigaStoryBtn:"Taiga: создать историю", taigaTasksBtn:"Taiga: история + задачи", taigaLoginTitle:"Вход в Taiga", taigaUser:"Имя пользователя", taigaPass:"Пароль", taigaLoginDo:"Войти", taigaCancel:"Отмена", taigaProjectTitle:"Создать тикет в Taiga", taigaProject:"Проект", taigaTasksPick:"Создать подпакеты как задачи:", taigaCreateDo:"Создать", taigaError:"Не удалось: {error}", taigaOpenBtn:"Открыть {ref} в Taiga", taigaTicketDiff:"расходится с планом:", taigaTicketNoBox:"без статуса", taigaTicketPush:"записать в Taiga", taigaTicketPull:"взять из Taiga", taigaTicketWriting:"запись …", taigaTicketNoMap:"У этого состояния нет соответствия в Taiga — ничего не записано.", taigaTicketNoColumn:"В этом проекте нет колонки «{name}».", taigaTicketFetch:"Получить статус", taigaTicketReload:"Обновить статус", taigaTicketLoading:"Получение статуса …", taigaTicketAssignee:"Назначено: {name}",
     liveLoadWarn:"Документ с сервера не загружен: {url} ({error}). Запущен ли бэкенд и является ли адрес адресом документа (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Ваше изменение больше не применялось ({error}) — состояние загружено заново.",
     liveConflictText:"Кто-то изменил те же строки. Чья версия должна остаться?",
@@ -3709,7 +3821,7 @@ const I18N = {
     acHint:"{n} आईडी सुझाव – ↑/↓ से चुनें, Enter से डालें",
     tipClose:"बंद करें",
     tipOpenLink:"लिंक खोलें",
-    taigaStoryBtn:"Taiga: स्टोरी बनाएँ", taigaTasksBtn:"Taiga: स्टोरी + टास्क बनाएँ", taigaLoginTitle:"Taiga में साइन इन करें", taigaUser:"उपयोगकर्ता नाम", taigaPass:"पासवर्ड", taigaLoginDo:"साइन इन", taigaCancel:"रद्द करें", taigaProjectTitle:"Taiga टिकट बनाएँ", taigaProject:"प्रोजेक्ट", taigaTasksPick:"उप-पैकेज टास्क के रूप में बनाएँ:", taigaCreateDo:"बनाएँ", taigaError:"विफल: {error}", taigaOpenBtn:"Taiga में {ref} खोलें", taigaTicketFetch:"स्थिति लाएँ", taigaTicketReload:"फिर से लाएँ", taigaTicketLoading:"स्थिति लाई जा रही है …", taigaTicketAssignee:"ज़िम्मेदार: {name}",
+    taigaStoryBtn:"Taiga: स्टोरी बनाएँ", taigaTasksBtn:"Taiga: स्टोरी + टास्क बनाएँ", taigaLoginTitle:"Taiga में साइन इन करें", taigaUser:"उपयोगकर्ता नाम", taigaPass:"पासवर्ड", taigaLoginDo:"साइन इन", taigaCancel:"रद्द करें", taigaProjectTitle:"Taiga टिकट बनाएँ", taigaProject:"प्रोजेक्ट", taigaTasksPick:"उप-पैकेज टास्क के रूप में बनाएँ:", taigaCreateDo:"बनाएँ", taigaError:"विफल: {error}", taigaOpenBtn:"Taiga में {ref} खोलें", taigaTicketDiff:"योजना से भिन्न:", taigaTicketNoBox:"स्थिति-बॉक्स नहीं", taigaTicketPush:"Taiga में लिखें", taigaTicketPull:"Taiga से लें", taigaTicketWriting:"लिखा जा रहा है …", taigaTicketNoMap:"इस स्थिति का Taiga में कोई समकक्ष नहीं है — कुछ नहीं लिखा जाता।", taigaTicketNoColumn:"इस प्रोजेक्ट में “{name}” कॉलम नहीं है।", taigaTicketFetch:"स्थिति लाएँ", taigaTicketReload:"फिर से लाएँ", taigaTicketLoading:"स्थिति लाई जा रही है …", taigaTicketAssignee:"ज़िम्मेदार: {name}",
     liveLoadWarn:"सर्वर दस्तावेज़ लोड नहीं हुआ: {url} ({error})। क्या बैकएंड चल रहा है और क्या पता दस्तावेज़ का पता है (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"आपका बदलाव अब लागू नहीं हो सका ({error}) — स्थिति एक बार नए सिरे से ली गई।",
     liveConflictText:"किसी और ने वही पंक्तियाँ बदली हैं। किसका संस्करण रहे?",
@@ -3856,7 +3968,7 @@ const I18N = {
     acHint:"{n} 个 ID 建议 – ↑/↓ 选择，Enter 插入",
     tipClose:"关闭",
     tipOpenLink:"打开链接",
-    taigaStoryBtn:"Taiga：创建故事", taigaTasksBtn:"Taiga：创建故事和任务", taigaLoginTitle:"登录 Taiga", taigaUser:"用户名", taigaPass:"密码", taigaLoginDo:"登录", taigaCancel:"取消", taigaProjectTitle:"创建 Taiga 工单", taigaProject:"项目", taigaTasksPick:"将子包创建为任务：", taigaCreateDo:"创建", taigaError:"失败：{error}", taigaOpenBtn:"在 Taiga 中打开 {ref}", taigaTicketFetch:"获取状态", taigaTicketReload:"重新获取", taigaTicketLoading:"正在获取状态 …", taigaTicketAssignee:"负责人：{name}",
+    taigaStoryBtn:"Taiga：创建故事", taigaTasksBtn:"Taiga：创建故事和任务", taigaLoginTitle:"登录 Taiga", taigaUser:"用户名", taigaPass:"密码", taigaLoginDo:"登录", taigaCancel:"取消", taigaProjectTitle:"创建 Taiga 工单", taigaProject:"项目", taigaTasksPick:"将子包创建为任务：", taigaCreateDo:"创建", taigaError:"失败：{error}", taigaOpenBtn:"在 Taiga 中打开 {ref}", taigaTicketDiff:"与计划不一致：", taigaTicketNoBox:"没有状态框", taigaTicketPush:"写入 Taiga", taigaTicketPull:"从 Taiga 取用", taigaTicketWriting:"正在写入 …", taigaTicketNoMap:"该状态在 Taiga 中没有对应项 — 不会写入任何内容。", taigaTicketNoColumn:"本项目中没有「{name}」这一列。", taigaTicketFetch:"获取状态", taigaTicketReload:"重新获取", taigaTicketLoading:"正在获取状态 …", taigaTicketAssignee:"负责人：{name}",
     liveLoadWarn:"未能加载服务器文档：{url}（{error}）。后端在运行吗？该地址是文档地址（…/documents/&lt;uuid&gt;）吗？",
     liveStaleWarn:"你的更改已无法应用（{error}）——已重新获取一次当前状态。",
     liveConflictText:"有人改动了同样的行。以谁的版本为准？",
@@ -3992,7 +4104,7 @@ const I18N = {
     acHint:"ID候補 {n} 件 – ↑/↓で選択、Enterで挿入",
     tipClose:"閉じる",
     tipOpenLink:"リンクを開く",
-    taigaStoryBtn:"Taiga: ストーリーを作成", taigaTasksBtn:"Taiga: ストーリー+タスクを作成", taigaLoginTitle:"Taiga にログイン", taigaUser:"ユーザー名", taigaPass:"パスワード", taigaLoginDo:"ログイン", taigaCancel:"キャンセル", taigaProjectTitle:"Taiga チケットを作成", taigaProject:"プロジェクト", taigaTasksPick:"サブパッケージをタスクとして作成:", taigaCreateDo:"作成", taigaError:"失敗: {error}", taigaOpenBtn:"Taiga で {ref} を開く", taigaTicketFetch:"状態を取得", taigaTicketReload:"再取得", taigaTicketLoading:"状態を取得中 …", taigaTicketAssignee:"担当: {name}",
+    taigaStoryBtn:"Taiga: ストーリーを作成", taigaTasksBtn:"Taiga: ストーリー+タスクを作成", taigaLoginTitle:"Taiga にログイン", taigaUser:"ユーザー名", taigaPass:"パスワード", taigaLoginDo:"ログイン", taigaCancel:"キャンセル", taigaProjectTitle:"Taiga チケットを作成", taigaProject:"プロジェクト", taigaTasksPick:"サブパッケージをタスクとして作成:", taigaCreateDo:"作成", taigaError:"失敗: {error}", taigaOpenBtn:"Taiga で {ref} を開く", taigaTicketDiff:"計画と食い違い:", taigaTicketNoBox:"ステータス欄なし", taigaTicketPush:"Taiga に書く", taigaTicketPull:"Taiga から取る", taigaTicketWriting:"書き込み中 …", taigaTicketNoMap:"この状態に対応する列が Taiga にありません — 何も書き込みません。", taigaTicketNoColumn:"このプロジェクトに「{name}」列はありません。", taigaTicketFetch:"状態を取得", taigaTicketReload:"再取得", taigaTicketLoading:"状態を取得中 …", taigaTicketAssignee:"担当: {name}",
     liveLoadWarn:"サーバー文書を読み込めませんでした: {url}（{error}）。バックエンドは動いていますか。アドレスは文書のアドレス（…/documents/&lt;uuid&gt;）ですか。",
     liveStaleWarn:"あなたの変更はもう適用できませんでした（{error}）。状態を一度取り直しました。",
     liveConflictText:"同じ行が他の人にも変更されました。どちらの版を採りますか。",

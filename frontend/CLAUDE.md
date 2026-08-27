@@ -681,6 +681,24 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   läuft schon beim Aufbau — sonst temporale Todeszone). Der
   `pointerdown`-Wächter lässt `.tabmodal-overlay` durch: Der Anmelde-Dialog
   gehört zu einer Aktion AUS dem Fenster und darf es nicht zumachen.
+- **Status zurückschreiben (D91-Nachtrag 7/8):** Weicht der Ticket-Status von
+  der Statusbox ab, zeigt `paintDiff()` beides und bietet **zwei** Knöpfe —
+  von selbst geschieht in keine Richtung etwas. `pushStatus()` sucht die
+  Spalte des Projekts (`statusListPath` → `pickStatus`, je Sitzung gecacht;
+  Taiga schreibt nach **Id**, nicht nach Namen) und patcht mit der zuletzt
+  GELESENEN `version` — Taigas optimistische Sperre; ein Konflikt kommt als
+  Fehlerzeile ins Fenster, überschrieben wird nie. `pullStatus()` schreibt
+  die Box über `setStatusBox()` (parser.js, Text→Text neben `setFoldMark`)
+  und `writeLine()`/`replaceTextUndoable` in die Zeile — der Neubau schließt
+  danach das Fenster. Schreibbar sind nur die fünf abgebildeten Zustände
+  (`taigaStatusName`); `[?]`, `[!]`, `[-]` und der neutrale Knoten bekommen
+  keinen Knopf, sondern die Begründung.
+- **Ein gerades `"` in einem i18n-Text zerlegt den Bundle** — und `npm test`
+  merkt es NICHT: Die Testsuite importiert `app.js` nie (sie prüft die
+  Module), gesehen hat es erst der Dev-Server (500er, weißes Bild). Deutsche
+  Anführungszeichen also typografisch schreiben (`„…“`) und die Datei nach
+  einer i18n-Runde einmal mit `npx esbuild src/app.js --outfile=/tmp/x.js`
+  prüfen — die schnellste ehrliche Syntaxprobe für eine Datei ohne Test.
 - **Nie `src.value = …` während des Bearbeitens (D53).** Es löscht die
   Undo-Historie des Textfelds **komplett** — nicht nur den eigenen Schritt,
   sondern alles davor Getippte. Gemessen: nach so einem Schreiben ändert das

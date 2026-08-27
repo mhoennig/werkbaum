@@ -51,7 +51,12 @@ data class TaigaTicketDetailData(
     val status: String?,
     val statusClosed: Boolean?,
     val assignee: String?,
+    /** Taigas optimistische Sperre; geht beim Schreiben unverändert zurück. */
+    val version: Long?,
 )
+
+/** Eine Spalte des Projekt-Workflows (D91-Nachtrag 8). */
+data class TaigaStatusData(val id: Long, val name: String, val closed: Boolean?)
 
 /**
  * Schmaler, benannter Client zur konfigurierten Taiga-Instanz (D91) — kein
@@ -127,15 +132,64 @@ class TaigaClient(private val properties: TaigaProperties) {
                 .header("Authorization", "Bearer $token")
                 .retrieve().body(MAP)
         } ?: throw TaigaUnavailableException("Leere Antwort von Taiga ($pfad)")
-        return TaigaTicketDetailData(
-            id = num(map, "id"),
-            ref = num(map, "ref"),
-            subject = str(map, "subject"),
-            status = extra(map, "status_extra_info")?.get("name") as? String,
-            statusClosed = extra(map, "status_extra_info")?.get("is_closed") as? Boolean,
-            assignee = extra(map, "assigned_to_extra_info")?.get("full_name_display") as? String,
-        )
+        return detail(map)
     }
+
+    /**
+     * Die Spalten des Projekt-Workflows (D91-Nachtrag 8) — Taiga schreibt nach
+     * Status-**Id**, und die Namen sind je Projekt frei. Welche Spalte gemeint
+     * ist, entscheidet der Editor: Er kennt die Abbildung auf die Statusbox
+     * (SPEC §4), das Backend parst die Notation nicht (D14).
+     */
+    fun statuses(token: String, slug: String, task: Boolean): List<TaigaStatusData> {
+        val project = projectId(token, slug)
+        val pfad = if (task) "/task-statuses" else "/userstory-statuses"
+        val list = exchange {
+            rest.get().uri(url("$pfad?project=$project"))
+                .header("Authorization", "Bearer $token")
+                .retrieve().body(LIST)
+        } ?: emptyList()
+        return list.map {
+            TaigaStatusData(num(it, "id"), str(it, "name"), it["is_closed"] as? Boolean)
+        }
+    }
+
+    /**
+     * Den Status eines Tickets setzen (D91-Nachtrag 8). Die `version` kommt
+     * vom Client — sie ist die, die er gelesen hat: Taigas optimistische
+     * Sperre lehnt das Schreiben ab, wenn jemand dazwischen geändert hat, und
+     * der Konflikt wird durchgereicht statt überschrieben (dieselbe Haltung
+     * wie beim Live-Editing, D76).
+     */
+    fun setStatus(
+        token: String,
+        slug: String,
+        ref: Long,
+        task: Boolean,
+        status: Long,
+        version: Long,
+    ): TaigaTicketDetailData {
+        val id = ticket(token, slug, ref, task).id
+        val pfad = if (task) "/tasks/$id" else "/userstories/$id"
+        val map = exchange {
+            rest.patch().uri(url(pfad))
+                .header("Authorization", "Bearer $token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(mapOf("status" to status, "version" to version))
+                .retrieve().body(MAP)
+        } ?: throw TaigaUnavailableException("Leere Antwort von Taiga ($pfad)")
+        return detail(map)
+    }
+
+    private fun detail(map: Map<String, Any?>) = TaigaTicketDetailData(
+        id = num(map, "id"),
+        ref = num(map, "ref"),
+        subject = str(map, "subject"),
+        status = extra(map, "status_extra_info")?.get("name") as? String,
+        statusClosed = extra(map, "status_extra_info")?.get("is_closed") as? Boolean,
+        assignee = extra(map, "assigned_to_extra_info")?.get("full_name_display") as? String,
+        version = (map["version"] as? Number)?.toLong(),
+    )
 
     /**
      * Projekt-Slug -> Id; Taigas `by_ref` filtert über die Id. Der Slug kommt

@@ -8261,3 +8261,73 @@ den Namen — die Spaltennamen sind je Projekt frei, der Proxy braucht also
 Und ein `PATCH` verlangt die `version` des Tickets (optimistisches Sperren):
 Hat jemand dazwischen geändert, meldet sich der Konflikt, statt ihn zu
 überschreiben — dieselbe Haltung wie beim Live-Editing (D76).
+
+**Nachtrag 8 — `#trk.write` gebaut: die Entscheidungen des Baus
+(2026-08-27).** Die Festlegung aus Nachtrag 7 ist umgesetzt (SPEC §9). Was
+dabei zu entscheiden war:
+
+**Taiga schreibt nach Status-Id, die Auswahl trifft der Editor.** Die
+Spaltennamen sind je Projekt frei, `PATCH` nimmt die **Id**. Der Proxy
+bekommt deshalb zwei Lese-Endpunkte für die Spalten
+(`GET /taiga/userstory-statuses`, `…/task-statuses`, je `?slug=`), und die
+Zuordnung Statusbox → Spaltenname bleibt im Editor (`taigaStatusName`,
+`pickStatus`, headless) — dieselbe Grenze wie beim Lesen: Statuscodes sind
+Notation, das Backend parst sie nicht (D14). Verglichen wird mit **derselben
+Normalisierung** wie beim Lesen (Groß-/Kleinschreibung und Leerraum egal),
+damit nicht zwei Stellen dieselbe Regel unterschiedlich auslegen. Findet sich
+die Spalte im Projekt nicht, wird **nicht geschrieben** und das Fenster nennt
+sie beim Namen.
+
+**Geschrieben wird gegen die gelesene `version`** — Taigas optimistische
+Sperre. Der Client schickt die Version, die er im Fenster **gezeigt** hat;
+hat jemand dazwischen etwas geändert, lehnt Taiga ab, der Fehlertext steht im
+Fenster und der ↻-Knopf holt den neuen Stand. Damit kann das Zurückschreiben
+nie eine fremde Änderung überschreiben, die man gar nicht gesehen hat — die
+Haltung des Live-Editings (D76), hier gegenüber einem fremden System.
+Nachgemessen: Ein zweiter Schreibversuch mit der alten Version wird abgelehnt
+(HTTP 400 samt Taigas Meldung), danach ↻ und derselbe Knopf gelingen.
+
+**Die Ref bleibt die Adresse, auch beim Schreiben.** `PATCH
+/taiga/userstories/{ref}/status?slug=` löst intern erst den Slug und dann die
+Ref auf (drei Umläufe je Schreibvorgang). Der Endpunkt könnte die Ticket-**Id**
+nehmen — die kennt der Client aus dem Lesen —, aber dann hieße `{…}` im selben
+Pfadmuster einmal Ref und einmal Id: eine Zweideutigkeit, die man später
+einmal falsch liest. Schreibvorgänge sind einzelne Klicks; der Umlauf ist
+billiger als die Verwechslung.
+
+**Die Statusbox setzt `setStatusBox()` in parser.js** — Text→Text neben
+`setFoldMark` (D38) und `expandShortIds` (D55), also an der Stelle, an der die
+Zeilenstruktur ohnehin bekannt ist: Angefasst wird nur die Box, Einrückung,
+Zeichen, **beide** Faltmarken-Stellungen und Label bleiben zeichengenau
+stehen. Geschrieben wird über `replaceTextUndoable` (D53) — ein Undo-Schritt,
+nie `src.value =`.
+
+**Nachgemessen** im Browser gegen das lokal laufende Backend mit Taiga-Stub:
+Ticket „In progress → [~]" gegen Plan `[ ]` zeigt die Abweichung in der
+Warnfarbe und beide Knöpfe; *nach Taiga schreiben* setzt die Spalte „New",
+danach ist die Abweichung weg **und der Notationstext unverändert**; ein
+`[?]`-Knoten bekommt **nur** den Übernehmen-Knopf samt Begründung, und
+*übernehmen* schreibt `[/]` in die Zeile (`- [/] API-Teil #T-1234`), worauf
+der Neubau das Fenster schließt. Backend: 5 neue Client-Tests (Spaltenlisten
+je Typ, PATCH per Id mit Status und Version, Konflikt-Durchreichung, gelesene
+Version) und 2 Ende-zu-Ende-Tests; Frontend 596 Tests (11 neue). Gegenproben:
+Normalisierung der Spaltensuche entfernt → genau die eine danach benannte
+Zusicherung fällt; die Faltmarken-Gruppe aus `setStatusBox` entfernt → die
+vier Statusbox-Tests.
+
+**Zwei Werkzeugfallen, beide schon einmal bezahlt und wieder zugeschnappt:**
+Der Stub muss **chunked** Bodies lesen — der JDK-HttpClient sendet ohne
+`Content-Length`, und wer nur die Länge liest, sieht `{}` und meldet einen
+Versionskonflikt, den es nicht gibt (dieselbe Falle wie in Nachtrag 4). Und
+`execCommand('insertText')` braucht **Fensterfokus**: Ohne dargestellte
+Browser-Fläche tut es nichts, der Prüftext muss dann über `value` plus
+`input`-Ereignis gesetzt werden (dieselbe Sorte Grenze wie D57).
+
+**Dazu eine neue, die es vorher nicht gab:** Ein **gerades** `"` in einem
+deutschen i18n-Text (`„{name}"`) beendet die JS-Zeichenkette — der Bundle war
+kaputt, und **`npm test` merkte davon nichts**, weil die Testsuite `app.js`
+nie importiert (sie prüft die Module). Gesehen hat es erst der Dev-Server.
+Wer i18n-Texte mit Anführungszeichen schreibt, nimmt die typografischen
+(`„…“`, `«…»`, `“…”`) und prüft die Datei einmal mit `npx esbuild src/app.js
+--outfile=…` — das ist die schnellste ehrliche Syntaxprobe für eine Datei,
+die kein Test anfasst.

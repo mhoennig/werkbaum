@@ -43,6 +43,18 @@ export function setFoldMark(line, mark){
   return m[1] + m[2] + (mark ? mark + ' ' : '') + line.slice(m[0].length);
 }
 
+/* Setzt (`'~'`) oder entfernt (`null`) die Statusbox einer Zeile — dieselbe
+   Sorte Umkehrung wie `setFoldMark`, gebraucht fürs Übernehmen eines
+   Ticket-Status aus Taiga (D91-Nachtrag 7/8). Angefasst wird NUR die Box:
+   Einrückung, Zerlegungszeichen, Faltmarke (in beiden Stellungen) und Label
+   bleiben zeichengenau stehen. Eine Zeile ohne Zeichen (Wurzel, SPEC §2)
+   bekommt die Box an den Zeilenanfang. */
+export function setStatusBox(line, code){
+  const m = line.match(
+    /^([ \t]*(?:[-|+]|=(?=[ \t]))?[ \t]*)((?:[><](?=[ \t])[ \t]*)?)(?:\[[^\]]\][ \t]*)?/);
+  return m[1] + m[2] + (code ? '[' + code + '] ' : '') + line.slice(m[0].length);
+}
+
 const RE_LINE = /^([ \t]*)([-|+]|=(?=[ \t]))?\s*(?:([><])(?=[ \t])\s*)?(?:\[([^\]])\]\s*)?(?:([><])(?=[ \t])\s*)?(.*)$/;
 const RE_ID_TOKEN = /(^|\s)#([\p{L}\p{N}._-]+)/u;
 /* Fortsetzungszeile (SPEC §1): Leerraum, dann `\` als letztes Zeichen. Der

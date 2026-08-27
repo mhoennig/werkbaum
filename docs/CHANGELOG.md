@@ -19,6 +19,10 @@ reverse.
 
 ## 2026-08-27
 
+- Where a ticket and the plan disagree, the node window says so and offers both directions as explicit buttons — nothing happens by itself
+- "Write to Taiga" sets the ticket's column from the status box; only the five mapped states can be written, `[?]`, `[!]`, `[-]` and a box-less node leave the ticket untouched
+- Writing goes against the state you were shown: if someone changed the ticket meanwhile, it is refused instead of overwritten, and ↻ fetches the new state
+- "Take from Taiga" writes the status box into the text line — an ordinary, undoable change, visible to everyone in a shared document
 - The node window shows the state of a ticket now: subject, status and assignee, read from Taiga through the backend proxy
 - Taiga's status is shown next to the notation's own box (`In progress → [~]`) — a column name outside the five known ones stays unmapped and is shown as text
 - Reading a ticket never changes the plan: no status is written back, and the text stays untouched

@@ -500,9 +500,25 @@ es einen gibt, den **Zuständigen**.
   „In progress“ `[~]`, „Ready for test“ `[/]`, „Done“ `[x]`, „Archived“ `[^]`;
   Groß-/Kleinschreibung und Leerraum sind egal. Ein Name außerhalb dieser
   Liste bleibt **unabgebildet** und steht nur als Text — geraten wird nicht.
-- **Gelesen, nie geschrieben.** Der Notationstext bleibt unangetastet; die
-  Statusbox des Knotens ändert sich nicht, und die Abbildung sagt nichts über
-  Fortschritt (§4) oder Kosten (§5). Das Zurückschreiben ist reserviert (§11).
+- **Von selbst geschieht nichts.** Weder wird der Notationstext angefasst
+  noch das Ticket: Die Abbildung ist eine Anzeige, keine Aussage über
+  Fortschritt (§4) oder Kosten (§5).
+- **Weicht der Ticket-Status von der Statusbox ab**, wird das **markiert**
+  (Warnfarbe, mit der eigenen Box daneben) und mit **zwei ausdrücklichen
+  Aktionen** angeboten:
+  - *nach Taiga schreiben* — setzt den Status des Tickets auf die Spalte, die
+    zur eigenen Statusbox gehört. Angeboten nur für die fünf abgebildeten
+    Zustände; `[?]`, `[!]`, `[-]` und der neutrale Knoten haben keine
+    Entsprechung und lassen das Ticket **unangetastet** — das Fenster sagt,
+    warum. Geschrieben wird gegen den zuletzt **gelesenen** Stand: Hat jemand
+    inzwischen etwas geändert, wird abgelehnt statt überschrieben, und die
+    Meldung steht im Fenster (↻ holt den neuen Stand).
+  - *aus Taiga übernehmen* — schreibt die Statusbox in die **Textzeile**, als
+    gewöhnliche, undo-fähige Änderung; in einem geteilten Dokument (§9,
+    `?live=`) sehen sie damit alle. Der Neubau schließt das Fenster; die neue
+    Farbe des Knotens ist die Rückmeldung.
+- Beide Richtungen betreffen **einen** Knoten; eine Sammelaktion über einen
+  Teilbaum gibt es nicht.
 - Geholt wird erst, wenn das Fenster **kurz stehen bleibt** (nicht im
   Vorüberfahren), und je Ticket **einmal je Sitzung** — ein ↻-Knopf im Fenster
   holt neu. Ohne Anmeldung an der Instanz, ohne Projekt-Zuordnung oder ohne
@@ -511,7 +527,7 @@ es einen gibt, den **Zuständigen**.
 - Reine Bedienhilfe wie das Fenster selbst: nicht im Grafikexport, nicht im
   Druck.
 
-Siehe D91-Nachtrag 6.
+Siehe D91-Nachträge 6, 7 und 8.
 
 **Die Knotenfarbe zeigt den effektiven Status (§4)**, nicht den intrinsischen —
 das Diagramm beantwortet „wie weit ist das wirklich?“. Wo der eigene Status
@@ -1385,33 +1401,17 @@ Taiga-Projekte, benennt das Schlagwort `&taiga.<slug>` (unten) das Projekt
 je Teilbaum — eine Ref wird gegen das Projekt des nächsten Vorfahren mit so
 einem Tag aufgelöst. Siehe D91-Nachträge 2 und 3.
 Der **Stand** eines so bezeichneten Tickets (Betreff, Status, Zuständiger)
-wird im Knoten-Fenster gezeigt (§9) — gelesen, nie geschrieben; das
-**Zurückschreiben** des Status bleibt reserviert (unten).
+wird im Knoten-Fenster gezeigt (§9); weicht er von der Statusbox ab, sind
+dort beide Richtungen als ausdrückliche Aktionen zu haben — von selbst
+geschieht nichts.
 Freie Schlagworte liegen **nicht** mehr auf `#` — siehe `&tag` unten; damit
 ist die frühere Dreifach-Rolle von `#` aufgelöst (D34).
 
-### Status zurückschreiben — festgelegt, noch nicht gebaut
+### Status zurückschreiben
 
-Der Ticket-Stand wird gelesen (§9). Der Abgleich in die andere Richtung ist
-entschieden, aber ungebaut; die Regeln stehen hier, bevor sie gebaut werden.
-
-- **Niemand gewinnt von selbst.** Weicht der gelesene Ticket-Status von der
-  Statusbox des Knotens ab, wird die Abweichung im Knoten-Fenster
-  **markiert** und mit **zwei ausdrücklichen Aktionen** angeboten: *nach
-  Taiga schreiben* (Statusbox → Ticket) und *aus Taiga übernehmen*
-  (Ticket-Status → Statusbox). Kein Takt, kein stiller Abgleich, keine
-  Richtung, die die andere überstimmt.
-- **Übernehmen ist eine gewöhnliche Textänderung**: Die Statusbox wird
-  geschrieben wie beim Falten (§9) — undo-fähig, in einem geteilten Dokument
-  für alle sichtbar. Sonst gilt weiter, dass der Text die Quelle der Wahrheit
-  ist und kein Werkzeug ihn ungefragt umschreibt.
-- **Geschrieben wird nur, was die Abbildung kennt** (§9, die fünf Zustände).
-  `[?]`, `[!]`, `[-]` und der neutrale Knoten haben keine Entsprechung und
-  lassen das Ticket **unangetastet**; das Fenster sagt, warum. Erfunden wird
-  nichts — dieselbe Haltung wie beim Lesen, wo ein unbekannter Spaltenname
-  unabgebildet bleibt.
-- Beide Richtungen betreffen **einen** Knoten. Eine Sammelaktion über einen
-  Teilbaum ist offen und wird, wenn sie kommt, hier festgelegt.
+**Umgesetzt** — Anzeige und Regeln in §9 (Abweichung im Knoten-Fenster, zwei
+ausdrückliche Aktionen, nur die abgebildeten Zustände). Entscheidung und
+verworfene Alternativen: D91-Nachträge 7 und 8.
 
 ### Schlagworte (`&tag`)
 

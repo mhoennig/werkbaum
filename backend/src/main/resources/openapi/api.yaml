@@ -606,6 +606,173 @@ paths:
         "503":
           $ref: "#/components/responses/TaigaNotConfigured"
 
+  /taiga/userstories/{ref}/status:
+    patch:
+      tags: [Taiga]
+      operationId: taigaSetStoryStatus
+      summary: Status einer User Story setzen (Proxy)
+      description: >
+        Schreibt den Status zurueck (D91-Nachtrag 7/8) - die eine Haelfte des
+        Abgleichs, die der Benutzer im Knoten-Fenster ausdruecklich anstoesst;
+        von selbst geschieht nichts. `status` ist die **Id** einer Spalte aus
+        `GET /taiga/userstory-statuses` (die Namen sind je Projekt frei),
+        `version` die zuletzt gelesene: Hat jemand dazwischen geaendert, lehnt
+        Taigas optimistische Sperre ab und der Konflikt wird durchgereicht,
+        statt ihn zu ueberschreiben.
+      parameters:
+        - $ref: "#/components/parameters/TaigaToken"
+        - $ref: "#/components/parameters/TaigaRef"
+        - $ref: "#/components/parameters/TaigaSlug"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaigaStatusPatch"
+      responses:
+        "200":
+          description: Der neue Stand des Tickets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaigaTicketDetail"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Token fehlt oder ist abgelaufen
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Projekt oder Ref gibt es nicht
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "502":
+          $ref: "#/components/responses/TaigaUnavailable"
+        "503":
+          $ref: "#/components/responses/TaigaNotConfigured"
+
+  /taiga/tasks/{ref}/status:
+    patch:
+      tags: [Taiga]
+      operationId: taigaSetTaskStatus
+      summary: Status einer Task setzen (Proxy)
+      description: >
+        Wie `PATCH /taiga/userstories/{ref}/status`, nur fuer Tasks; die
+        Spalten kommen aus `GET /taiga/task-statuses`.
+      parameters:
+        - $ref: "#/components/parameters/TaigaToken"
+        - $ref: "#/components/parameters/TaigaRef"
+        - $ref: "#/components/parameters/TaigaSlug"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaigaStatusPatch"
+      responses:
+        "200":
+          description: Der neue Stand des Tickets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaigaTicketDetail"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Token fehlt oder ist abgelaufen
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Projekt oder Ref gibt es nicht
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "502":
+          $ref: "#/components/responses/TaigaUnavailable"
+        "503":
+          $ref: "#/components/responses/TaigaNotConfigured"
+
+  /taiga/userstory-statuses:
+    get:
+      tags: [Taiga]
+      operationId: taigaStoryStatuses
+      summary: Workflow-Spalten der Storys eines Projekts (Proxy)
+      description: >
+        `GET <api-url>/userstory-statuses?project=<id>`. Gebraucht zum
+        Schreiben: Taiga nimmt die Status-**Id**, und welche Spalte zu welcher
+        Statusbox gehoert, entscheidet der Editor (SPEC par. 4/9) - das
+        Backend parst die Notation nicht (D14).
+      parameters:
+        - $ref: "#/components/parameters/TaigaToken"
+        - $ref: "#/components/parameters/TaigaSlug"
+      responses:
+        "200":
+          description: Die Spalten des Projekts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TaigaStatus"
+        "401":
+          description: Token fehlt oder ist abgelaufen
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Projekt gibt es nicht
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "502":
+          $ref: "#/components/responses/TaigaUnavailable"
+        "503":
+          $ref: "#/components/responses/TaigaNotConfigured"
+
+  /taiga/task-statuses:
+    get:
+      tags: [Taiga]
+      operationId: taigaTaskStatuses
+      summary: Workflow-Spalten der Tasks eines Projekts (Proxy)
+      description: Wie `GET /taiga/userstory-statuses`, nur fuer Tasks.
+      parameters:
+        - $ref: "#/components/parameters/TaigaToken"
+        - $ref: "#/components/parameters/TaigaSlug"
+      responses:
+        "200":
+          description: Die Spalten des Projekts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TaigaStatus"
+        "401":
+          description: Token fehlt oder ist abgelaufen
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Projekt gibt es nicht
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "502":
+          $ref: "#/components/responses/TaigaUnavailable"
+        "503":
+          $ref: "#/components/responses/TaigaNotConfigured"
+
   /info:
     get:
       tags: [Documents]
@@ -1113,6 +1280,42 @@ components:
             Anzeigename des Zustaendigen
             (`assigned_to_extra_info.full_name_display`); fehlt, wenn niemand
             zugewiesen ist.
+        version:
+          type: integer
+          format: int64
+          description: >
+            Taigas optimistische Sperre. Sie geht beim Schreiben unveraendert
+            zurueck (`PATCH .../status`); passt sie nicht mehr, lehnt Taiga ab
+            und der Konflikt wird durchgereicht.
+
+    TaigaStatus:
+      type: object
+      description: Eine Spalte des Projekt-Workflows (D91-Nachtrag 8).
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          description: >
+            Frei benannt, je Projekt verschieden - die Zuordnung zur Statusbox
+            der Notation macht der Editor.
+        closed:
+          type: boolean
+
+    TaigaStatusPatch:
+      type: object
+      required: [status, version]
+      properties:
+        status:
+          type: integer
+          format: int64
+          description: Id der Zielspalte (aus den Status-Listen), nicht ihr Name.
+        version:
+          type: integer
+          format: int64
+          description: Die zuletzt gelesene Version des Tickets.
 
     ProblemDetail:
       type: object

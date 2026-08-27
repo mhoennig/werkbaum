@@ -1095,6 +1095,13 @@
   .nodetip-ticket .tk-line{margin-top:4px;color:var(--muted)}
   .nodetip-ticket .tk-err{margin-top:2px;margin-bottom:6px;color:var(--warn)}
   .nodetip-ticket .tk-mini{margin-left:auto;padding:2px 7px;font-size:.8rem;line-height:1.1}
+  /* Abweichung zwischen Ticket und Statusbox (D91-Nachtrag 7): markiert in der
+     Warnfarbe, beide Richtungen als ausdrückliche Knöpfe darunter. */
+  .nodetip-ticket .tk-diff{
+    display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+    margin-top:6px;color:var(--warn);font-weight:500;
+  }
+  .nodetip-ticket .tk-act{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
   /* Die Spitze zeigt auf den Knoten — ohne sie wäre bei dicht stehenden Knoten
      nicht zu sehen, welcher gemeint ist. Ein gedrehtes Quadrat mit zwei Kanten:
      so erbt es Rahmen UND Schatten des Fensters. JS setzt --tipx (Spitze) und

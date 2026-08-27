@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/parser.js';
 import { taigaSlugs } from '../src/model.js';
-import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt, refParts, ticketApiPath, mapTaigaStatus } from '../src/taiga.js';
+import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt, refParts, ticketApiPath, mapTaigaStatus, taigaStatusName, pickStatus, statusApiPath, statusListPath } from '../src/taiga.js';
+import { setStatusBox } from '../src/parser.js';
 
 /* Schlagworte `&tag` (SPEC §1, D91): Extraktion im Parser und die
    `taiga.*`-Vererbung in model.js — der erste Konsument der reservierten
@@ -299,5 +300,80 @@ describe('mapTaigaStatus — Workflow auf die Statusbox (SPEC §4/§9)', () => {
     expect(mapTaigaStatus('')).toBe(null);
     expect(mapTaigaStatus(null)).toBe(null);
     expect(mapTaigaStatus(undefined)).toBe(null);
+  });
+});
+
+/* Status zurückschreiben (D91-Nachtrag 7/8): die Gegenrichtung der Abbildung,
+   die Spaltensuche im Projekt, die beiden Schreib-Pfade — und das Setzen der
+   Statusbox im Text für „aus Taiga übernehmen". */
+
+describe('taigaStatusName / pickStatus — die Gegenrichtung', () => {
+  it('nennt zu den fünf Zuständen ihre Taiga-Spalte', () => {
+    expect(taigaStatusName(' ')).toBe('New');
+    expect(taigaStatusName('~')).toBe('In progress');
+    expect(taigaStatusName('/')).toBe('Ready for test');
+    expect(taigaStatusName('x')).toBe('Done');
+    expect(taigaStatusName('^')).toBe('Archived');
+  });
+
+  it('die übrigen Zustände haben keine Entsprechung — es wird nichts geschrieben', () => {
+    expect(taigaStatusName('?')).toBe(null);   /* Idee */
+    expect(taigaStatusName('!')).toBe(null);   /* High Risk */
+    expect(taigaStatusName('-')).toBe(null);   /* verworfen */
+    expect(taigaStatusName(null)).toBe(null);  /* neutraler Knoten */
+  });
+
+  it('findet die Spalte des Projekts, Schreibweise egal', () => {
+    const spalten = [{id: 11, name: 'New'}, {id: 12, name: ' in  PROGRESS '}];
+    expect(pickStatus(spalten, 'In progress').id).toBe(12);
+  });
+
+  it('ohne passende Spalte gibt es keine — dann wird nicht geschrieben', () => {
+    expect(pickStatus([{id: 11, name: 'Backlog'}], 'Done')).toBe(null);
+    expect(pickStatus(null, 'Done')).toBe(null);
+    expect(pickStatus([{id: 1}], 'Done')).toBe(null);
+  });
+
+  it('baut die Schreib-Pfade je Typ', () => {
+    expect(statusApiPath('US-123', 'mi-kunde')).toBe('/userstories/123/status?slug=mi-kunde');
+    expect(statusApiPath('T-9', 'mi-kunde')).toBe('/tasks/9/status?slug=mi-kunde');
+    expect(statusListPath('US-1', 'mi-kunde')).toBe('/userstory-statuses?slug=mi-kunde');
+    expect(statusListPath('T-1', 'a&b')).toBe('/task-statuses?slug=a%26b');
+    expect(statusApiPath('ABC-1', 'mi-kunde')).toBe(null);
+    expect(statusListPath('US-1', null)).toBe(null);
+  });
+});
+
+describe('setStatusBox — die Statusbox im Text setzen (SPEC §1)', () => {
+  it('ersetzt eine vorhandene Box', () => {
+    expect(setStatusBox('  - [ ] Backend (M) #US-1', '~')).toBe('  - [~] Backend (M) #US-1');
+  });
+
+  it('setzt eine fehlende Box hinter das Zeichen', () => {
+    expect(setStatusBox('  - Backend', 'x')).toBe('  - [x] Backend');
+  });
+
+  it('eine Wurzelzeile bekommt sie an den Zeilenanfang', () => {
+    expect(setStatusBox('Wurzel', '^')).toBe('[^] Wurzel');
+  });
+
+  it('lässt die Faltmarke stehen — in beiden Stellungen (D34-Nachtrag 2)', () => {
+    expect(setStatusBox('- [ ] > Backend', 'x')).toBe('- [x] > Backend');
+    expect(setStatusBox('- > [ ] Backend', 'x')).toBe('- > [x] Backend');
+  });
+
+  it('null entfernt die Box', () => {
+    expect(setStatusBox('  - [x] Backend', null)).toBe('  - Backend');
+  });
+
+  it('das Ergebnis parst mit dem gesetzten Status und unverändertem Rest', () => {
+    const zeile = setStatusBox('  - [ ] #auth: Backend (M) @anna #US-1', '/');
+    const { roots } = parse('- Wurzel\n' + zeile);
+    const n = roots[0].children[0];
+    expect(n.status.key).toBe('durchstich');
+    expect(n.id).toBe('auth');
+    expect(n.size).toBe('M');
+    expect(n.tags).toEqual(['anna']);
+    expect(ticketRefOf(n)).toBe('US-1');
   });
 });

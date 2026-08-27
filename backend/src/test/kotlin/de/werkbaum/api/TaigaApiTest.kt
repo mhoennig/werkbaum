@@ -143,6 +143,31 @@ class TaigaApiTest {
         result.responseBody!! shouldContain "\"assignee\":null"
     }
 
+    @Test
+    fun `die Workflow-Spalten eines Projekts kommen als Id und Name`() {
+        val result = client.get()
+            .uri("/api/v1/taiga/userstory-statuses?slug=mi-kunde")
+            .header("X-Taiga-Token", "tok-abc123")
+            .exchange()
+            .returnResult(String::class.java)
+        result.status.value() shouldBe 200
+        result.responseBody!! shouldContain """{"id":12,"name":"In progress","closed":false}"""
+    }
+
+    @Test
+    fun `ein Status wird per Ref gesetzt und antwortet mit dem neuen Stand`() {
+        val result = client.patch()
+            .uri("/api/v1/taiga/userstories/123/status?slug=mi-kunde")
+            .header("X-Taiga-Token", "tok-abc123")
+            .header("Content-Type", "application/json")
+            .body("""{"status":13,"version":7}""")
+            .exchange()
+            .returnResult(String::class.java)
+        result.status.value() shouldBe 200
+        result.responseBody!! shouldContain "\"status\":\"Done\""
+        result.responseBody!! shouldContain "\"version\":8"
+    }
+
     companion object {
         private lateinit var stub: HttpServer
         @Volatile private var stubStatus = 200
@@ -160,6 +185,9 @@ class TaigaApiTest {
                     "/api/v1/projects/by_slug" -> TaigaClientTestData.PROJECT_OK
                     "/api/v1/userstories/by_ref" -> TaigaClientTestData.STORY_DETAIL
                     "/api/v1/tasks/by_ref" -> TaigaClientTestData.TASK_DETAIL
+                    "/api/v1/userstory-statuses", "/api/v1/task-statuses" ->
+                        TaigaClientTestData.STATUSES_OK
+                    "/api/v1/userstories/1234" -> TaigaClientTestData.STORY_PATCHED
                     else -> "{}"
                 }
                 val status = if (stubBody != null) stubStatus
@@ -209,9 +237,16 @@ object TaigaClientTestData {
     const val PROJECT_OK =
         """{"id": 7, "name": "Kunde", "slug": "mi-kunde"}"""
     const val STORY_DETAIL =
-        """{"id": 1234, "ref": 123, "subject": "Login bauen", "project": 7,
+        """{"id": 1234, "ref": 123, "subject": "Login bauen", "project": 7, "version": 7,
             "status_extra_info": {"name": "In progress", "is_closed": false},
             "assigned_to_extra_info": {"full_name_display": "Anna Beispiel"}}"""
+    const val STATUSES_OK =
+        """[{"id": 11, "name": "New", "is_closed": false},
+            {"id": 12, "name": "In progress", "is_closed": false},
+            {"id": 13, "name": "Done", "is_closed": true}]"""
+    const val STORY_PATCHED =
+        """{"id": 1234, "ref": 123, "subject": "Login bauen", "version": 8,
+            "status_extra_info": {"name": "Done", "is_closed": true}}"""
     const val TASK_DETAIL =
         """{"id": 5678, "ref": 1234, "subject": "API-Teil", "project": 7,
             "status_extra_info": {"name": "Done", "is_closed": true}}"""

@@ -162,6 +162,64 @@ class TaigaClientTest {
         requests[0].query shouldBe "slug=a%26member%3D1"
     }
 
+    /* ---- Status zurückschreiben (D91-Nachtrag 7/8) ---- */
+
+    @Test
+    fun `statuses liefert die Spalten des Projekt-Workflows`() {
+        routes["/api/v1/projects/by_slug"] = 200 to PROJECT_OK
+        routes["/api/v1/userstory-statuses"] = 200 to STATUSES_OK
+        val s = client().statuses("tok-abc123", "mi-kunde", task = false)
+
+        s.map { it.name } shouldBe listOf("New", "In progress", "Done")
+        s[0].id shouldBe 11L
+        s[2].closed shouldBe true
+        requests[1].query shouldBe "project=7"
+    }
+
+    @Test
+    fun `Task-Spalten kommen vom eigenen Endpunkt`() {
+        routes["/api/v1/projects/by_slug"] = 200 to PROJECT_OK
+        routes["/api/v1/task-statuses"] = 200 to STATUSES_OK
+        client().statuses("tok-abc123", "mi-kunde", task = true)
+        requests[1].path shouldBe "/api/v1/task-statuses"
+    }
+
+    @Test
+    fun `setStatus loest die Ref auf und patcht mit Status-Id und Version`() {
+        routes["/api/v1/projects/by_slug"] = 200 to PROJECT_OK
+        routes["/api/v1/userstories/by_ref"] = 200 to STORY_DETAIL
+        routes["/api/v1/userstories/1234"] = 200 to STORY_PATCHED
+        val d = client().setStatus("tok-abc123", "mi-kunde", 123, task = false, status = 13, version = 7)
+
+        d.status shouldBe "Done"
+        d.version shouldBe 8L
+
+        val patch = requests.last()
+        patch.path shouldBe "/api/v1/userstories/1234"   /* per Id, nicht per Ref */
+        patch.method shouldBe "PATCH"
+        patch.body shouldContain "\"status\":13"
+        patch.body shouldContain "\"version\":7"
+    }
+
+    @Test
+    fun `eine veraltete Version wird als Konflikt durchgereicht`() {
+        routes["/api/v1/projects/by_slug"] = 200 to PROJECT_OK
+        routes["/api/v1/userstories/by_ref"] = 200 to STORY_DETAIL
+        routes["/api/v1/userstories/1234"] = 400 to STALE
+        val ex = shouldThrow<TaigaUpstreamException> {
+            client().setStatus("tok-abc123", "mi-kunde", 123, task = false, status = 13, version = 1)
+        }
+        ex.status shouldBe 400
+        ex.message shouldContain "modified"
+    }
+
+    @Test
+    fun `die gelesene Version kommt mit - sie ist die Sperre fuers Schreiben`() {
+        routes["/api/v1/projects/by_slug"] = 200 to PROJECT_OK
+        routes["/api/v1/userstories/by_ref"] = 200 to STORY_DETAIL
+        client().ticket("tok-abc123", "mi-kunde", 123, task = false).version shouldBe 7L
+    }
+
     @Test
     fun `ohne konfigurierte Instanz gibt es kein Ziel`() {
         val bare = TaigaClient(TaigaProperties(apiUrl = ""))
@@ -183,6 +241,7 @@ class TaigaClientTest {
 
     data class Recorded(
         val path: String,
+        val method: String,
         val query: String?,
         val auth: String?,
         val noPagination: String?,
@@ -220,7 +279,7 @@ class TaigaClientTest {
         /* Form der by_ref-Antwort: die Namen stehen in den
            `*_extra_info`-Blöcken, die Ids daneben (Taiga-API). */
         const val STORY_DETAIL =
-            """{"id": 1234, "ref": 123, "subject": "Login bauen", "project": 7, "status": 3,
+            """{"id": 1234, "ref": 123, "subject": "Login bauen", "project": 7, "status": 3, "version": 7,
                 "status_extra_info": {"name": "In progress", "color": "#ff9900", "is_closed": false},
                 "assigned_to": 42,
                 "assigned_to_extra_info": {"username": "anna", "full_name_display": "Anna Beispiel"}}"""
@@ -230,6 +289,15 @@ class TaigaClientTest {
                 "assigned_to_extra_info": null}"""
         const val STORY_BARE =
             """{"id": 1234, "ref": 123, "subject": "Login bauen", "project": 7, "status": 3}"""
+        const val STATUSES_OK =
+            """[{"id": 11, "name": "New", "is_closed": false, "order": 1},
+                {"id": 12, "name": "In progress", "is_closed": false},
+                {"id": 13, "name": "Done", "is_closed": true}]"""
+        const val STORY_PATCHED =
+            """{"id": 1234, "ref": 123, "subject": "Login bauen", "version": 8,
+                "status_extra_info": {"name": "Done", "is_closed": true}}"""
+        const val STALE =
+            """{"_error_message": "The version doesn't match the data base version. The object was modified.", "_error_type": "taiga.base.exceptions.WrongArguments"}"""
         const val NOT_FOUND =
             """{"_error_message": "Not found.", "_error_type": "taiga.base.exceptions.NotFound"}"""
 
@@ -240,6 +308,7 @@ class TaigaClientTest {
             server.createContext("/") { ex ->
                 recorded = Recorded(
                     path = ex.requestURI.path,
+                    method = ex.requestMethod,
                     query = ex.requestURI.query,
                     auth = ex.requestHeaders.getFirst("Authorization"),
                     noPagination = ex.requestHeaders.getFirst("x-disable-pagination"),

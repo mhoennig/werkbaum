@@ -6,9 +6,12 @@ import de.werkbaum.generated.model.TaigaProject
 import de.werkbaum.generated.model.TaigaSession
 import de.werkbaum.generated.model.TaigaStoryCreateRequest
 import de.werkbaum.generated.model.TaigaTaskCreateRequest
+import de.werkbaum.generated.model.TaigaStatus
+import de.werkbaum.generated.model.TaigaStatusPatch
 import de.werkbaum.generated.model.TaigaTicket
 import de.werkbaum.generated.model.TaigaTicketDetail
 import de.werkbaum.integration.taiga.TaigaClient
+import de.werkbaum.integration.taiga.TaigaTicketDetailData
 import de.werkbaum.integration.taiga.TaigaTicketData
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -84,19 +87,60 @@ class TaigaController(private val client: TaigaClient) : TaigaApi {
         ticket(xTaigaToken, slug, ref, task = true)
 
     private fun ticket(token: String, slug: String, ref: Long, task: Boolean):
-        ResponseEntity<TaigaTicketDetail> {
-        val d = client.ticket(token, slug, ref, task)
-        return ResponseEntity.ok(
-            TaigaTicketDetail(
-                id = d.id,
-                ref = d.ref,
-                subject = d.subject,
-                status = d.status,
-                statusClosed = d.statusClosed,
-                assignee = d.assignee,
-            )
+        ResponseEntity<TaigaTicketDetail> =
+        ResponseEntity.ok(client.ticket(token, slug, ref, task).toApi())
+
+    /* Schreiben (D91-Nachtrag 7/8): angestoßen wird es im Knoten-Fenster, von
+       selbst geschieht nichts. Die Zielspalte kommt als Id herein — welche es
+       ist, entscheidet der Editor über die Statusbox-Abbildung (D14). */
+    override fun taigaStoryStatuses(xTaigaToken: String, slug: String) =
+        statuses(xTaigaToken, slug, task = false)
+
+    override fun taigaTaskStatuses(xTaigaToken: String, slug: String) =
+        statuses(xTaigaToken, slug, task = true)
+
+    private fun statuses(token: String, slug: String, task: Boolean):
+        ResponseEntity<List<TaigaStatus>> =
+        ResponseEntity.ok(
+            client.statuses(token, slug, task).map {
+                TaigaStatus(id = it.id, name = it.name, closed = it.closed)
+            }
         )
-    }
+
+    override fun taigaSetStoryStatus(
+        xTaigaToken: String,
+        ref: Long,
+        slug: String,
+        taigaStatusPatch: TaigaStatusPatch,
+    ) = setStatus(xTaigaToken, slug, ref, task = false, patch = taigaStatusPatch)
+
+    override fun taigaSetTaskStatus(
+        xTaigaToken: String,
+        ref: Long,
+        slug: String,
+        taigaStatusPatch: TaigaStatusPatch,
+    ) = setStatus(xTaigaToken, slug, ref, task = true, patch = taigaStatusPatch)
+
+    private fun setStatus(
+        token: String,
+        slug: String,
+        ref: Long,
+        task: Boolean,
+        patch: TaigaStatusPatch,
+    ): ResponseEntity<TaigaTicketDetail> =
+        ResponseEntity.ok(
+            client.setStatus(token, slug, ref, task, patch.status, patch.version).toApi()
+        )
+
+    private fun TaigaTicketDetailData.toApi() = TaigaTicketDetail(
+        id = id,
+        ref = ref,
+        subject = subject,
+        status = status,
+        statusClosed = statusClosed,
+        assignee = assignee,
+        version = version,
+    )
 
     private fun created(ticket: TaigaTicketData): ResponseEntity<TaigaTicket> =
         ResponseEntity.status(HttpStatus.CREATED).body(

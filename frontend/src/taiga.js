@@ -70,8 +70,47 @@ export const TAIGA_STATUS_CODE = {
 };
 export function mapTaigaStatus(name){
   if(typeof name !== 'string') return null;
-  const code = TAIGA_STATUS_CODE[name.trim().toLowerCase().replace(/\s+/g, ' ')];
+  const code = TAIGA_STATUS_CODE[normName(name)];
   return code ? STATUS_BY_CODE[code] : null;
+}
+const normName = s => s.trim().toLowerCase().replace(/\s+/g, ' ');
+
+/* Die Gegenrichtung (D91-Nachtrag 7/8): Zu welcher Taiga-Spalte gehört eine
+   Statusbox? Nur die fünf abgebildeten Zustände haben eine — `[?]`, `[!]`,
+   `[-]` und der neutrale Knoten (code null) haben keine Entsprechung und
+   lassen das Ticket unangetastet; erfunden wird nichts. */
+export const TAIGA_STATUS_NAME = Object.fromEntries(
+  Object.entries(TAIGA_STATUS_CODE).map(([name, code]) => [code, name]));
+export function taigaStatusName(code){
+  const name = code ? TAIGA_STATUS_NAME[code] : null;
+  /* Zurück in die Schreibweise, in der Taiga die Spalten führt — gesucht wird
+     ohnehin normalisiert (`pickStatus`), aber gemeldet wird sie im Klartext. */
+  return name ? name.replace(/^./, c => c.toUpperCase()) : null;
+}
+
+/* Die Spalte des Projekts zu einem Namen — Taiga schreibt nach **Id**, und
+   die Namen sind je Projekt frei. Verglichen wird mit derselben
+   Normalisierung wie beim Lesen; findet sich nichts, wird nicht geschrieben
+   (der Aufrufer sagt, welche Spalte fehlte). */
+export function pickStatus(list, name){
+  if(!Array.isArray(list) || typeof name !== 'string') return null;
+  const gesucht = normName(name);
+  return list.find(s => s && typeof s.name === 'string' && normName(s.name) === gesucht) || null;
+}
+
+/* Die beiden Schreib-Pfade am Proxy: der Status des Tickets und die Spalten
+   des Projekts — je Typ ein eigener Endpunkt, wie beim Lesen. */
+export function statusApiPath(ref, slug){
+  const p = ticketApiPath(ref, slug);
+  if(!p) return null;
+  const [pfad, query] = p.split('?');
+  return pfad + '/status?' + query;
+}
+export function statusListPath(ref, slug){
+  const p = refParts(ref);
+  if(!p || !slug) return null;
+  return '/' + (p.kind === 'US' ? 'userstory-statuses' : 'task-statuses') +
+    '?slug=' + encodeURIComponent(slug);
 }
 
 /* Die Ticket-Referenz unter der Schreibmarke (Strg+Klick im Text,

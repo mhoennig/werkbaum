@@ -204,7 +204,7 @@
       - [/] #trk.resolve: Resolve "#US-123" over the REST API (M)
         - [^] #trk.resolve.read: Read title, link and status (S)
         - [/] #trk.resolve.map: Map the workflow onto the states (S)
-      - [?] #trk.write: Write the status back (M) :#trk.resolve
+      - [x] #trk.write: Write the status back (M) :#trk.resolve
       - [^] #trk.create: Create tickets from nodes (XL)
         - [^] #trk.create.proxy: Backend proxy with named endpoints (M)
         - [^] #trk.create.login: Log in to Taiga, token stays in the browser (S) :#trk.create.proxy
@@ -1158,8 +1158,9 @@
   shown as plain text; making the mapping configurable is still open.
 
 #trk.write
-  The other direction: change a status in the plan and the ticket follows.
-  Only worth doing once reading it is trustworthy.
+  The other direction. Neither side wins by itself: a difference between the
+  ticket and the status box is marked, and both directions are offered as
+  explicit buttons — writing only for the five mapped states.
 
 #trk.create
   One click in the node window turns a node into a Taiga ticket. The cut

@@ -81,3 +81,10 @@ docs/SPEC.md §10 testen — niemals eine zweite, abweichende Grammatik pflegen.
   deshalb den `slug` (aus `&taiga.<slug>`, SPEC §1) und fragen erst
   `/projects/by_slug`, dann `by_ref` — der Slug kommt vom Client und wird
   **kodiert** angehängt, sonst hängte ein `&` darin einen weiteren Filter an.
+- **Schreiben (D91-Nachtrag 8):** `PATCH /taiga/{userstories|tasks}/{ref}/status`
+  nimmt die Status-**Id** (aus `GET /taiga/{userstory|task}-statuses?slug=`)
+  und die zuletzt gelesene `version` — Taigas optimistische Sperre; ein
+  Konflikt wird durchgereicht, nie überschrieben. Die Zielspalte wählt der
+  Editor: Namen sind je Projekt frei, die Abbildung ist Notation (D14). Der
+  Test-Stub muss **chunked** Bodies lesen (der JDK-HttpClient sendet ohne
+  `Content-Length`) — sonst meldet er einen Versionskonflikt, den es nicht gibt.
