@@ -489,6 +489,30 @@ durch eine echte Linie abgesetzt. Siehe D57.
 
 Siehe D52.
 
+**Ticket-Stand im Knoten-Fenster (§11).** Trägt die Zeile eine
+Ticket-Referenz (`#US-123` / `#T-1234`) und ist ihr Teilbaum per
+`&taiga.<slug>` (§1) einem Projekt zugeordnet, holt das Fenster den Stand des
+Tickets und zeigt ihn über dem Öffnen-Knopf: **Betreff**, **Status** und, wenn
+es einen gibt, den **Zuständigen**.
+
+- Der Taiga-Status wird auf die Statusbox der Notation (§4) abgebildet und
+  **neben** seinem eigenen Namen gezeigt (`In progress → [~]`): „New“ `[ ]`,
+  „In progress“ `[~]`, „Ready for test“ `[/]`, „Done“ `[x]`, „Archived“ `[^]`;
+  Groß-/Kleinschreibung und Leerraum sind egal. Ein Name außerhalb dieser
+  Liste bleibt **unabgebildet** und steht nur als Text — geraten wird nicht.
+- **Gelesen, nie geschrieben.** Der Notationstext bleibt unangetastet; die
+  Statusbox des Knotens ändert sich nicht, und die Abbildung sagt nichts über
+  Fortschritt (§4) oder Kosten (§5). Das Zurückschreiben ist reserviert (§11).
+- Geholt wird erst, wenn das Fenster **kurz stehen bleibt** (nicht im
+  Vorüberfahren), und je Ticket **einmal je Sitzung** — ein ↻-Knopf im Fenster
+  holt neu. Ohne Anmeldung an der Instanz, ohne Projekt-Zuordnung oder ohne
+  konfiguriertes Backend geschieht still nichts; ein Fehler steht als Zeile im
+  Fenster.
+- Reine Bedienhilfe wie das Fenster selbst: nicht im Grafikexport, nicht im
+  Druck.
+
+Siehe D91-Nachtrag 6.
+
 **Die Knotenfarbe zeigt den effektiven Status (§4)**, nicht den intrinsischen —
 das Diagramm beantwortet „wie weit ist das wirklich?“. Wo der eigene Status
 **weiter** ist als der effektive (der Knoten wird von Abhängigkeiten
@@ -1360,6 +1384,9 @@ wird sie von selbst die ID. Erstreckt sich ein Plan über **mehrere**
 Taiga-Projekte, benennt das Schlagwort `&taiga.<slug>` (unten) das Projekt
 je Teilbaum — eine Ref wird gegen das Projekt des nächsten Vorfahren mit so
 einem Tag aufgelöst. Siehe D91-Nachträge 2 und 3.
+Der **Stand** eines so bezeichneten Tickets (Betreff, Status, Zuständiger)
+wird im Knoten-Fenster gezeigt (§9) — gelesen, nie geschrieben; das
+**Zurückschreiben** des Status bleibt reserviert (unten).
 Freie Schlagworte liegen **nicht** mehr auf `#` — siehe `&tag` unten; damit
 ist die frühere Dreifach-Rolle von `#` aufgelöst (D34).
 

@@ -1,7 +1,7 @@
 import './style.css';
 import { parse, setFoldMark, expandShortIds, shortIdClosed } from './parser.js';
 import { computeCheapPlan, overloadedAssignee, assigneeLoads, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, presetFoldSet, personFoldSet, allTags, lineTargets, taigaSlugs } from './model.js';
-import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt } from './taiga.js';
+import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt, ticketApiPath, mapTaigaStatus } from './taiga.js';
 import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning, warningText } from './warnings.js';
 import * as live from './live.js';
@@ -1585,11 +1585,16 @@ out.addEventListener('contextmenu', e => { if(pressTimer || armedEl) e.preventDe
 const nodeTip = document.getElementById('nodeTip');
 const nodeTipBody = document.getElementById('nodeTipBody');
 let tipNode = null;
+/* Der Ticket-Stand darin (D91-Nachtrag 6) steht hier oben bei `tipNode`:
+   `closeNodeTip()` räumt ihn mit weg, und das läuft schon beim Aufbau. */
+let tipTicket = null, ticketTimer = null;
 
 function closeNodeTip(){
   if(!tipNode) return;
   tipNode.classList.remove('tipped');
   tipNode = null;
+  tipTicket = null;             /* nichts mehr zu bemalen (D91-Nachtrag 6) */
+  clearTimeout(ticketTimer);    /* ein noch nicht gestarteter Abruf entfällt */
   nodeTip.hidden = true;
 }
 
@@ -1701,6 +1706,10 @@ document.getElementById('nodeTipClose').addEventListener('click', closeNodeTip);
 document.addEventListener('pointerdown', e => {
   if(!tipNode || nodeTip.contains(e.target)) return;
   if(e.target && e.target.closest && e.target.closest('.node') === tipNode) return;
+  /* Ein modaler Dialog gehört zu einer Aktion AUS dem Fenster (Anmelden für
+     den Ticket-Stand, D91-Nachtrag 6) — er darf es nicht zumachen, sonst
+     fiele die Antwort ins Leere. Er liegt ohnehin darüber (z-index). */
+  if(e.target && e.target.closest && e.target.closest('.tabmodal-overlay')) return;
   closeNodeTip();
 }, true);
 document.addEventListener('keydown', e => { if(e.key === 'Escape'){ closeNodeTip(); closeNewsMenu(); } });
@@ -1808,17 +1817,23 @@ function appendTaigaActions(el){
   const ref = ticketRefOf(node);
   if(ref){
     /* Der Knoten IST schon angelegt (Idempotenz-Marker) — statt der
-       Anlage-Knöpfe gibt es den Weg zum Ticket. Als Knopf im Fenster ist er
-       auch auf Touch erreichbar (dort gibt es kein Strg) und macht die
-       Strg+Klick-Geste nebenbei auffindbar (D25-Lehre). */
-    const url = ticketUrl(taigaWeb, taigaSlugs(roots).get(node), ref);
-    if(!url) return;
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'nodetip-taigabtn'; b.tabIndex = -1;
-    b.textContent = '↗ ' + t('taigaOpenBtn', {ref: '#' + ref});
-    b.addEventListener('click', () => { closeNodeTip(); window.open(url, '_blank', 'noopener'); });
-    wrap.appendChild(b);
-    nodeTipBody.appendChild(wrap);
+       Anlage-Knöpfe gibt es den Stand des Tickets und den Weg dorthin. Der
+       Slug (SPEC §1) trägt das Lesen, die Web-Basis das Öffnen: Fehlt eines,
+       entfällt nur dessen Hälfte. */
+    const slug = taigaSlugs(roots).get(node);
+    const url = ticketUrl(taigaWeb, slug, ref);
+    if(slug) nodeTipBody.appendChild(ticketBox(el, slug, ref));
+    /* Als Knopf im Fenster ist der Link auch auf Touch erreichbar (dort gibt
+       es kein Strg) und macht die Strg+Klick-Geste nebenbei auffindbar
+       (D25-Lehre). */
+    if(url){
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'nodetip-taigabtn'; b.tabIndex = -1;
+      b.textContent = '↗ ' + t('taigaOpenBtn', {ref: '#' + ref});
+      b.addEventListener('click', () => { closeNodeTip(); window.open(url, '_blank', 'noopener'); });
+      wrap.appendChild(b);
+      nodeTipBody.appendChild(wrap);
+    }
     return;
   }
   const mk = (label, mitTasks) => {
@@ -1831,6 +1846,115 @@ function appendTaigaActions(el){
   wrap.appendChild(mk(t('taigaStoryBtn'), false));
   if(taskCandidates(node).some(c => !c.exists)) wrap.appendChild(mk(t('taigaTasksBtn'), true));
   nodeTipBody.appendChild(wrap);
+}
+
+/* ---------- Ticket-Stand im Knoten-Fenster (D91-Nachtrag 6) ----------
+   Trägt die Zeile eine Ref und ist der Teilbaum per `&taiga.<slug>` zugeordnet,
+   zeigt das Fenster Betreff, Status und Zuständigen des Tickets. Gelesen, nie
+   geschrieben: Der Notationstext bleibt unangetastet, die Abbildung des
+   Taiga-Status auf die Statusbox (SPEC §4) ist reine Anzeige.
+
+   Zwei Sparsamkeiten, beide der fremden Instanz zuliebe: Geholt wird je Ticket
+   EINMAL je Sitzung (Cache; der ↻-Knopf holt neu), und erst, wenn das Fenster
+   kurz stehen bleibt — es öffnet schon beim Überfahren (D57) und beim Tabben,
+   ein Abruf je gestreiftem Knoten wäre unhöflich. */
+const taigaTickets = new Map();   /* '<slug>/<ref>' -> {kind:'load'|'ok'|'err', data, msg} */
+const TICKET_DELAY = 400;         /* `tipTicket`/`ticketTimer`: oben bei `tipNode` */
+
+function ticketBox(el, slug, ref){
+  const box = document.createElement('div');
+  box.className = 'nodetip-ticket';
+  const key = slug + '/' + ref;
+  tipTicket = {key, slug, ref, box};
+  paintTicket(box, key, slug, ref);
+  clearTimeout(ticketTimer);
+  if(!taigaTickets.has(key) && taigaSession()){
+    ticketTimer = setTimeout(() => {
+      if(tipNode === el) loadTicket(key, slug, ref, false);
+    }, TICKET_DELAY);
+  }
+  return box;
+}
+
+function paintTicket(box, key, slug, ref){
+  const st = taigaTickets.get(key) || {kind: 'idle'};
+  box.textContent = '';
+  const line = (cls, text) => {
+    const d = document.createElement('div');
+    d.className = cls;
+    d.textContent = text;
+    box.appendChild(d);
+    return d;
+  };
+  if(st.kind === 'load'){ line('tk-line', t('taigaTicketLoading')); return; }
+  if(st.kind === 'ok'){
+    const head = document.createElement('div');
+    head.className = 'tk-head';
+    if(st.data.status){
+      const s = document.createElement('span');
+      s.className = 'tk-status';
+      s.textContent = st.data.status;
+      head.appendChild(s);
+      /* Taigas Name UND die Statusbox der Notation — die Abbildung ist die
+         Aussage, deshalb stehen beide da (SPEC §9). Ein unbekannter Name
+         bleibt für sich stehen. */
+      const m = mapTaigaStatus(st.data.status);
+      if(m){
+        const a = document.createElement('span');
+        a.className = 'tk-arrow';
+        a.textContent = '→';
+        const c = document.createElement('span');
+        c.className = 'chip st-' + m.key;
+        c.textContent = '[' + m.code + ']';
+        head.append(a, c);
+      }
+    }
+    head.appendChild(reloadBtn(key, slug, ref, true));
+    box.appendChild(head);
+    if(st.data.subject) line('tk-line', st.data.subject);
+    if(st.data.assignee) line('tk-line', t('taigaTicketAssignee', {name: st.data.assignee}));
+    return;
+  }
+  if(st.kind === 'err') line('tk-err', st.msg);
+  box.appendChild(reloadBtn(key, slug, ref, st.kind === 'err'));
+}
+
+/* Der Knopf holt den Stand — und meldet dafür bei Bedarf an (`interactive`):
+   Ein Klick ist die ausdrückliche Absicht, das Überfahren eines Knotens nicht. */
+function reloadBtn(key, slug, ref, kurz){
+  const b = document.createElement('button');
+  b.type = 'button'; b.tabIndex = -1;
+  b.className = 'nodetip-taigabtn' + (kurz ? ' tk-mini' : '');
+  b.textContent = kurz ? '↻' : t('taigaTicketFetch');
+  if(kurz) b.title = t('taigaTicketReload');
+  b.addEventListener('click', () => loadTicket(key, slug, ref, true));
+  return b;
+}
+
+async function loadTicket(key, slug, ref, interactive){
+  const session = interactive ? await taigaEnsureSession() : taigaSession();
+  if(!session || !session.token) return;   /* nicht angemeldet: der Knopf bleibt stehen */
+  taigaTickets.set(key, {kind: 'load'});
+  repaintTicket(key);
+  try{
+    const d = await taigaFetch(ticketApiPath(ref, slug), null, session.token);
+    taigaTickets.set(key, {kind: 'ok', data: d});
+  }catch(err){
+    /* Abgelaufenes Token: wegräumen, damit der nächste Knopfdruck die
+       Anmeldung anbietet (wie bei der Projektliste). */
+    if(err && err.status === 401) storeTaigaSession(null);
+    taigaTickets.set(key, {kind: 'err', msg: taigaErrText(err)});
+  }
+  repaintTicket(key);
+}
+
+/* Gemalt wird nur, wenn genau dieses Ticket noch im offenen Fenster steht —
+   die Antwort kann kommen, wenn längst ein anderer Knoten dran ist. Das
+   Fenster wächst dabei, also neu setzen. */
+function repaintTicket(key){
+  if(!tipTicket || tipTicket.key !== key || !tipTicket.box.isConnected) return;
+  paintTicket(tipTicket.box, key, tipTicket.slug, tipTicket.ref);
+  if(tipNode) placeNodeTip(tipNode);
 }
 
 /* Strg+Klick (macOS auch Cmd) auf einen Knoten mit Ticket-Referenz öffnet
@@ -2768,7 +2892,7 @@ const I18N = {
     acHint:"{n} ID-Vorschläge – ↑/↓ wählt, Enter übernimmt",
     tipClose:"Schließen",
     tipOpenLink:"Link öffnen",
-    taigaStoryBtn:"Taiga: Story anlegen", taigaTasksBtn:"Taiga: Story + Tasks anlegen", taigaLoginTitle:"Bei Taiga anmelden", taigaUser:"Benutzername", taigaPass:"Passwort", taigaLoginDo:"Anmelden", taigaCancel:"Abbrechen", taigaProjectTitle:"Taiga-Ticket anlegen", taigaProject:"Projekt", taigaTasksPick:"Teilpakete als Tasks anlegen:", taigaCreateDo:"Anlegen", taigaError:"Fehlgeschlagen: {error}", taigaOpenBtn:"{ref} in Taiga öffnen",
+    taigaStoryBtn:"Taiga: Story anlegen", taigaTasksBtn:"Taiga: Story + Tasks anlegen", taigaLoginTitle:"Bei Taiga anmelden", taigaUser:"Benutzername", taigaPass:"Passwort", taigaLoginDo:"Anmelden", taigaCancel:"Abbrechen", taigaProjectTitle:"Taiga-Ticket anlegen", taigaProject:"Projekt", taigaTasksPick:"Teilpakete als Tasks anlegen:", taigaCreateDo:"Anlegen", taigaError:"Fehlgeschlagen: {error}", taigaOpenBtn:"{ref} in Taiga öffnen", taigaTicketFetch:"Stand holen", taigaTicketReload:"Stand neu holen", taigaTicketLoading:"Stand wird geholt …", taigaTicketAssignee:"Zuständig: {name}",
     liveLoadWarn:"Server-Dokument nicht geladen: {url} ({error}). Läuft das Backend, und ist die Adresse eine Dokument-Adresse (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Deine Änderung war nicht mehr anwendbar ({error}) — der Stand wurde einmal frisch geholt.",
     liveConflictText:"Jemand hat dieselben Zeilen geändert. Wessen Fassung soll gelten?",
@@ -2905,7 +3029,7 @@ const I18N = {
     acHint:"{n} id suggestions – ↑/↓ to choose, Enter to insert",
     tipClose:"Close",
     tipOpenLink:"Open link",
-    taigaStoryBtn:"Taiga: create story", taigaTasksBtn:"Taiga: create story + tasks", taigaLoginTitle:"Log in to Taiga", taigaUser:"Username", taigaPass:"Password", taigaLoginDo:"Log in", taigaCancel:"Cancel", taigaProjectTitle:"Create Taiga ticket", taigaProject:"Project", taigaTasksPick:"Create sub-packages as tasks:", taigaCreateDo:"Create", taigaError:"Failed: {error}", taigaOpenBtn:"Open {ref} in Taiga",
+    taigaStoryBtn:"Taiga: create story", taigaTasksBtn:"Taiga: create story + tasks", taigaLoginTitle:"Log in to Taiga", taigaUser:"Username", taigaPass:"Password", taigaLoginDo:"Log in", taigaCancel:"Cancel", taigaProjectTitle:"Create Taiga ticket", taigaProject:"Project", taigaTasksPick:"Create sub-packages as tasks:", taigaCreateDo:"Create", taigaError:"Failed: {error}", taigaOpenBtn:"Open {ref} in Taiga", taigaTicketFetch:"Fetch state", taigaTicketReload:"Fetch again", taigaTicketLoading:"Fetching state …", taigaTicketAssignee:"Assigned to: {name}",
     liveLoadWarn:"Server document not loaded: {url} ({error}). Is the backend running, and is the address a document address (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Your change no longer applied ({error}) — the document was fetched afresh once.",
     liveConflictText:"Someone changed the same lines. Whose version should win?",
@@ -3041,7 +3165,7 @@ const I18N = {
     acHint:"{n} sugerencias de ID – ↑/↓ elige, Intro inserta",
     tipClose:"Cerrar",
     tipOpenLink:"Abrir enlace",
-    taigaStoryBtn:"Taiga: crear historia", taigaTasksBtn:"Taiga: crear historia + tareas", taigaLoginTitle:"Iniciar sesión en Taiga", taigaUser:"Usuario", taigaPass:"Contraseña", taigaLoginDo:"Iniciar sesión", taigaCancel:"Cancelar", taigaProjectTitle:"Crear ticket de Taiga", taigaProject:"Proyecto", taigaTasksPick:"Crear subpaquetes como tareas:", taigaCreateDo:"Crear", taigaError:"Error: {error}", taigaOpenBtn:"Abrir {ref} en Taiga",
+    taigaStoryBtn:"Taiga: crear historia", taigaTasksBtn:"Taiga: crear historia + tareas", taigaLoginTitle:"Iniciar sesión en Taiga", taigaUser:"Usuario", taigaPass:"Contraseña", taigaLoginDo:"Iniciar sesión", taigaCancel:"Cancelar", taigaProjectTitle:"Crear ticket de Taiga", taigaProject:"Proyecto", taigaTasksPick:"Crear subpaquetes como tareas:", taigaCreateDo:"Crear", taigaError:"Error: {error}", taigaOpenBtn:"Abrir {ref} en Taiga", taigaTicketFetch:"Consultar estado", taigaTicketReload:"Volver a consultar", taigaTicketLoading:"Consultando estado …", taigaTicketAssignee:"Asignado a: {name}",
     liveLoadWarn:"Documento del servidor no cargado: {url} ({error}). ¿Está el backend en marcha y es la dirección la de un documento (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Tu cambio ya no era aplicable ({error}): se volvió a cargar el estado una vez.",
     liveConflictText:"Alguien cambió las mismas líneas. ¿Qué versión debe prevalecer?",
@@ -3177,7 +3301,7 @@ const I18N = {
     acHint:"{n} suggestions d'ID – ↑/↓ pour choisir, Entrée pour insérer",
     tipClose:"Fermer",
     tipOpenLink:"Ouvrir le lien",
-    taigaStoryBtn:"Taiga : créer la story", taigaTasksBtn:"Taiga : créer story + tâches", taigaLoginTitle:"Se connecter à Taiga", taigaUser:"Nom d'utilisateur", taigaPass:"Mot de passe", taigaLoginDo:"Se connecter", taigaCancel:"Annuler", taigaProjectTitle:"Créer un ticket Taiga", taigaProject:"Projet", taigaTasksPick:"Créer les sous-lots comme tâches :", taigaCreateDo:"Créer", taigaError:"Échec : {error}", taigaOpenBtn:"Ouvrir {ref} dans Taiga",
+    taigaStoryBtn:"Taiga : créer la story", taigaTasksBtn:"Taiga : créer story + tâches", taigaLoginTitle:"Se connecter à Taiga", taigaUser:"Nom d'utilisateur", taigaPass:"Mot de passe", taigaLoginDo:"Se connecter", taigaCancel:"Annuler", taigaProjectTitle:"Créer un ticket Taiga", taigaProject:"Projet", taigaTasksPick:"Créer les sous-lots comme tâches :", taigaCreateDo:"Créer", taigaError:"Échec : {error}", taigaOpenBtn:"Ouvrir {ref} dans Taiga", taigaTicketFetch:"Relever l'état", taigaTicketReload:"Relever à nouveau", taigaTicketLoading:"Relevé de l'état …", taigaTicketAssignee:"Assigné à : {name}",
     liveLoadWarn:"Document du serveur non chargé : {url} ({error}). Le backend tourne-t-il, et l'adresse est-elle celle d'un document (…/documents/&lt;uuid&gt;) ?",
     liveStaleWarn:"Ta modification n'était plus applicable ({error}) — l'état a été rechargé une fois.",
     liveConflictText:"Quelqu'un a modifié les mêmes lignes. Quelle version doit l'emporter ?",
@@ -3313,7 +3437,7 @@ const I18N = {
     acHint:"{n} podpowiedzi ID – ↑/↓ wybiera, Enter wstawia",
     tipClose:"Zamknij",
     tipOpenLink:"Otwórz link",
-    taigaStoryBtn:"Taiga: utwórz historyjkę", taigaTasksBtn:"Taiga: historyjka + zadania", taigaLoginTitle:"Zaloguj się do Taigi", taigaUser:"Nazwa użytkownika", taigaPass:"Hasło", taigaLoginDo:"Zaloguj", taigaCancel:"Anuluj", taigaProjectTitle:"Utwórz zgłoszenie w Taidze", taigaProject:"Projekt", taigaTasksPick:"Utwórz podpakiety jako zadania:", taigaCreateDo:"Utwórz", taigaError:"Niepowodzenie: {error}", taigaOpenBtn:"Otwórz {ref} w Taidze",
+    taigaStoryBtn:"Taiga: utwórz historyjkę", taigaTasksBtn:"Taiga: historyjka + zadania", taigaLoginTitle:"Zaloguj się do Taigi", taigaUser:"Nazwa użytkownika", taigaPass:"Hasło", taigaLoginDo:"Zaloguj", taigaCancel:"Anuluj", taigaProjectTitle:"Utwórz zgłoszenie w Taidze", taigaProject:"Projekt", taigaTasksPick:"Utwórz podpakiety jako zadania:", taigaCreateDo:"Utwórz", taigaError:"Niepowodzenie: {error}", taigaOpenBtn:"Otwórz {ref} w Taidze", taigaTicketFetch:"Pobierz stan", taigaTicketReload:"Pobierz ponownie", taigaTicketLoading:"Pobieranie stanu …", taigaTicketAssignee:"Przypisane do: {name}",
     liveLoadWarn:"Nie wczytano dokumentu z serwera: {url} ({error}). Czy backend działa i czy adres wskazuje dokument (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Twoja zmiana nie dała się już zastosować ({error}) — stan pobrano raz od nowa.",
     liveConflictText:"Ktoś zmienił te same wiersze. Która wersja ma obowiązywać?",
@@ -3449,7 +3573,7 @@ const I18N = {
     acHint:"{n} подсказок ID – ↑/↓ выбирает, Enter вставляет",
     tipClose:"Закрыть",
     tipOpenLink:"Открыть ссылку",
-    taigaStoryBtn:"Taiga: создать историю", taigaTasksBtn:"Taiga: история + задачи", taigaLoginTitle:"Вход в Taiga", taigaUser:"Имя пользователя", taigaPass:"Пароль", taigaLoginDo:"Войти", taigaCancel:"Отмена", taigaProjectTitle:"Создать тикет в Taiga", taigaProject:"Проект", taigaTasksPick:"Создать подпакеты как задачи:", taigaCreateDo:"Создать", taigaError:"Не удалось: {error}", taigaOpenBtn:"Открыть {ref} в Taiga",
+    taigaStoryBtn:"Taiga: создать историю", taigaTasksBtn:"Taiga: история + задачи", taigaLoginTitle:"Вход в Taiga", taigaUser:"Имя пользователя", taigaPass:"Пароль", taigaLoginDo:"Войти", taigaCancel:"Отмена", taigaProjectTitle:"Создать тикет в Taiga", taigaProject:"Проект", taigaTasksPick:"Создать подпакеты как задачи:", taigaCreateDo:"Создать", taigaError:"Не удалось: {error}", taigaOpenBtn:"Открыть {ref} в Taiga", taigaTicketFetch:"Получить статус", taigaTicketReload:"Обновить статус", taigaTicketLoading:"Получение статуса …", taigaTicketAssignee:"Назначено: {name}",
     liveLoadWarn:"Документ с сервера не загружен: {url} ({error}). Запущен ли бэкенд и является ли адрес адресом документа (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Ваше изменение больше не применялось ({error}) — состояние загружено заново.",
     liveConflictText:"Кто-то изменил те же строки. Чья версия должна остаться?",
@@ -3585,7 +3709,7 @@ const I18N = {
     acHint:"{n} आईडी सुझाव – ↑/↓ से चुनें, Enter से डालें",
     tipClose:"बंद करें",
     tipOpenLink:"लिंक खोलें",
-    taigaStoryBtn:"Taiga: स्टोरी बनाएँ", taigaTasksBtn:"Taiga: स्टोरी + टास्क बनाएँ", taigaLoginTitle:"Taiga में साइन इन करें", taigaUser:"उपयोगकर्ता नाम", taigaPass:"पासवर्ड", taigaLoginDo:"साइन इन", taigaCancel:"रद्द करें", taigaProjectTitle:"Taiga टिकट बनाएँ", taigaProject:"प्रोजेक्ट", taigaTasksPick:"उप-पैकेज टास्क के रूप में बनाएँ:", taigaCreateDo:"बनाएँ", taigaError:"विफल: {error}", taigaOpenBtn:"Taiga में {ref} खोलें",
+    taigaStoryBtn:"Taiga: स्टोरी बनाएँ", taigaTasksBtn:"Taiga: स्टोरी + टास्क बनाएँ", taigaLoginTitle:"Taiga में साइन इन करें", taigaUser:"उपयोगकर्ता नाम", taigaPass:"पासवर्ड", taigaLoginDo:"साइन इन", taigaCancel:"रद्द करें", taigaProjectTitle:"Taiga टिकट बनाएँ", taigaProject:"प्रोजेक्ट", taigaTasksPick:"उप-पैकेज टास्क के रूप में बनाएँ:", taigaCreateDo:"बनाएँ", taigaError:"विफल: {error}", taigaOpenBtn:"Taiga में {ref} खोलें", taigaTicketFetch:"स्थिति लाएँ", taigaTicketReload:"फिर से लाएँ", taigaTicketLoading:"स्थिति लाई जा रही है …", taigaTicketAssignee:"ज़िम्मेदार: {name}",
     liveLoadWarn:"सर्वर दस्तावेज़ लोड नहीं हुआ: {url} ({error})। क्या बैकएंड चल रहा है और क्या पता दस्तावेज़ का पता है (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"आपका बदलाव अब लागू नहीं हो सका ({error}) — स्थिति एक बार नए सिरे से ली गई।",
     liveConflictText:"किसी और ने वही पंक्तियाँ बदली हैं। किसका संस्करण रहे?",
@@ -3732,7 +3856,7 @@ const I18N = {
     acHint:"{n} 个 ID 建议 – ↑/↓ 选择，Enter 插入",
     tipClose:"关闭",
     tipOpenLink:"打开链接",
-    taigaStoryBtn:"Taiga：创建故事", taigaTasksBtn:"Taiga：创建故事和任务", taigaLoginTitle:"登录 Taiga", taigaUser:"用户名", taigaPass:"密码", taigaLoginDo:"登录", taigaCancel:"取消", taigaProjectTitle:"创建 Taiga 工单", taigaProject:"项目", taigaTasksPick:"将子包创建为任务：", taigaCreateDo:"创建", taigaError:"失败：{error}", taigaOpenBtn:"在 Taiga 中打开 {ref}",
+    taigaStoryBtn:"Taiga：创建故事", taigaTasksBtn:"Taiga：创建故事和任务", taigaLoginTitle:"登录 Taiga", taigaUser:"用户名", taigaPass:"密码", taigaLoginDo:"登录", taigaCancel:"取消", taigaProjectTitle:"创建 Taiga 工单", taigaProject:"项目", taigaTasksPick:"将子包创建为任务：", taigaCreateDo:"创建", taigaError:"失败：{error}", taigaOpenBtn:"在 Taiga 中打开 {ref}", taigaTicketFetch:"获取状态", taigaTicketReload:"重新获取", taigaTicketLoading:"正在获取状态 …", taigaTicketAssignee:"负责人：{name}",
     liveLoadWarn:"未能加载服务器文档：{url}（{error}）。后端在运行吗？该地址是文档地址（…/documents/&lt;uuid&gt;）吗？",
     liveStaleWarn:"你的更改已无法应用（{error}）——已重新获取一次当前状态。",
     liveConflictText:"有人改动了同样的行。以谁的版本为准？",
@@ -3868,7 +3992,7 @@ const I18N = {
     acHint:"ID候補 {n} 件 – ↑/↓で選択、Enterで挿入",
     tipClose:"閉じる",
     tipOpenLink:"リンクを開く",
-    taigaStoryBtn:"Taiga: ストーリーを作成", taigaTasksBtn:"Taiga: ストーリー+タスクを作成", taigaLoginTitle:"Taiga にログイン", taigaUser:"ユーザー名", taigaPass:"パスワード", taigaLoginDo:"ログイン", taigaCancel:"キャンセル", taigaProjectTitle:"Taiga チケットを作成", taigaProject:"プロジェクト", taigaTasksPick:"サブパッケージをタスクとして作成:", taigaCreateDo:"作成", taigaError:"失敗: {error}", taigaOpenBtn:"Taiga で {ref} を開く",
+    taigaStoryBtn:"Taiga: ストーリーを作成", taigaTasksBtn:"Taiga: ストーリー+タスクを作成", taigaLoginTitle:"Taiga にログイン", taigaUser:"ユーザー名", taigaPass:"パスワード", taigaLoginDo:"ログイン", taigaCancel:"キャンセル", taigaProjectTitle:"Taiga チケットを作成", taigaProject:"プロジェクト", taigaTasksPick:"サブパッケージをタスクとして作成:", taigaCreateDo:"作成", taigaError:"失敗: {error}", taigaOpenBtn:"Taiga で {ref} を開く", taigaTicketFetch:"状態を取得", taigaTicketReload:"再取得", taigaTicketLoading:"状態を取得中 …", taigaTicketAssignee:"担当: {name}",
     liveLoadWarn:"サーバー文書を読み込めませんでした: {url}（{error}）。バックエンドは動いていますか。アドレスは文書のアドレス（…/documents/&lt;uuid&gt;）ですか。",
     liveStaleWarn:"あなたの変更はもう適用できませんでした（{error}）。状態を一度取り直しました。",
     liveConflictText:"同じ行が他の人にも変更されました。どちらの版を採りますか。",

@@ -18,7 +18,8 @@ schneiden, dass die Berechtigungsprüfung dazukommen kann, ohne die Signatur
 zu brechen.
 
 **Taiga-Proxy (D91):** schmale, benannte Endpunkte unter `/api/v1/taiga/*`
-(auth, projects, userstories, tasks) in `de.werkbaum.integration.taiga`
+(auth, projects, userstories, tasks — je POST zum Anlegen und GET
+`…/{ref}?slug=` zum **Lesen**, D91-Nachtrag 6) in `de.werkbaum.integration.taiga`
 (`TaigaClient` + `TaigaProperties`), Controller in `api`. Die Basis-URL der
 Taiga-**API** ist Server-Konfiguration (`werkbaum.taiga.api-url` bzw.
 `WERKBAUM_TAIGA_API_URL`), **nie** Request-Parameter — die SSRF-Falle
@@ -71,3 +72,12 @@ docs/SPEC.md §10 testen — niemals eine zweite, abweichende Grammatik pflegen.
   URL, Status. Status-Mapping Taiga-Workflow → Notation konfigurierbar
   (Default: „New"→`[ ]`, „In progress"→`[~]`, „Ready for test"→`[/]`,
   „Done"→`[x]`, „Archived"→`[^]`).
+- **Abgebildet wird im Frontend, nicht hier** (D91-Nachtrag 6): Der Proxy
+  reicht Taigas Status-**Namen** durch (`status_extra_info.name`), die
+  Statuscodes sind Notations-Vokabular und das Backend parst die Notation
+  nicht (D14). Die Tabelle steht headless in `frontend/src/taiga.js`
+  (`mapTaigaStatus`); konfigurierbar ist sie noch nicht.
+- **Eine Ref ist nur je Projekt eindeutig:** Die Lese-Endpunkte nehmen
+  deshalb den `slug` (aus `&taiga.<slug>`, SPEC §1) und fragen erst
+  `/projects/by_slug`, dann `by_ref` — der Slug kommt vom Client und wird
+  **kodiert** angehängt, sonst hängte ein `&` darin einen weiteren Filter an.

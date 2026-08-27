@@ -524,6 +524,88 @@ paths:
         "503":
           $ref: "#/components/responses/TaigaNotConfigured"
 
+  /taiga/userstories/{ref}:
+    get:
+      tags: [Taiga]
+      operationId: taigaStoryByRef
+      summary: User Story ueber ihre Ref lesen (Proxy)
+      description: >
+        Loest `#US-<ref>` auf (D91-Nachtrag 6): Betreff, Status und
+        Zustaendiger einer Story. Refs sind nur **je Projekt** eindeutig -
+        deshalb der `slug`, den der Editor aus dem Schlagwort
+        `&taiga.<slug>` des Teilbaums nimmt (SPEC par. 1). Der Proxy fragt
+        dafuer zuerst `GET <api-url>/projects/by_slug`, dann
+        `GET <api-url>/userstories/by_ref?project=<id>&ref=<ref>`.
+        Nur gelesen: Werkbaum schreibt hier nichts nach Taiga und nichts in
+        den Notationstext.
+      parameters:
+        - $ref: "#/components/parameters/TaigaToken"
+        - $ref: "#/components/parameters/TaigaRef"
+        - $ref: "#/components/parameters/TaigaSlug"
+      responses:
+        "200":
+          description: Die Story
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaigaTicketDetail"
+        "401":
+          description: Token fehlt oder ist abgelaufen
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: >
+            Projekt oder Ref gibt es nicht - Taigas Status wird
+            durchgereicht (der Editor zeigt den Fehlertext im Knoten-Fenster).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "502":
+          $ref: "#/components/responses/TaigaUnavailable"
+        "503":
+          $ref: "#/components/responses/TaigaNotConfigured"
+
+  /taiga/tasks/{ref}:
+    get:
+      tags: [Taiga]
+      operationId: taigaTaskByRef
+      summary: Task ueber ihre Ref lesen (Proxy)
+      description: >
+        Wie `GET /taiga/userstories/{ref}`, nur ueber
+        `GET <api-url>/tasks/by_ref` - loest `#T-<ref>` auf. Zwei Endpunkte
+        statt eines mit Typ-Parameter, weil das Praefix der Ref den Typ
+        traegt und Taiga getrennte `by_ref`-Endpunkte hat (SPEC par. 11).
+      parameters:
+        - $ref: "#/components/parameters/TaigaToken"
+        - $ref: "#/components/parameters/TaigaRef"
+        - $ref: "#/components/parameters/TaigaSlug"
+      responses:
+        "200":
+          description: Die Task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaigaTicketDetail"
+        "401":
+          description: Token fehlt oder ist abgelaufen
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Projekt oder Ref gibt es nicht
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "502":
+          $ref: "#/components/responses/TaigaUnavailable"
+        "503":
+          $ref: "#/components/responses/TaigaNotConfigured"
+
   /info:
     get:
       tags: [Documents]
@@ -558,6 +640,31 @@ components:
       schema:
         type: string
         maxLength: 512
+
+    TaigaRef:
+      name: ref
+      in: path
+      required: true
+      description: >
+        Die nackte Taiga-Nummer, ohne das Werkbaum-Praefix: aus `#US-123`
+        bzw. `#T-1234` wird `123` bzw. `1234`. Den Typ traegt der Pfad.
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    TaigaSlug:
+      name: slug
+      in: query
+      required: true
+      description: >
+        Projekt-Slug aus dem Schlagwort `&taiga.<slug>` (SPEC par. 1). Refs
+        laufen je Projekt fortlaufend - ohne das Projekt ist eine Ref nicht
+        eindeutig.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 255
 
   responses:
     TaigaNotConfigured:
@@ -974,6 +1081,38 @@ components:
             (D91-Nachtrag 2).
         subject:
           type: string
+
+    TaigaTicketDetail:
+      type: object
+      description: >
+        Der gelesene Stand eines Tickets (D91-Nachtrag 6) - schmal wie alles
+        hier: genau die Felder, die das Knoten-Fenster zeigt.
+      required: [id, ref, subject]
+      properties:
+        id:
+          type: integer
+          format: int64
+        ref:
+          type: integer
+          format: int64
+        subject:
+          type: string
+        status:
+          type: string
+          description: >
+            Name des Taiga-Workflow-Status (`status_extra_info.name`), z. B.
+            "In progress". Die Abbildung auf die Statusbox der Notation macht
+            der Editor (SPEC par. 4/9) - das Backend parst die Notation nicht
+            (D14). Fehlt, wenn Taiga den Namen nicht mitliefert.
+        statusClosed:
+          type: boolean
+          description: Taigas eigene Aussage, ob der Status als erledigt gilt.
+        assignee:
+          type: string
+          description: >
+            Anzeigename des Zustaendigen
+            (`assigned_to_extra_info.full_name_display`); fehlt, wenn niemand
+            zugewiesen ist.
 
     ProblemDetail:
       type: object

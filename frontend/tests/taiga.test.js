@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/parser.js';
 import { taigaSlugs } from '../src/model.js';
-import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt } from '../src/taiga.js';
+import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt, refParts, ticketApiPath, mapTaigaStatus } from '../src/taiga.js';
 
 /* Schlagworte `&tag` (SPEC §1, D91): Extraktion im Parser und die
    `taiga.*`-Vererbung in model.js — der erste Konsument der reservierten
@@ -240,5 +240,64 @@ describe('ticketRefAt — die Ref unter der Schreibmarke', () => {
   it('kein Treffer mitten in einem längeren Token', () => {
     const text = '- A #US-123abc B';
     expect(ticketRefAt(text, at(text, 'US'))).toBe(null);
+  });
+});
+
+/* Ticket-Stand lesen (D91-Nachtrag 6): Ref zerlegen, Proxy-Pfad bauen,
+   Taiga-Workflow auf die Statusbox der Notation abbilden. */
+
+describe('refParts / ticketApiPath — das Präfix trägt den Typ', () => {
+  it('zerlegt Story- und Task-Refs', () => {
+    expect(refParts('US-123')).toEqual({kind: 'US', nr: '123'});
+    expect(refParts('T-9')).toEqual({kind: 'T', nr: '9'});
+  });
+
+  it('alles andere ergibt null — geraten wird nicht', () => {
+    expect(refParts('ABC-1')).toBe(null);
+    expect(refParts('US-1x')).toBe(null);
+    expect(refParts('123')).toBe(null);
+    expect(refParts(null)).toBe(null);
+  });
+
+  it('baut die getrennten by_ref-Pfade des Proxys samt Slug', () => {
+    expect(ticketApiPath('US-123', 'mi-kunde')).toBe('/userstories/123?slug=mi-kunde');
+    expect(ticketApiPath('T-1234', 'mi-kunde')).toBe('/tasks/1234?slug=mi-kunde');
+  });
+
+  it('kodiert den Slug — er hängt keinen zweiten Parameter an', () => {
+    expect(ticketApiPath('US-1', 'a&b=2')).toBe('/userstories/1?slug=a%26b%3D2');
+  });
+
+  it('ohne Slug oder mit unbrauchbarer Ref gibt es keinen Pfad', () => {
+    expect(ticketApiPath('US-1', null)).toBe(null);
+    expect(ticketApiPath('ABC-1', 'mi-kunde')).toBe(null);
+  });
+});
+
+describe('mapTaigaStatus — Workflow auf die Statusbox (SPEC §4/§9)', () => {
+  const code = name => (mapTaigaStatus(name) || {}).code;
+
+  it('bildet die fünf vorgegebenen Zustände ab', () => {
+    expect(code('New')).toBe(' ');
+    expect(code('In progress')).toBe('~');
+    expect(code('Ready for test')).toBe('/');
+    expect(code('Done')).toBe('x');
+    expect(code('Archived')).toBe('^');
+  });
+
+  it('liefert den vollen Status samt Schlüssel für die Anzeige', () => {
+    expect(mapTaigaStatus('in progress').key).toBe('arbeit');
+    expect(mapTaigaStatus('DONE').key).toBe('fertig');
+  });
+
+  it('Groß-/Kleinschreibung und Leerraum sind egal', () => {
+    expect(code('  ready   FOR test ')).toBe('/');
+  });
+
+  it('ein unbekannter Name bleibt unabgebildet', () => {
+    expect(mapTaigaStatus('Blocked')).toBe(null);
+    expect(mapTaigaStatus('')).toBe(null);
+    expect(mapTaigaStatus(null)).toBe(null);
+    expect(mapTaigaStatus(undefined)).toBe(null);
   });
 });

@@ -8123,3 +8123,90 @@ gestapelten Prüfskript setzte der Sprung aus dem Vor-Schritt die Auswahl
 asynchron neu und ließ den Tastaturweg scheinbar die falsche URL öffnen —
 isoliert wiederholt stimmt sie; dieselbe Zustandsvermischung wie beim
 Nachtrag-4-Bau.
+
+**Nachtrag 6 — Ticket-Stand im Knoten-Fenster: gelesen, nie geschrieben
+(2026-08-27).** `#trk.resolve` gebaut: Wo eine Ref steht und ein
+`&taiga.<slug>` gilt, zeigt das Fenster Betreff, Status und Zuständigen des
+Tickets (SPEC §9). Die Entscheidungen:
+
+**Zwei benannte Lese-Endpunkte statt eines mit Typ-Parameter** —
+`GET /taiga/userstories/{ref}` und `GET /taiga/tasks/{ref}`, je mit `?slug=`.
+Das Präfix der Ref **trägt** den Typ (D91-Nachtrag 2), und Taiga hat für die
+beiden Typen getrennte `by_ref`-Endpunkte; ein Enum-Parameter hätte dieselbe
+Verzweigung nur einen Schritt später gemacht — und passt schlecht zu den
+vorhandenen Namen (`/taiga/userstories` POST legt an, GET liest).
+
+**Zwei Umläufe, nicht einer auf Verdacht.** Eine Ref ist nur **je Projekt**
+eindeutig, `by_ref` filtert über die Projekt-**Id**. Der Proxy fragt deshalb
+erst `/projects/by_slug`, dann `by_ref`. Der eine gesparte Umlauf über
+`?project__slug=` wäre eine Wette auf eine Filter-Eigenheit gewesen, die
+niemand hier gemessen hat — die beiden genommenen Endpunkte sind
+dokumentiert. **Der Slug wird kodiert** in die Anfrage gesetzt: Er kommt vom
+Client, und ein `&` darin hängte sonst einen weiteren Filter an (die kleine
+Schwester der SSRF-Falle, wegen der die Basis-URL Server-Konfiguration ist).
+
+**Die Abbildung Taiga-Status → Statusbox liegt im FRONTEND**, obwohl
+`backend/CLAUDE.md` sie unter „Taiga-Mapping" führt: Die Statuscodes sind
+Notations-Vokabular (SPEC §4), und das Backend parst die Notation nicht
+(D14). Der Proxy reicht den **Namen** durch (`status_extra_info.name`), der
+Editor bildet ab — headless in `taiga.js`, damit die Regel eine Zusicherung
+hat. Vorgabe wie dort notiert: „New" `[ ]`, „In progress" `[~]`, „Ready for
+test" `[/]`, „Done" `[x]`, „Archived" `[^]`; Groß-/Kleinschreibung und
+Leerraum egal. **Unbekannte Namen bleiben unabgebildet** und stehen nur als
+Text — Taiga-Workflows sind je Projekt frei benannt, und Raten wäre hier
+besonders teuer: Der Knoten bekäme eine Statusaussage, die niemand gemacht
+hat. Die in der Roadmap versprochene **Konfigurierbarkeit** ist damit
+ausdrücklich noch offen; der Plan-Knoten `#trk.resolve.map` steht deshalb auf
+`[/]`, nicht auf `[x]`.
+
+**Gezeigt wird beides: Taigas Name UND die Box** (`In progress → [~]`). Die
+Abbildung ist die Aussage — nur die Box zu zeigen verlöre, woher sie kommt,
+nur den Namen zu zeigen verlöre den Bezug zur Notation.
+
+**Gelesen, nie geschrieben.** Kein Zeichen wandert in den Text, keine
+Statusbox ändert sich. Das Zurückschreiben ist ein eigener Knoten
+(`#trk.write`) und braucht eigene Entscheidungen (wer gewinnt bei
+Abweichung?). Wo Ticket und Knoten auseinanderlaufen, sieht man es jetzt —
+die Frage stellt das Fenster, beantworten muss sie ein Mensch.
+
+**Zwei Sparsamkeiten gegenüber der fremden Instanz.** Das Fenster öffnet beim
+**Überfahren** (D57) und beim Tabben — ein Abruf je gestreiftem Knoten wäre
+unhöflich. Also: geholt wird erst, wenn es **400 ms** stehen bleibt, und je
+Ticket **einmal je Sitzung** (Cache); ein ↻-Knopf holt neu. Ohne Anmeldung
+wird **gar nicht** automatisch geholt — dort steht der Knopf „Stand holen",
+und der meldet bei Bedarf an: Ein Klick ist die ausdrückliche Absicht, ein
+Zeiger über einem Knoten nicht.
+
+**Der Anmelde-Dialog darf das Fenster nicht zumachen.** Er gehört zu einer
+Aktion **aus** dem Fenster; schlösse der `pointerdown`-Wächter es (D52), fiele
+die Antwort ins Leere und man müsste den Knoten erneut aufsuchen. Ausgenommen
+ist deshalb `.tabmodal-overlay` — die Anlage-Aktion (D91-Nachtrag 4) schließt
+das Fenster weiterhin selbst, dort ist es gewollt.
+
+**Ohne Slug geschieht still nichts**, wie beim Öffnen (D91-Nachtrag 5) und
+beim Abhängigkeits-Sprung (D67); ein Fehler dagegen steht als Zeile im
+Fenster — ein Abruf, den jemand angefordert hat, darf nicht stumm scheitern.
+Nicht im Grafikexport und nicht im Druck: Das Fenster ist Bedienhilfe.
+
+**Nachgemessen** Ende-zu-Ende im Browser gegen das lokal laufende Backend mit
+Taiga-Stub: Ohne Sitzung steht „Stand holen" und **kein** Abruf geht hinaus;
+der Knopf meldet an (Dialog, Fenster bleibt offen) und zeigt danach
+`In progress → [~]` mit Taigas eigenem Betreff und „Zuständig: Anna
+Beispiel"; die Task zeigt `Ready for test → [/]`; ein Knoten ohne Ref zeigt
+unverändert die Anlage-Knöpfe, eine Ref **ohne** Projekt-Zuordnung gar
+nichts. Im Mitschnitt des Stubs: genau **zwei** Anfragen je Ticket
+(`by_slug` + `by_ref`), **keine** beim kurzen Streifen eines Knotens,
+**keine** beim zweiten Ansehen (Cache), und genau eine neue Runde auf ↻.
+Die Farben der Box stammen aus §4 (gemessen: `#FADDE4`/`#D897A8` für
+`arbeit`). Backend: 5 neue Client-Tests (zweistufiger Weg, eigener
+Task-Endpunkt, fehlendes `extra_info` → leer statt geraten, 404 ohne zweiten
+Umlauf, kodierter Slug) und 2 Ende-zu-Ende-Tests; Frontend 585 Tests
+(9 neue). Gegenproben: Kodierung entfernt → genau die eine danach benannte
+Zusicherung fällt, Normalisierung des Statusnamens entfernt → genau die drei.
+
+**Werkzeuggrenze, benannt:** Die Browser-Fläche wurde in dieser Sitzung nicht
+dargestellt (keine Frames, keine Screenshots, `getBoundingClientRect()`
+durchweg 0) — geprüft ist deshalb über Ereignisse und **berechnete** Stile,
+nicht am Bild. Dieselbe Sorte Grenze wie D57 (`focus()` ohne Fensterfokus
+feuert keine Fokus-Ereignisse): Der Tastaturweg musste synthetisch angestoßen
+werden.

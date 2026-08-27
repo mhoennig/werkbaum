@@ -667,6 +667,20 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `werkbaum-taiga` im localStorage (nur Token, nie ein Passwort); ein 401
   löscht es und fragt neu. Fehler erscheinen IM Dialog, nicht als
   `window.alert` (in manchen Kontexten unterdrückt, D22-Lehre).
+- **Ticket-Stand lesen (D91-Nachtrag 6):** `ticketApiPath()` baut den
+  Proxy-Pfad (getrennte by_ref-Endpunkte je Typ, Slug kodiert),
+  `mapTaigaStatus()` bildet Taigas Statusnamen auf `STATUS_BY_CODE` ab —
+  beides headless in `taiga.js`, denn die Statuscodes sind Notation und das
+  Backend parst sie nicht (D14); ein unbekannter Name bleibt **null**.
+  In app.js: `ticketBox()`/`paintTicket()`/`loadTicket()` samt Cache
+  `taigaTickets` (je Ticket EIN Abruf je Sitzung, ↻ holt neu) und
+  `TICKET_DELAY` (400 ms Verweilen, bevor überhaupt gefragt wird — das
+  Fenster öffnet beim Überfahren und beim Tabben). **Ohne Sitzung wird nichts
+  automatisch geholt**, der Knopf meldet erst an. `tipTicket`/`ticketTimer`
+  stehen oben bei `tipNode`, weil `closeNodeTip()` sie mit wegräumt (das
+  läuft schon beim Aufbau — sonst temporale Todeszone). Der
+  `pointerdown`-Wächter lässt `.tabmodal-overlay` durch: Der Anmelde-Dialog
+  gehört zu einer Aktion AUS dem Fenster und darf es nicht zumachen.
 - **Nie `src.value = …` während des Bearbeitens (D53).** Es löscht die
   Undo-Historie des Textfelds **komplett** — nicht nur den eigenen Schritt,
   sondern alles davor Getippte. Gemessen: nach so einem Schreiben ändert das

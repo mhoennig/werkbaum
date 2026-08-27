@@ -201,9 +201,9 @@
         | [?] #idea.drift.js: Run the one JS parser inside the IDE (M)
   - [~] #trk: Tracker integration (XL)  %% exactly one of these, hence =
     = [~] #trk.taiga: Taiga (XL) https://taiga.io
-      - [ ] #trk.resolve: Resolve "#US-123" over the REST API (M)
-        - [ ] #trk.resolve.read: Read title, link and status (S)
-        - [ ] #trk.resolve.map: Map the workflow onto the states (S)
+      - [/] #trk.resolve: Resolve "#US-123" over the REST API (M)
+        - [x] #trk.resolve.read: Read title, link and status (S)
+        - [/] #trk.resolve.map: Map the workflow onto the states (S)
       - [?] #trk.write: Write the status back (M) :#trk.resolve
       - [^] #trk.create: Create tickets from nodes (XL)
         - [^] #trk.create.proxy: Backend proxy with named endpoints (M)
@@ -1149,11 +1149,13 @@
   state. Read-only, and already useful on its own.
 
 #trk.resolve.read
-  Fetching the ticket and showing what it says.
+  Fetching the ticket and showing what it says: subject, status and assignee
+  in the node window, read through the backend proxy.
 
 #trk.resolve.map
   Translating the tracker's workflow onto the eight states of the notation.
-  Configurable, because no two projects use the same column names.
+  The default five are mapped, an unknown column name stays unmapped and is
+  shown as plain text; making the mapping configurable is still open.
 
 #trk.write
   The other direction: change a status in the plan and the ticket follows.

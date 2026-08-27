@@ -7,6 +7,7 @@ import de.werkbaum.generated.model.TaigaSession
 import de.werkbaum.generated.model.TaigaStoryCreateRequest
 import de.werkbaum.generated.model.TaigaTaskCreateRequest
 import de.werkbaum.generated.model.TaigaTicket
+import de.werkbaum.generated.model.TaigaTicketDetail
 import de.werkbaum.integration.taiga.TaigaClient
 import de.werkbaum.integration.taiga.TaigaTicketData
 import org.springframework.http.HttpStatus
@@ -70,6 +71,31 @@ class TaigaController(private val client: TaigaClient) : TaigaApi {
             userStory = taigaTaskCreateRequest.userStory,
         )
         return created(ticket)
+    }
+
+    /* Lesen (D91-Nachtrag 6): zwei Endpunkte statt eines mit Typ-Parameter —
+       das Präfix der Ref trägt den Typ, und Taiga hat getrennte
+       `by_ref`-Endpunkte. Die Abbildung des Status auf die Notation macht der
+       Editor: Das Backend parst die Notation nicht (D14). */
+    override fun taigaStoryByRef(xTaigaToken: String, ref: Long, slug: String) =
+        ticket(xTaigaToken, slug, ref, task = false)
+
+    override fun taigaTaskByRef(xTaigaToken: String, ref: Long, slug: String) =
+        ticket(xTaigaToken, slug, ref, task = true)
+
+    private fun ticket(token: String, slug: String, ref: Long, task: Boolean):
+        ResponseEntity<TaigaTicketDetail> {
+        val d = client.ticket(token, slug, ref, task)
+        return ResponseEntity.ok(
+            TaigaTicketDetail(
+                id = d.id,
+                ref = d.ref,
+                subject = d.subject,
+                status = d.status,
+                statusClosed = d.statusClosed,
+                assignee = d.assignee,
+            )
+        )
     }
 
     private fun created(ticket: TaigaTicketData): ResponseEntity<TaigaTicket> =

@@ -1083,6 +1083,18 @@
     font:inherit;font-size:.74rem;font-weight:500;
   }
   .nodetip-taigabtn:hover{background:rgba(15,118,110,.08)}
+  /* Der gelesene Ticket-Stand (D91-Nachtrag 6): abgesetzt wie die Kurz-Fakten,
+     die Statusbox als gewöhnlicher .chip in den §4-Farben. */
+  .nodetip-ticket{
+    margin-top:9px;padding-top:8px;
+    border-top:1px solid rgba(36,52,71,.15);font-size:.74rem;
+  }
+  .nodetip-ticket .tk-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .nodetip-ticket .tk-status{font-weight:500}
+  .nodetip-ticket .tk-arrow{color:var(--muted)}
+  .nodetip-ticket .tk-line{margin-top:4px;color:var(--muted)}
+  .nodetip-ticket .tk-err{margin-top:2px;margin-bottom:6px;color:var(--warn)}
+  .nodetip-ticket .tk-mini{margin-left:auto;padding:2px 7px;font-size:.8rem;line-height:1.1}
   /* Die Spitze zeigt auf den Knoten — ohne sie wäre bei dicht stehenden Knoten
      nicht zu sehen, welcher gemeint ist. Ein gedrehtes Quadrat mit zwei Kanten:
      so erbt es Rahmen UND Schatten des Fensters. JS setzt --tipx (Spitze) und

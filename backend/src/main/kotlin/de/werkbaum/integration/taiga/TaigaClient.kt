@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestClientResponseException
+import java.net.URLEncoder
 import java.net.http.HttpClient
+import java.nio.charset.StandardCharsets
 import java.time.Duration
 
 /** Keine Taiga-Instanz konfiguriert — der Proxy hat kein Ziel (503). */
@@ -35,6 +37,21 @@ data class TaigaSessionData(
 data class TaigaProjectData(val id: Long, val name: String, val slug: String)
 
 data class TaigaTicketData(val id: Long, val ref: Long, val subject: String)
+
+/**
+ * Der gelesene Stand eines Tickets (D91-Nachtrag 6). Status und Zuständiger
+ * kommen aus Taigas `*_extra_info`-Blöcken und sind **nullbar**: Liefert die
+ * Instanz sie nicht mit, fehlt die Zeile im Knoten-Fenster — geraten wird
+ * nicht.
+ */
+data class TaigaTicketDetailData(
+    val id: Long,
+    val ref: Long,
+    val subject: String,
+    val status: String?,
+    val statusClosed: Boolean?,
+    val assignee: String?,
+)
 
 /**
  * Schmaler, benannter Client zur konfigurierten Taiga-Instanz (D91) — kein
@@ -91,6 +108,53 @@ class TaigaClient(private val properties: TaigaProperties) {
         // Taigas Feldname; unsere API sagt `userStory` (camelCase wie überall).
         create(token, "/tasks", mapOf("project" to project, "subject" to subject, "user_story" to userStory))
 
+    /**
+     * Ein Ticket über seine **Ref** lesen (D91-Nachtrag 6). Zwei Schritte,
+     * weil eine Ref nur je Projekt eindeutig ist: erst der Projekt-Slug zur
+     * Id (`/projects/by_slug`), dann `by_ref` am passenden Endpunkt. Beide
+     * sind dokumentierte Taiga-Endpunkte — der eine gesparte Umlauf über
+     * `project__slug` wäre eine Wette auf eine Filter-Eigenheit gewesen.
+     *
+     * `task` unterscheidet die beiden Typen; welcher gemeint ist, weiß der
+     * Aufrufer aus dem Präfix der Ref (`US-`/`T-`, SPEC §11) — hier steht
+     * nur, wohin gefragt wird.
+     */
+    fun ticket(token: String, slug: String, ref: Long, task: Boolean): TaigaTicketDetailData {
+        val project = projectId(token, slug)
+        val pfad = if (task) "/tasks/by_ref" else "/userstories/by_ref"
+        val map = exchange {
+            rest.get().uri(url("$pfad?project=$project&ref=$ref"))
+                .header("Authorization", "Bearer $token")
+                .retrieve().body(MAP)
+        } ?: throw TaigaUnavailableException("Leere Antwort von Taiga ($pfad)")
+        return TaigaTicketDetailData(
+            id = num(map, "id"),
+            ref = num(map, "ref"),
+            subject = str(map, "subject"),
+            status = extra(map, "status_extra_info")?.get("name") as? String,
+            statusClosed = extra(map, "status_extra_info")?.get("is_closed") as? Boolean,
+            assignee = extra(map, "assigned_to_extra_info")?.get("full_name_display") as? String,
+        )
+    }
+
+    /**
+     * Projekt-Slug -> Id; Taigas `by_ref` filtert über die Id. Der Slug kommt
+     * vom Client und wird deshalb **kodiert** in die Anfrage gesetzt — sonst
+     * hängte ein `&` daran einen weiteren Filter an.
+     */
+    fun projectId(token: String, slug: String): Long {
+        val map = exchange {
+            rest.get().uri(url("/projects/by_slug?slug=" + enc(slug)))
+                .header("Authorization", "Bearer $token")
+                .retrieve().body(MAP)
+        } ?: throw TaigaUnavailableException("Leere Antwort von Taiga (/projects/by_slug)")
+        return num(map, "id")
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun extra(m: Map<String, Any?>, key: String): Map<String, Any?>? =
+        m[key] as? Map<String, Any?>
+
     private fun create(token: String, path: String, body: Map<String, Any>): TaigaTicketData {
         val map = exchange {
             rest.post().uri(url(path))
@@ -101,6 +165,8 @@ class TaigaClient(private val properties: TaigaProperties) {
         } ?: throw TaigaUnavailableException("Leere Antwort von Taiga ($path)")
         return TaigaTicketData(id = num(map, "id"), ref = num(map, "ref"), subject = str(map, "subject"))
     }
+
+    private fun enc(value: String): String = URLEncoder.encode(value, StandardCharsets.UTF_8)
 
     private fun url(path: String): String {
         if (!properties.configured) throw TaigaNotConfiguredException()

@@ -9,9 +9,19 @@
    zeigt nur die Nummer. */
 
 import { gateOf, isDone, isRealized } from './model.js';
+import { STATUS_BY_CODE } from './parser.js';
 
 /* Das Tracker-Muster (SPEC §11): `US-\d+` (Story) und `T-\d+` (Task). */
 export const TICKET_ID_RE = /^(?:US|T)-\d+$/;
+
+/* Zerlegt eine Ref in Typ und nackte Nummer: `US-123` -> {kind:'US', nr:123}.
+   Das Präfix trägt den Typ (SPEC §11) — daran hängen der Frontend-Pfad
+   (unten), Taigas getrennte `by_ref`-Endpunkte und damit auch der Proxy-Pfad.
+   Ungültiges ergibt null; geraten wird nirgends. */
+export function refParts(ref){
+  const m = /^(US|T)-(\d+)$/.exec(ref || '');
+  return m ? {kind: m[1], nr: m[2]} : null;
+}
 
 /* Trägt die Zeile eines Knotens schon eine Ticket-Referenz? Das ist der
    Idempotenz-Marker (D91-Nachtrag 2): So ein Knoten wird nicht erneut
@@ -29,9 +39,39 @@ export function ticketRefOf(n){
    genau dafür schreibt Werkbaum es (SPEC §11). Ohne Web-Basis, Projekt-Slug
    oder gültige Ref gibt es keine Adresse (null). */
 export function ticketUrl(web, slug, ref){
-  const m = /^(US|T)-(\d+)$/.exec(ref || '');
-  if(!m || !web || !slug) return null;
-  return web + '/project/' + slug + '/' + (m[1] === 'US' ? 'us' : 'task') + '/' + m[2];
+  const p = refParts(ref);
+  if(!p || !web || !slug) return null;
+  return web + '/project/' + slug + '/' + (p.kind === 'US' ? 'us' : 'task') + '/' + p.nr;
+}
+
+/* Der Pfad am Backend-Proxy zum LESEN eines Tickets (D91-Nachtrag 6),
+   relativ zu `/api/v1/taiga`: zwei benannte Endpunkte statt eines mit
+   Typ-Parameter, weil Taiga getrennte `by_ref`-Endpunkte hat. Der Slug
+   kommt als Query dazu (eine Ref ist nur je Projekt eindeutig). */
+export function ticketApiPath(ref, slug){
+  const p = refParts(ref);
+  if(!p || !slug) return null;
+  return '/' + (p.kind === 'US' ? 'userstories' : 'tasks') + '/' + p.nr +
+    '?slug=' + encodeURIComponent(slug);
+}
+
+/* Taiga-Workflow -> Statusbox der Notation (SPEC §4/§9, D91-Nachtrag 6).
+   Die Vorgabe steht in backend/CLAUDE.md; abgebildet wird im **Editor**, denn
+   die Statuscodes sind Notations-Vokabular und das Backend parst die Notation
+   nicht (D14). Groß-/Kleinschreibung und Leerraum sind egal; ein Name
+   außerhalb der Liste bleibt unabgebildet (null) — geraten wird nicht, und
+   Taigas Workflows sind je Projekt frei benennbar. */
+export const TAIGA_STATUS_CODE = {
+  'new': ' ',
+  'in progress': '~',
+  'ready for test': '/',
+  'done': 'x',
+  'archived': '^',
+};
+export function mapTaigaStatus(name){
+  if(typeof name !== 'string') return null;
+  const code = TAIGA_STATUS_CODE[name.trim().toLowerCase().replace(/\s+/g, ' ')];
+  return code ? STATUS_BY_CODE[code] : null;
 }
 
 /* Die Ticket-Referenz unter der Schreibmarke (Strg+Klick im Text,

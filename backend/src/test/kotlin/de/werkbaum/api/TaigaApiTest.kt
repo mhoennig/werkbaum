@@ -115,6 +115,34 @@ class TaigaApiTest {
         result.responseBody!! shouldContain "\"ref\":124"
     }
 
+    @Test
+    fun `eine Story-Ref wird ueber Slug und by_ref aufgeloest`() {
+        val result = client.get()
+            .uri("/api/v1/taiga/userstories/123?slug=mi-kunde")
+            .header("X-Taiga-Token", "tok-abc123")
+            .exchange()
+            .returnResult(String::class.java)
+        result.status.value() shouldBe 200
+        result.responseBody!! shouldContain "\"subject\":\"Login bauen\""
+        // Der Status kommt als NAME an; abgebildet wird er im Editor (D14).
+        result.responseBody!! shouldContain "\"status\":\"In progress\""
+        result.responseBody!! shouldContain "\"assignee\":\"Anna Beispiel\""
+    }
+
+    @Test
+    fun `eine Task-Ref geht an den Task-Endpunkt und darf ohne Zustaendigen kommen`() {
+        val result = client.get()
+            .uri("/api/v1/taiga/tasks/1234?slug=mi-kunde")
+            .header("X-Taiga-Token", "tok-abc123")
+            .exchange()
+            .returnResult(String::class.java)
+        result.status.value() shouldBe 200
+        result.responseBody!! shouldContain "\"status\":\"Done\""
+        result.responseBody!! shouldContain "\"statusClosed\":true"
+        // Niemand zugewiesen: ausdrücklich null, nicht geraten.
+        result.responseBody!! shouldContain "\"assignee\":null"
+    }
+
     companion object {
         private lateinit var stub: HttpServer
         @Volatile private var stubStatus = 200
@@ -129,6 +157,9 @@ class TaigaApiTest {
                     "/api/v1/projects" -> TaigaClientTestData.PROJECTS_OK
                     "/api/v1/userstories" -> TaigaClientTestData.STORY_OK
                     "/api/v1/tasks" -> TaigaClientTestData.TASK_OK
+                    "/api/v1/projects/by_slug" -> TaigaClientTestData.PROJECT_OK
+                    "/api/v1/userstories/by_ref" -> TaigaClientTestData.STORY_DETAIL
+                    "/api/v1/tasks/by_ref" -> TaigaClientTestData.TASK_DETAIL
                     else -> "{}"
                 }
                 val status = if (stubBody != null) stubStatus
@@ -175,4 +206,13 @@ object TaigaClientTestData {
         """{"id": 1234, "ref": 123, "subject": "Backend bauen", "project": 7}"""
     const val TASK_OK =
         """{"id": 5678, "ref": 124, "subject": "API-Teil", "project": 7, "user_story": 1234}"""
+    const val PROJECT_OK =
+        """{"id": 7, "name": "Kunde", "slug": "mi-kunde"}"""
+    const val STORY_DETAIL =
+        """{"id": 1234, "ref": 123, "subject": "Login bauen", "project": 7,
+            "status_extra_info": {"name": "In progress", "is_closed": false},
+            "assigned_to_extra_info": {"full_name_display": "Anna Beispiel"}}"""
+    const val TASK_DETAIL =
+        """{"id": 5678, "ref": 1234, "subject": "API-Teil", "project": 7,
+            "status_extra_info": {"name": "Done", "is_closed": true}}"""
 }

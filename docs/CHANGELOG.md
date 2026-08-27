@@ -19,6 +19,11 @@ reverse.
 
 ## 2026-08-27
 
+- The node window shows the state of a ticket now: subject, status and assignee, read from Taiga through the backend proxy
+- Taiga's status is shown next to the notation's own box (`In progress → [~]`) — a column name outside the five known ones stays unmapped and is shown as text
+- Reading a ticket never changes the plan: no status is written back, and the text stays untouched
+- The state is fetched once per ticket and session, and only when the node window stays open for a moment — a ↻ button fetches again
+- Without being logged in nothing is fetched: the window offers a "fetch state" button that asks for the login first
 - Ctrl+click a ticket ref like `#US-123` — in the text or on its node — opens the ticket in Taiga's web UI; the node window carries an open button, which is the way on touch
 - The backend names the Taiga web address now (`WERKBAUM_TAIGA_WEB_URL`, reported by `/api/v1/info`) — without it, creating tickets still works and opening is simply absent
 - A ticket ref like `#US-123` in a node title no longer breaks across two lines at its hyphen
