@@ -19,6 +19,11 @@ reverse.
 
 ## 2026-08-27
 
+- A second Werkbaum window now raises a modal dialog in both windows — it closes by itself as soon as the other window is gone
+- A standing warning appears when changes have not reached the server for 30 seconds — whatever the reason: an open conflict bar, a dead session, the network
+- Unsent text is never discarded silently any more: it is rescued into the local backups before a reload, a conflict decision or a server full-text replaces it, and closing with unsent changes asks first
+- Local backups are collected for shared documents again and appear in the clock menu below the server milestones
+- Fix: a failed first load of a shared document left a half-initialised session behind — typing went nowhere, silently
 - A `pull-doc` script fetches a shared document from the backend into a file — with `--git-commit` it also commits it, dated, and only when something changed, so a cron gives the plan a git history
 - A benefit rating per node recorded as planned: a 0-9 digit inside the size token (`M/9`), and a third path mode that picks alternatives by benefit over cost — spelled out in SPEC §11 before it is built
 - A people bar below the diagram shows each `@person` with their share of the open work on the cheapest path — plus an entry for what is assigned to nobody

@@ -7597,3 +7597,112 @@ dann `--git-commit` → Commit, Worktree sauber; sauber und gleich →
 Haupttext gelten fort; neu geprüft außerdem: flaglos außerhalb jedes
 Worktrees schreibt anstandslos, `--git-commit` dort lehnt mit klarer
 Meldung ab.
+
+## D89 — Zwei Stunden verlorene Arbeit: vier Netze gegen den stillen Live-Verlust
+Der Vorfall (2026-08-27 vormittags, gemeldet vom Nutzer): Zwei Stunden Arbeit
+an einem geteilten Dokument (`?live=`, PWA) waren weg — die Server-Historie
+endet 08:55:58, danach kam **kein einziger Patch** mehr an, obwohl bis ~11 Uhr
+getippt wurde; beim Zurückkommen nach einer Pause stand wieder der Stand von
+vor 9 Uhr. Alle Verstecke wurden geprüft und waren leer: Die Server-Historie
+(Meilensteine enden bei v22), die lokalen 10-Minuten-Stände (für
+Server-Dokumente seit D86, deployt am selben Morgen 08:35, **nicht mehr
+gesammelt** — die Sitzung lief bereits auf dem neuen Stand), und
+Dokument-Schlüssel wie Spiegel im localStorage (beim Wiederöffnen mit dem
+Server-Stand überschrieben). Die Arbeit war nicht zu retten.
+
+**Der Auslöser ist nicht bewiesen — die Bauform des Schadens schon.** Vorher
+war ein zweites Werkbaum-Fenster offen (geschlossen, PWA neu gestartet), am
+selben Morgen liefen Backend- und Frontend-Deploys; welcher Kandidat die
+Sitzung stumm stellte, gibt der Client nach dem Neuladen nicht mehr her. Die
+Code-Durchsicht fand aber **mehrere** Zustände, in denen der Editor Tippen
+annimmt, ohne zu senden und ohne laut zu werden — und genau das ist der
+eigentliche Fehler, unabhängig vom Auslöser:
+
+- Ein **offenes Konflikt-Band** lässt Senden und Feed ruhen (gewollt, D76-N7) —
+  aber man kann darunter stundenlang weitertippen, alles bleibt nur lokal.
+- **`stopLive()` auf ein Feed-404** beendete die Sitzung wortlos.
+- **`startLive()` ließ bei gescheitertem Erstabruf `liveState` halb
+  initialisiert stehen** (Version 0, leere Schattenkopie, kein Feed) — jede
+  weitere Eingabe eine stumme Sackgasse.
+- Und **D86 hatte das letzte Netz entfernt**: „Fremde übernehmen" und jedes
+  Neuladen verwarfen ungesendeten Text ersatzlos; der Code-Kommentar „er steht
+  in den früheren Ständen (D54)" stimmte seit D86 nicht mehr.
+
+**Vier Netze, gegen die Bauform statt gegen den einen Auslöser:**
+
+**1. Zwei Fenster ⇒ modaler Dialog, in beiden, bis eines zu ist**
+(Nutzer-Vorgabe; verschärft D84, dessen zeilenlose Warnung als Protokoll
+bleibt). Herzschlag über einen BroadcastChannel: jedes Fenster meldet sich
+sekündlich, ein `hello` wird sofort beantwortet (Erkennung < 1 s), `bye` bei
+pagehide schließt den Dialog im anderen Fenster **sofort und ohne Klick** —
+die zweite Nutzer-Vorgabe („wenn das zweite Fenster geschlossen wird, muss
+die App wieder funktionieren"). Zwei Messbefunde beim Bauen, beide erst im
+Browser sichtbar: **(a)** Der Totes-Fenster-Timeout darf nicht bei wenigen
+Sekunden liegen — Chrome drosselt die Timer verborgener Fenster nach fünf
+Minuten auf **einen Tick je Minute** (dieselbe Umgebungsgrenze wie in D79
+gemessen); mit 3 s Timeout flackerte der Dialog im sichtbaren Fenster. Jetzt
+75 s — er fängt nur hart gestorbene Fenster, das saubere Schließen meldet
+sich selbst ab. **(b)** Die Notluke „Trotzdem fortfahren" gilt **je fremder
+Fenster-Id**, nicht je Sitzung: Die erste Fassung setzte ein Flag zurück,
+sobald eine Herzschlag-Lücke beobachtet wurde — ein gedrosseltes Fenster
+verpasst die Lücke, und ein NEUES zweites Fenster bekam nie wieder einen
+Dialog. Identität statt Timing.
+
+**2. Lokale Sicherungen wieder auch für Server-Dokumente** (kehrt D86
+teilweise um — dieser Vorfall ist der Beweis, dass der Rückbau zu weit ging).
+Der 10-Minuten-Takt sammelt wieder; die Kamera bleibt Server-Meilenstein
+(D86). Sichtbar im Uhr-Menü als eigener Abschnitt **„Lokale Sicherungen
+(dieses Fenster)"** unter den Server-Meilensteinen — beschriftet, weil sie
+fremde Änderungen enthalten können und nur dieses Fenster sie kennt (die
+D86-Einwände, beantwortet statt ignoriert). Auch wenn der Server nicht
+antwortet, zeigt das Menü sie — gerade dann zählen sie.
+
+**3. Nichts verwirft ungesendeten Text stumm.** `rescueSnapshot()` legt ihn
+in die lokalen Sicherungen, **bevor** er weicht: in `adoptLive()` (die
+Stelle, an der der Vormittag verloren ging — jedes Wiederöffnen, Neuladen
+und jeder Rollback läuft hier durch), in „Fremde übernehmen" und im
+Volltext-Ersatz des Feeds; dedupliziert gegen den letzten Stand, gedeckelt
+wie alle Stände (D54). Dazu `beforeunload` (Nachfrage des Browsers bei
+Ungesendetem) und als Gürtel zum Hosenträger eine Rettungs-Sicherung bei
+`pagehide` — auch wer die Nachfrage wegklickt, verliert nichts mehr.
+
+**4. Ein Wachhund macht jede stumme Blockade laut.** Alle 5 s: Weicht der
+Editor länger als 30 s von der Schattenkopie ab, steht die zeilenlose
+Warnung `liveUnsent` („seit {min} Minuten NICHT auf dem Server … nur in
+diesem Fenster"), **egal aus welchem Grund** — offenes Band, tote Sitzung,
+Netz; sie räumt sich beim nächsten gelungenen Abgleich selbst weg. Ist das
+aktive Dokument ein `live:`-Dokument ohne Sitzung, steht `liveEnded` — damit
+ist auch das Feed-404-stopLive nicht mehr wortlos, ohne dass die
+Abbruchstelle selbst Warnungen kennen muss. `startLive()` räumt bei
+gescheitertem Erstabruf `liveState` jetzt ganz weg (der Wachhund meldet die
+Lage), und ein gelungener Push räumt eine liegengebliebene
+`liveLoad`-Warnung mit ab — „nicht geladen" neben funktionierendem Senden
+wäre eine Lüge.
+
+**Nachgemessen** im Browser gegen ein lokal laufendes Backend, das
+Vormittags-Szenario nachgestellt: Backend getötet, getippt, Backend neu,
+Seite neu geladen — der Editor zeigt den Server-Stand, aber der ungesendete
+Text liegt in den lokalen Sicherungen (genau **ein** Eintrag trotz doppelten
+Netzes aus pagehide und adoptLive), und das Uhr-Menü zeigt ihn unter den
+zwei Server-Meilensteinen. Wachhund: 40 s nach dem Tippen gegen ein totes
+Backend steht `liveUnsent` neben dem Push-Fehler; ein Tastendruck nach dem
+Neustart, und beide sind weg (Server auf v3, alles angekommen). Toter
+Erstabruf: `liveEnded` nach < 10 s, der Editor behält den lokalen Text.
+Modal: zweites Fenster ⇒ Dialog in beiden < 2 s; Notluke wirkt nur im
+eigenen Fenster; Schließen des zweiten ⇒ Dialog verschwindet von selbst;
+ein NEUES zweites Fenster nach früherer Notluke ⇒ Dialog wieder da. 538
+Tests unverändert grün; die Netze sind DOM/BroadcastChannel-Verdrahtung und
+damit Browser-geprüft statt unit-getestet (dieselbe Grenze wie D41/D54-N3).
+
+**Werkzeuggrenze, wieder einschlägig:** Der Automations-Tab meldet sich
+dauerhaft als verborgen — Feed und Sichtbarkeits-Pfade liefen nur mit
+gestellter Sichtbarkeit (D76-N7), und die Intensiv-Drosselung verborgener
+Tabs hätte den ersten Modal-Test beinahe als „geht doch" durchgewinkt: Der
+Flacker- und der Kleb-Befund oben stammen genau daher.
+
+**Was offen bleibt:** der Auslöser des 08:56-Abrisses. Kandidaten (offenes
+Band, Feed-404, halb initialisierte Sitzung, Zwei-Fenster-Überschreiben)
+sind jetzt alle laut oder abgestellt; tritt es erneut auf, benennt die
+Warnung den Zustand, und die Sicherungen halten den Text. Unabhängig davon
+kann `tools/pull-doc --git-commit` (D88) per Cron eine Git-Historie des
+Server-Dokuments führen — ein Netz außerhalb des Browsers.

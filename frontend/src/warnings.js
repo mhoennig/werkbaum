@@ -55,7 +55,15 @@
    - tabConflict   { }              — ein weiterer Tab schreibt in dieselbe
                                       Dokument-Ablage (D84): der letzte Flush
                                       gewinnt; zeilenlos, bleibt bis zum
-                                      Neuladen stehen */
+                                      Neuladen stehen
+   - liveUnsent    { min }          — Änderungen an einem Server-Dokument seit
+                                      {min} Minuten nicht angekommen (D89):
+                                      sie existieren nur in diesem Fenster;
+                                      zeilenlos, zuoberst, verschwindet mit
+                                      dem nächsten erfolgreichen Abgleich
+   - liveEnded     { }              — die Live-Sitzung ist beendet, ohne dass
+                                      der Nutzer sie beendet hat (D89):
+                                      Änderungen werden nicht mehr geteilt */
 
 import { esc } from './render.js';
 
@@ -110,6 +118,10 @@ function build(w, t, esc){
       return t('storeFailedWarn');
     case 'tabConflict':
       return t('tabConflictWarn');
+    case 'liveUnsent':
+      return t('liveUnsentWarn', {min: w.min});
+    case 'liveEnded':
+      return t('liveEndedWarn');
     default:
       return `${esc(String(w.type))} (${w.line ?? '?'})`;
   }

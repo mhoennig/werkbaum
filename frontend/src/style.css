@@ -1640,3 +1640,31 @@
   font-size: .82em; color: var(--muted); white-space: nowrap;
 }
 .docpick[aria-checked="true"] .docitem-where{ color: inherit; opacity: .75; }
+
+/* ---------- Zwei-Fenster-Wächter (D89) ----------
+   Modaler Dialog, solange ein zweites lebendes Werkbaum-Fenster desselben
+   Browsers nachweisbar ist (Herzschlag); schließt sich von selbst, sobald
+   das andere Fenster zu ist. Über allem (Konflikt-Band liegt bei 1200). */
+.tabmodal-overlay{
+  position:fixed;inset:0;z-index:1300;
+  background:rgba(36,52,71,.55);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.tabmodal{
+  background:var(--paper);border-radius:10px;max-width:440px;
+  padding:22px 24px;box-shadow:0 12px 40px rgba(0,0,0,.35);
+}
+.tabmodal h2{margin:0 0 10px;font-size:1.05rem;color:var(--line)}
+.tabmodal p{margin:0 0 14px;line-height:1.45}
+.tabmodal-force{
+  background:none;border:none;padding:0;cursor:pointer;
+  color:var(--muted);text-decoration:underline;font:inherit;font-size:.85em;
+}
+@media print{ .tabmodal-overlay{ display:none; } }
+
+/* Abschnitts-Kopf „Lokale Sicherungen" im Uhr-Menü (D89) */
+.snaphead{
+  padding:8px 12px 4px;margin-top:4px;
+  font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);border-top:1px solid rgba(107,122,140,.25);
+}

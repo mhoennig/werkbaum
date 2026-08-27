@@ -844,6 +844,25 @@ anderen, ohne neu zu laden.
   Wähler auswählt, arbeitet darin wieder gemeinsam; wer es verlässt, hört auf,
   mitzuschreiben. Siehe D80.
 
+- **Ungesendetes bleibt nie stumm.** Erreichen Änderungen den Server länger
+  als ~30 Sekunden nicht — offenes Konflikt-Band, tote Sitzung, Netz —, steht
+  eine Warnung, bis der Abgleich wieder gelingt; eine beendete Sitzung meldet
+  sich ebenso. Beim Schließen oder Neuladen mit ungesendeten Änderungen fragt
+  der Browser nach. Und **bevor** irgendetwas ungesendeten Text überschreibt
+  (Neuladen des Dokuments, *Fremde übernehmen*, ein Volltext vom Server),
+  wandert er in die **lokalen Sicherungen**: Für Server-Dokumente sammelt der
+  10-Minuten-Takt sie wieder, und das Uhr-Menü zeigt sie als eigenen Abschnitt
+  unter den Server-Meilensteinen. Siehe D89.
+
+**Ein zweites Werkbaum-Fenster desselben Browsers** — Tab, Fenster oder
+PWA — bekommt einen **modalen Dialog**, in beiden Fenstern, bis eines
+geschlossen ist: Beide schreiben in dieselbe Dokument-Ablage, der zuletzt
+speichernde überschreibt den anderen. Erkannt per Herzschlag
+(BroadcastChannel); der Dialog schließt sich **von selbst**, sobald das
+andere Fenster zu ist — es ist nichts zu bestätigen. „Trotzdem fortfahren"
+ist die Notluke und gilt je Fenster und Vorfall. Siehe D89 (und D84 für die
+zeilenlose Warnung, die daneben bestehen bleibt).
+
 Siehe D76 (Protokoll und Begründung) und
 `backend/docs/live-editing-proposal.md`.
 

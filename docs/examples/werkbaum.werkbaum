@@ -148,7 +148,7 @@
           - [?] #col.git.diff: Diff between two versions (S)
           - [?] #col.git.blame: Who changed this line (S)
         - [?] #col.git.branch: A branch per scenario (S)
-    - [/] #col.live: Live editing, several people at once (XL) :#be.docs
+    - [/] #col.live: Live editing, several people at once (XXL) :#be.docs
       - [^] #col.live.http: Transport over plain HTTP (M) :#be.docs  %% no websocket needed
         - [^] #col.live.patch: Submit a change as a line diff (S)
         - [^] #col.live.feed: Long polling holds the other direction open (S)
@@ -163,6 +163,7 @@
       - [^] #col.live.rename: Renaming reaches everyone (S)  %% PATCH /title + RENAMED in the feed, see D85
       - [^] #col.live.history: Earlier states come from the server (M)  %% milestones in the clock menu, rollback for everyone, see D86
       - [^] #col.live.name: A self-chosen display name (XS)  %% fills "changed by", a claim, not a proof
+      - [x] #col.live.safe: Unsent work is loud, rescued and never silently discarded (M)  %% modal for a second window, watchdog, local backups — see D89
       - [-] #col.live.ws: Transport over a websocket (S)  %% plain HTTP turned out to be enough
       - [-] #col.live.own: A merge algorithm of our own (XL)  %% solved problem, do not reinvent
   - [?] #mmd: Mermaid plugin (XL)
@@ -982,6 +983,12 @@
 #col.live.name
   Asked once when joining or sharing, kept in the browser, sent with every
   patch. Without accounts it is a claim, not a proof.
+
+#col.live.safe
+  Born from a real loss: two hours of typing that never reached the server
+  and vanished on reload. A second window raises a modal dialog until one is
+  closed; a watchdog warns after 30 seconds of unsent changes; and unsent
+  text is rescued into the local backups before anything overwrites it.
 
 #col.live.cursors
   Seeing where the others are. A by-product of the merge layer rather than a

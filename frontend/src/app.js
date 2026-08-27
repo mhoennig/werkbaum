@@ -100,6 +100,68 @@ window.addEventListener('storage', e => {
   tabWarning = {type: 'tabConflict'};
   render();
 });
+/* Zwei lebende Fenster sind mehr als eine Fußnote (D89): Die zeilenlose
+   Warnung oben meldet nur, dass ein anderer Tab GESCHRIEBEN hat — ein
+   zweites offenes Fenster bekommt zusätzlich einen MODALEN Dialog, in beiden
+   Fenstern, bis das Problem behoben ist. Herzschlag über BroadcastChannel:
+   jedes Fenster meldet sich sekündlich; verstummt das andere (Abmeldung beim
+   Schließen, sonst 3 s Stille), schließt der Dialog sich von selbst — die
+   App läuft ohne weiteren Klick weiter. „Trotzdem fortfahren" ist die
+   Notluke und gilt nur, solange DIESES zweite Fenster lebt. */
+/* Wachhund-Warnung (D89): Ungesendete Live-Änderungen bzw. tote Sitzung.
+   Gesetzt vom 5-s-Takt im Live-Abschnitt, gelesen von render(). */
+let liveWarning = null;
+const WIN_ID = Math.random().toString(36).slice(2);
+/* 75 s statt weniger Sekunden: Chrome drosselt die Timer verborgener Fenster
+   nach fünf Minuten auf einen Tick je MINUTE (dieselbe Umgebungsgrenze wie in
+   D79 gemessen) — ein kürzerer Timeout ließe den Dialog im sichtbaren Fenster
+   flackern, weil das verborgene nur noch minütlich schlägt. Das saubere
+   Schließen meldet sich ohnehin sofort ab (bye bei pagehide); der Timeout
+   fängt nur hart gestorbene Fenster. */
+const FOREIGN_DEAD_MS = 75000;
+let presenceChannel = null, tabModalEl = null;
+const foreignBeats = new Map();       /* fremde Fenster-Id -> letzter Herzschlag */
+const tabModalDismissed = new Set();  /* Notluke gilt je fremder Id, nicht je Sitzung:
+                                         ein NEUES zweites Fenster bekommt wieder den Dialog */
+try{ presenceChannel = new BroadcastChannel('werkbaum-presence'); }catch(_){}
+if(presenceChannel){
+  presenceChannel.onmessage = e => {
+    const m = e.data || {};
+    if(!m.id || m.id === WIN_ID) return;
+    if(m.type === 'hello') presenceChannel.postMessage({type: 'beat', id: WIN_ID});
+    if(m.type === 'hello' || m.type === 'beat') foreignBeats.set(m.id, Date.now());
+    if(m.type === 'bye'){ foreignBeats.delete(m.id); tabModalDismissed.delete(m.id); }
+    updateTabModal();
+  };
+  presenceChannel.postMessage({type: 'hello', id: WIN_ID});
+  setInterval(() => {
+    presenceChannel.postMessage({type: 'beat', id: WIN_ID});
+    for(const [id, wann] of foreignBeats)
+      if(Date.now() - wann > FOREIGN_DEAD_MS){ foreignBeats.delete(id); tabModalDismissed.delete(id); }
+    updateTabModal();
+  }, 1000);
+  addEventListener('pagehide', () => { try{ presenceChannel.postMessage({type: 'bye', id: WIN_ID}); }catch(_){} });
+}
+function updateTabModal(){
+  const offen = [...foreignBeats.keys()].some(id => !tabModalDismissed.has(id));
+  if(offen && !tabModalEl){
+    const ov = document.createElement('div');
+    ov.className = 'tabmodal-overlay';
+    ov.innerHTML = '<div class="tabmodal" role="alertdialog" aria-modal="true">' +
+      '<h2></h2><p></p><button type="button" class="tabmodal-force"></button></div>';
+    ov.querySelector('h2').textContent = t('tabModalTitle');
+    ov.querySelector('p').textContent = t('tabModalText');
+    const force = ov.querySelector('.tabmodal-force');
+    force.textContent = t('tabModalForce');
+    force.addEventListener('click', () => {
+      for(const id of foreignBeats.keys()) tabModalDismissed.add(id);
+      updateTabModal();
+    });
+    document.body.appendChild(ov);
+    tabModalEl = ov;
+  }
+  if(!offen && tabModalEl){ tabModalEl.remove(); tabModalEl = null; }
+}
 function noteStore(ok){
   const neu = ok ? null : {type: 'storeFailed'};
   const wechsel = (!!storeWarning) !== (!!neu);
@@ -172,6 +234,7 @@ function render(){
      Neu-Renderings bestehen, bis das Laden gelingt. */
   let warnings = sourceWarning ? [sourceWarning].concat(parsed.warnings) : parsed.warnings;
   if(tabWarning) warnings = [tabWarning].concat(warnings);       /* fremder Tab schreibt mit (D84) */
+  if(liveWarning) warnings = [liveWarning].concat(warnings);     /* Ungesendetes / tote Sitzung (D89) */
   if(storeWarning) warnings = [storeWarning].concat(warnings);   /* Datenverlust droht — zuoberst (D82) */
 
   /* Personen-Linse (D87): erlischt, sobald es die Person (oder überhaupt
@@ -2430,6 +2493,12 @@ const I18N = {
     padGoneWarn:"Dieser Link zeigt auf ein Etherpad-Pad. Die Etherpad-Anbindung gibt es nicht mehr — gemeinsames Arbeiten läuft jetzt über ein Werkbaum-Backend (?live=…). Der Text des Pads lässt sich dort einmal einfügen und dann zu zweit bearbeiten.",
     storeFailedWarn:"Speichern im Browser fehlgeschlagen — vermutlich ist der Speicher voll. Änderungen können beim Neuladen verloren gehen; Platz schaffen: nicht mehr gebrauchte Dokumente oder frühere Stände löschen.",
     tabConflictWarn:"Werkbaum ist in einem weiteren Browser-Tab geöffnet — beide schreiben in dieselbe Dokumentenliste, und der zuletzt speichernde gewinnt. Am besten nur in einem Tab arbeiten.",
+    liveUnsentWarn:"Deine Änderungen sind seit {min} Minuten NICHT auf dem Server angekommen — sie existieren nur in diesem Fenster. Vor dem Schließen sichern (Strg+S oder Kamera-Knopf).",
+    liveEndedWarn:"Die Live-Verbindung zu diesem Server-Dokument ist beendet — Änderungen werden nicht mehr geteilt. Neu laden stellt die Verbindung wieder her.",
+    tabModalTitle:"Werkbaum ist mehrfach geöffnet",
+    tabModalText:"Diese App ist gerade in einem weiteren Fenster oder Tab geöffnet. Beide schreiben in dieselbe Dokument-Ablage — der zuletzt speichernde überschreibt den anderen. Bitte das andere Fenster schließen; dieser Hinweis verschwindet dann von selbst.",
+    tabModalForce:"Trotzdem fortfahren (nicht empfohlen)",
+    snapLocalHead:"Lokale Sicherungen (dieses Fenster)",
     a11yStatus:"Status: {status}", a11ySize:"Aufwand: {size}", a11ySizeImplicit:"Aufwand: mindestens {size} (angenommen)", a11yTags:"Zuständig: {names}", a11yId:"ID: #{id}", a11yDeps:"hängt ab von: {ids}", a11yFolded:"eingeklappt, {n} verborgen", a11yEffective:"effektiv: {status}", heldTooltip:"effektiv {eff} — selbst schon {own}, wartet auf Abhängigkeiten", a11yOptional:"optional", a11yFocusMark:"hierhin schauen", a11yLink:"verlinkt",
     hint_indent:"Einrückung (2 Leerzeichen oder Tab) definiert die Hierarchie.",
     hint_all:"Teilpaket, alle erforderlich", hint_any:"Alternative, eine wählen",
@@ -2556,6 +2625,12 @@ const I18N = {
     padGoneWarn:"This link points at an Etherpad pad. The Etherpad connection is gone — collaboration now runs through a Werkbaum backend (?live=…). Paste the pad’s text there once, then edit it together.",
     storeFailedWarn:"Saving in the browser failed — its storage is probably full. Changes may be lost on reload; free space by deleting unused documents or earlier states.",
     tabConflictWarn:"Werkbaum is open in another browser tab — both write to the same document list, and the last one to save wins. Best work in a single tab.",
+    liveUnsentWarn:"Your changes have NOT reached the server for {min} minutes — they exist only in this window. Save before closing (Ctrl+S or the camera button).",
+    liveEndedWarn:"The live connection to this server document has ended — changes are no longer shared. Reload to reconnect.",
+    tabModalTitle:"Werkbaum is open more than once",
+    tabModalText:"This app is currently open in another window or tab. Both write to the same document storage — whichever saves last overwrites the other. Please close the other window; this notice then disappears by itself.",
+    tabModalForce:"Continue anyway (not recommended)",
+    snapLocalHead:"Local backups (this window)",
     a11yStatus:"Status: {status}", a11ySize:"Effort: {size}", a11ySizeImplicit:"Effort: at least {size} (assumed)", a11yTags:"Assigned: {names}", a11yId:"ID: #{id}", a11yDeps:"depends on: {ids}", a11yFolded:"collapsed, {n} hidden", a11yEffective:"effective: {status}", heldTooltip:"effectively {eff} — itself already {own}, waiting on dependencies", a11yOptional:"optional", a11yFocusMark:"look here", a11yLink:"has link",
     hint_indent:"Indentation (2 spaces or a tab) defines the hierarchy.",
     hint_all:"sub-task, all required", hint_any:"alternative, choose one",
@@ -2682,6 +2757,12 @@ const I18N = {
     padGoneWarn:"Este enlace apunta a un pad de Etherpad. La conexión con Etherpad ya no existe: ahora se colabora a través de un backend de Werkbaum (?live=…). Pega allí el texto del pad una vez y editadlo juntos.",
     storeFailedWarn:"No se pudo guardar en el navegador: su almacenamiento probablemente está lleno. Los cambios pueden perderse al recargar; libera espacio borrando documentos sin uso o estados anteriores.",
     tabConflictWarn:"Werkbaum está abierto en otra pestaña — ambas escriben en la misma lista de documentos y gana la última en guardar. Mejor trabaja en una sola pestaña.",
+    liveUnsentWarn:"Tus cambios NO han llegado al servidor desde hace {min} minutos — solo existen en esta ventana. Guarda antes de cerrar (Ctrl+S o el botón de cámara).",
+    liveEndedWarn:"La conexión en vivo con este documento del servidor ha terminado — los cambios ya no se comparten. Recarga para reconectar.",
+    tabModalTitle:"Werkbaum está abierto más de una vez",
+    tabModalText:"Esta aplicación está abierta en otra ventana o pestaña. Ambas escriben en el mismo almacén de documentos — la última en guardar sobrescribe a la otra. Cierra la otra ventana; este aviso desaparecerá solo.",
+    tabModalForce:"Continuar de todos modos (no recomendado)",
+    snapLocalHead:"Copias locales (esta ventana)",
     a11yStatus:"Estado: {status}", a11ySize:"Esfuerzo: {size}", a11ySizeImplicit:"Esfuerzo: al menos {size} (asumido)", a11yTags:"Responsable: {names}", a11yId:"ID: #{id}", a11yDeps:"depende de: {ids}", a11yFolded:"plegado, {n} ocultos", a11yEffective:"efectivo: {status}", heldTooltip:"efectivamente {eff} — por sí mismo ya {own}, espera dependencias", a11yOptional:"opcional", a11yFocusMark:"mirar aquí", a11yLink:"con enlace",
     hint_indent:"La sangría (2 espacios o un tabulador) define la jerarquía.",
     hint_all:"subtarea, todas obligatorias", hint_any:"alternativa, elige una",
@@ -2808,6 +2889,12 @@ const I18N = {
     padGoneWarn:"Ce lien pointe vers un pad Etherpad. La connexion Etherpad n’existe plus — la collaboration passe désormais par un backend Werkbaum (?live=…). Collez-y une fois le texte du pad, puis modifiez-le à plusieurs.",
     storeFailedWarn:"L'enregistrement dans le navigateur a échoué — son stockage est probablement plein. Les modifications peuvent être perdues au rechargement ; libérez de l'espace en supprimant des documents inutilisés ou des états antérieurs.",
     tabConflictWarn:"Werkbaum est ouvert dans un autre onglet — les deux écrivent dans la même liste de documents et le dernier à enregistrer l'emporte. Mieux vaut travailler dans un seul onglet.",
+    liveUnsentWarn:"Tes modifications ne sont PAS arrivées au serveur depuis {min} minutes — elles n'existent que dans cette fenêtre. Enregistre avant de fermer (Ctrl+S ou le bouton appareil photo).",
+    liveEndedWarn:"La connexion en direct à ce document serveur est terminée — les modifications ne sont plus partagées. Recharge pour te reconnecter.",
+    tabModalTitle:"Werkbaum est ouvert plusieurs fois",
+    tabModalText:"Cette application est ouverte dans une autre fenêtre ou un autre onglet. Les deux écrivent dans le même stockage de documents — le dernier à enregistrer écrase l'autre. Ferme l'autre fenêtre ; cet avis disparaîtra de lui-même.",
+    tabModalForce:"Continuer quand même (déconseillé)",
+    snapLocalHead:"Sauvegardes locales (cette fenêtre)",
     a11yStatus:"Statut : {status}", a11ySize:"Effort : {size}", a11ySizeImplicit:"Effort : au moins {size} (supposé)", a11yTags:"Responsable : {names}", a11yId:"ID : #{id}", a11yDeps:"dépend de : {ids}", a11yFolded:"replié, {n} masqués", a11yEffective:"effectif : {status}", heldTooltip:"effectivement {eff} — lui-même déjà {own}, en attente de dépendances", a11yOptional:"facultatif", a11yFocusMark:"regarder ici", a11yLink:"avec lien",
     hint_indent:"L'indentation (2 espaces ou une tabulation) définit la hiérarchie.",
     hint_all:"sous-tâche, toutes requises", hint_any:"alternative, en choisir une",
@@ -2934,6 +3021,12 @@ const I18N = {
     padGoneWarn:"Ten link prowadzi do pada Etherpad. Połączenia z Etherpadem już nie ma — wspólna praca odbywa się teraz przez backend Werkbaum (?live=…). Wklej tam raz tekst pada i edytujcie go razem.",
     storeFailedWarn:"Zapis w przeglądarce nie powiódł się — jego pamięć jest zapewne pełna. Zmiany mogą przepaść przy przeładowaniu; zwolnij miejsce, usuwając nieużywane dokumenty lub wcześniejsze stany.",
     tabConflictWarn:"Werkbaum jest otwarty w innej karcie — obie zapisują tę samą listę dokumentów i wygrywa ta, która zapisze ostatnia. Najlepiej pracować w jednej karcie.",
+    liveUnsentWarn:"Twoje zmiany NIE dotarły na serwer od {min} minut — istnieją tylko w tym oknie. Zapisz przed zamknięciem (Ctrl+S lub przycisk aparatu).",
+    liveEndedWarn:"Połączenie na żywo z tym dokumentem serwera zostało zakończone — zmiany nie są już udostępniane. Przeładuj, aby połączyć się ponownie.",
+    tabModalTitle:"Werkbaum jest otwarty więcej niż raz",
+    tabModalText:"Ta aplikacja jest otwarta w innym oknie lub karcie. Obie zapisują do tego samego magazynu dokumentów — ostatni zapis nadpisuje drugi. Zamknij drugie okno; ten komunikat zniknie sam.",
+    tabModalForce:"Kontynuuj mimo to (niezalecane)",
+    snapLocalHead:"Lokalne kopie (to okno)",
     a11yStatus:"Status: {status}", a11ySize:"Nakład: {size}", a11ySizeImplicit:"Nakład: co najmniej {size} (założony)", a11yTags:"Przypisano: {names}", a11yId:"ID: #{id}", a11yDeps:"zależy od: {ids}", a11yFolded:"zwinięte, ukrytych: {n}", a11yEffective:"efektywnie: {status}", heldTooltip:"efektywnie {eff} — sam już {own}, czeka na zależności", a11yOptional:"opcjonalny", a11yFocusMark:"spójrz tutaj", a11yLink:"z linkiem",
     hint_indent:"Wcięcie (2 spacje lub tabulator) definiuje hierarchię.",
     hint_all:"podzadanie, wszystkie wymagane", hint_any:"alternatywa, wybierz jedną",
@@ -3060,6 +3153,12 @@ const I18N = {
     padGoneWarn:"Эта ссылка ведёт на пад Etherpad. Подключения к Etherpad больше нет — совместная работа теперь идёт через бэкенд Werkbaum (?live=…). Вставьте туда текст пада один раз и редактируйте вместе.",
     storeFailedWarn:"Не удалось сохранить в браузере — его хранилище, вероятно, заполнено. Изменения могут потеряться при перезагрузке; освободите место, удалив ненужные документы или прежние состояния.",
     tabConflictWarn:"Werkbaum открыт в другой вкладке — обе пишут в один список документов, и побеждает та, что сохранит последней. Лучше работать в одной вкладке.",
+    liveUnsentWarn:"Ваши изменения НЕ доходят до сервера уже {min} мин — они существуют только в этом окне. Сохраните перед закрытием (Ctrl+S или кнопка камеры).",
+    liveEndedWarn:"Живое соединение с этим серверным документом завершено — изменения больше не передаются. Перезагрузите, чтобы переподключиться.",
+    tabModalTitle:"Werkbaum открыт несколько раз",
+    tabModalText:"Приложение открыто в другом окне или вкладке. Оба пишут в одно хранилище документов — последний сохранивший перезаписывает другого. Закройте другое окно; это сообщение исчезнет само.",
+    tabModalForce:"Продолжить всё равно (не рекомендуется)",
+    snapLocalHead:"Локальные копии (это окно)",
     a11yStatus:"Статус: {status}", a11ySize:"Оценка: {size}", a11ySizeImplicit:"Оценка: не меньше {size} (предполагается)", a11yTags:"Ответственные: {names}", a11yId:"ID: #{id}", a11yDeps:"зависит от: {ids}", a11yFolded:"свёрнуто, скрыто: {n}", a11yEffective:"фактически: {status}", heldTooltip:"фактически {eff} — сам уже {own}, ждёт зависимости", a11yOptional:"необязательно", a11yFocusMark:"смотрите здесь", a11yLink:"со ссылкой",
     hint_indent:"Отступ (2 пробела или табуляция) задаёт иерархию.",
     hint_all:"подзадача, все обязательны", hint_any:"альтернатива, выберите одну",
@@ -3186,6 +3285,12 @@ const I18N = {
     padGoneWarn:"यह लिंक एक Etherpad पैड की ओर इशारा करता है। Etherpad कनेक्शन अब नहीं है — साझा काम अब Werkbaum बैकएंड (?live=…) से होता है। पैड का टेक्स्ट वहाँ एक बार चिपकाएँ और मिलकर संपादित करें।",
     storeFailedWarn:"ब्राउज़र में सहेजना विफल रहा — संभवतः उसका संग्रहण भर गया है। पुनः लोड करने पर बदलाव खो सकते हैं; अनुपयोगी दस्तावेज़ या पिछली स्थितियाँ हटाकर जगह बनाएँ।",
     tabConflictWarn:"Werkbaum एक और ब्राउज़र टैब में खुला है — दोनों एक ही दस्तावेज़ सूची में लिखते हैं, और आख़िर में सहेजने वाला जीतता है। बेहतर है कि एक ही टैब में काम करें।",
+    liveUnsentWarn:"आपके बदलाव {min} मिनट से सर्वर तक नहीं पहुँचे — वे केवल इस विंडो में मौजूद हैं। बंद करने से पहले सहेजें (Ctrl+S या कैमरा बटन)।",
+    liveEndedWarn:"इस सर्वर दस्तावेज़ से लाइव कनेक्शन समाप्त हो गया है — बदलाव अब साझा नहीं होते। दोबारा जोड़ने के लिए पुनः लोड करें।",
+    tabModalTitle:"Werkbaum एक से अधिक बार खुला है",
+    tabModalText:"यह ऐप किसी और विंडो या टैब में भी खुला है। दोनों एक ही दस्तावेज़ भंडार में लिखते हैं — आख़िर में सहेजने वाला दूसरे को मिटा देता है। कृपया दूसरी विंडो बंद करें; यह सूचना अपने आप हट जाएगी।",
+    tabModalForce:"फिर भी जारी रखें (अनुशंसित नहीं)",
+    snapLocalHead:"स्थानीय प्रतियाँ (यह विंडो)",
     a11yStatus:"स्थिति: {status}", a11ySize:"आकार: {size}", a11ySizeImplicit:"आकार: कम से कम {size} (अनुमानित)", a11yTags:"जिम्मेदार: {names}", a11yId:"आईडी: #{id}", a11yDeps:"निर्भर: {ids}", a11yFolded:"समेटा हुआ, {n} छिपे", a11yEffective:"प्रभावी: {status}", heldTooltip:"प्रभावी रूप से {eff} — स्वयं {own} है, निर्भरताओं की प्रतीक्षा में", a11yOptional:"वैकल्पिक", a11yFocusMark:"यहाँ देखें", a11yLink:"लिंक सहित",
     hint_indent:"इंडेंट (2 स्पेस या टैब) पदानुक्रम तय करता है।",
     hint_all:"उप-कार्य, सभी आवश्यक", hint_any:"विकल्प, एक चुनें",
@@ -3312,6 +3417,12 @@ const I18N = {
     padGoneWarn:"此链接指向一个 Etherpad pad。Etherpad 连接已移除——协作现在通过 Werkbaum 后端（?live=…）进行。把 pad 的文本粘贴过去一次，然后一起编辑。",
     storeFailedWarn:"无法保存到浏览器——其存储空间可能已满。重新加载时更改可能丢失；请删除不再使用的文档或以前的状态以腾出空间。",
     tabConflictWarn:"Werkbaum 已在另一个浏览器标签页中打开——两者写入同一份文档列表，最后保存者生效。最好只在一个标签页中工作。",
+    liveUnsentWarn:"你的更改已有 {min} 分钟未到达服务器——它们只存在于此窗口中。关闭前请先保存（Ctrl+S 或相机按钮）。",
+    liveEndedWarn:"与此服务器文档的实时连接已结束——更改不再共享。重新加载以重新连接。",
+    tabModalTitle:"Werkbaum 已多处打开",
+    tabModalText:"此应用正同时在另一个窗口或标签页中打开。两者写入同一份文档存储——后保存者会覆盖对方。请关闭另一个窗口；此提示会自行消失。",
+    tabModalForce:"仍要继续（不推荐）",
+    snapLocalHead:"本地备份（此窗口）",
     a11yStatus:"状态：{status}", a11ySize:"工作量：{size}", a11ySizeImplicit:"工作量：至少 {size}（假定）", a11yTags:"负责人：{names}", a11yId:"ID：#{id}", a11yDeps:"依赖：{ids}", a11yFolded:"已折叠，隐藏 {n} 项", a11yEffective:"实际：{status}", heldTooltip:"实际为 {eff}——自身已是 {own}，等待依赖完成", a11yOptional:"可选", a11yFocusMark:"看这里", a11yLink:"含链接",
     hint_indent:"缩进（2 个空格或制表符）定义层级。",
     hint_all:"子任务，全部必需", hint_any:"备选项，择其一",
@@ -3438,6 +3549,12 @@ const I18N = {
     padGoneWarn:"このリンクは Etherpad のパッドを指しています。Etherpad 連携は廃止されました。共同編集は Werkbaum バックエンド（?live=…）で行います。パッドの本文を一度貼り付ければ、複数人で編集できます。",
     storeFailedWarn:"ブラウザーへの保存に失敗しました — ストレージが満杯の可能性があります。再読み込みで変更が失われることがあります。不要なドキュメントや以前の状態を削除して空きを作ってください。",
     tabConflictWarn:"Werkbaum が別のタブでも開いています — 両方が同じドキュメント一覧に書き込み、最後に保存した方が勝ちます。1 つのタブでの作業をおすすめします。",
+    liveUnsentWarn:"変更が {min} 分間サーバーに届いていません — この変更はこのウィンドウにしか存在しません。閉じる前に保存してください（Ctrl+S またはカメラボタン）。",
+    liveEndedWarn:"このサーバー文書とのライブ接続は終了しました — 変更は共有されなくなっています。再読み込みで再接続します。",
+    tabModalTitle:"Werkbaum が複数開かれています",
+    tabModalText:"このアプリは別のウィンドウまたはタブでも開かれています。両方が同じ文書ストレージに書き込むため、最後に保存した側が他方を上書きします。もう一方のウィンドウを閉じてください。この通知は自動的に消えます。",
+    tabModalForce:"それでも続行（非推奨）",
+    snapLocalHead:"ローカルの控え（このウィンドウ）",
     a11yStatus:"ステータス: {status}", a11ySize:"規模: {size}", a11ySizeImplicit:"規模: 少なくとも {size}（想定）", a11yTags:"担当: {names}", a11yId:"ID: #{id}", a11yDeps:"依存先: {ids}", a11yFolded:"折りたたみ中、{n} 件非表示", a11yEffective:"実効: {status}", heldTooltip:"実効では {eff} — 自身は既に {own}、依存待ち", a11yOptional:"任意", a11yFocusMark:"ここを見る", a11yLink:"リンクあり",
     hint_indent:"インデント（スペース2つまたはタブ）で階層を定義します。",
     hint_all:"サブタスク、すべて必須", hint_any:"選択肢、1つを選ぶ",
@@ -4051,10 +4168,11 @@ function loadSnaps(){ snaps = parseSnaps(localStorage.getItem(LS_SNAPS)); }
 function snapshotNow(manuell){
   const d = activeDoc();
   if(!d) return false;
-  /* Server-Dokumente: Die Historie führt der Server (D86) — lokale Stände
-     wären irreführend (sie enthalten fremde Änderungen, D76) und im Menü
-     ohnehin unsichtbar. */
-  if(String(d.id).startsWith('live:')) return false;
+  /* Auch für Server-Dokumente (D89, kehrt D86 teilweise um): Die Historie
+     führt weiterhin der Server, aber die lokalen Stände sind das
+     Sicherheitsnetz für alles, was ihn NICHT erreicht — genau der Verlust,
+     den D86 möglich gemacht hat. Im Uhr-Menü stehen sie als eigener
+     Abschnitt „Lokale Sicherungen" unter den Server-Meilensteinen. */
   const text = src.value;
   if(!addSnapshot(snaps, d.id, text, Date.now(), {base: snapBase, manual: manuell})) return false;
   snapBase = text;
@@ -4084,17 +4202,31 @@ function renderSnapMenu(){
     return;
   }
   /* Neueste zuoberst — danach sucht man zuerst. */
-  list.slice().reverse().forEach(s => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'snapitem';
-    b.setAttribute('role', 'menuitem');
-    b.innerHTML = '<span></span><span class="snapsize"></span>';
-    b.firstChild.textContent = snapLabel(s.t, lang, Date.now());
-    b.lastChild.textContent = t('snapLines', {n: s.text.split('\n').length});
-    b.addEventListener('click', e => { e.stopPropagation(); loadSnapshot(s); });
-    snapMenu.appendChild(b);
-  });
+  list.slice().reverse().forEach(s => snapMenu.appendChild(snapItemBtn(s)));
+}
+function snapItemBtn(s){
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'snapitem';
+  b.setAttribute('role', 'menuitem');
+  b.innerHTML = '<span></span><span class="snapsize"></span>';
+  b.firstChild.textContent = snapLabel(s.t, lang, Date.now());
+  b.lastChild.textContent = t('snapLines', {n: s.text.split('\n').length});
+  b.addEventListener('click', e => { e.stopPropagation(); loadSnapshot(s); });
+  return b;
+}
+/* Lokale Sicherungen unter den Server-Meilensteinen (D89): das, was der
+   Server NICHT hat — Rettungs-Stände und der 10-Minuten-Takt. Sichtbar
+   beschriftet, damit klar bleibt, dass sie nur dieses Fenster kennt. */
+function appendLocalSnaps(){
+  const d = activeDoc();
+  const list = d ? (snaps[d.id] || []) : [];
+  if(!list.length) return;
+  const h = document.createElement('div');
+  h.className = 'snaphead';
+  h.textContent = t('snapLocalHead');
+  snapMenu.appendChild(h);
+  list.slice().reverse().forEach(s => snapMenu.appendChild(snapItemBtn(s)));
 }
 /* Zurückgeholt wird **undo-fähig** (D53): Ein Griff daneben kostet ein Strg+Z,
    keine Rückfrage. Der aktuelle Stand wird vorher weggelegt, falls er noch
@@ -4127,7 +4259,11 @@ async function renderServerHistory(){
   snapMenu.appendChild(lade);
   let eintraege;
   try{ eintraege = await fetchJson(sitzung.urls.doc + '/history'); }
-  catch(err){ lade.textContent = (err && err.message) || String(err); return; }
+  catch(err){
+    lade.textContent = (err && err.message) || String(err);
+    appendLocalSnaps();   /* gerade wenn der Server nicht antwortet, zählen die lokalen (D89) */
+    return;
+  }
   if(liveState !== sitzung || snapMenu.hidden) return;   /* inzwischen zu oder umgeschaltet */
   snapMenu.innerHTML = '';
   const max = Math.max(0, ...eintraege.map(x => x.version));
@@ -4137,6 +4273,7 @@ async function renderServerHistory(){
     p.className = 'snapempty';
     p.textContent = t('snapNoneLive');
     snapMenu.appendChild(p);
+    appendLocalSnaps();
     return;
   }
   fruehere.forEach(x => {
@@ -4150,6 +4287,7 @@ async function renderServerHistory(){
     b.addEventListener('click', e => { e.stopPropagation(); rollbackToVersion(x); });
     snapMenu.appendChild(b);
   });
+  appendLocalSnaps();
 }
 /* Rücksprung als SERVER-Rollback (ROLLED_BACK, D76/D86): Er geschieht für
    alle nachvollziehbar auf dem Server — als neue Version, nichts geht
@@ -4977,6 +5115,10 @@ async function startLive(raw){
     adoptLive(doc);
     runFeed();
   }catch(err){
+    /* liveState NICHT halb initialisiert stehen lassen (D89): Mit Version 0,
+       leerer Schattenkopie und ohne Feed wäre jede weitere Eingabe eine
+       stumme Sackgasse. Ohne Sitzung meldet der Wachhund die Lage. */
+    liveState = null;
     sourceWarning = {type:'liveLoad', url: urls.doc, error: (err && err.message) || String(err)};
     render();
   }
@@ -5005,6 +5147,10 @@ function adoptLive(doc){
   liveState.shadow = live.lines(content);
   flushActive();
   let d = docs.find(x => x.id === liveState.id);
+  /* Weicht der lokal gehaltene Text vom Server ab, wandert er VOR dem
+     Überschreiben in die lokalen Sicherungen (D89) — genau an dieser Stelle
+     ging beim Vorfall der ungesendete Vormittag verloren. */
+  if(d && d.text !== content) rescueSnapshot(d.id, d.text);
   if(d){ d.text = content; d.name = doc.title || liveState.urls.doc; }
   else { d = {id: liveState.id, name: doc.title || liveState.urls.doc, text: content}; docs.push(d); }
   d.source = liveState.urls.doc;
@@ -5031,6 +5177,56 @@ function scheduleLivePush(){
   liveState.pushTimer = setTimeout(() => { liveState.pushTimer = null; pushLive(); },
                                    LIVE_DEBOUNCE_MS);
 }
+
+/* ---------- Ungesendetes darf nicht stumm bleiben (D89) ----------
+   Der Vorfall dahinter: Zwei Stunden Tippen erreichten den Server nicht —
+   ohne Warnung, und beim nächsten Neuladen war der Text weg. Drei Netze:
+   ein Wachhund, der stehende Unterschiede zwischen Editor und Schattenkopie
+   nach 30 s laut meldet (egal aus welchem Grund — offenes Konflikt-Band,
+   tote Sitzung, Netz); eine Rettungs-Sicherung, bevor irgendetwas
+   ungesendeten Text überschreibt; und eine Nachfrage beim Verlassen. */
+
+function livePendingChanges(){
+  if(liveConflict) return true;
+  if(!liveActive() || !liveState.version) return false;   /* Sitzung nie angekommen: nichts zu vergleichen */
+  return live.text(liveState.shadow) !== live.normalize(src.value);
+}
+
+/* Ungesendeten Text in die lokalen Sicherungen legen — die Zusage „verloren
+   geht nichts" muss auch gelten, wenn niemand mehr fragt. Dedupliziert gegen
+   den letzten Stand (addSnapshot), gedeckelt wie alle Stände (D54). */
+function rescueSnapshot(docId, text){
+  if(!text || !text.trim()) return;
+  if(addSnapshot(snaps, docId, text, Date.now(), {base: null, manual: true}))
+    persistSnaps(snaps, localStorage);
+}
+
+let unsyncedSince = 0;
+setInterval(() => {
+  const d = activeDoc();
+  const tot = !!(d && String(d.id).startsWith('live:') && !liveState);
+  const offen = !tot && livePendingChanges();
+  if(offen){ if(!unsyncedSince) unsyncedSince = Date.now(); }
+  else unsyncedSince = 0;
+  let neu = null;
+  if(tot) neu = {type: 'liveEnded'};
+  else if(unsyncedSince && Date.now() - unsyncedSince > 30000)
+    neu = {type: 'liveUnsent', min: Math.max(1, Math.floor((Date.now() - unsyncedSince) / 60000))};
+  if(JSON.stringify(neu) !== JSON.stringify(liveWarning)){
+    liveWarning = neu;
+    render();
+  }
+}, 5000);
+
+/* Nachfrage beim Schließen/Neuladen mit ungesendeten Änderungen — und als
+   Gürtel zum Hosenträger legt pagehide den Text zusätzlich in die lokalen
+   Sicherungen: auch wer die Nachfrage wegklickt, verliert nichts mehr. */
+addEventListener('beforeunload', e => {
+  if(livePendingChanges()){ e.preventDefault(); e.returnValue = ''; }
+});
+addEventListener('pagehide', () => {
+  if(liveState && livePendingChanges()) rescueSnapshot(liveState.id, live.normalize(src.value));
+});
 
 /* [meilenstein]: Der Kamera-Knopf hält den Stand als SERVER-Meilenstein fest
    (D86) — dann darf das Diff auch leer sein: Die leere Änderung bumpt die
@@ -5083,6 +5279,12 @@ async function pushLive(meilenstein){
     sitzung.shadow = live.applyOps(
       foreign.length ? live.applyOps(basis, foreign) : basis, meine);
     sitzung.version = result.version;
+    /* Ein gelungener Abgleich räumt eine liegengebliebene Live-Warnung mit
+       weg — „nicht geladen" neben funktionierendem Senden wäre eine Lüge. */
+    if(sourceWarning && (sourceWarning.type === 'liveLoad' || sourceWarning.type === 'liveStale')){
+      sourceWarning = null;
+      render();
+    }
     if(foreign.length) applyForeign(basis, foreign, sitzung.shadow, sitzung.version);
   }catch(err){
     if(liveState === sitzung) handlePushError(err);
@@ -5167,9 +5369,13 @@ function applyFeed(feed){
   if(what === 'skip') return;
   applyRenameEvents(feed);   /* Umbenennung durch andere (RENAMED, D85) */
   if(what === 'replace'){
-    /* Volltext: die Basis ist verdichtet, ein Diff gibt es nicht mehr. */
+    /* Volltext: die Basis ist verdichtet, ein Diff gibt es nicht mehr.
+       Auch hier weicht der eigene Stand — vorher sichern (D89). */
+    const eigen = live.normalize(src.value);
+    const neu = live.normalize(feed.content);
+    if(eigen !== neu) rescueSnapshot(liveState.id, eigen);
     liveState.version = feed.currentVersion;
-    liveState.shadow = live.lines(live.normalize(feed.content));
+    liveState.shadow = live.lines(neu);
     setLiveText(live.text(liveState.shadow), null);
     return;
   }
@@ -5254,6 +5460,11 @@ function takeTheirs(){
   const c = liveConflict;
   liveConflict = null;
   hideConflictBanner();
+  /* Der eigene Text weicht — aber nicht mehr spurlos (D89): Er wandert in die
+     lokalen Sicherungen. Der Kommentar „er steht in den früheren Ständen"
+     stimmte seit D86 nicht mehr; jetzt stimmt er wieder. */
+  const eigen = live.normalize(src.value);
+  if(eigen !== live.text(c.serverLines)) rescueSnapshot(liveState.id, eigen);
   liveState.version = c.version;
   liveState.shadow = c.serverLines;
   setLiveText(live.text(c.serverLines), null);
