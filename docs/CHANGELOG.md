@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-27
 
+- Plans spanning several Taiga projects: a `&taiga.slug` tag names the project per subtree, inherited downwards — the first consumer of the reserved free tags, recorded as planned
 - Creating Taiga tickets from nodes recorded as planned: a story per node from the node window, sub-packages as tasks picked in a dialog, through a backend proxy — the ref lands in the line as `#US-123`/`#T-1234`, beside the node id
 - The unassigned pill in the people bar shows each language's short form now — German `N.N.`, English `TBD` — with the long wording in the tooltip
 - `pull-doc --open` opens the fetched document in IntelliJ IDEA afterwards — also when nothing changed

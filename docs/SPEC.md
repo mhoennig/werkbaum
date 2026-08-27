@@ -1311,7 +1311,10 @@ laufen **je Projekt** fortlaufend über alle Typen, das Präfix trägt den Typ,
 den die Auflösung braucht). Die Ref wird **zusätzlich zur Knoten-ID** als
 eigenes Token an die Zeile geschrieben: Mit vorhandener ID bleibt sie
 Ticket-Referenz im Label (§1: nur das erste `#`-Token ist die ID), ohne ID
-wird sie von selbst die ID. Siehe D91-Nachtrag 2.
+wird sie von selbst die ID. Erstreckt sich ein Plan über **mehrere**
+Taiga-Projekte, benennt das Schlagwort `&taiga.<slug>` (unten) das Projekt
+je Teilbaum — eine Ref wird gegen das Projekt des nächsten Vorfahren mit so
+einem Tag aufgelöst. Siehe D91-Nachträge 2 und 3.
 Freie Schlagworte liegen **nicht** mehr auf `#` — siehe `&tag` unten; damit
 ist die frühere Dreifach-Rolle von `#` aufgelöst (D34).
 
@@ -1327,6 +1330,14 @@ ist die frühere Dreifach-Rolle von `#` aufgelöst (D34).
   (Filter-/Hervorheben-Linse, Taiga-Label-Sync), sind sie nur Kommentare mit
   Extra-Syntax — gebaut werden sie erst **zusammen mit** dem ersten solchen
   Konsumenten. Bis dahin gilt allein: `&` nicht anderweitig vergeben.
+- **Der erste Konsument ist festgelegt** (D91-Nachtrag 3): das
+  **Taiga-Projekt-Schlagwort**. `&taiga.<projekt-slug>` benennt das
+  Taiga-Projekt, zu dem ein Teilbaum gehört, und **vererbt sich** auf die
+  Nachkommen wie die `@`-Tags beim Zuständigen-Engpass (§7/§9) — der
+  nächste Vorfahr mit einem `taiga.*`-Tag gewinnt, ein eigener Tag am
+  Knoten übersteuert. Alle übrigen Schlagworte bleiben frei; die Syntax
+  wird zusammen mit der Ticket-Anlage gebaut, und die Zitier-Konvention
+  gilt auch hier (`(&taiga.slug)` bleibt Label).
 
 ### Nutzen je Knoten (`(M/9)`) — festgelegt, noch nicht gebaut
 

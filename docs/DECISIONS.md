@@ -7956,3 +7956,45 @@ ein Dokument theoretisch Refs aus **mehreren** Projekten mischen — und
 `#US-123` ist nur je Projekt eindeutig. Der spätere Resolver braucht darum
 eine Projekt-Zuordnung; praktisch gehört ein Plan zu einem Projekt, und die
 Frage stellt sich erst bei `#trk.resolve`.
+
+**Nachtrag 3 — Pläne über mehrere Taiga-Projekte: `&taiga.<slug>` erbt im
+Teilbaum (2026-08-27).** Die in Nachtrag 2 benannte Grenze ist real
+(Nutzer: „wir haben einige Werkbäume, die sich über mehrere Taiga-Projekte
+erstrecken") und braucht eine Notationsantwort — außerhalb des Textes
+gemerkt (localStorage, Server-Metadatum) bräche D14: In einem geteilten
+Dokument müsste jeder dieselbe Zuordnung kennen. Entschieden
+(Multiple-Choice):
+
+**Das Schlagwort `&taiga.<projekt-slug>` am Wurzelknoten des jeweiligen
+Teilbaums**, vererbt auf die Nachkommen wie die `@`-Tags beim
+Zuständigen-Engpass (D71) — der nächste Vorfahr mit `taiga.*`-Tag gewinnt.
+Refs bleiben damit überall kurz (`#US-123`), ein Ein-Projekt-Plan braucht
+genau ein Tag, und es ist der **erste Konsument des reservierten `&tag`**
+— SPEC §11 nennt „Taiga-Label-Sync" seit D34 wörtlich als möglichen
+Anlass; die Schlagwort-Syntax wird also zusammen mit der Ticket-Anlage
+gebaut (`#not.tag.project` im Plan, Abhängigkeit von
+`#trk.create.project`). Alle übrigen `&`-Schlagworte bleiben frei — das
+Werkzeug wertet nur das `taiga.`-Präfix aus.
+
+**Verworfen:**
+
+- **Slug im Ref-Token** (`#<slug>.US-123`) — keine neue Syntax und jede
+  Zeile für sich eindeutig, aber lange Tokens an jeder Ticket-Zeile, auch
+  in Plänen mit nur einem Projekt.
+- **Slug nur bei Bedarf** — zwei Formen nebeneinander und eine stille
+  Umschreib-Frage, sobald das zweite Projekt später dazukommt.
+- **Resolver probiert alle Projekte** (`by_ref` über die Mitgliedschaften)
+  — bei Nummern-Kollisionen zwischen Projekten schlicht mehrdeutig, und
+  ein Leser ohne Login rät.
+
+**Der Anlege-Dialog wird vorbelegt und schreibt zurück** (revidiert das
+„blind fragen" aus dem Haupttext): Gefragt wird weiterhin bei jeder
+Anlage, aber mit dem geerbten Projekt vorausgewählt; die **erste** Anlage
+in einem Teilbaum ohne Zuordnung schreibt `&taiga.<slug>` an den Knoten
+zurück — undo-fähig wie die Ref, über dieselbe Maschinerie. Die
+Zuordnung entsteht so beim Arbeiten von selbst, statt gepflegt werden zu
+müssen.
+
+An `llms.md` ändert sich weiterhin nichts — die Syntax ist reserviert und
+ungebaut; nachgezogen wird sie, wenn `&tag` wirklich gebaut wird
+(SPEC §13).

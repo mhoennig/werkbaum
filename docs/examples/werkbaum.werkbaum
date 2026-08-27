@@ -12,8 +12,9 @@
     - [^] #not.gates: And/or decomposition (S)
     - [^] #not.opt: Optional nodes — neither required nor an alternative (S)
     - [^] #not.id: Node IDs, (#auth:) before the title (S)  %% often the ticket number, see SPEC §11
-    + [?] #not.tag: Free tags, &tag (M)  %% only together with a consumer, see D34
+    + [ ] #not.tag: Free tags, &tag (M)  %% first consumer found: the Taiga project tag, D91
       - [?] #not.tag.lens: A lens: highlight every node tagged &x (S)
+      - [ ] #not.tag.project: (&taiga.slug) assigns the Taiga project, inherited (S)
     - [^] #not.dep: Dependencies across the tree, (:#auth,#api) (M)
       - [^] #not.dep.status: They constrain the status, not when work may start (S)
       - [^] #not.dep.eff: Effective status: intrinsic, plus what it depends on (S)
@@ -25,7 +26,7 @@
       - [^] #not.desc.long: A long block at the end, addressed by its id (S)  %% behind a --- separator
     - [^] #not.sizes: Size conflict — sub-packages must fit the given size (S)  %% ranges, XXL open-ended, see D62
     - [-] #not.store: A separate storage format for the structure (L)  %% the text is the format
-    - [ ] #not.ticket: Ticket references (#123,#US-123) (S)  %% Taiga writes #US-123 for a user story
+    - [ ] #not.ticket: Ticket references (#US-123,#T-1234) (S)  %% Werkbaum writes the US-/T- prefixes itself
     - [^] #not.llms: llms.md, the notation explained to AI agents (S)
       - [^] #not.llms.index: llms.txt, the signpost that points at it (XS)  %% the convention wants an index, not the content
     - [ ] #not.benefit: Benefit per node: a 0-9 digit in the size token (M)  %% (M/9), benefit alone as (/7) — see SPEC §11
@@ -204,9 +205,10 @@
         - [ ] #trk.resolve.read: Read title, link and status (S)
         - [ ] #trk.resolve.map: Map the workflow onto the states (S)
       - [?] #trk.write: Write the status back (M) :#trk.resolve
-      - [ ] #trk.create: Create tickets from nodes (L)
+      - [ ] #trk.create: Create tickets from nodes (XL)
         - [ ] #trk.create.proxy: Backend proxy with named endpoints (M)
         - [ ] #trk.create.login: Log in to Taiga, token stays in the browser (S) :#trk.create.proxy
+        - [ ] #trk.create.project: The project comes from the inherited tag (S) :#not.tag.project
         - [ ] #trk.create.story: A "create story" action in the node window (S) :#trk.create.login
         - [ ] #trk.create.tasks: Sub-packages become tasks, picked in a dialog (M) :#trk.create.story
         - [ ] #trk.create.ref: The ref lands in the line beside the id (S) :#trk.create.story
@@ -273,13 +275,19 @@
 
 #not.tag
   A tag names a set of nodes across the tree, whereas the tree itself is
-  exactly one decomposition. Reserved but deliberately unbuilt: with nothing
-  to evaluate them, tags are only comments with extra syntax.
+  exactly one decomposition. Long reserved but unbuilt — tags without a
+  consumer are only comments with extra syntax; the first consumer is now
+  the Taiga project tag below, so the syntax gets built with it (D91).
 
 #not.tag.lens
   The consumer that would justify tags: pick one and let everything else
   recede. The mechanics already exist — the cheapest path dims unneeded nodes
   in exactly that way.
+
+#not.tag.project
+  A tag of the form (&taiga.slug) names the Taiga project a subtree belongs
+  to, inherited downwards like people tags in the bottleneck rule — plans
+  that span several projects tag each subtree once, refs stay short.
 
 #not.dep
   A node may need nodes outside its own subtree. That is the one thing a pure
@@ -336,8 +344,8 @@
 
 #not.ticket
   A reference into a tracker. Which token counts as a ticket comes from the
-  connected tracker's own pattern rather than from guessing at its shape,
-  which is why this waits for the tracker work.
+  connected tracker's pattern — for Taiga fixed as US-/T- plus number,
+  prefixes written by Werkbaum itself since Taiga only counts per project.
 
 #not.llms
   An English short form of the specification, served at the site root, so an
@@ -1169,8 +1177,8 @@
   proxy once at login and is never logged.
 
 #trk.create.story
-  "Create story" in the node window: pick the project from your list — asked
-  on every creation, so nothing stale is remembered — and the story is
+  "Create story" in the node window: confirm the project — asked on every
+  creation, prefilled from the inherited project tag — and the story is
   created. A node that already carries a ticket ref is left alone.
 
 #trk.create.tasks
@@ -1178,6 +1186,11 @@
   story, chosen in a checkbox dialog: preselected are required and optional
   children plus the realized alternatives of a |/= group; discarded ones
   never appear, finished ones start unchecked.
+
+#trk.create.project
+  The dialog's project choice is prefilled from the nearest (&taiga.slug)
+  tag up the tree, and the first creation in a subtree without one writes
+  the tag back, undoable — the assignment grows out of the work itself.
 
 #trk.create.ref
   The returned ref is appended to the line as an extra token — #US-123 for
