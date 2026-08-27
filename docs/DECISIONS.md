@@ -7144,3 +7144,58 @@ Zwei-Tab-Versuch scheiterte lehrreich daran, dass das Fronten des zweiten
 Tabs im ersten genau den neuen visibilitychange-Flush auslöste, der die
 Inszenierung überschrieb — der Flush bewies sich damit ungefragt selbst.
 519 Tests unverändert grün.
+
+## D83 — Dokument-Ablage aufgeteilt: Index + ein Schlüssel je Text
+Nutzer-Einwand im Anschluss an D82: „Es ist tatsächlich so, dass beim
+Zurückspeichern irgendwann sämtliche Dokumente neu geschrieben werden?" Ja —
+D82 hatte nur die Frequenz repariert (nicht mehr je Tastendruck), nicht die
+Struktur: Alle Dokumente lagen als EIN JSON unter einem Schlüssel, jeder
+Flush schrieb alle Bytes aller Dokumente. Das eigentliche Problem daran ist
+nicht die Performance (Flushes sind seltene Nutzeraktionen), sondern
+**Alles-oder-nichts**:
+
+- **Quota:** Wächst das Gesamt-JSON über die Quota, scheitert jeder Flush
+  ganz — auch die Änderung an einem winzigen Dokument muss das Ganze
+  mitschreiben.
+- **Korruption:** Ein einziger kaputter Schlüssel ließ `JSON.parse`
+  scheitern, und der Rückfallpfad ersetzte die Liste durch ein frisches
+  Beispiel — ein kaputter Schlüssel kostete die Sicht auf ALLE Dokumente.
+  Der teuerste Fehlermodus des ganzen Speicher-Designs.
+
+**Das Schema jetzt** (docstore.js, headless nach Hausregel D54-Nachtrag 3):
+`werkbaum-docs` ist nur noch der **Index** `[{id, name, source?}]` — klein,
+ändert sich selten; der Text jedes Dokuments liegt unter einem eigenen
+Schlüssel `werkbaum-doc:<id>`. Der Tastendruck schreibt damit **direkt in
+die echte Ablage** (Text-Schlüssel + Spiegel) statt in eine Zwischenstation;
+die „Spiegel gewinnt"-Regel aus D82 gilt nur noch der **einmaligen
+Migration** aus dem Altformat — samt ihrer Reihenfolge-Falle (vor
+`seedShippedDocs()`, sonst dreht der ältere Spiegel eine frisch nachgezogene
+Fassung zurück). Der Voll-Flush vergleicht **vor jedem Schreiben** und fasst
+unveränderte Schlüssel nicht an — sonst wäre die Write-Amplification nur
+verteilt statt behoben — und räumt verwaiste Text-Schlüssel gelöschter
+Dokumente ab, ohne fremde Schlüssel zu berühren. Ein fehlender oder kaputter
+Text-Schlüssel ergibt ein Dokument mit leerem Text, **kein** Verwerfen der
+Liste: Der Schaden bleibt, wo er entstand.
+
+**Bewusst NICHT IndexedDB:** Das wäre die Antwort auf wirklich viele große
+Dokumente (asynchron, größere Quota), aber ein Umbau des ganzen synchronen
+Ladepfads — und D22 hat den localStorage ohnehin als Platzhalter bis zum
+Backend deklariert; wer so viele Dokumente hat, ist der Fall für
+Server-Dokumente (D76). **Benannter Preis:** Ein Downgrade auf einen Build
+vor D83 findet im Index keine Texte, hält die Liste für unbrauchbar und
+fällt auf das Beispiel samt Spiegel (= aktiver Text) zurück — bei einer
+Anwendung, die nur vorwärts deployt wird, tragbar. Die Stände (D54) behalten
+ihren einen Schlüssel: Sie sind Sicherheitsnetz mit eigener
+Verdrängungsregel, kein Bestand.
+
+**Nachgemessen** (529 Tests, +10 in `tests/docstore.test.js`, darunter
+Rundreise, Nur-bei-Änderung-Schreiben per setItem-Zähler, Waisen-Abräumen,
+Quota-Durchreichen): Im Browser migriert das Altformat beim ersten Laden
+(Index ohne Texte, je Dokument ein Schlüssel); Tippen lässt den Index
+unangetastet; ein gezielt zerstörter Text-Schlüssel kostet genau dieses eine
+Dokument (leer im Menü, wiederherstellbar über den Neu-laden-Knopf), Liste
+und Nachbar-Dokument bleiben unversehrt; Anlegen erzeugt den Schlüssel,
+Löschen räumt ihn ab. Beim Prüfen fiel im Test-Profil das Werkbaum-Dokument
+als fehlend auf — Ursache waren die inszenierten Speicherzustände der
+D82-Prüfung selbst, nicht das neue Schema; der Seed-Merker tat das Richtige
+(„gelöscht bleibt gelöscht", D27).

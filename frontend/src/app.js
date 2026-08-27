@@ -9,6 +9,7 @@ import { LS_SNAPS, SNAP_EVERY, parseSnaps, addSnapshot, persistSnaps, snapLabel 
   from './snapshots.js';
 import { FILE_ACCEPT, FILE_TYPES, saveFileName } from './localfile.js';
 import { LIVE_PARAM, SOURCE_PARAM, ETHERPAD_PARAM, docSearch, docKind } from './docurl.js';
+import { readDocs, storeDocs, storeDocText, LS_DOCS, LS_ACTIVE, LS_SRC } from './docstore.js';
 /* Neuigkeiten (D58): die git-Historie, zur BAUZEIT eingelesen (Vite-Plugin in
    vite.config.js). Zur Laufzeit gibt es kein git — und keinen Server, der
    nachliefern könnte (D11/D19). Leer, wo git nicht erreichbar war. */
@@ -3362,19 +3363,22 @@ fsBtn.addEventListener('click', () => {
    Noch kein Backend: Einstellungen (Modus, verworfene, Aufteilung, Zoom,
    Vollbild) und der Editortext bleiben per localStorage über Neuladen
    erhalten. Sprache liegt weiterhin in 'werkbaum-lang'. */
-const LS_UI = 'werkbaum-ui', LS_SRC = 'werkbaum-src';
-const LS_DOCS = 'werkbaum-docs', LS_ACTIVE = 'werkbaum-active';
+const LS_UI = 'werkbaum-ui';
+/* LS_DOCS / LS_ACTIVE / LS_SRC kommen aus docstore.js (D83) — dort liegt das
+   Ablageschema: Index ohne Texte, Text je Dokument unter eigenem Schlüssel. */
 const LS_SEEDED = 'werkbaum-seeded';   /* mitgelieferte Dokumente schon angelegt? */
 const LS_SEEDED_EXAMPLE = 'werkbaum-seeded-example';   /* Fingerabdruck der ausgelieferten INITIAL-Fassung (D27-Nachtrag) */
 let restoring = false;   /* unterdrückt Speichern während des Wiederherstellens */
 let hadStoredUI = false;  /* gab es beim Laden schon gespeicherte GUI-Einstellungen? */
 
 /* ---------- Dokumente (mehrere umschaltbare Notationstexte) ----------
-   Noch kein Backend: mehrere Dokumente liegen als [{id,name,text}] im
-   localStorage (LS_DOCS), das aktive per id in LS_ACTIVE. Jedes Dokument ist
-   nur ein Notationstext + Name (Metadatum) — kein eigenes Strukturformat (D14).
-   Der aktive Text wird zusätzlich in LS_SRC gespiegelt (Abwärtskompatibilität
-   + Migration bestehender Einzeltexte). */
+   Noch kein Backend: Der INDEX [{id,name,source?}] liegt unter LS_DOCS, der
+   Text je Dokument unter einem eigenen Schlüssel (Schema: docstore.js, D83) —
+   so trifft eine volle Quota nur das eine zu große Dokument und ein kaputter
+   Schlüssel nur eines statt aller. Das aktive Dokument steht per id in
+   LS_ACTIVE; sein Text wird zusätzlich in LS_SRC gespiegelt (Rollback- und
+   Migrations-Fallback). Jedes Dokument ist nur ein Notationstext + Name
+   (Metadatum) — kein eigenes Strukturformat (D14). */
 /* Das Beispiel-Dokument trägt eine reservierte id und einen festen englischen
    Namen: So trifft der Reset genau dieses eine Dokument (D22) und der Name ist
    unabhängig von der UI-Sprache englisch — wie der Beispieltext selbst (breiteres
@@ -3396,26 +3400,26 @@ function uniqueName(base){
   while(taken.has(base + ' ' + i)) i++;
   return base + ' ' + i;
 }
-/* Die volle Persistenz: serialisiert ALLE Dokumente — deshalb läuft sie nur
-   an Flush-Punkten (Wechseln/Anlegen/Löschen/Umbenennen, Verlassen der
-   Seite), nicht mehr bei jedem Tastendruck (D82). Ein Fehlschlag (Quota
-   voll) wird gemeldet statt geschluckt. */
+/* Die volle Persistenz (Flush-Punkte: Wechseln/Anlegen/Löschen/Umbenennen,
+   Verlassen der Seite — nicht der Tastendruck, D82): Index + Texte über das
+   Ablageschema (docstore.js, D83). Unveränderte Schlüssel werden dort nicht
+   angefasst; ein Fehlschlag (Quota voll) wird gemeldet statt geschluckt. */
 function persistDocs(){
   try{
-    localStorage.setItem(LS_DOCS, JSON.stringify(docs));
+    storeDocs(localStorage, docs, Object.keys(localStorage));
     localStorage.setItem(LS_ACTIVE, activeId || '');
     const d = activeDoc();
-    if(d) localStorage.setItem(LS_SRC, d.text);   /* Spiegel, siehe persistActiveText */
+    if(d) localStorage.setItem(LS_SRC, d.text);   /* Spiegel: Rollback-Fallback */
     noteStore(true);
   }catch(_){ noteStore(false); }
 }
-/* Die Tastendruck-Hälfte (D82): nur der Spiegel des AKTIVEN Texts (LS_SRC).
-   Für das aktive Dokument ist der Spiegel damit immer mindestens so neu wie
-   das Array — beim Laden gewinnt er (loadDocs). */
+/* Die Tastendruck-Hälfte (D82/D83): der Text des AKTIVEN Dokuments unter
+   seinem eigenen Schlüssel plus der Spiegel — der Tastendruck schreibt damit
+   direkt in die echte Ablage, nicht mehr in eine Zwischenstation. */
 function persistActiveText(){
   try{
     const d = activeDoc();
-    if(d) localStorage.setItem(LS_SRC, d.text);
+    if(d) storeDocText(localStorage, d.id, d.text);
     noteStore(true);
   }catch(_){ noteStore(false); }
 }
@@ -3465,18 +3469,19 @@ function seedShippedDocs(){
   if(shipped && shipped.text === WERKBAUM_DOC) computeFresh(WERKBAUM_ID, WERKBAUM_DOC);
 }
 
-/* Aus dem localStorage laden; bei fehlender Dokumentenliste den bestehenden
-   Einzeltext (oder INITIAL) als erstes Dokument migrieren. */
+/* Aus dem localStorage laden (Schema: docstore.js, D83); bei fehlender oder
+   unbrauchbarer Dokumentenliste den bestehenden Einzeltext (oder INITIAL)
+   als erstes Dokument migrieren. */
 function loadDocs(){
-  let arr = null;
-  try{ arr = JSON.parse(localStorage.getItem(LS_DOCS) || 'null'); }catch(_){}
-  if(!Array.isArray(arr) || !arr.length ||
-     !arr.every(d => d && typeof d.id === 'string' && typeof d.text === 'string')){
+  let gelesen = null;
+  try{ gelesen = readDocs(localStorage); }catch(_){}
+  if(gelesen){
+    docs = gelesen.docs;
+  } else {
     let legacy = null;
     try{ legacy = localStorage.getItem(LS_SRC); }catch(_){}
-    arr = [{ id: EXAMPLE_ID, name: EXAMPLE_NAME, text: (legacy !== null) ? legacy : INITIAL }];
+    docs = [{ id: EXAMPLE_ID, name: EXAMPLE_NAME, text: (legacy !== null) ? legacy : INITIAL }];
   }
-  docs = arr;
   let a = null;
   try{ a = localStorage.getItem(LS_ACTIVE); }catch(_){}
   /* Alt-Zustand (erste Version: zufällige id, lokalisierter Name): ein noch
@@ -3489,19 +3494,22 @@ function loadDocs(){
     docs[0].name = EXAMPLE_NAME;
   }
   activeId = docs.some(d => d.id === a) ? a : docs[0].id;
-  /* Der Spiegel gewinnt (D82): Beim Tippen wird nur LS_SRC geschrieben, das
+  /* „Der Spiegel gewinnt" gilt nur noch der EINMALIGEN Migration aus dem
+     Altformat (D82→D83): Dort schrieb der Tastendruck nur den Spiegel, das
      Array erst an Flush-Punkten — für das aktive Dokument ist der Spiegel
-     also mindestens so neu. Wurde die Seite ohne Flush beendet (Absturz,
-     abgewürgter Tab), holt das hier die letzten Tastendrücke zurück.
-     Zwingend VOR seedShippedDocs(): Danach kann das Array die frisch
-     nachgezogene Fassung tragen, und der (dann ältere) Spiegel würde sie
-     zurückdrehen — das Dokument gälte fortan als „bearbeitet" und bekäme
-     nie wieder eine neue Fassung. */
-  try{
-    const spiegel = localStorage.getItem(LS_SRC);
-    const d = docs.find(x => x.id === activeId);
-    if(d && spiegel !== null && spiegel !== d.text) d.text = spiegel;
-  }catch(_){}
+     also mindestens so neu. Im neuen Schema schreibt der Tastendruck den
+     Text-Schlüssel selbst; eine Vorrang-Regel bräuchte dort nur etwas, das
+     es lügen lassen könnte. Zwingend VOR seedShippedDocs(): Danach kann das
+     Array die frisch nachgezogene Fassung tragen, und der (dann ältere)
+     Spiegel würde sie zurückdrehen — das Dokument gälte fortan als
+     „bearbeitet" und bekäme nie wieder eine neue Fassung. */
+  if(gelesen && gelesen.legacy){
+    try{
+      const spiegel = localStorage.getItem(LS_SRC);
+      const d = docs.find(x => x.id === activeId);
+      if(d && spiegel !== null && spiegel !== d.text) d.text = spiegel;
+    }catch(_){}
+  }
   seedShippedDocs();
   /* Namensfix für die kurzlebige Fassung mit dem Tippfehler — nur, solange der
      ausgelieferte Name unverändert ist; eine eigene Umbenennung bleibt stehen
