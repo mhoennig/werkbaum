@@ -715,13 +715,19 @@
      Chip muss sich auf ALLEN acht Füllungen abheben, und Weiß mit sattem Rand
      tut das; auf dem weißen Neutral-Knoten trägt der Rand allein. */
   .node .fold:hover{color:var(--ink);border-color:var(--line);background:#fff}
-  /* Der dunkle Wurzelknoten braucht die helle Umkehrung. */
-  .root-node .fold{color:#fff;border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.16)}
-  .root-node .fold:hover{color:#fff;border-color:#fff;background:rgba(255,255,255,.26)}
+  /* Der Wurzelknoten bekommt DENSELBEN Chip wie alle anderen — die frühere
+     helle Umkehrung (weiße Glyphe auf durchscheinendem Weiß) war für den
+     dunklen Tinte-Wurzelknoten gebaut; trägt die Wurzel aber einen Status,
+     gewinnt dessen Pastell-Füllung (.node.st-* ist spezifischer, D39), und
+     Weiß auf Rosé war praktisch unsichtbar. Der deckend weiße Chip hebt sich
+     auch auf der dunklen Wurzel ab (wie die hellen Tag-Pillen dort). */
   /* ”-Marke (SPEC §9, D40): der Knoten trägt eine Beschreibung — im Tooltip
      nachlesbar. Spiegelt das "-Zeichen der Notation; gedeckt, kein Klickziel. */
   .node .desc-mark{color:var(--muted);margin-left:4px;font-weight:600}
-  .root-node .desc-mark{color:rgba(255,255,255,.75)}
+  /* Die helle Textfassung gilt nur dem DUNKLEN Wurzelknoten — mit Status ist
+     die Wurzel pastellfarben (siehe Falt-Chip oben), und Weiß darauf wäre
+     unsichtbar. „Dunkel" heißt: keine Statusklasse. */
+  .root-node:not(.st-idee):not(.st-geplant):not(.st-arbeit):not(.st-durchstich):not(.st-fertig):not(.st-prod):not(.st-highrisk):not(.st-verworfen) .desc-mark{color:rgba(255,255,255,.75)}
   /* Knoten-ID vor dem Titel (D56). Zurückgenommen und in der Mono-Schrift des
      Textfelds: Sie ist die Adresse, nicht der Name — der Titel soll die Zeile
      weiter anführen. Kein `margin-right`; das trennende Leerzeichen steht im
@@ -730,7 +736,8 @@
     font-family:'IBM Plex Mono',monospace;font-size:.86em;font-weight:500;
     color:var(--muted);
   }
-  .root-node .nid{color:rgba(255,255,255,.75)}
+  /* Nur die dunkle (statuslose) Wurzel — Begründung beim Falt-Chip oben. */
+  .root-node:not(.st-idee):not(.st-geplant):not(.st-arbeit):not(.st-durchstich):not(.st-fertig):not(.st-prod):not(.st-highrisk):not(.st-verworfen) .nid{color:rgba(255,255,255,.75)}
   /* Der Knopf trägt das Zeichen selbst statt eines Icons — in der Größe der
      SVGs daneben, damit die Kopfzeile ihre Höhe behält. */
   .copybtn.idsbtn span{

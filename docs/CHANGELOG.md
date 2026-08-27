@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-27
 
+- Fix: the root node's fold chip was white-on-pastel and barely visible — it now looks like every other node's, and the description mark and id line on a coloured root are readable too
 - The caret on a node off the cheapest path now highlights only the ring — the fill stays pale instead of jumping back to full colour
 - On shared documents the history button shows the server's milestones — loading one is a rollback for everyone, as a new version, nothing lost
 - The camera button turns the current state of a shared document into a server milestone instead of a local snapshot

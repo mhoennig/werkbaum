@@ -4894,6 +4894,38 @@ Wurzelknoten bekommt die helle Umkehrung (weiße Glyphe, Rand 0,7). Nur
 Farben — Innenabstand und `line-height:14px` bleiben unangetastet, die
 23-px-Geometrie (oben) hängt daran.
 
+**Nachtrag 2 — der Wurzelknoten bekommt denselben Chip; die „helle
+Umkehrung" war ein Fehler mit Verfallsdatum.** Gemeldet: „Der Root-Knoten hat
+immer noch einen schlecht sichtbaren Aufklapp-Button — bei allen anderen
+sieht der anders aus. Warum?" Die Antwort steht im Nachtrag oben: Die helle
+Umkehrung (weiße Glyphe auf durchscheinendem Weiß) war für den **dunklen**
+Tinte-Wurzelknoten gebaut. Nur ist die Wurzel seit D39 fast nie dunkel:
+Trägt sie einen Status, gewinnt dessen Pastell-Füllung (`.node.st-*` ist
+spezifischer als `.root-node`) — und alle mitgelieferten Pläne haben eine
+`[~]`-Wurzel. Weiß auf Rosé ist genau das „weiß auf heller Farbe", das der
+Nachtrag oben für alle anderen Knoten behoben hatte; die Wurzel-Ausnahme hat
+denselben Fehler eine Runde länger getragen.
+
+**Die Sonderregel entfällt ersatzlos** — der deckend weiße Chip mit
+Tinte-Glyphe gilt jetzt überall. Auf der dunklen (statuslosen) Wurzel hebt
+er sich erst recht ab, und helle Pillen auf dem dunklen Grund gibt es dort
+längst (Tags, Größen-Badge). Einheitlich ist zugleich die Antwort auf das
+„Warum sieht der anders aus?": Er soll es nicht.
+
+**Dieselbe Falle steckte in zwei Nachbarn:** `.root-node .desc-mark` und
+`.root-node .nid` färbten die ”-Marke und die eingeblendete ID weiß — auf
+der Pastell-Wurzel unsichtbar, und die Wurzel des mitgelieferten Plans trägt
+beides (D48-Beschreibung, `#wb`). Beide Regeln gelten jetzt nur noch der
+**dunklen** Wurzel, erkannt am Fehlen jeder Statusklasse (achtfaches
+`:not(.st-…)` — verbos, aber exakt die Bedingung, unter der die dunkle
+Füllung überhaupt gewinnt).
+
+**Nachgemessen** im Browser: Der Chip der `[~]`-Wurzel ist jetzt
+Byte-identisch mit dem jedes anderen Knotens (weiß, Rand `--muted`, Glyphe
+`--line`), die ”-Marke dort `--muted` statt Weiß; mit probeweise entfernter
+Statusklasse (dunkle Wurzel) bleibt der Chip weiß auf Tinte und die Marke
+fällt auf Weiß 75 % zurück.
+
 ## D65 — Abgerissene Linien im vertikalen Modus: Geometrie-Fehler, kein Rendering-Problem
 Gemeldet: „Es geschieht immer wieder, dass die Verbindungslinien zu Sub-Knoten
 nicht durchgängig sind, sondern Lücken haben — meistens fehlen in der
