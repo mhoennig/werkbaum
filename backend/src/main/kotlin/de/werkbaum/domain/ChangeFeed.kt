@@ -2,11 +2,16 @@ package de.werkbaum.domain
 
 import de.werkbaum.diff.LineOp
 
-/** Was an einer Version geschehen ist und wer sie eingereicht hat. */
+/**
+ * Was an einer Version geschehen ist und wer sie eingereicht hat.
+ * [title] nur bei [ChangeType.RENAMED]: der neue Titel im Klartext, damit der
+ * Client ihn ohne weiteren Abruf übernehmen kann (D76/D85).
+ */
 data class ChangeEvent(
     val version: Long,
     val changeType: ChangeType,
     val author: ChangeAuthor? = null,
+    val title: String? = null,
 )
 
 /**

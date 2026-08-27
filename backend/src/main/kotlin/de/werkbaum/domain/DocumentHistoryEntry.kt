@@ -11,8 +11,11 @@ import java.util.UUID
  * eines **lebenden** Dokuments auf eine alte Version; für den Client ein
  * gewöhnlicher Inhaltswechsel. Beide trugen früher denselben Typ; ein Typ, der
  * zwei Dinge bedeutet, ist die Unschärfe, aus der später Fehler werden (D76).
+ *
+ * [RENAMED] ändert nur den Titel — ein Metadatum, kein Zeileninhalt (D76/D85);
+ * der Feed stellt den neuen Titel im Klartext zu, der Inhalt bleibt.
  */
-enum class ChangeType { CREATED, UPDATED, DELETED, RESTORED, ROLLED_BACK }
+enum class ChangeType { CREATED, UPDATED, RENAMED, DELETED, RESTORED, ROLLED_BACK }
 
 /**
  * Ein Eintrag der Dokumenthistorie. Die Historie wird getrennt vom Dokument

@@ -113,6 +113,35 @@ class DocumentServiceTest {
     }
 
     @Test
+    fun `rename inkrementiert Version und schreibt RENAMED-Meilenstein`() {
+        val doc = sampleDocument(version = 3)
+        every { repository.findById(doc.id) } returns doc
+        val saved = slot<Document>()
+        every { repository.save(capture(saved)) } answers { saved.captured }
+        val entry = captureAppended()
+
+        val result = service.rename(doc.id, title = "Team-Plan", expectedVersion = 3)
+
+        result.version shouldBe 4
+        result.title shouldBe "Team-Plan"
+        result.content shouldBe doc.content          /* der Inhalt bleibt */
+        entry.captured.changeType shouldBe ChangeType.RENAMED
+        entry.captured.milestone shouldBe true        /* strukturell, nie bloss Sync */
+        entry.captured.title shouldBe "Team-Plan"
+    }
+
+    @Test
+    fun `rename mit veralteter Version wirft Konflikt und schreibt nichts`() {
+        val doc = sampleDocument(version = 3)
+        every { repository.findById(doc.id) } returns doc
+
+        shouldThrow<DocumentConflictException> {
+            service.rename(doc.id, title = "Zu spaet", expectedVersion = 2)
+        }
+        verify(exactly = 0) { repository.save(any()) }
+    }
+
+    @Test
     fun `delete entfernt Dokument und schreibt DELETED-Tombstone`() {
         val doc = sampleDocument(version = 2)
         every { repository.findById(doc.id) } returns doc

@@ -3714,7 +3714,12 @@ function docRowHtml(d){
     `<span class="doccheck" aria-hidden="true">✓</span>` +
     `<span class="docitem-name">${esc(d.name)}</span>${zusatz}</button>` +
     `<span class="docacts">` +
-    (shippedStateOf(d.id) ? '' : iconBtn('rename', t('docRename'), IC_RENAME)) +
+    /* Umbenennen: bei Mitgelieferten nicht (der Name ist Auslieferungsstand,
+       D81-Nachtrag 3), bei URL-Dokumenten nicht (der Name IST die URL, D23 —
+       ein lokaler Name würde beim nächsten Laden überschrieben, D85). Bei
+       Server-Dokumenten wirkt es über PATCH /title für ALLE (D85). */
+    (['shipped', 'url'].includes(docKind(d.id, SHIPPED_IDS))
+      ? '' : iconBtn('rename', t('docRename'), IC_RENAME)) +
     /* Geteilte (Server- wie URL-Dokumente) werden VERLASSEN, nicht gelöscht
        (D81-Nachtrag 5): Die Aktion tut lokal dasselbe, ist für den Benutzer
        aber eine andere — dem Dokument selbst geschieht nichts, man gibt nur
@@ -4213,9 +4218,9 @@ function finishNewDoc(){
 }
 function renameDoc(id){
   if(!docs.some(x => x.id === id)) return;
-  /* Mitgelieferte nicht (D81-Nachtrag 3): Ihr Name ist Auslieferungsstand.
-     Die Prüfung liegt hier, nicht nur am ausgeblendeten Stift. */
-  if(shippedStateOf(id)) return;
+  /* Mitgelieferte nicht (D81-Nachtrag 3) und URL-Dokumente nicht (D85) —
+     die Prüfung liegt hier, nicht nur am ausgeblendeten Stift. */
+  if(['shipped', 'url'].includes(docKind(id, SHIPPED_IDS))) return;
   renamingId = id;   /* Zeilen-Aktion (D81): jedes Dokument, nicht nur das aktive */
   renameIsNew = false;
   renderDocMenu();
@@ -4226,11 +4231,50 @@ function commitRename(){
   const d = docs.find(x => x.id === renamingId);
   const val = inp ? inp.value.trim() : '';
   renamingId = null;
-  if(d && val){ d.name = val; persistDocs(); updateDocName(); }
+  if(d && val){
+    /* Server-Dokumente: Der Titel gehört dem Server — alle sehen denselben
+       (D76). Der Weg dorthin ist PATCH /title (D85), nicht der lokale Name. */
+    if(String(d.id).startsWith('live:')) renameOnServer(d, val);
+    else { d.name = val; persistDocs(); updateDocName(); }
+  }
   renderDocMenu();
   finishNewDoc();
 }
 function cancelRename(){ renamingId = null; renderDocMenu(); finishNewDoc(); }
+/* Umbenennen eines Server-Dokuments (D85): optimistisch sofort anzeigen;
+   scheitert der PATCH, kommt der alte Name zurück und die Warnung sagt
+   warum. Bei 409 — jemand war zwischen Abruf und PATCH schneller — einmal
+   mit frischer Version erneut. Die Version bumpt ohne Inhaltsänderung, die
+   Schattenkopie bleibt also gültig; die übrigen Mitschreiber bekommen die
+   Umbenennung als RENAMED-Ereignis über ihren Feed. */
+async function renameOnServer(d, titel){
+  const url = String(d.id).slice(5);
+  const alt = d.name;
+  const zeige = () => { persistDocs(); updateDocName(); if(!docMenu.hidden) renderDocMenu(); };
+  d.name = titel; zeige();
+  const patch = async () => {
+    const doc = await fetchJson(url);
+    return fetchJson(url + '/title', {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({title: titel, expectedVersion: doc.version}),
+    });
+  };
+  try{
+    let neu;
+    try{ neu = await patch(); }
+    catch(err){ if(err && err.status === 409) neu = await patch(); else throw err; }
+    d.name = neu.title;
+    if(liveState && liveState.id === d.id) liveState.version = neu.version;
+    zeige();
+  }catch(err){
+    d.name = alt;
+    sourceWarning = {type: 'liveLoad', url: url + '/title',
+                     error: (err && err.message) || String(err)};
+    zeige();
+    render();
+  }
+}
 /* Der gemeinsame Kern von Löschen und Verlassen: den Eintrag samt lokaler
    Anhängsel entfernen. Die beiden Aktionen unterscheiden sich für den
    Benutzer (Wort, Icon, Rückfrage — D81-Nachtrag 5), lokal tun sie dasselbe. */
@@ -4878,6 +4922,7 @@ document.addEventListener('visibilitychange', () => {
 function applyFeed(feed){
   const what = live.feedAction(feed, liveState.version, liveState.busy);
   if(what === 'skip') return;
+  applyRenameEvents(feed);   /* Umbenennung durch andere (RENAMED, D85) */
   if(what === 'replace'){
     /* Volltext: die Basis ist verdichtet, ein Diff gibt es nicht mehr. */
     liveState.version = feed.currentVersion;
@@ -4889,6 +4934,20 @@ function applyFeed(feed){
   liveState.shadow = live.applyOps(alt, feed.ops);
   liveState.version = feed.currentVersion;
   applyForeign(alt, feed.ops, liveState.shadow, liveState.version);
+}
+
+/* Hat jemand umbenannt, trägt der Feed den neuen Titel im Klartext (D85) —
+   der letzte gewinnt. Der Name ist Index-Metadatum: persistieren ist ein
+   Flush-Ereignis, und Umbenennen ist selten. */
+function applyRenameEvents(feed){
+  const ev = (feed.events || []).filter(e => e && e.changeType === 'RENAMED' && e.title).pop();
+  if(!ev) return;
+  const d = docs.find(x => x.id === liveState.id);
+  if(!d || d.name === ev.title) return;
+  d.name = ev.title;
+  persistDocs();
+  updateDocName();
+  if(!docMenu.hidden) renderDocMenu();
 }
 
 /* Fremde Operationen auf den **sichtbaren** Text anwenden.

@@ -7290,3 +7290,44 @@ richtigen Texte, Abbruch lässt alles stehen; und die Tab-Warnung erschien
 durch **echtes** Tippen in einem zweiten Tab (kein synthetisches Ereignis —
 das storage-Ereignis kommt nur aus fremden Fenstern). 531 Tests, davon 2 neue
 für `isDocKey`.
+
+## D85 — Umbenennen erreicht alle: PATCH /title und das RENAMED-Ereignis
+Paket B der Ungereimtheiten-Liste (D84). Der Befund: Umbenennen eines
+geteilten Dokuments wirkte nur lokal und war flüchtig — der Server-Titel gilt
+für alle (D76), und `adoptLive()` überschrieb den lokalen Namen beim nächsten
+Laden. Dasselbe bei URL-Dokumenten, deren Name die URL ist (D23). Entschieden
+(Multiple-Choice): der in D76 vorgesehene eigene Weg wird gebaut.
+
+**Backend:** `PATCH /documents/{id}/title` mit `expectedVersion` —
+abweichende Version ⇒ 409, der Client setzt frisch auf; leerer oder zu langer
+Titel ⇒ 400 (die Regeln liegen im `LiveEditingService`, unter derselben
+Stripe-Sperre wie die Inhalts-Patches: auch der Titel bumpt die Version, und
+prüfen und schreiben gehören zusammen). Die Umbenennung ist ein neuer
+`ChangeType.RENAMED` — strukturell, also immer Meilenstein — und der
+Änderungsfeed stellt den **neuen Titel im Klartext** zu (`ChangeEvent.title`,
+nur bei RENAMED gefüllt): Kein Client braucht einen weiteren Abruf. In der
+API-Beschreibung steht die Owner-Vormerkung: Die Aktion wird künftig an das
+geplante Owner-Passwort gebunden (`#col.live.owner`), die Bindung kommt als
+Berechtigungsprüfung dazu, die Signatur bleibt.
+
+**Frontend:** Der Zeilen-Stift eines Server-Dokuments ruft `renameOnServer()` —
+optimistisch sofort anzeigen, dann GET (Version) + PATCH; bei 409 einmal mit
+frischer Version erneut, bei endgültigem Scheitern kommt der alte Name zurück
+und eine Warnung sagt warum. Die Version bumpt ohne Inhaltsänderung, die
+Schattenkopie bleibt also gültig. Die übrigen Mitschreiber bekommen die
+Umbenennung über `applyRenameEvents()` aus dem Feed — Chip und Menü folgen
+ohne Neuladen. **URL-Dokumente verlieren den Stift** (wie Mitgelieferte,
+D81-Nachtrag 3): Ihr Name ist die URL; ein lokaler Name würde beim nächsten
+Laden überschrieben, und ein Server, den man umbenennen könnte, steht dort
+nicht dahinter.
+
+**Nachgemessen** Ende-zu-Ende gegen das lokal laufende Backend: Der Stift am
+Server-Dokument benennt um (Server-Titel „Team-Plan X", Version 2, keine
+Warnung); eine Umbenennung **von außen** (curl) erreicht den offenen Editor
+über den Feed — Chip wechselt auf „Von aussen umbenannt", der Inhalt bleibt
+unangetastet. Backend: vier neue Cucumber-Szenarien (gilt für alle und lässt
+den Inhalt stehen; Feed samt Titel; veraltete Version ⇒ 409; leerer Titel ⇒
+400) und zwei Unit-Tests (RENAMED-Meilenstein; Konflikt schreibt nichts),
+BUILD SUCCESSFUL samt Coverage. Werkzeuggrenze wie in D76-Nachtrag 7: Der
+Automations-Tab meldet sich dauerhaft als verborgen — der Feed lief nur mit
+gestellter Sichtbarkeit.

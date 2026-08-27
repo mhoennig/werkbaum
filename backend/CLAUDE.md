@@ -10,8 +10,12 @@ Kommandos in README.md hier. Live-Editing (D76,
 `docs/live-editing-proposal.md`) ist in Arbeit: Schritte 1–5 der Reihenfolge
 dort sind gebaut (Zeilen-Diff in `de.werkbaum.diff`, Historie in zwei Ebenen,
 `PATCH /content` und der Änderungsfeed im `LiveEditingService`,
-Master-Passwort für die Dokumentenliste); offen sind `PATCH /title` und der
-Client im Frontend.
+Master-Passwort für die Dokumentenliste, `PATCH /title` samt RENAMED-Ereignis
+im Feed — D85), der Client im Frontend ist verdrahtet (D76-Nachtrag 7).
+Verwaltungs-Aktionen (Umbenennen, künftig Löschen) perspektivisch an das
+geplante Owner-Passwort binden (`#col.live.owner` im Plan) — Endpunkte so
+schneiden, dass die Berechtigungsprüfung dazukommen kann, ohne die Signatur
+zu brechen.
 
 ## Konventionen
 - Kotlin, **Spring Boot 4**, Gradle (Kotlin DSL), JDK 21.

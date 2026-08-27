@@ -11,6 +11,7 @@ import de.werkbaum.generated.model.DocumentHistoryEntry as ApiHistoryEntry
 import de.werkbaum.generated.model.DocumentUpdateRequest
 import de.werkbaum.generated.model.RestoreRequest
 import de.werkbaum.generated.model.ServiceInfo
+import de.werkbaum.generated.model.TitlePatchRequest
 import de.werkbaum.domain.ChangeAuthor
 import de.werkbaum.domain.ChangeEvent
 import de.werkbaum.domain.ChangeFeed
@@ -137,6 +138,18 @@ class DocumentsController(
             .body(feed?.toApi())
     }
 
+    override fun patchDocumentTitle(
+        documentId: UUID,
+        titlePatchRequest: TitlePatchRequest,
+    ): ResponseEntity<ApiDocument> {
+        val renamed = liveEditing.renameDocument(
+            documentId,
+            titlePatchRequest.title,
+            titlePatchRequest.expectedVersion,
+        )
+        return ResponseEntity.ok(renamed.toApi())
+    }
+
     override fun getDocumentHistory(documentId: UUID): ResponseEntity<List<ApiHistoryEntry>> =
         ResponseEntity.ok(service.history(documentId).map { it.toApi() })
 
@@ -170,6 +183,7 @@ class DocumentsController(
         changeType = ApiChangeEvent.ChangeType.valueOf(changeType.name),
         clientId = author?.clientId,
         displayName = author?.displayName,
+        title = title,
     )
 
     private fun DocumentHistoryEntry.toApi(): ApiHistoryEntry = ApiHistoryEntry(

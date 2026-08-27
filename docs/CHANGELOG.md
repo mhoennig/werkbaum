@@ -19,6 +19,8 @@ reverse.
 
 ## 2026-08-27
 
+- Renaming a shared document now renames it for everyone: the pencil patches the server title, and the change feed hands the new name to every open editor
+- URL documents lost their pencil — their name is the URL, and a local name would not survive the next load
 - If Werkbaum is open in a second browser tab, a warning says so — both tabs write the same document list, and the last one to save wins
 - Reloading a URL document no longer asks — a page reload discards local changes silently anyway, so the question promised a protection that did not exist
 - Deleting your last document now says that a fresh example will take its place

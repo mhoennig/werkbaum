@@ -255,6 +255,56 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
 
+  /documents/{documentId}/title:
+    parameters:
+      - name: documentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      tags: [Documents]
+      operationId: patchDocumentTitle
+      summary: Dokument umbenennen (Live-Editing)
+      description: >
+        Aendert nur den Titel - er ist ein Metadatum, kein Zeileninhalt, und
+        bekommt deshalb seinen eigenen Weg mit Versionspruefung (D76). Die
+        Umbenennung erzeugt eine neue Version vom Typ RENAMED, die der
+        Aenderungsfeed mit dem neuen Titel im Klartext zustellt - alle sehen
+        denselben Namen.
+
+
+        Verwaltungs-Aktion: Sie wird kuenftig an das geplante Owner-Passwort
+        gebunden (die Bindung kommt als Berechtigungspruefung dazu, die
+        Signatur bleibt).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TitlePatchRequest"
+      responses:
+        "200":
+          description: Umbenanntes Dokument
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: >
+            Versionskonflikt - `expectedVersion` ist nicht mehr die aktuelle
+            Version. Der Client holt das Dokument frisch und versucht es mit
+            dessen Version erneut.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+
   /documents/{documentId}/changes:
     parameters:
       - name: documentId
@@ -427,10 +477,25 @@ components:
             RESTORED heisst: ein geloeschtes Dokument ist wieder da.
             ROLLED_BACK ist der Rueckfall eines lebenden Dokuments auf eine
             aeltere Version.
-          enum: [CREATED, UPDATED, DELETED, RESTORED, ROLLED_BACK]
+          enum: [CREATED, UPDATED, RENAMED, DELETED, RESTORED, ROLLED_BACK]
         timestamp:
           type: string
           format: date-time
+
+    TitlePatchRequest:
+      type: object
+      required: [title, expectedVersion]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        expectedVersion:
+          type: integer
+          format: int64
+          description: >
+            Die Version, auf der die Umbenennung aufsetzt - weicht sie von der
+            aktuellen ab, antwortet der Server mit 409.
 
     RestoreRequest:
       type: object
@@ -546,7 +611,7 @@ components:
           format: int64
         changeType:
           type: string
-          enum: [CREATED, UPDATED, DELETED, RESTORED, ROLLED_BACK]
+          enum: [CREATED, UPDATED, RENAMED, DELETED, RESTORED, ROLLED_BACK]
         clientId:
           type: string
           description: Fehlt bei Aenderungen ohne Absender (etwa ueber PUT).
@@ -555,6 +620,11 @@ components:
           description: >
             Selbstgewaehlt und ohne Anmeldung eine Behauptung - in der
             Oberflaeche nicht wie ein Nachweis darstellen.
+        title:
+          type: string
+          description: >
+            Nur bei RENAMED - der neue Titel im Klartext, damit der Client
+            ihn ohne weiteren Abruf uebernehmen kann (D76).
 
     ChangeFeed:
       type: object

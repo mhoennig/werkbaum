@@ -205,6 +205,45 @@ class LiveEditingStepDefinitions {
         feed.content shouldBe erwartet
     }
 
+    @Wenn("das Dokument auf {string} umbenannt wird")
+    fun `das Dokument wird umbenannt`(titel: String) =
+        sendRename(titel, currentDocument().version)
+
+    @Wenn("das Dokument mit veralteter Version auf {string} umbenannt wird")
+    fun `veraltete Umbenennung`(titel: String) =
+        sendRename(titel, currentDocument().version - 1)
+
+    private fun sendRename(titel: String, version: Long) {
+        lastResponse = client.patch()
+            .uri("/api/v1/documents/$documentId/title")
+            .contentType(MediaType.APPLICATION_JSON)
+            .body("""{"title":${json(titel)},"expectedVersion":$version}""")
+            .exchange()
+            .returnResult(String::class.java)
+    }
+
+    @Dann("erhalte ich für das Umbenennen den Status {int}")
+    fun `status des Umbenennens`(erwartet: Int) {
+        status() shouldBe erwartet
+    }
+
+    @Und("das Dokument trägt den Titel {string}")
+    fun `dokument traegt den Titel`(titel: String) {
+        currentDocument().title shouldBe titel
+    }
+
+    @Und("das Dokument steht auf Version {long}")
+    fun `dokument steht auf Version`(version: Long) {
+        currentDocument().version shouldBe version
+    }
+
+    @Und("das RENAMED-Ereignis nennt den Titel {string}")
+    fun `renamed nennt den Titel`(titel: String) {
+        lastBody<ChangeFeed>().events
+            .first { it.changeType.value == "RENAMED" }
+            .title shouldBe titel
+    }
+
     @Und("der Feed meldet das Ereignis {string}")
     fun `der Feed meldet das Ereignis`(typ: String) {
         lastBody<ChangeFeed>().events.map { it.changeType.value } shouldContain typ

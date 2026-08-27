@@ -76,6 +76,30 @@ class DocumentService(
         return updated
     }
 
+    /**
+     * Ändert nur den Titel (D76/D85): ein Metadatum mit eigener
+     * Versionsprüfung — weicht [expectedVersion] von der aktuellen Version
+     * ab, gibt es 409, und der Client setzt frisch auf. Die Umbenennung ist
+     * strukturell (Meilenstein) und erreicht alle über den Feed als
+     * [ChangeType.RENAMED] samt neuem Titel.
+     */
+    fun rename(id: UUID, title: String, expectedVersion: Long): Document {
+        val existing = findById(id)
+        if (existing.version != expectedVersion) {
+            throw DocumentConflictException(
+                "Version $expectedVersion ist nicht mehr aktuell (jetzt: ${existing.version})"
+            )
+        }
+        val renamed = existing.copy(
+            title = title,
+            version = existing.version + 1,
+            updatedAt = OffsetDateTime.now(clock),
+        )
+        repository.save(renamed)
+        recordHistory(renamed, ChangeType.RENAMED)
+        return renamed
+    }
+
     fun delete(id: UUID) {
         val existing = findById(id)
         repository.deleteById(id)

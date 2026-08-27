@@ -53,6 +53,21 @@ class LiveEditingService(
     fun patchContent(documentId: UUID, patch: ContentPatch): ContentPatchOutcome =
         lockFor(documentId).withLock { applyPatch(documentId, patch) }
 
+    /**
+     * Umbenennen unter derselben Sperre wie die Inhalts-Patches (D85): Auch
+     * der Titel bumpt die Version, und prüfen und schreiben gehören zusammen.
+     * Titel-Regeln liegen hier (400), die Versionsprüfung im [DocumentService].
+     */
+    fun renameDocument(documentId: UUID, title: String, expectedVersion: Long) =
+        lockFor(documentId).withLock {
+            val bereinigt = title.trim()
+            if (bereinigt.isEmpty()) throw InvalidPatchException("Titel darf nicht leer sein")
+            if (bereinigt.length > 255) {
+                throw InvalidPatchException("Titel zu lang: ${bereinigt.length} (erlaubt: 255)")
+            }
+            documents.rename(documentId, bereinigt, expectedVersion)
+        }
+
     private fun applyPatch(documentId: UUID, patch: ContentPatch): ContentPatchOutcome {
         if (patch.ops.size > properties.maxOps) {
             throw InvalidPatchException(
@@ -185,7 +200,10 @@ class LiveEditingService(
         }
     }
 
-    private fun DocumentHistoryEntry.toEvent() = ChangeEvent(version, changeType, author)
+    private fun DocumentHistoryEntry.toEvent() = ChangeEvent(
+        version, changeType, author,
+        title = title.takeIf { changeType == de.werkbaum.domain.ChangeType.RENAMED },
+    )
 
     private fun lockFor(documentId: UUID): ReentrantLock =
         stripes[Math.floorMod(documentId.hashCode(), stripes.size)]
