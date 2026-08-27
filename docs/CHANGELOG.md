@@ -19,6 +19,10 @@ reverse.
 
 ## 2026-08-27
 
+- Create a Taiga story from a diagram node: the node window offers "create story" and "create story + tasks" — log in once (the token stays in the browser), pick the project, and the ref lands in the line as `#US-123`, undoable
+- Sub-packages become Taiga tasks via a checkbox dialog: required and optional children start checked, in `|`/`=` groups only realized alternatives, done children unchecked, discarded ones absent — each created task writes its `#T-…` ref to its line
+- The project dialog is prefilled from the inherited `&taiga.slug` keyword, and a creation without or against the inherited assignment writes the keyword back to the node's line
+- A node whose line already carries a `#US-…`/`#T-…` token offers no create action — the ref on the line is the idempotency marker
 - The backend proxies Taiga through four named endpoints — login, projects, create story, create task; the Taiga API address is server configuration, the token stays in the browser, and `/api/v1/info` says whether the feature is on
 - Free `&tag` keywords are part of the notation now: free-standing only, quoted mentions like `(&taiga.slug)` stay labels — and `&taiga.slug` names the Taiga project of a subtree, inherited downwards
 - Plans spanning several Taiga projects: a `&taiga.slug` tag names the project per subtree, inherited downwards — the first consumer of the reserved free tags, recorded as planned

@@ -1,6 +1,7 @@
 import './style.css';
 import { parse, setFoldMark, expandShortIds, shortIdClosed } from './parser.js';
-import { computeCheapPlan, overloadedAssignee, assigneeLoads, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, presetFoldSet, personFoldSet, allTags, lineTargets } from './model.js';
+import { computeCheapPlan, overloadedAssignee, assigneeLoads, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, presetFoldSet, personFoldSet, allTags, lineTargets, taigaSlugs } from './model.js';
+import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken } from './taiga.js';
 import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning, warningText } from './warnings.js';
 import * as live from './live.js';
@@ -1620,6 +1621,7 @@ function showNodeTip(el, touch){
     (paras.length ? `<div class="nodetip-desc">${paras.map(p => `<p>${esc(p)}</p>`).join('')}</div>` : '') +
     (facts ? `<div class="nodetip-facts">${esc(facts)}</div>` : '') +
     (href ? `<a class="nodetip-link" tabindex="-1" href="${esc(href)}" target="_blank" rel="noopener">↗ ${esc(t('tipOpenLink'))}</a>` : '');
+  appendTaigaActions(el);   /* Taiga-Aktionen (D91) — vor dem Messen in placeNodeTip */
   tipNode = el;
   el.classList.add('tipped');
   nodeTip.hidden = false;
@@ -1705,6 +1707,304 @@ document.addEventListener('keydown', e => { if(e.key === 'Escape'){ closeNodeTip
 /* Beim Scrollen des Diagramms wandert der Knoten, das `position:fixed`-Fenster
    nicht — es zeigte dann auf etwas anderes. Also zumachen. */
 document.querySelector('.diagram').addEventListener('scroll', closeNodeTip, {passive: true});
+
+/* ---------- Taiga-Ticket-Anlage (SPEC §11, D91) ----------
+   Zwei Aktionen im Knoten-Fenster — „Story anlegen" und „Story + Teilpakete
+   als Tasks" —, über den Backend-Proxy (D91: die Taiga-Adresse ist
+   Server-Konfiguration, das Token bleibt im Browser). Die Aktionen erscheinen
+   nur, wo `GET /info` das Feature meldet (`taiga`, Lebendprobe-Muster wie
+   beim Teilen, D81-Nachtrag), und nur an Knoten OHNE Ticket-Referenz — die
+   Ref an der Zeile ist der Idempotenz-Marker (D91-Nachtrag 2). Die Regeln
+   (Vorbelegung, Token-Anhängen) liegen headless in taiga.js. */
+const LS_TAIGA = 'werkbaum-taiga';
+let taigaBase = null, taigaOn = false;
+const taigaProbeCache = new Map();   /* Basis -> Promise<boolean> (je Basis EIN /info) */
+
+/* Die Taiga-Sitzung des Browsers: Token samt Benutzer-Id, wie vom Proxy
+   geliefert. Nur das Token — nie ein Passwort — und löschbar durch Abmelden
+   bzw. ein 401 (Token abgelaufen -> neu anmelden). */
+function taigaSession(){
+  try{ return JSON.parse(localStorage.getItem(LS_TAIGA) || 'null'); }catch(_){ return null; }
+}
+function storeTaigaSession(s){
+  try{
+    if(s) localStorage.setItem(LS_TAIGA, JSON.stringify(s));
+    else localStorage.removeItem(LS_TAIGA);
+  }catch(_){}
+}
+
+/* Welches Backend, und kann es Taiga? Dieselbe Basis-Herleitung wie beim
+   Teilen (serverBaseOrAsk, ohne den Dialog): das offene Server-Dokument vor
+   `?server=`/gemerkter Adresse vor der eigenen Herkunft. Je Basis wird genau
+   einmal gefragt (Cache) — die Antwort ändert sich nur mit einem Deploy. */
+async function refreshTaiga(){
+  let gemerkt = null;
+  try{ gemerkt = localStorage.getItem(LS_SERVER); }catch(_){}
+  const offen = liveState ? liveState.urls.doc : null;
+  const basis = live.serverBase(urlParam(SERVER_PARAM) || gemerkt, offen, location.href);
+  taigaBase = basis;
+  taigaOn = false;
+  if(!basis) return;
+  if(!taigaProbeCache.has(basis)){
+    taigaProbeCache.set(basis,
+      fetchJson(live.infoUrl(basis)).then(i => !!(i && i.taiga)).catch(() => false));
+  }
+  const on = await taigaProbeCache.get(basis);
+  if(taigaBase === basis) taigaOn = on;
+}
+
+function taigaFetch(path, options, token){
+  const opts = Object.assign({}, options);
+  opts.headers = Object.assign({}, opts.headers, token ? {'X-Taiga-Token': token} : {});
+  return fetchJson(taigaBase + '/api/v1/taiga' + path, opts);
+}
+/* Der Fehlertext: Taigas eigener (der Proxy reicht `_error_message` als
+   ProblemDetail durch) vor dem nackten HTTP-Status. */
+function taigaErrText(err){
+  return (err && err.body && err.body.detail) || (err && err.message) || String(err);
+}
+
+/* Knoten samt frischem Baum zu einer Zeilennummer — frisch geparst, denn das
+   Knoten-Fenster kann eine Weile offen gestanden haben. */
+function nodeAndRootsByLine(line){
+  const { roots } = parse(src.value);
+  let found = null;
+  (function w(ns){
+    for(const n of ns){
+      if(found) return;
+      if(n.line === line){ found = n; return; }
+      w(n.children);
+    }
+  })(roots);
+  return {node: found, roots};
+}
+
+/* Die Aktions-Knöpfe im Knoten-Fenster (aufgerufen aus showNodeTip).
+   `tabindex="-1"` wie × und ↗ — das Fenster ist aria-hidden (D57). */
+function appendTaigaActions(el){
+  if(!taigaOn) return;
+  const line = +el.dataset.line;
+  if(!line) return;
+  const {node} = nodeAndRootsByLine(line);
+  if(!node || ticketRefOf(node)) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'nodetip-taiga';
+  const mk = (label, mitTasks) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'nodetip-taigabtn'; b.tabIndex = -1;
+    b.textContent = label;
+    b.addEventListener('click', () => { closeNodeTip(); taigaCreate(line, mitTasks); });
+    return b;
+  };
+  wrap.appendChild(mk(t('taigaStoryBtn'), false));
+  if(taskCandidates(node).some(c => !c.exists)) wrap.appendChild(mk(t('taigaTasksBtn'), true));
+  nodeTipBody.appendChild(wrap);
+}
+
+/* Kleiner modaler Dialog im tabmodal-Idiom (D89). Fehler erscheinen IM
+   Dialog statt als window.alert — der ist in manchen Browser-Kontexten
+   unterdrückt (dieselbe Lehre wie beim Inline-Umbenennen, D22). */
+function taigaModal(title, okLabel){
+  const ov = document.createElement('div');
+  ov.className = 'tabmodal-overlay';
+  ov.innerHTML = '<div class="tabmodal taigadlg" role="dialog" aria-modal="true">' +
+    '<h2></h2><div class="taiga-body"></div><p class="taiga-err" hidden></p>' +
+    '<div class="taiga-btns"><button type="button" class="taiga-cancel"></button>' +
+    '<button type="button" class="taiga-ok"></button></div></div>';
+  ov.querySelector('h2').textContent = title;
+  const err = ov.querySelector('.taiga-err');
+  const ok = ov.querySelector('.taiga-ok');
+  const cancel = ov.querySelector('.taiga-cancel');
+  ok.textContent = okLabel;
+  cancel.textContent = t('taigaCancel');
+  ov.addEventListener('keydown', e => {
+    if(e.key === 'Escape'){ e.stopPropagation(); cancel.click(); }
+    if(e.key === 'Enter' && e.target.tagName === 'INPUT'){ e.preventDefault(); ok.click(); }
+  });
+  document.body.appendChild(ov);
+  return {
+    body: ov.querySelector('.taiga-body'), err, ok, cancel,
+    close(){ ov.remove(); },
+    busy(){ err.hidden = true; ok.disabled = true; cancel.disabled = true; },
+    fail(msg){
+      err.textContent = t('taigaError', {error: msg});
+      err.hidden = false; ok.disabled = false; cancel.disabled = false;
+    },
+  };
+}
+
+/* Anmeldedialog: Benutzername + Passwort gehen EINMAL an den Proxy
+   (`POST /taiga/auth`), gespeichert wird nur das Token. Kein window.prompt —
+   ein Passwort gehört in ein type="password"-Feld. */
+function taigaLoginDialog(){
+  return new Promise(resolve => {
+    const dlg = taigaModal(t('taigaLoginTitle'), t('taigaLoginDo'));
+    const lab = (text, input) => {
+      const l = document.createElement('label');
+      l.className = 'taiga-lab';
+      const s = document.createElement('span');
+      s.textContent = text;
+      l.append(s, input);
+      return l;
+    };
+    const user = document.createElement('input');
+    user.type = 'text'; user.autocomplete = 'username';
+    const pass = document.createElement('input');
+    pass.type = 'password'; pass.autocomplete = 'current-password';
+    dlg.body.append(lab(t('taigaUser'), user), lab(t('taigaPass'), pass));
+    dlg.ok.addEventListener('click', async () => {
+      dlg.busy();
+      try{
+        const s = await taigaFetch('/auth', {method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({username: user.value.trim(), password: pass.value})});
+        const session = {token: s.authToken, userId: s.userId, username: s.username};
+        storeTaigaSession(session);
+        dlg.close();
+        resolve(session);
+      }catch(e2){ dlg.fail(taigaErrText(e2)); }
+    });
+    dlg.cancel.addEventListener('click', () => { dlg.close(); resolve(null); });
+    user.focus();
+  });
+}
+
+async function taigaEnsureSession(){
+  const s = taigaSession();
+  if(s && s.token) return s;
+  return taigaLoginDialog();
+}
+
+/* Projektliste, mit einem Neu-Anmelden bei 401 (Token abgelaufen). */
+async function taigaProjects(session){
+  try{
+    return await taigaFetch('/projects?member=' + session.userId, null, session.token);
+  }catch(err){
+    if(!err || err.status !== 401) throw err;
+    storeTaigaSession(null);
+    const neu = await taigaLoginDialog();
+    if(!neu) throw err;
+    Object.assign(session, neu);
+    return taigaFetch('/projects?member=' + session.userId, null, session.token);
+  }
+}
+
+/* Hängt Tokens ans sichtbare Ende einer Textzeile — undo-fähig über
+   `replaceTextUndoable` (das kümmert sich um Fokus, Bildschirmtastatur und
+   Schreibmarke; ein nacktes execCommand griffe ohne Fokus nicht und fiele
+   auf den Historien-Killer `src.value =` zurück, D53). */
+function writeLineTokens(lineNo, tokens){
+  const zeilen = src.value.split('\n');
+  if(lineNo < 1 || lineNo > zeilen.length) return;
+  let zeile = zeilen[lineNo - 1];
+  for(const tok of tokens) zeile = appendToken(zeile, tok);
+  if(zeile === zeilen[lineNo - 1]) return;
+  zeilen[lineNo - 1] = zeile;
+  withEditorWritable(() => replaceTextUndoable(zeilen.join('\n')));
+}
+
+/* Der Anlege-Dialog (D91): Projekt wählen — vorbelegt aus dem geerbten
+   `&taiga.<slug>` (D91-Nachtrag 3) —, bei „Story + Tasks" dazu der
+   Häkchen-Dialog über die direkten Kinder. Nach dem Anlegen landet die Ref
+   als Token an der Zeile (`#US-…`/`#T-…`); die ERSTE Anlage in einem
+   Teilbaum ohne Zuordnung schreibt zusätzlich das Projekt-Schlagwort zurück
+   — beides in einem Undo-Schritt je Zeile.
+
+   Scheitert eine Task, bleibt der Dialog mit dem Fehler offen; die Story und
+   schon angelegte Tasks werden beim erneuten Anlegen NICHT wiederholt
+   (`story`/`b.done` halten fest, was bezahlt ist — und die geschriebenen
+   Refs sind ohnehin der Idempotenz-Marker). */
+async function taigaCreate(line, mitTasks){
+  const info = nodeAndRootsByLine(line);
+  const node = info.node;
+  if(!node || ticketRefOf(node)) return;
+  const session = await taigaEnsureSession();
+  if(!session) return;
+  const inherited = taigaSlugs(info.roots).get(node) || null;
+  const cands = mitTasks ? taskCandidates(node).filter(c => !c.exists) : [];
+
+  const dlg = taigaModal(t('taigaProjectTitle'), t('taigaCreateDo'));
+  const subject = document.createElement('p');
+  subject.className = 'taiga-subject';
+  subject.textContent = node.label;
+  const sel = document.createElement('select');
+  sel.disabled = true;
+  const lab = document.createElement('label');
+  lab.className = 'taiga-lab';
+  const labSpan = document.createElement('span');
+  labSpan.textContent = t('taigaProject');
+  lab.append(labSpan, sel);
+  dlg.body.append(subject, lab);
+  let boxes = [];
+  if(cands.length){
+    const head = document.createElement('p');
+    head.className = 'taiga-pick';
+    head.textContent = t('taigaTasksPick');
+    const list = document.createElement('div');
+    list.className = 'taiga-cands';
+    boxes = cands.map(c => {
+      const l = document.createElement('label');
+      l.className = 'taiga-cand';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = c.checked;
+      l.append(cb, document.createTextNode(' ' + c.node.label));
+      list.appendChild(l);
+      return {cb, cand: c, done: false};
+    });
+    dlg.body.append(head, list);
+  }
+  dlg.ok.disabled = true;
+  dlg.cancel.addEventListener('click', () => dlg.close());
+
+  let projects = [];
+  try{
+    projects = await taigaProjects(session);
+  }catch(err){ dlg.fail(taigaErrText(err)); return; }
+  for(const p of projects){
+    const o = document.createElement('option');
+    o.textContent = p.name;
+    sel.appendChild(o);
+  }
+  const vor = inherited ? projects.findIndex(p => p.slug === inherited) : -1;
+  if(vor >= 0) sel.selectedIndex = vor;
+  sel.disabled = false;
+  dlg.ok.disabled = !projects.length;
+
+  let story = null;
+  dlg.ok.addEventListener('click', async () => {
+    const projekt = projects[sel.selectedIndex];
+    if(!projekt) return;
+    dlg.busy();
+    try{
+      if(!story){
+        story = await taigaFetch('/userstories', {method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({project: projekt.id, subject: node.label})}, session.token);
+        /* Das Projekt-Schlagwort zurückschreiben (D91-Nachtrag 3): wenn die
+           Wahl nicht schon aus dem Baum folgt — also ohne Zuordnung oder
+           abweichend vom GEERBTEN. Trägt die Zeile selbst schon ein
+           `taiga.*`, wird nichts angehängt: Das erste Token gewinnt (§1),
+           ein zweites dahinter wäre wirkungslos. */
+        const ownTag = (node.marks || []).some(m => m.startsWith('taiga.'));
+        const tokens = (!ownTag && inherited !== projekt.slug) ? [slugToken(projekt.slug)] : [];
+        writeLineTokens(node.line, tokens.concat(refToken('US', story.ref)));
+        sel.disabled = true;   /* die Wahl ist getroffen und bezahlt */
+      }
+      for(const b of boxes){
+        if(!b.cb.checked || b.done) continue;
+        const task = await taigaFetch('/tasks', {method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({project: projekt.id, subject: b.cand.node.label,
+                                userStory: story.id})}, session.token);
+        b.done = true;
+        b.cb.disabled = true;
+        writeLineTokens(b.cand.node.line, [refToken('T', task.ref)]);
+      }
+      dlg.close();
+    }catch(err){ dlg.fail(taigaErrText(err)); }
+  });
+}
 
 /* Welcher Knoten gehört zu einer Textzeile? Zuerst der Knoten, DER auf dieser
    Zeile steht; sonst der Knoten, dessen **Beschreibung** hier steht (SPEC §9):
@@ -2404,6 +2704,7 @@ const I18N = {
     acHint:"{n} ID-Vorschläge – ↑/↓ wählt, Enter übernimmt",
     tipClose:"Schließen",
     tipOpenLink:"Link öffnen",
+    taigaStoryBtn:"Taiga: Story anlegen", taigaTasksBtn:"Taiga: Story + Tasks anlegen", taigaLoginTitle:"Bei Taiga anmelden", taigaUser:"Benutzername", taigaPass:"Passwort", taigaLoginDo:"Anmelden", taigaCancel:"Abbrechen", taigaProjectTitle:"Taiga-Ticket anlegen", taigaProject:"Projekt", taigaTasksPick:"Teilpakete als Tasks anlegen:", taigaCreateDo:"Anlegen", taigaError:"Fehlgeschlagen: {error}",
     liveLoadWarn:"Server-Dokument nicht geladen: {url} ({error}). Läuft das Backend, und ist die Adresse eine Dokument-Adresse (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Deine Änderung war nicht mehr anwendbar ({error}) — der Stand wurde einmal frisch geholt.",
     liveConflictText:"Jemand hat dieselben Zeilen geändert. Wessen Fassung soll gelten?",
@@ -2540,6 +2841,7 @@ const I18N = {
     acHint:"{n} id suggestions – ↑/↓ to choose, Enter to insert",
     tipClose:"Close",
     tipOpenLink:"Open link",
+    taigaStoryBtn:"Taiga: create story", taigaTasksBtn:"Taiga: create story + tasks", taigaLoginTitle:"Log in to Taiga", taigaUser:"Username", taigaPass:"Password", taigaLoginDo:"Log in", taigaCancel:"Cancel", taigaProjectTitle:"Create Taiga ticket", taigaProject:"Project", taigaTasksPick:"Create sub-packages as tasks:", taigaCreateDo:"Create", taigaError:"Failed: {error}",
     liveLoadWarn:"Server document not loaded: {url} ({error}). Is the backend running, and is the address a document address (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Your change no longer applied ({error}) — the document was fetched afresh once.",
     liveConflictText:"Someone changed the same lines. Whose version should win?",
@@ -2675,6 +2977,7 @@ const I18N = {
     acHint:"{n} sugerencias de ID – ↑/↓ elige, Intro inserta",
     tipClose:"Cerrar",
     tipOpenLink:"Abrir enlace",
+    taigaStoryBtn:"Taiga: crear historia", taigaTasksBtn:"Taiga: crear historia + tareas", taigaLoginTitle:"Iniciar sesión en Taiga", taigaUser:"Usuario", taigaPass:"Contraseña", taigaLoginDo:"Iniciar sesión", taigaCancel:"Cancelar", taigaProjectTitle:"Crear ticket de Taiga", taigaProject:"Proyecto", taigaTasksPick:"Crear subpaquetes como tareas:", taigaCreateDo:"Crear", taigaError:"Error: {error}",
     liveLoadWarn:"Documento del servidor no cargado: {url} ({error}). ¿Está el backend en marcha y es la dirección la de un documento (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Tu cambio ya no era aplicable ({error}): se volvió a cargar el estado una vez.",
     liveConflictText:"Alguien cambió las mismas líneas. ¿Qué versión debe prevalecer?",
@@ -2810,6 +3113,7 @@ const I18N = {
     acHint:"{n} suggestions d'ID – ↑/↓ pour choisir, Entrée pour insérer",
     tipClose:"Fermer",
     tipOpenLink:"Ouvrir le lien",
+    taigaStoryBtn:"Taiga : créer la story", taigaTasksBtn:"Taiga : créer story + tâches", taigaLoginTitle:"Se connecter à Taiga", taigaUser:"Nom d'utilisateur", taigaPass:"Mot de passe", taigaLoginDo:"Se connecter", taigaCancel:"Annuler", taigaProjectTitle:"Créer un ticket Taiga", taigaProject:"Projet", taigaTasksPick:"Créer les sous-lots comme tâches :", taigaCreateDo:"Créer", taigaError:"Échec : {error}",
     liveLoadWarn:"Document du serveur non chargé : {url} ({error}). Le backend tourne-t-il, et l'adresse est-elle celle d'un document (…/documents/&lt;uuid&gt;) ?",
     liveStaleWarn:"Ta modification n'était plus applicable ({error}) — l'état a été rechargé une fois.",
     liveConflictText:"Quelqu'un a modifié les mêmes lignes. Quelle version doit l'emporter ?",
@@ -2945,6 +3249,7 @@ const I18N = {
     acHint:"{n} podpowiedzi ID – ↑/↓ wybiera, Enter wstawia",
     tipClose:"Zamknij",
     tipOpenLink:"Otwórz link",
+    taigaStoryBtn:"Taiga: utwórz historyjkę", taigaTasksBtn:"Taiga: historyjka + zadania", taigaLoginTitle:"Zaloguj się do Taigi", taigaUser:"Nazwa użytkownika", taigaPass:"Hasło", taigaLoginDo:"Zaloguj", taigaCancel:"Anuluj", taigaProjectTitle:"Utwórz zgłoszenie w Taidze", taigaProject:"Projekt", taigaTasksPick:"Utwórz podpakiety jako zadania:", taigaCreateDo:"Utwórz", taigaError:"Niepowodzenie: {error}",
     liveLoadWarn:"Nie wczytano dokumentu z serwera: {url} ({error}). Czy backend działa i czy adres wskazuje dokument (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Twoja zmiana nie dała się już zastosować ({error}) — stan pobrano raz od nowa.",
     liveConflictText:"Ktoś zmienił te same wiersze. Która wersja ma obowiązywać?",
@@ -3080,6 +3385,7 @@ const I18N = {
     acHint:"{n} подсказок ID – ↑/↓ выбирает, Enter вставляет",
     tipClose:"Закрыть",
     tipOpenLink:"Открыть ссылку",
+    taigaStoryBtn:"Taiga: создать историю", taigaTasksBtn:"Taiga: история + задачи", taigaLoginTitle:"Вход в Taiga", taigaUser:"Имя пользователя", taigaPass:"Пароль", taigaLoginDo:"Войти", taigaCancel:"Отмена", taigaProjectTitle:"Создать тикет в Taiga", taigaProject:"Проект", taigaTasksPick:"Создать подпакеты как задачи:", taigaCreateDo:"Создать", taigaError:"Не удалось: {error}",
     liveLoadWarn:"Документ с сервера не загружен: {url} ({error}). Запущен ли бэкенд и является ли адрес адресом документа (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"Ваше изменение больше не применялось ({error}) — состояние загружено заново.",
     liveConflictText:"Кто-то изменил те же строки. Чья версия должна остаться?",
@@ -3215,6 +3521,7 @@ const I18N = {
     acHint:"{n} आईडी सुझाव – ↑/↓ से चुनें, Enter से डालें",
     tipClose:"बंद करें",
     tipOpenLink:"लिंक खोलें",
+    taigaStoryBtn:"Taiga: स्टोरी बनाएँ", taigaTasksBtn:"Taiga: स्टोरी + टास्क बनाएँ", taigaLoginTitle:"Taiga में साइन इन करें", taigaUser:"उपयोगकर्ता नाम", taigaPass:"पासवर्ड", taigaLoginDo:"साइन इन", taigaCancel:"रद्द करें", taigaProjectTitle:"Taiga टिकट बनाएँ", taigaProject:"प्रोजेक्ट", taigaTasksPick:"उप-पैकेज टास्क के रूप में बनाएँ:", taigaCreateDo:"बनाएँ", taigaError:"विफल: {error}",
     liveLoadWarn:"सर्वर दस्तावेज़ लोड नहीं हुआ: {url} ({error})। क्या बैकएंड चल रहा है और क्या पता दस्तावेज़ का पता है (…/documents/&lt;uuid&gt;)?",
     liveStaleWarn:"आपका बदलाव अब लागू नहीं हो सका ({error}) — स्थिति एक बार नए सिरे से ली गई।",
     liveConflictText:"किसी और ने वही पंक्तियाँ बदली हैं। किसका संस्करण रहे?",
@@ -3361,6 +3668,7 @@ const I18N = {
     acHint:"{n} 个 ID 建议 – ↑/↓ 选择，Enter 插入",
     tipClose:"关闭",
     tipOpenLink:"打开链接",
+    taigaStoryBtn:"Taiga：创建故事", taigaTasksBtn:"Taiga：创建故事和任务", taigaLoginTitle:"登录 Taiga", taigaUser:"用户名", taigaPass:"密码", taigaLoginDo:"登录", taigaCancel:"取消", taigaProjectTitle:"创建 Taiga 工单", taigaProject:"项目", taigaTasksPick:"将子包创建为任务：", taigaCreateDo:"创建", taigaError:"失败：{error}",
     liveLoadWarn:"未能加载服务器文档：{url}（{error}）。后端在运行吗？该地址是文档地址（…/documents/&lt;uuid&gt;）吗？",
     liveStaleWarn:"你的更改已无法应用（{error}）——已重新获取一次当前状态。",
     liveConflictText:"有人改动了同样的行。以谁的版本为准？",
@@ -3496,6 +3804,7 @@ const I18N = {
     acHint:"ID候補 {n} 件 – ↑/↓で選択、Enterで挿入",
     tipClose:"閉じる",
     tipOpenLink:"リンクを開く",
+    taigaStoryBtn:"Taiga: ストーリーを作成", taigaTasksBtn:"Taiga: ストーリー+タスクを作成", taigaLoginTitle:"Taiga にログイン", taigaUser:"ユーザー名", taigaPass:"パスワード", taigaLoginDo:"ログイン", taigaCancel:"キャンセル", taigaProjectTitle:"Taiga チケットを作成", taigaProject:"プロジェクト", taigaTasksPick:"サブパッケージをタスクとして作成:", taigaCreateDo:"作成", taigaError:"失敗: {error}",
     liveLoadWarn:"サーバー文書を読み込めませんでした: {url}（{error}）。バックエンドは動いていますか。アドレスは文書のアドレス（…/documents/&lt;uuid&gt;）ですか。",
     liveStaleWarn:"あなたの変更はもう適用できませんでした（{error}）。状態を一度取り直しました。",
     liveConflictText:"同じ行が他の人にも変更されました。どちらの版を採りますか。",
@@ -4598,6 +4907,7 @@ function followActiveDoc(){
   if(liveState && liveState.id !== activeId) stopLive();
   const d = activeDoc();
   if(!liveState && d && String(d.id).startsWith('live:')) startLive(d.id.slice(5));
+  refreshTaiga();   /* die Basis kann mit dem Dokument wechseln (D91); gecacht */
 }
 
 function switchDoc(id){
@@ -5968,6 +6278,7 @@ loadLive();            /* ?live= — Server-Dokument samt Feed (asynchron, D76) 
 /* Beide haben ihren Parameter jetzt gelesen (synchron, vor dem ersten
    `await`). Ab hier folgt die Adresszeile dem aktiven Dokument (D80). */
 bootDone = true;
+refreshTaiga();        /* kann das Backend Taiga? (asynchron, D91) */
 
 /* ---------- PWA: Service Worker (D73) ----------
    Ein reiner Offline-Mantel (public/sw.js): Navigationen network-first, der

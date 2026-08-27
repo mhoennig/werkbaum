@@ -74,6 +74,9 @@ DIR="$(env_value BACKEND_DIR)";         DIR="${DIR:-opt/werkbaum}"
 JDK_DIR="$(env_value BACKEND_JDK_DIR)"; JDK_DIR="${JDK_DIR:-opt/jdk21}"
 PORT="$(env_value BACKEND_PORT)";       PORT="${PORT:-9080}"
 XMX="$(env_value BACKEND_XMX)";         XMX="${XMX:-192m}"
+# Taiga-Proxy (D91): API-URL aus der lokalen .env; der Deploy zieht sie als
+# WERKBAUM_TAIGA_API_URL in die Server-Umgebung nach (leer = nichts anfassen).
+TAIGA_API_URL="$(env_value TAIGA_API_URL)"
 
 # Derselbe Pfad in DREI Schreibweisen, weil ihn drei Werkzeuge lesen:
 #
@@ -147,7 +150,7 @@ ssh "$SSH_TARGET" "mkdir -p \"$DIR_SH\" \"\$HOME/.config/systemd/user\""
 rsync -az --chmod=F644 "$STAGE/werkbaum-backend.service" \
       "$SSH_TARGET:~/.config/systemd/user/werkbaum-backend.service"
 
-ssh "$SSH_TARGET" DIR="$DIR_SH" PORT="$PORT" RESTART="$RESTART" 'bash -s' <<'REMOTE'
+ssh "$SSH_TARGET" DIR="$DIR_SH" PORT="$PORT" RESTART="$RESTART" TAIGA_URL="$TAIGA_API_URL" 'bash -s' <<'REMOTE'
 set -euo pipefail
 DIR="$(eval echo "$DIR")"
 
@@ -187,6 +190,19 @@ ENV
   echo "      sonst bleibt die Dokumentenliste gesperrt."
 fi
 chmod 600 "$DIR/env"
+
+# Taiga-Proxy (D91): Steht TAIGA_API_URL in der lokalen .env, wird genau diese
+# eine Zeile hier nachgezogen — idempotent, alles andere (insbesondere der
+# Passwort-Hash) bleibt unangetastet. Ohne Wert wird nichts angefasst: Eine von
+# Hand gesetzte Server-Zeile soll ein Deploy ohne .env-Eintrag nicht löschen.
+if [ -n "${TAIGA_URL:-}" ]; then
+  if grep -q '^WERKBAUM_TAIGA_API_URL=' "$DIR/env"; then
+    sed -i "s#^WERKBAUM_TAIGA_API_URL=.*#WERKBAUM_TAIGA_API_URL=${TAIGA_URL}#" "$DIR/env"
+  else
+    printf 'WERKBAUM_TAIGA_API_URL=%s\n' "$TAIGA_URL" >> "$DIR/env"
+  fi
+  echo "    WERKBAUM_TAIGA_API_URL -> ${TAIGA_URL}"
+fi
 
 if ! loginctl show-user "$(id -un)" -p Linger 2>/dev/null | grep -q 'Linger=yes'; then
   echo "    ! Linger ist nicht gesetzt — der Dienst endet mit der Sitzung."

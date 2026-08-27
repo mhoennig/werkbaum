@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/parser.js';
 import { taigaSlugs } from '../src/model.js';
+import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken } from '../src/taiga.js';
 
 /* Schlagworte `&tag` (SPEC §1, D91): Extraktion im Parser und die
    `taiga.*`-Vererbung in model.js — der erste Konsument der reservierten
@@ -87,5 +88,95 @@ describe('taigaSlugs — Projekt-Vererbung (SPEC §1, D91-Nachtrag 3)', () => {
   it('das nackte &taiga. ohne Slug zählt nicht', () => {
     const r = tree('- Wurzel &taiga.');
     expect(taigaSlugs(r).has(r[0])).toBe(false);
+  });
+});
+
+describe('ticketRefOf — der Idempotenz-Marker (D91-Nachtrag 2)', () => {
+  const node = text => parse(text).roots[0];
+
+  it('erkennt die Ref als Knoten-ID (Label-Vertreter, SPEC §1)', () => {
+    expect(ticketRefOf(node('- #US-123'))).toBe('US-123');
+  });
+
+  it('erkennt die Ref als weiteres #-Token im Label, neben der Knoten-ID', () => {
+    const n = node('- #auth: Backend #US-123 (M)');
+    expect(n.id).toBe('auth');
+    expect(ticketRefOf(n)).toBe('US-123');
+  });
+
+  it('erkennt Task-Refs (#T-…)', () => {
+    expect(ticketRefOf(node('- API-Teil #T-1234'))).toBe('T-1234');
+  });
+
+  it('ein Knoten ohne Tracker-Token hat keine Ref', () => {
+    expect(ticketRefOf(node('- #auth: Backend (M)'))).toBe(null);
+    expect(ticketRefOf(node('- US-123 als Text'))).toBe(null);   /* ohne # */
+    expect(ticketRefOf(node('- #ABC-123: Jira-artig'))).toBe(null);
+  });
+});
+
+describe('taskCandidates — Vorbelegung des Häkchen-Dialogs (D91)', () => {
+  const kids = text => taskCandidates(parse(text).roots[0]);
+
+  it('konjunktiv: Pflicht- und optionale Kinder vorbelegt, erledigte abgewählt, verworfene fehlen', () => {
+    const c = kids('- P\n  - [ ] a\n  + [?] b\n  - [x] c\n  - [-] d');
+    expect(c.map(x => x.node.label)).toEqual(['a', 'b', 'c']);
+    expect(c.map(x => x.checked)).toEqual([true, true, false]);
+  });
+
+  it('disjunktiv: nur realisierte Alternativen vorbelegt', () => {
+    const c = kids('- P\n  | [~] a\n  | [ ] b\n  | [x] c');
+    expect(c.map(x => x.checked)).toEqual([true, false, false]);  /* c ist erledigt */
+  });
+
+  it('disjunktiv ohne Realisiertes: nichts vorbelegt — die Wahl ist nicht getroffen', () => {
+    const c = kids('= P\n  = [ ] a\n  = [?] b');
+    expect(c.map(x => x.checked)).toEqual([false, false]);
+  });
+
+  it('ein Kind mit eigener Ref ist gesperrt und abgewählt', () => {
+    const c = kids('- P\n  - [ ] a #T-9\n  - [ ] b');
+    expect(c[0].exists).toBe(true);
+    expect(c[0].checked).toBe(false);
+    expect(c[1].checked).toBe(true);
+  });
+
+  it('ein Blatt hat keine Kandidaten', () => {
+    expect(kids('- P')).toEqual([]);
+  });
+});
+
+describe('appendToken — Token ans sichtbare Zeilenende (D91)', () => {
+  it('hängt hinter den Inhalt an', () => {
+    expect(appendToken('  - [ ] Backend (M)', '#US-123')).toBe('  - [ ] Backend (M) #US-123');
+  });
+
+  it('vor einen %%-Kommentar, dessen Leerraum bleibt', () => {
+    expect(appendToken('- X  %% Notiz', '#US-1')).toBe('- X #US-1  %% Notiz');
+  });
+
+  it('vor die Fortsetzungsmarke ` \\` (SPEC §1)', () => {
+    expect(appendToken('- Langer Titel \\', '#US-1')).toBe('- Langer Titel #US-1 \\');
+  });
+
+  it('eine leere oder reine Kommentarzeile bleibt unangetastet', () => {
+    expect(appendToken('   ', '#US-1')).toBe('   ');
+    expect(appendToken('%% nur Kommentar', '#US-1')).toBe('%% nur Kommentar');
+  });
+
+  it('das Ergebnis parst mit der Ref im Label und unveränderter Struktur', () => {
+    const zeile = appendToken('  - [ ] #auth: Backend (M) @anna', refToken('US', 123));
+    const { roots } = parse('- Wurzel\n' + zeile);
+    const n = roots[0].children[0];
+    expect(n.id).toBe('auth');
+    expect(n.label).toBe('Backend #US-123');
+    expect(n.size).toBe('M');
+    expect(ticketRefOf(n)).toBe('US-123');
+  });
+
+  it('slugToken ergibt das Schlagwort der Projekt-Zuordnung', () => {
+    const zeile = appendToken('- Teilbaum', slugToken('mi-intern'));
+    const { roots } = parse(zeile);
+    expect(roots[0].marks).toEqual(['taiga.mi-intern']);
   });
 });

@@ -654,6 +654,19 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Es schließt bei allem, was seine Aussage hinfällig macht — Tipp daneben,
   zweiter Tipp, Esc, ×, Diagramm-Scroll, Bereichswechsel, Sprung in den Text,
   `render()`. Die letzten drei sind beim Bauen zuerst vergessen worden.
+- **Taiga-Ticket-Anlage (D91):** Die entscheidbaren Regeln liegen headless in
+  `taiga.js` (`ticketRefOf` = Idempotenz-Marker, `taskCandidates` =
+  Dialog-Vorbelegung, `appendToken` = Token vor `%%` und vor der
+  Fortsetzungsmarke ` \`); die `taiga.*`-Vererbung rechnet `taigaSlugs()` in
+  model.js. app.js verdrahtet: `refreshTaiga()` fragt je Basis EINMAL
+  `GET /info` (`taiga`-Flag; Aufruf aus Boot und `followActiveDoc`),
+  `appendTaigaActions()` hängt die zwei Knöpfe ins Knoten-Fenster (nur ohne
+  vorhandene Ref), `taigaCreate()` führt Login → Projekt-Dialog →
+  Anlegen → Ref-Rückschreiben. Geschrieben wird über `replaceTextUndoable`
+  (Fokus/Undo/Schreibmarke, D53) — nie `src.value =`. Das Token liegt als
+  `werkbaum-taiga` im localStorage (nur Token, nie ein Passwort); ein 401
+  löscht es und fragt neu. Fehler erscheinen IM Dialog, nicht als
+  `window.alert` (in manchen Kontexten unterdrückt, D22-Lehre).
 - **Nie `src.value = …` während des Bearbeitens (D53).** Es löscht die
   Undo-Historie des Textfelds **komplett** — nicht nur den eigenen Schritt,
   sondern alles davor Getippte. Gemessen: nach so einem Schreiben ändert das
