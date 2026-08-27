@@ -1299,6 +1299,40 @@ ist die frühere Dreifach-Rolle von `#` aufgelöst (D34).
   Extra-Syntax — gebaut werden sie erst **zusammen mit** dem ersten solchen
   Konsumenten. Bis dahin gilt allein: `&` nicht anderweitig vergeben.
 
+### Nutzen je Knoten (`(M/9)`) — festgelegt, noch nicht gebaut
+
+Eine **unabhängige Nutzenbewertung** neben der Aufwandsschätzung; die
+Abwägung geschieht erst bei der Priorisierung (lohnendster Pfad, unten).
+
+- **Notiert im Größen-Token:** `(Aufwand/Nutzen)`, z. B. `(M/9)`; nur Nutzen
+  `(/7)`; nur Größe wie bisher `(M)`. Es bleibt **ein** Token in **einer**
+  Ecke — Erkennungsregeln wie bei der Größe (§1, Schritt 4): alleinstehend
+  angesetzt, das **letzte** Token gewinnt, die Zitier-Konventionen gelten
+  (`"(M/9)"` bleibt Label). Ein ungültiger Nutzen (`(M/12)`, `(M/x)`) macht
+  das Token zum Label — der laute Fehlermodus (D59).
+- **Skala: eine Ziffer 0–9.** `9` = hoher Nutzen, `1` = geringer, **`0` =
+  Vorbedingung**: muss gemacht werden, hat aber keinen eigenen Nutzen. Im
+  lohnendsten Pfad gewinnt eine `0` nie eine Alternativen-Wahl, wird aber
+  über Abhängigkeiten (`:#…`) und all-of-Notwendigkeit gezogen — genau die
+  Vorbedingungs-Semantik.
+- **Reine Autoren-Aussage:** keine Aggregation über Teilbäume, keine
+  Konfliktprüfung, keine Schätzung fehlender Werte. Nutzen ist — anders als
+  Kosten — **nicht additiv**: Teilpakete können denselben Nutzen doppelt
+  versprechen (Überlappung) oder zusammen mehr sein (Synergie); es gibt
+  keine sichere Lesart, unter der eine Kindersumme den Elternwert widerlegt.
+  Größen-Konflikt (§5/D62) und Größen-Schätzung (D66) bleiben Kosten-Sache.
+- **Anzeige** im vorhandenen Größen-Badge oben rechts (`M/9` bzw. `/7`);
+  die Knoten-Ecken bleiben, wie sie sind.
+- **Lohnendster Pfad:** Der Pfad-Umschalter wird ein **Durchschalter mit
+  drei Stellungen** (aus → günstigster → lohnendster). Im lohnendsten Pfad
+  wählt eine Alternativgruppe nach **Nutzen/Kosten-Verhältnis**;
+  **Bewertetes schlägt Unbewertetes** (fehlender Nutzen zählt 0, sobald
+  mindestens eine Alternative der Gruppe bewertet ist), eine Gruppe ganz
+  ohne Bewertungen wählt nach Kosten wie bisher — ohne Nutzen-Angaben im
+  Dokument ist der lohnendste Pfad damit der günstigste. Realisiert bleibt
+  realisiert (D46/D61), Verworfenes zählt nie; Linie, Stationen und
+  Inversion behalten ihre Mechanik.
+
 ### Abhängigkeiten zwischen Knoten (`:#auth,#api`)
 
 Die **Schreibweise ist umgesetzt** — Definition jetzt in §1 (Token-Vertrag,
