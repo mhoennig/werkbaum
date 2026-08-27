@@ -87,9 +87,9 @@
       - [^] #ed.fold.write: Folding writes the mark back into the text (S)  %% one undo step
       - [^] #ed.fold.preset: The fold button cycles through four presets (S)  %% M-and-smaller, off-path, all, none — see D44/D75
     + [?] #ed.textfold: Fold regions in the text editor, next to the line numbers  %% view-only, unrelated to the > marks; not sized yet
-    - [x] #ed.lens: A people bar with a person lens (M)
-      - [x] #ed.lens.fold: One person's nodes, everything else folds (S)  %% view-only, never written into the text
-      - [x] #ed.lens.load: A load bar per person, shares of the open path work (S)  %% the D71 measure
+    - [^] #ed.lens: A people bar with a person lens (M)
+      - [^] #ed.lens.fold: One person's nodes, everything else folds (S)  %% view-only, never written into the text
+      - [^] #ed.lens.load: A load bar per person, shares of the open path work (S)  %% the D71 measure
     - [^] #ed.snaps: Earlier states of a document, every ten minutes (S)  %% only when something changed
       - [^] #ed.snaps.manual: Save a state by hand, before a larger change (XS)  %% ten minutes is the wrong beat for that moment
     - [^] #ed.files: Open and save .werkbaum files (S)
