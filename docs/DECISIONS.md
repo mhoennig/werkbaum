@@ -7525,3 +7525,53 @@ anna-Pillen petrol, Text byte-identisch. Bens Linse hält annas Backend
 Text nicht; Ausschalten stellt den textdefinierten Zustand wieder her;
 Unzugewiesen-Linse klappt genau die getaggten Pakete zu. Tag-loses Dokument:
 keine Leiste. 538 Tests, davon 7 neue in `tests/lens.test.js`.
+
+## D88 — pull-doc: ein Server-Dokument in ein git-Worktree holen und committen
+Gewünscht: ein Script im `tools`-Verzeichnis, das eine Backend-URL und einen
+Zielpfad nimmt (der Zielpfad muss in einem git-Worktree liegen), das Dokument
+herunterlädt und mit einem Datums-Kommentar committet. Das ist die dritte
+Alternative unter „Git as the shared store" (`#col.git.pull`): zwischen der
+Datei im Repo (`#col.git.pr`) und dem Backend, das jede Änderung committet
+(`#col.git.auto`), steht der Cron-fähige Archiv-Schritt — ein geteilter Plan
+(D76) bekommt so eine Git-Historie, ohne dass der Server git können muss.
+
+**Eigenes Script `tools/pull-doc`, nicht hinter `remote`.** `remote` ist die
+Vordertür für alles, was **auf dem Server** passiert (D77/CLAUDE.md); dieses
+Werkzeug läuft lokal — es holt per HTTP und committet ins lokale Worktree.
+
+**Auch der Editor-Link wird genommen.** Was ein Mensch in der Hand hat, ist
+meist der geteilte `?live=`-Link, nicht die API-Adresse — der Parameter wird
+erkannt und prozent-dekodiert ausgepackt (dieselbe Höflichkeit wie bei den
+Pad-Adressen in D31: die URL aus der Adresszeile genügt).
+
+**Unverändert heißt: kein Commit, Exit 0.** Ohne diese Regel füllte ein Cron
+die Historie mit leeren Bewegungen bzw. bräche bei `--allow-empty`-losem
+`git commit` fehl. Verglichen wird gegen die Datei auf der Platte.
+
+**Byte-getreu geschrieben, von Python, nicht über eine Shell-Variable.** Eine
+Kommandosubstitution verschluckt abschließende Zeilenumbrüche — der Inhalt
+liefe also durch die Shell nicht unverfälscht. Das JSON liest und schreibt
+deshalb ein `python3`-Einzeiler (Datei direkt, `newline=""`); die Wahl fiel
+auf python3 statt jq/node, weil es der eine Interpreter ist, der auf
+Entwickler-Rechnern wie auf dem Zielserver (D76-Nachtrag 1) sicher vorliegt.
+Nachgemessen: 29 Bytes ohne angehängtes Newline kommen als 29 Bytes an.
+
+**Committet wird mit Pfadangabe** (`git commit -m … -- <datei>`): Andere
+vorgemerkte Änderungen im Worktree bleiben unangetastet — nachgemessen mit
+einer gestagten Fremd-Datei, die nach dem Lauf weiterhin gestagt und nicht im
+Commit war. Die Nachricht nennt Datum, Titel und Server-Version
+(`Werkbaum-Stand vom 2026-08-27 11:53 — „Titel" (Version 8)`).
+
+**Fehler sind laut und räumen auf:** kein Worktree, Verzeichnis fehlt,
+Abruf gescheitert, Antwort kein Dokument — je eigene Meldung, Exit ≠ 0,
+Temp-Datei weg (Trap). Die Worktree-Prüfung lehnt auch das `.git`-Verzeichnis
+selbst ab.
+
+**Nachgemessen** gegen einen lokalen Mock-Server in einem
+Wegwerf-Worktree: Erstabruf committet genau die eine Datei; unveränderter
+zweiter Lauf meldet „kein Commit" (Exit 0, Commit-Zahl unverändert);
+geänderter Inhalt ergibt den zweiten Commit; der prozent-kodierte
+`?live=`-Link wird ausgepackt; Nicht-Worktree, 404 und Nicht-Dokument-JSON
+enden mit klarer Meldung und ohne Rückstände. Der echte Backend-Abruf ist
+derselbe GET wie im Mock — dieselbe Werkzeuggrenze wie überall: Der native
+Serverbetrieb ist über D76/D77 abgedeckt.

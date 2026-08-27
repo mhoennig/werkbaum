@@ -127,6 +127,12 @@ und holt ihn ins Bild — bei **allen**, die das Dokument ansehen. Das kann ein
 Cursor nicht. Erkannt nur als alleinstehendes Token, `Achtung!!!` bleibt also ein
 gewöhnliches Label. Die Marke bleibt stehen, bis jemand sie löscht.
 
+**Eine Git-Historie für einen geteilten Plan:** `tools/pull-doc <dokument-url>
+<datei>` holt das Dokument (auch ein `?live=`-Link funktioniert) und committet
+es in das git-Worktree der Datei — Datum, Titel und Version in der Nachricht,
+kein Commit ohne Änderung. Per Cron aufgerufen archiviert sich der Plan von
+selbst; siehe `docs/DECISIONS.md` D88.
+
 Das Backend einrichten: siehe [backend/README.md](backend/README.md) und
 `docs/DECISIONS.md` D76.
 

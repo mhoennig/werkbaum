@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+#
+# Werkbaum — pull-doc: ein Server-Dokument in ein git-Worktree holen und
+# committen. Gedacht als Archiv-Schritt (auch per Cron): Der Notationstext
+# eines geteilten Plans (D76) bekommt so eine Git-Historie.
+#
+# Verwendung:
+#   pull-doc <dokument-url> <zieldatei>
+#
+#   <dokument-url>  Die Dokument-Adresse des Backends
+#                   (https://…/api/v1/documents/<uuid>) — oder gleich der
+#                   geteilte Editor-Link (…?live=<adresse>); der Parameter
+#                   wird erkannt und ausgepackt.
+#   <zieldatei>     Datei, in die der Notationstext geschrieben wird. Sie muss
+#                   in einem git-Worktree liegen. Committet wird nur diese
+#                   eine Datei; die Commit-Nachricht nennt Datum, Titel und
+#                   Version des Server-Stands.
+#
+# Unverändert heißt: kein Commit — der Lauf meldet es und endet mit 0.
+# Geschrieben wird byte-getreu, was der Server hält (der Text ist das
+# führende Datenformat, D14); andere vorgemerkte Änderungen im Worktree
+# bleiben unangetastet (Commit mit Pfadangabe).
+#
+# Siehe docs/DECISIONS.md D88.
+
+set -euo pipefail
+
+usage(){ sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; }
+
+case "${1:-}" in -h|--help) usage; exit 0;; esac
+[ $# -eq 2 ] || { echo "Fehler: genau zwei Argumente erwartet (URL und Zieldatei)." >&2; echo >&2; usage >&2; exit 2; }
+
+url="$1"; target="$2"
+
+command -v python3 >/dev/null || { echo "Fehler: python3 wird gebraucht (JSON lesen)." >&2; exit 2; }
+command -v curl    >/dev/null || { echo "Fehler: curl wird gebraucht." >&2; exit 2; }
+
+# Ein geteilter Editor-Link traegt die Dokument-Adresse als ?live=…-Parameter —
+# auspacken (samt Prozent-Dekodierung), sonst gilt die URL selbst.
+url="$(python3 - "$url" <<'PY'
+import sys, urllib.parse
+u = sys.argv[1]
+q = urllib.parse.parse_qs(urllib.parse.urlsplit(u).query)
+print(q["live"][0] if "live" in q else u)
+PY
+)"
+case "$url" in http://*|https://*) ;; *) echo "Fehler: keine http(s)-URL: $url" >&2; exit 2;; esac
+
+# Ziel pruefen: Verzeichnis muss existieren und in einem git-Worktree liegen.
+[ -d "$target" ] && { echo "Fehler: $target ist ein Verzeichnis." >&2; exit 2; }
+dir="$(dirname -- "$target")"; base="$(basename -- "$target")"
+[ -d "$dir" ] || { echo "Fehler: Verzeichnis $dir gibt es nicht." >&2; exit 2; }
+if [ "$(git -C "$dir" rev-parse --is-inside-work-tree 2>/dev/null)" != "true" ]; then
+  echo "Fehler: $dir liegt in keinem git-Worktree." >&2; exit 2
+fi
+if [ "$(git -C "$dir" rev-parse --is-inside-git-dir 2>/dev/null)" = "true" ]; then
+  echo "Fehler: $dir liegt im .git-Verzeichnis." >&2; exit 2
+fi
+
+tmp_json="$(mktemp)"; tmp_doc="$dir/.$base.pull-doc.$$"
+trap 'rm -f "$tmp_json" "$tmp_doc"' EXIT
+
+curl -fsS --max-time 30 -H 'Accept: application/json' -o "$tmp_json" "$url" \
+  || { echo "Fehler: Abruf gescheitert: $url" >&2; exit 1; }
+
+# JSON lesen; den Inhalt schreibt python selbst (byte-getreu — eine
+# Shell-Variable verschluckte abschliessende Zeilenumbrueche).
+meta="$(python3 - "$tmp_json" "$tmp_doc" <<'PY'
+import io, json, sys
+try:
+    with io.open(sys.argv[1], encoding="utf-8") as f:
+        doc = json.load(f)
+    content, title, version = doc["content"], doc["title"], doc["version"]
+except Exception as e:
+    sys.exit(f"Fehler: Antwort ist kein Werkbaum-Dokument ({e})")
+with io.open(sys.argv[2], "w", encoding="utf-8", newline="") as f:
+    f.write(content)
+print(f"{title}\t{version}")
+PY
+)"
+title="${meta%$'\t'*}"; version="${meta##*$'\t'}"
+
+if [ -f "$target" ] && cmp -s "$tmp_doc" "$target"; then
+  echo "Unverändert: „$title“ (Version $version) — kein Commit."
+  exit 0
+fi
+
+mv -- "$tmp_doc" "$target"
+msg="Werkbaum-Stand vom $(date '+%Y-%m-%d %H:%M') — „$title“ (Version $version)"
+git -C "$dir" add -- "$base"
+git -C "$dir" commit -q -m "$msg" -- "$base"
+echo "Committet $(git -C "$dir" rev-parse --short HEAD): $msg"
