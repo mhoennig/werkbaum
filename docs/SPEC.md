@@ -7,7 +7,7 @@ Syntaxänderungen werden zuerst hier dokumentiert, dann implementiert.
 ## 1. Zeilenformat
 
 ```
-[Einrückung][Zeichen] [Statusbox] [Faltmarke] Label (Größe) URL @tag … !!! %% Kommentar
+[Einrückung][Zeichen] [Statusbox] [Faltmarke] Label (Größe) URL @tag &tag … !!! %% Kommentar
 ```
 
 Alle Bestandteile außer dem Label sind optional. Die Extraktion erfolgt in
@@ -24,6 +24,7 @@ dieser Reihenfolge (wichtig für Kollisionsfreiheit):
    Groß-/Kleinschreibung egal (siehe unten). Frühere Vorkommen bleiben im
    Label stehen.
 5. Tags: alle `@name`-Vorkommen.
+5b. Schlagworte: alle alleinstehend angesetzten `&name`-Token (siehe unten).
 6. Knoten-ID: das **erste** alleinstehend angesetzte `#name`-Token (siehe unten).
 7. Abhängigkeiten: alle alleinstehend angesetzten `:#a,#b`-Token (siehe unten).
 8. Fokusmarke: `!!!` als **alleinstehendes** Token (siehe unten).
@@ -98,6 +99,30 @@ Referenz-Regex (Schritt 1b, geprüft auf der kommentarfreien Zeile):
   hinter dem Titel — das letzte Token ist die Angabe, alles davor ist Text.
   (Bis D68 galt das **erste** Token; die Umkehrung trifft nur Zeilen mit
   mehreren Kandidaten.)
+
+**Schlagworte `&tag`** — freie Schlagworte quer zur Hierarchie (die ID benennt
+genau einen Knoten, ein Schlagwort eine **Menge**); das erste ausgewertete ist
+das **Taiga-Projekt-Schlagwort** (§11, D91-Nachtrag 3):
+
+- Zeichenmenge wie bei `@name` (§7): Unicode-Buchstaben, Ziffern, `.`, `_`,
+  `-`. Mehrere pro Zeile möglich, Position im Text egal.
+- Erkannt nur **alleinstehend angesetzt** (`(^|\s)&…`): „R&D“ und
+  „Drag & Drop“ bleiben damit gewöhnliche Labels, und die Zitier-Konvention
+  gilt auch hier — `(&taiga.slug)` bleibt Label.
+- Schlagworte gehören **nicht** zum Label. Sichtbar sind sie im
+  Knoten-Tooltip und im `aria-label`; eine eigene Diagramm-Darstellung haben
+  sie nicht.
+- Semantik trägt allein das Präfix **`taiga.`**: `&taiga.<projekt-slug>`
+  benennt das Taiga-Projekt, zu dem der Teilbaum gehört, und **vererbt sich**
+  auf die Nachkommen wie die `@`-Tags beim Zuständigen-Engpass (§7/§9) — der
+  nächste Vorfahr mit einem `taiga.*`-Schlagwort gewinnt, ein eigenes am
+  Knoten übersteuert; trägt eine Zeile mehrere, gilt das **erste**. Konsument
+  ist die Ticket-Anlage (§11): Der Projekt-Dialog wird damit vorbelegt, und
+  die erste Anlage in einem Teilbaum ohne Zuordnung schreibt das Schlagwort
+  zurück.
+- Alle übrigen Schlagworte sind **frei** und haben (noch) keinen Konsumenten.
+  Sie sagen nichts über Fortschritt (§4) oder Notwendigkeit (§3) und ändern
+  weder Kosten noch Warnungen.
 
 **Knoten-ID `#name`** — benennt einen Knoten im **ganzen Dokument** eindeutig;
 sie ist die Adresse für Abhängigkeiten und Beschreibungsblöcke (§11).
@@ -221,6 +246,12 @@ bleibt stehen):
 
 ```
 (^|\s)\((XXL|XS|XL|S|M|L)\)
+```
+
+Für die Schlagworte (Schritt 5b, alle Treffer):
+
+```
+(^|\s)&([\p{L}\p{N}._-]+)
 ```
 
 Für die Knoten-ID (Schritt 6, nur der erste Treffer; die letzte Gruppe ist der
@@ -1318,26 +1349,15 @@ einem Tag aufgelöst. Siehe D91-Nachträge 2 und 3.
 Freie Schlagworte liegen **nicht** mehr auf `#` — siehe `&tag` unten; damit
 ist die frühere Dreifach-Rolle von `#` aufgelöst (D34).
 
-### Schlagworte (`&tag`) — reserviert, bewusst ungebaut
+### Schlagworte (`&tag`)
 
-- `&tag` — freies Schlagwort: benennt eine **Menge** von Knoten quer zur
-  Hierarchie (die ID benennt genau einen). Mehrere pro Zeile, Position egal,
-  gleiche Zeichenmenge wie `@name` (§7: Unicode-Buchstaben, Ziffern, `.`,
-  `_`, `-`).
-- Erkannt nur **alleinstehend** angesetzt (`(^|\s)&\w`, wie `!!!` in §1) —
-  „R&D“ und „Drag & Drop“ bleiben damit gewöhnliche Labels.
-- **Niedrig priorisiert:** Ohne ein Feature, das Schlagworte auswertet
-  (Filter-/Hervorheben-Linse, Taiga-Label-Sync), sind sie nur Kommentare mit
-  Extra-Syntax — gebaut werden sie erst **zusammen mit** dem ersten solchen
-  Konsumenten. Bis dahin gilt allein: `&` nicht anderweitig vergeben.
-- **Der erste Konsument ist festgelegt** (D91-Nachtrag 3): das
-  **Taiga-Projekt-Schlagwort**. `&taiga.<projekt-slug>` benennt das
-  Taiga-Projekt, zu dem ein Teilbaum gehört, und **vererbt sich** auf die
-  Nachkommen wie die `@`-Tags beim Zuständigen-Engpass (§7/§9) — der
-  nächste Vorfahr mit einem `taiga.*`-Tag gewinnt, ein eigener Tag am
-  Knoten übersteuert. Alle übrigen Schlagworte bleiben frei; die Syntax
-  wird zusammen mit der Ticket-Anlage gebaut, und die Zitier-Konvention
-  gilt auch hier (`(&taiga.slug)` bleibt Label).
+Die **Schreibweise ist umgesetzt** — Definition jetzt in §1 (Zeichenmenge wie
+`@name`, Alleinstehend-Regel, Zitier-Konvention, `taiga.*`-Vererbung); gebaut
+zusammen mit der Ticket-Anlage, wie D91-Nachtrag 3 es festlegte. Der erste
+Konsument ist das **Taiga-Projekt-Schlagwort** `&taiga.<projekt-slug>` (§1).
+Alle **übrigen** Schlagworte bleiben frei und ohne Konsumenten — künftige
+Auswerter (Filter-/Hervorheben-Linse, Label-Sync) sind weiterhin offen und
+werden hier festgelegt, bevor sie gebaut werden.
 
 ### Nutzen je Knoten (`(M/9)`) — festgelegt, noch nicht gebaut
 

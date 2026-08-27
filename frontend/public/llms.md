@@ -15,7 +15,7 @@ people edit at once.
 
 ## Line format
 
-    [indent][gate] [status] [fold] Label (SIZE) URL @person #id :#id,#id !!! %% comment
+    [indent][gate] [status] [fold] Label (SIZE) URL @person &tag #id :#id,#id !!! %% comment
 
 One node per line. Everything except the label is optional.
 
@@ -150,7 +150,15 @@ One node per line. Everything except the label is optional.
    size-like tokens stay in the label.
 4. `@name` — people tags; several per line, any position. Characters:
    Unicode letters, digits, `.`, `_`, `-`.
-5. `#id` — **node ID**: the *first* free-standing `#token` of the line
+5. `&tag` — **free keywords**, free-standing only (so `R&D` and
+   `Drag & Drop` stay labels; `(&taiga.slug)` in parentheses mentions one
+   literally). Same character set as `@name`; several per line, any
+   position. Only the `taiga.` prefix carries meaning:
+   `&taiga.<project-slug>` names the Taiga project a subtree belongs to and
+   is **inherited downwards** — the nearest ancestor with a `taiga.*`
+   keyword wins, a node's own keyword overrides, the first of several on
+   one line counts. All other keywords are free and (so far) unconsumed.
+6. `#id` — **node ID**: the *first* free-standing `#token` of the line
    (preceded by start-of-line or whitespace). Uniquely names the node in the
    whole document; a duplicate ID warns, and references resolve to the first
    occurrence. Later `#tokens` stay label text; `C#` stays a label. Same
@@ -162,15 +170,15 @@ One node per line. Everything except the label is optional.
    whitespace or end of line — so a colon inside the label survives
    (`#auth: Rule: token required`), and `#auth:#db` still reads as ID plus
    dependency. Placement stays free: `Backend #auth` means the same thing.
-6. `:#a,#b` — **dependencies**: one contiguous free-standing token — colon,
+7. `:#a,#b` — **dependencies**: one contiguous free-standing token — colon,
    then comma-separated IDs, each with `#`, **no spaces** (`:#a, #b` reads
    only `#a`, and the free-standing ` #b` would become the node ID!).
    Several tokens per line merge. `(:#a,#b)` in parentheses stays label text
    (quoting convention, same as `(#id)`).
-7. `!!!` — **focus mark**, free-standing only: "everybody look here" — a
+8. `!!!` — **focus mark**, free-standing only: "everybody look here" — a
    shared pointer for collaborative editing. Independent of status and
    necessity; `Wow!!!` stays a label.
-8. Whatever remains, whitespace-normalized, is the **label**. An empty label
+9. Whatever remains, whitespace-normalized, is the **label**. An empty label
    means the line is ignored — **unless the line carries a node ID**: then
    `#id` becomes the label, with or without the trailing colon. `- #US-123`
    and `- #US-123:` both render a node titled `#US-123`. Use this when the
@@ -264,5 +272,8 @@ One node per line. Everything except the label is optional.
 
 - Ticket references like `#123` or `#US-123` (Taiga user story, Jira
   `#ABC-123`): planned tracker integration will resolve node IDs that match
-  the connected tracker's reference pattern.
-- Free-standing `&tag`: keywords across the hierarchy (reserved, unbuilt).
+  the connected tracker's reference pattern. Werkbaum writes the `US-`/`T-`
+  prefixes itself when it creates tickets; the ref is added to the line
+  **beside** an existing node ID (later `#tokens` stay label text).
+- Free-standing `&tag` keywords other than `taiga.*` are parsed but have no
+  consumer yet — do not assign them a meaning.

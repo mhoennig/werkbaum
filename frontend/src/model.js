@@ -565,6 +565,31 @@ export function personFoldSet(roots, tag){
   return set;
 }
 
+/* ---------- Taiga-Projekt-Schlagwort (SPEC §1/§11, D91) ----------
+   `&taiga.<slug>` benennt das Taiga-Projekt eines Teilbaums und vererbt sich
+   auf die Nachkommen wie die `@`-Tags beim Zuständigen-Engpass (D71): der
+   nächste Vorfahr mit einem `taiga.*`-Schlagwort gewinnt, ein eigenes am
+   Knoten übersteuert; trägt eine Zeile mehrere, gilt das erste. Map
+   Knoten -> Slug, nur für Knoten, die (geerbt) eines haben — Konsument ist
+   die Vorbelegung des Projekt-Dialogs der Ticket-Anlage. */
+export function taigaSlugs(roots){
+  const map = new Map();
+  const own = n => {
+    for(const m of n.marks || [])
+      if(m.startsWith('taiga.') && m.length > 'taiga.'.length) return m.slice('taiga.'.length);
+    return null;
+  };
+  const walk = (ns, inherited) => {
+    for(const n of ns){
+      const slug = own(n) || inherited;
+      if(slug) map.set(n, slug);
+      walk(n.children, slug);
+    }
+  };
+  walk(roots, null);
+  return map;
+}
+
 /* Alle vergebenen Personen-Tags in Dokumentreihenfolge — die Einträge der
    Personen-Leiste (D87). */
 export function allTags(roots){

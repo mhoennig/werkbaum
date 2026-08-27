@@ -12,9 +12,9 @@
     - [^] #not.gates: And/or decomposition (S)
     - [^] #not.opt: Optional nodes — neither required nor an alternative (S)
     - [^] #not.id: Node IDs, (#auth:) before the title (S)  %% often the ticket number, see SPEC §11
-    + [ ] #not.tag: Free tags, &tag (M)  %% first consumer found: the Taiga project tag, D91
-      - [?] #not.tag.lens: A lens: highlight every node tagged &x (S)
-      - [ ] #not.tag.project: (&taiga.slug) assigns the Taiga project, inherited (S)
+    + [~] #not.tag: Free tags, (&tag) (M)  %% first consumer found: the Taiga project tag, D91
+      - [?] #not.tag.lens: A lens: highlight every node tagged (&x) (S)
+      - [~] #not.tag.project: (&taiga.slug) assigns the Taiga project, inherited (S)
     - [^] #not.dep: Dependencies across the tree, (:#auth,#api) (M)
       - [^] #not.dep.status: They constrain the status, not when work may start (S)
       - [^] #not.dep.eff: Effective status: intrinsic, plus what it depends on (S)

@@ -121,6 +121,10 @@ function nodeAria(n, opts, fold){
   if(n.id && !n.labelFromId) parts.push(t('a11yId', {id: n.id}));
   if(n.deps && n.deps.length)
     parts.push(t('a11yDeps', {ids: n.deps.map(d => '#' + d).join(', ')}));
+  /* Schlagworte (SPEC §1, D91): keine eigene Diagramm-Darstellung — sichtbar
+     nur im Tooltip und hier. */
+  if(n.marks && n.marks.length)
+    parts.push(t('a11yMarks', {names: n.marks.map(m => '&' + m).join(', ')}));
   if(n.optional) parts.push(t('a11yOptional'));
   /* Die Fokusmarke ist rein als box-shadow sichtbar — ohne diese Ansage wüsste
      ein Screenreader nichts davon. Zugleich der einzige Ort, an dem sie sich von
@@ -181,6 +185,9 @@ function nodeHtml(n, extra, opts, fold){
      ein Screenreader läse die Striche einzeln vor (nodeAria oben). */
   const facts = [(n.id && !n.labelFromId) ? '#' + n.id : '',
                  n.deps && n.deps.length ? '→ ' + n.deps.map(d => '#' + d).join(', ') : '',
+                 /* Schlagworte (SPEC §1, D91) — wörtlich, wie sie im Text
+                    stehen; sie spiegeln die Notation und brauchen kein i18n. */
+                 n.marks && n.marks.length ? n.marks.map(m => '&' + m).join(' ') : '',
                  effKey
                    ? t('heldTooltip', {eff: t('st_' + effKey), own: t('st_' + n.status.key)})
                    : (n.status ? t('st_' + n.status.key) : ''),

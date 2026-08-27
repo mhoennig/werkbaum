@@ -163,7 +163,9 @@ const REALIZED = new Set(['arbeit', 'durchstich', 'fertig', 'prod']);
 
 /* Parst den Notationstext zu { roots, warnings }.
    Jeder Knoten: {label, type:'and'|'or'|'xor', optional, fold, status, url,
-   size, tags, id, deps, desc, focus, children, line}.
+   size, tags, marks, id, deps, desc, focus, children, line}.
+   `marks` (SPEC §1, D91) sind die freien Schlagworte (`&tag`, ohne `&`);
+   ausgewertet wird bisher nur das Präfix `taiga.` (model.js, `taigaSlugs`).
    `desc` (SPEC §11/D40) ist der Beschreibungstext: `"`-Zeilen unter dem
    Knoten (Kurzform) und ID-Blöcke aus dem `---`-Beschreibungsteil (Langform),
    in Dokumentreihenfolge mit Zeilenumbrüchen zusammengefügt; null ohne.
@@ -181,7 +183,8 @@ const REALIZED = new Set(['arbeit', 'durchstich', 'fertig', 'prod']);
    Gemischt-Warnung unverändert richtig — sie schlägt an, wenn `|` oder `=`
    mit `-`/`+` (oder untereinander) gemischt wird.
    Extraktionsreihenfolge (SPEC §1): Kommentar -> Zeichen/Status -> URL -> Größe
-   -> Tags -> Knoten-ID -> Abhängigkeiten -> Fokusmarke -> Label. Hierarchie
+   -> Tags -> Schlagworte -> Knoten-ID -> Abhängigkeiten -> Fokusmarke -> Label.
+   Hierarchie
    über Einrückungsbreite (Tab = 2 Leerzeichen);
    Elternknoten ist die nächste vorangehende Zeile mit kleinerer Breite. */
 export function parse(text){
@@ -302,6 +305,13 @@ export function parse(text){
       }
     }
     rest = rest.replace(/@([\p{L}\p{N}._-]+)/gu, (s, g) => { tags.push(g); return ''; });
+    /* Schlagworte `&name` (SPEC §1 Schritt 5b, D91): nur ALLEINSTEHEND
+       ANGESETZT — „R&D" und „Drag & Drop" bleiben Labels, und die
+       Zitier-Konvention gilt auch hier (`(&taiga.slug)` bleibt Label).
+       Semantik trägt allein das Präfix `taiga.` (Projekt-Vererbung rechnet
+       `taigaSlugs()` in model.js); alle übrigen sind frei. */
+    const marks = [];
+    rest = rest.replace(/(^|\s)&([\p{L}\p{N}._-]+)/gu, (s, pre, g) => { marks.push(g); return pre; });
     /* Knoten-ID `#name` (SPEC §1, D36): nur ALLEINSTEHEND ANGESETZT — „C#"
        bleibt Label, und das reservierte `:#a,#b` (§11) wird nicht gefressen.
        Nur der ERSTE Treffer (kein /g): weitere `#`-Token bleiben im Label
@@ -353,7 +363,7 @@ export function parse(text){
     while(stack.length > 1 && stack[stack.length-1].width >= width) stack.pop();
     const parent = stack[stack.length-1].node;
 
-    const node = {label, labelFromId, type, optional, fold, status, url, size, tags, id, deps, desc:null, descLines:null, focus, children:[], line:i+1};
+    const node = {label, labelFromId, type, optional, fold, status, url, size, tags, marks, id, deps, desc:null, descLines:null, focus, children:[], line:i+1};
     parent.children.push(node);
     stack.push({node, width});
     lastNode = node;
