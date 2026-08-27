@@ -56,6 +56,9 @@ werkbaum:
   # bei der Zielinstanz z. B. https://plan-api.hostsharing.net/api/v1
   taiga:
     api-url: ${WERKBAUM_TAIGA_API_URL:}
+    # Basis-URL des Taiga-FRONTENDS (z. B. https://plan.hostsharing.net) -
+    # nicht aus der API-URL ableitbar. Nur fuer die Ticket-Links des Editors.
+    web-url: ${WERKBAUM_TAIGA_WEB_URL:}
     # Login-Typ der Instanz fuer POST /taiga/auth: "ldap" (LDAP-Plugin,
     # plan.hostsharing.net) oder "normal".
     auth-type: ${WERKBAUM_TAIGA_AUTH_TYPE:ldap}

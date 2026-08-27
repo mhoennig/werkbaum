@@ -41,6 +41,9 @@ class TaigaApiTest {
         val result = client.get().uri("/api/v1/info").exchange().returnResult(String::class.java)
         result.status.value() shouldBe 200
         result.responseBody!! shouldContain "\"taiga\":true"
+        // Die Web-Basis für die Ticket-Links (D91-Nachtrag 5) — ohne den
+        // konfigurierten Schrägstrich am Ende.
+        result.responseBody!! shouldContain "\"taigaWeb\":\"https://plan.example.test\""
     }
 
     @Test
@@ -154,6 +157,8 @@ class TaigaApiTest {
         fun taigaUrl(registry: DynamicPropertyRegistry) {
             startStub()
             registry.add("werkbaum.taiga.api-url") { "http://127.0.0.1:${stub.address.port}/api/v1" }
+            // Mit abschließendem Schrägstrich — /info muss ihn abstreifen.
+            registry.add("werkbaum.taiga.web-url") { "https://plan.example.test/" }
         }
     }
 }

@@ -2,6 +2,7 @@ package de.werkbaum.api
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient
@@ -36,6 +37,9 @@ class TaigaDisabledTest {
         val result = client.get().uri("/api/v1/info").exchange().returnResult(String::class.java)
         result.status.value() shouldBe 200
         result.responseBody!! shouldContain "\"taiga\":false"
+        // Ohne konfigurierte Web-Basis gibt es keine Ticket-Links — und keine
+        // leere Zeichenkette, an die ein Client Pfade anhängen könnte.
+        result.responseBody!! shouldNotContain "\"taigaWeb\":\""
     }
 
     @Test

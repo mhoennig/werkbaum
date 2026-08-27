@@ -22,6 +22,15 @@ data class TaigaProperties(
     val apiUrl: String = "",
 
     /**
+     * Basis-URL des Taiga-**Frontends** (`https://plan.hostsharing.net`) —
+     * nicht aus der API-URL ableitbar, bei der Zielinstanz liegen beide auf
+     * verschiedenen Hosts. Nur für die Links des Editors (`GET /info` meldet
+     * sie als `taigaWeb`); leer heißt: keine Links, die Anlage funktioniert
+     * trotzdem.
+     */
+    val webUrl: String = "",
+
+    /**
      * Login-Typ für `POST /auth`: `ldap` (LDAP-Plugin, so die Zielinstanz)
      * oder `normal`. Nur der Auth-Endpunkt braucht ihn; bei der angekündigten
      * OIDC-Umstellung wird er durch den Redirect-Flow ersetzt.

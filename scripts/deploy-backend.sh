@@ -74,9 +74,11 @@ DIR="$(env_value BACKEND_DIR)";         DIR="${DIR:-opt/werkbaum}"
 JDK_DIR="$(env_value BACKEND_JDK_DIR)"; JDK_DIR="${JDK_DIR:-opt/jdk21}"
 PORT="$(env_value BACKEND_PORT)";       PORT="${PORT:-9080}"
 XMX="$(env_value BACKEND_XMX)";         XMX="${XMX:-192m}"
-# Taiga-Proxy (D91): API-URL aus der lokalen .env; der Deploy zieht sie als
-# WERKBAUM_TAIGA_API_URL in die Server-Umgebung nach (leer = nichts anfassen).
+# Taiga-Proxy (D91): API- und Web-URL aus der lokalen .env; der Deploy zieht
+# sie als WERKBAUM_TAIGA_API_URL / WERKBAUM_TAIGA_WEB_URL in die
+# Server-Umgebung nach (leer = nichts anfassen).
 TAIGA_API_URL="$(env_value TAIGA_API_URL)"
+TAIGA_WEB_URL="$(env_value TAIGA_WEB_URL)"
 
 # Derselbe Pfad in DREI Schreibweisen, weil ihn drei Werkzeuge lesen:
 #
@@ -150,7 +152,7 @@ ssh "$SSH_TARGET" "mkdir -p \"$DIR_SH\" \"\$HOME/.config/systemd/user\""
 rsync -az --chmod=F644 "$STAGE/werkbaum-backend.service" \
       "$SSH_TARGET:~/.config/systemd/user/werkbaum-backend.service"
 
-ssh "$SSH_TARGET" DIR="$DIR_SH" PORT="$PORT" RESTART="$RESTART" TAIGA_URL="$TAIGA_API_URL" 'bash -s' <<'REMOTE'
+ssh "$SSH_TARGET" DIR="$DIR_SH" PORT="$PORT" RESTART="$RESTART" TAIGA_URL="$TAIGA_API_URL" TAIGA_WEB="$TAIGA_WEB_URL" 'bash -s' <<'REMOTE'
 set -euo pipefail
 DIR="$(eval echo "$DIR")"
 
@@ -184,6 +186,8 @@ WERKBAUM_MASTER_PASSWORD_HASH=
 # Zielinstanz liegt sie auf einem eigenen Host. Leer = Feature aus;
 # GET /api/v1/info meldet es (taiga).
 #WERKBAUM_TAIGA_API_URL=https://plan-api.hostsharing.net/api/v1
+# Basis-URL des Taiga-FRONTENDS — nur fuer die Ticket-Links des Editors.
+#WERKBAUM_TAIGA_WEB_URL=https://plan.hostsharing.net
 ENV
   chmod 600 "$DIR/env"
   echo "    ! $DIR/env angelegt — Master-Passwort-Hash dort eintragen,"
@@ -202,6 +206,14 @@ if [ -n "${TAIGA_URL:-}" ]; then
     printf 'WERKBAUM_TAIGA_API_URL=%s\n' "$TAIGA_URL" >> "$DIR/env"
   fi
   echo "    WERKBAUM_TAIGA_API_URL -> ${TAIGA_URL}"
+fi
+if [ -n "${TAIGA_WEB:-}" ]; then
+  if grep -q '^WERKBAUM_TAIGA_WEB_URL=' "$DIR/env"; then
+    sed -i "s#^WERKBAUM_TAIGA_WEB_URL=.*#WERKBAUM_TAIGA_WEB_URL=${TAIGA_WEB}#" "$DIR/env"
+  else
+    printf 'WERKBAUM_TAIGA_WEB_URL=%s\n' "$TAIGA_WEB" >> "$DIR/env"
+  fi
+  echo "    WERKBAUM_TAIGA_WEB_URL -> ${TAIGA_WEB}"
 fi
 
 if ! loginctl show-user "$(id -un)" -p Linger 2>/dev/null | grep -q 'Linger=yes'; then

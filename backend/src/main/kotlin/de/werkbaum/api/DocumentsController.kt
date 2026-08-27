@@ -65,6 +65,9 @@ class DocumentsController(
             // Feature-Meldung des Taiga-Proxys (D91): Der Editor zeigt die
             // Ticket-Aktionen nur, wo ein konfiguriertes Backend antwortet.
             taiga = taigaProperties.configured,
+            // Für die Ticket-Links des Editors (D91-Nachtrag 5); ohne
+            // abschließenden Schrägstrich, damit der Client schlicht anhängt.
+            taigaWeb = taigaProperties.webUrl.trimEnd('/').ifBlank { null },
         )
     )
 

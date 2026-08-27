@@ -872,6 +872,14 @@ components:
             true, wenn eine Taiga-Instanz konfiguriert ist
             (`werkbaum.taiga.api-url`) - der Editor zeigt die Ticket-Aktionen
             im Knoten-Fenster nur dann (D91).
+        taigaWeb:
+          type: string
+          description: >
+            Basis-URL des Taiga-Frontends (`werkbaum.taiga.web-url`), ohne
+            abschliessenden Schraegstrich - der Editor baut daraus die Links
+            zum Oeffnen einer Ticket-Referenz
+            (`<web>/project/<slug>/us/<ref>` bzw. `.../task/<ref>`).
+            Fehlt, wenn nicht konfiguriert; das Oeffnen entfaellt dann.
 
     TaigaAuthRequest:
       type: object
