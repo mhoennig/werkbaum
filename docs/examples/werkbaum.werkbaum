@@ -532,7 +532,8 @@
 
 #ed.docs.picker
   The app header reads "Werkbaum > name": the chip opens the menu, grouped by
-  kind (shipped, yours, sources), with rename and delete on each row. Restore
+  kind (shipped, yours, sources), with rename and delete on each row (shipped
+  ones keep their delivered name). Restore
   lives on the editor title bar's reload button instead, acting only on the
   open document. The menu scrolls as a whole instead of being cut off on
   small screens, and on the phone it is reachable from both panes.

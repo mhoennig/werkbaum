@@ -3577,11 +3577,14 @@ const IC_RENAME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const IC_DELETE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>';
 /* Eine Menüzeile: Wählen-Knopf + Zeilen-Aktionen als GESCHWISTER — ein Knopf
    im Knopf wäre ungültiges HTML. Die Aktionen sind immer sichtbar (Touch
-   kennt kein Hover): Umbenennen und Löschen, beides überall. Wiederherstellen
-   gibt es hier bewusst NICHT (D81-Nachtrag 2): Es wirkt über den
-   Neu-laden-Knopf der Editor-Titelzeile nur auf das geöffnete Dokument —
-   ein ungeöffnetes zurückzusetzen, ohne zu sehen, was man verwirft, ergäbe
-   keinen Sinn. */
+   kennt kein Hover): Löschen überall, Umbenennen nur bei NICHT
+   mitgelieferten Dokumenten (D81-Nachtrag 3) — der Name gehört dort zum
+   Auslieferungsstand, und ein umbenanntes, aber unverändertes Beispiel
+   bekäme weiter still neue Fassungen nachgezogen (das Nachziehen hängt an id
+   und Text-Fingerabdruck, D27). Wiederherstellen gibt es hier ebenfalls
+   NICHT (D81-Nachtrag 2): Es wirkt über den Neu-laden-Knopf der
+   Editor-Titelzeile nur auf das geöffnete Dokument — ein ungeöffnetes
+   zurückzusetzen, ohne zu sehen, was man verwirft, ergäbe keinen Sinn. */
 function docRowHtml(d){
   if(d.id === renamingId){
     /* Inline-Umbenennen direkt im Menü (kein window.prompt — das ist in
@@ -3604,7 +3607,7 @@ function docRowHtml(d){
     `<span class="doccheck" aria-hidden="true">✓</span>` +
     `<span class="docitem-name">${esc(d.name)}</span>${zusatz}</button>` +
     `<span class="docacts">` +
-    iconBtn('rename', t('docRename'), IC_RENAME) +
+    (shippedStateOf(d.id) ? '' : iconBtn('rename', t('docRename'), IC_RENAME)) +
     iconBtn('delete', t('docDelete'), IC_DELETE, ' docdelbtn') +
     `</span></div>`;
 }
@@ -4089,6 +4092,9 @@ function finishNewDoc(){
 }
 function renameDoc(id){
   if(!docs.some(x => x.id === id)) return;
+  /* Mitgelieferte nicht (D81-Nachtrag 3): Ihr Name ist Auslieferungsstand.
+     Die Prüfung liegt hier, nicht nur am ausgeblendeten Stift. */
+  if(shippedStateOf(id)) return;
   renamingId = id;   /* Zeilen-Aktion (D81): jedes Dokument, nicht nur das aktive */
   renameIsNew = false;
   renderDocMenu();

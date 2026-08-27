@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-27
 
+- Shipped documents are no longer renamable — their name is part of the delivered state, and a renamed but unedited example would still silently receive new versions
 - Fix: sharing from an instance without its own backend (GitHub Pages) failed with HTTP 405 — the share button now probes the default address and asks for the server instead
 
 ## 2026-08-26

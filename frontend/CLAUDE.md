@@ -158,6 +158,11 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   docurl.js, headless getestet) und trägt Umbenennen/Löschen als Symbole
   **je Zeile** — `renameDoc/deleteDoc` nehmen deshalb eine **id**, nicht das
   aktive Dokument, und Verwaltungs-Aktionen lassen das Menü offen.
+  **Mitgelieferte Dokumente sind nicht umbenennbar** (D81-Nachtrag 3): kein
+  Stift an ihrer Zeile, und `renameDoc()` prüft es selbst — ihr Name ist
+  Auslieferungsstand (Restore stellt ihn wieder her), und ein umbenanntes,
+  unverändertes Beispiel bekäme weiter still neue Fassungen (das Nachziehen
+  hängt an id + Text-Fingerabdruck, nicht am Namen).
   Wiederherstellen gibt es im Menü bewusst **nicht** (D81-Nachtrag 2): Es
   läuft über den Neu-laden-Knopf der Titelzeile und wirkt nur auf das
   geöffnete Dokument — `restoreDoc()` prüft das selbst. Die Editor-Titelzeile heißt wieder „Text-Editor" und trägt die

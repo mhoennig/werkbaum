@@ -7053,3 +7053,34 @@ steht da, und Löschen fragt nach); Wiederherstellen wirkt nur noch über den
 `restoreDoc()` prüft das selbst (`d.id !== activeId` → nichts), statt sich
 auf den Aufrufer zu verlassen. Der D81-Haupttext oben beschreibt insoweit
 den Zwischenstand von einem Tag.
+
+**Nachtrag 3 — mitgelieferte Dokumente sind nicht mehr umbenennbar.**
+Nutzer-Einwand samt Verdacht, das Umbenennen mache „Probleme beim Neuladen".
+Die Prüfung ergab: Es bricht nichts — und genau das ist das Problem. Das
+Nachziehen neuer Fassungen (D27) hängt an **id und Text-Fingerabdruck**, der
+Name spielt keine Rolle: Ein umbenanntes, aber textlich unverändertes
+Beispiel bekäme beim nächsten Laden weiter still die neue Fassung — ein
+Dokument, das der Nutzer per Umbenennung gedanklich zu seinem gemacht hat,
+tauschte ohne Vorwarnung den Inhalt. Dazu zwei Merkwürdigkeiten derselben
+Wurzel: Bloßes Umbenennen aktivierte den Neu-laden-Knopf (der Vergleich
+prüft Text UND Name), und Wiederherstellen setzte den Namen kommentarlos mit
+zurück; und die Menü-Gruppe „Mitgeliefert" zeigte einen fremden Namen, denn
+die Gruppierung läuft über die id.
+
+**Entschieden: kein Stift an mitgelieferten Zeilen**, und `renameDoc()`
+prüft es selbst statt sich auf das ausgeblendete Symbol zu verlassen. Der
+Name gehört bei mitgelieferten Dokumenten zum **Auslieferungsstand** — er
+wird beim Wiederherstellen mitgestellt und beim Vergleich mitgeprüft; dann
+darf er auch nicht separat editierbar sein. **Löschen bleibt** je Zeile: Das
+ist eine andere Aussage („will ich nicht haben"), und das Nachziehen
+respektiert sie längst (gelöscht bleibt gelöscht, D27).
+
+Das ist eine **bewusste Abkehr** von der D22/D27-Linie „Dokumentnamen sind
+Nutzerdaten, eine Umbenennung bleibt stehen" — für genau diese zwei
+Dokumente, deren Name eben keine Nutzerdaten ist, sondern Teil der
+Auslieferung. Die Bestandsregeln (Adoption, Namensfix „Werkbank", Umbenennung
+überlebt das Nachziehen) bleiben unangetastet: Wer früher umbenannt hat,
+behält seinen Namen; nur das UI bietet es nicht mehr an. Wer das Beispiel
+als Basis für einen eigenen Plan will, ändert den Text (dann stoppt das
+Nachziehen ohnehin) oder legt ein eigenes Dokument an; ein „Duplizieren" im
+Menü wäre die saubere Antwort darauf, ist aber ein eigenes Feature.
