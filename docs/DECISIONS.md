@@ -7998,3 +7998,69 @@ müssen.
 An `llms.md` ändert sich weiterhin nichts — die Syntax ist reserviert und
 ungebaut; nachgezogen wird sie, wenn `&tag` wirklich gebaut wird
 (SPEC §13).
+
+**Nachtrag 4 — gebaut; die Entscheidungen des Baus (2026-08-27).** D91 ist
+umgesetzt: die `&tag`-Notation samt `taiga.*`-Vererbung (SPEC §1, Parser,
+`taigaSlugs()` in model.js, llms.md nachgezogen), der Backend-Proxy
+(`/api/v1/taiga/*`: auth, projects, userstories, tasks — API First,
+`de.werkbaum.integration.taiga`) und die beiden Aktionen im Knoten-Fenster
+samt Login-, Projekt- und Häkchen-Dialog (Regeln headless in
+`frontend/src/taiga.js`). Was beim Bauen zu entscheiden war:
+
+- **Das Token reist im Header `X-Taiga-Token`, nicht in `Authorization`.**
+  Einen Header-Parameter namens `Authorization` müssen OpenAPI-Werkzeuge
+  laut Spezifikation ignorieren — die generierte Signatur verlöre ihn —,
+  und der Name kollidierte mit dem Basic-Auth des Master-Passworts. Der
+  Proxy setzt daraus den `Authorization: Bearer …` der Weiterleitung; in
+  CORS ist der Header freigegeben.
+- **Taiga-Fehler werden durchgereicht, nicht übersetzt.** 4xx samt Taigas
+  `_error_message` (die Instanz meldet falsche Zugangsdaten als **400**),
+  fremde 5xx und Netzfehler als 502, unkonfiguriert als 503 — und
+  `GET /info` meldet `taiga: true/false`, damit der Editor die Aktionen
+  nur zeigt, wo sie funktionieren (Lebendprobe-Muster, D81-Nachtrag; je
+  Basis einmal gefragt und gecacht).
+- **Stub statt WireMock.** backend/CLAUDE.md nannte WireMock; gebaut sind
+  die Tests gegen aufgezeichnete Antwortformen auf dem JDK-eigenen
+  `HttpServer` — dieselbe Zusicherung (nie gegen Live-Instanzen), keine
+  neue Test-Abhängigkeit. CLAUDE.md ist entsprechend fortgeschrieben.
+  Beim E2E-Stub in Python die passende Falle gefunden: Der JDK-HttpClient
+  sendet Bodies **chunked**, ein Stub, der nur `Content-Length` liest,
+  sieht `{}` — und der Fehler sah aus wie ein kaputter Proxy.
+- **Das Schlagwort wird auch bei ABWEICHENDER Wahl zurückgeschrieben** —
+  D91-Nachtrag 3 nannte nur den Teilbaum „ohne Zuordnung". Wer im Dialog
+  ein anderes Projekt wählt als das geerbte, trifft eine Aussage, die die
+  spätere Auflösung braucht; nicht geschrieben wird nur, wenn die Zeile
+  selbst schon ein `taiga.*` trägt (das erste Token gewinnt, §1 — ein
+  zweites dahinter wäre wirkungslos) oder die Wahl dem Geerbten entspricht.
+- **Scheitert eine Task, wiederholt der Dialog nichts Bezahltes.** Story
+  und schon angelegte Tasks sind je Zeile als Ref festgehalten
+  (Idempotenz-Marker) und im Dialog gesperrt; der Fehler steht IM Dialog
+  (kein `window.alert` — in manchen Kontexten unterdrückt, D22-Lehre),
+  und „Anlegen" macht nur mit dem Offenen weiter.
+- **Geschrieben wird je Zeile in einem Undo-Schritt** über
+  `replaceTextUndoable` (D53); `appendToken` setzt das Token vor einen
+  `%%`-Kommentar und vor die Fortsetzungsmarke ` \` (SPEC §1) und lässt
+  Leer-/Kommentarzeilen stehen.
+- **Deployment:** `TAIGA_API_URL` in der lokalen `.env` (Nutzerwunsch);
+  `deploy-backend.sh` zieht genau diese eine Zeile als
+  `WERKBAUM_TAIGA_API_URL` in die Server-Umgebung nach — idempotent, der
+  Passwort-Hash bleibt unangetastet, und ohne Wert wird nichts angefasst.
+
+**Nachgemessen** Ende-zu-Ende im Browser gegen das lokale Backend mit
+Taiga-Stub: Die Knöpfe erscheinen nur an Knoten ohne Ref; der Login-Dialog
+speichert nur das Token; der Projekt-Dialog steht auf dem geerbten
+`&taiga.mi-kunde` vor; „Story + Tasks" legt die Story und genau die
+vorbelegten Kinder an (`#US-103`, `#T-104`, `#T-105` an den richtigen
+Zeilen, das erledigte Kind übersprungen, kein redundantes Schlagwort);
+eine abweichende Projektwahl schreibt `&taiga.mi-intern` zurück; Undo/Redo
+nimmt je Schreibzug zurück; ein falsches Passwort bleibt als Taigas
+Fehlertext im Dialog stehen. 565 Frontend-Tests, Backend-`check` grün
+(93 % Coverage); Gegenproben per Mutation: ohne Alleinstehend-Anker der
+`&tag`-Extraktion fallen genau die zwei Zitier-Tests, ohne den
+`type`-Durchreich des Logins genau der benannte Client-Test.
+
+**Benannte Grenze:** Gegen die echte Instanz (`plan.hostsharing.net`, ldap)
+ist der Weg nicht gemessen — dafür braucht es echte Zugangsdaten, und die
+gibt niemand einem Werkzeug. Der Plan-Knoten `#trk.create` steht deshalb
+auf `[/]` (funktionsbereit, Feinarbeiten offen) statt `[x]`: Der erste
+echte Login ist der Handtest, der noch aussteht.
