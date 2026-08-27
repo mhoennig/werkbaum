@@ -2494,11 +2494,13 @@ const I18N = {
     storeFailedWarn:"Speichern im Browser fehlgeschlagen — vermutlich ist der Speicher voll. Änderungen können beim Neuladen verloren gehen; Platz schaffen: nicht mehr gebrauchte Dokumente oder frühere Stände löschen.",
     tabConflictWarn:"Werkbaum ist in einem weiteren Browser-Tab geöffnet — beide schreiben in dieselbe Dokumentenliste, und der zuletzt speichernde gewinnt. Am besten nur in einem Tab arbeiten.",
     liveUnsentWarn:"Deine Änderungen sind seit {min} Minuten NICHT auf dem Server angekommen — sie existieren nur in diesem Fenster. Vor dem Schließen sichern (Strg+S oder Kamera-Knopf).",
-    liveEndedWarn:"Die Live-Verbindung zu diesem Server-Dokument ist beendet — Änderungen werden nicht mehr geteilt. Neu laden stellt die Verbindung wieder her.",
+    liveEndedWarn:"Die Live-Verbindung zu diesem Server-Dokument ist getrennt — Werkbaum verbindet automatisch neu. Bis dahin bleiben Änderungen nur in diesem Fenster.",
     tabModalTitle:"Werkbaum ist mehrfach geöffnet",
     tabModalText:"Diese App ist gerade in einem weiteren Fenster oder Tab geöffnet. Beide schreiben in dieselbe Dokument-Ablage — der zuletzt speichernde überschreibt den anderen. Bitte das andere Fenster schließen; dieser Hinweis verschwindet dann von selbst.",
     tabModalForce:"Trotzdem fortfahren (nicht empfohlen)",
     snapLocalHead:"Lokale Sicherungen (dieses Fenster)",
+    kindLiveDead:"getrennt — verbindet neu …",
+    kindLiveUnsent:"ungesendete Änderungen!",
     a11yStatus:"Status: {status}", a11ySize:"Aufwand: {size}", a11ySizeImplicit:"Aufwand: mindestens {size} (angenommen)", a11yTags:"Zuständig: {names}", a11yId:"ID: #{id}", a11yDeps:"hängt ab von: {ids}", a11yFolded:"eingeklappt, {n} verborgen", a11yEffective:"effektiv: {status}", heldTooltip:"effektiv {eff} — selbst schon {own}, wartet auf Abhängigkeiten", a11yOptional:"optional", a11yFocusMark:"hierhin schauen", a11yLink:"verlinkt",
     hint_indent:"Einrückung (2 Leerzeichen oder Tab) definiert die Hierarchie.",
     hint_all:"Teilpaket, alle erforderlich", hint_any:"Alternative, eine wählen",
@@ -2626,11 +2628,13 @@ const I18N = {
     storeFailedWarn:"Saving in the browser failed — its storage is probably full. Changes may be lost on reload; free space by deleting unused documents or earlier states.",
     tabConflictWarn:"Werkbaum is open in another browser tab — both write to the same document list, and the last one to save wins. Best work in a single tab.",
     liveUnsentWarn:"Your changes have NOT reached the server for {min} minutes — they exist only in this window. Save before closing (Ctrl+S or the camera button).",
-    liveEndedWarn:"The live connection to this server document has ended — changes are no longer shared. Reload to reconnect.",
+    liveEndedWarn:"The live connection to this server document is down — Werkbaum reconnects automatically. Until then, changes stay in this window only.",
     tabModalTitle:"Werkbaum is open more than once",
     tabModalText:"This app is currently open in another window or tab. Both write to the same document storage — whichever saves last overwrites the other. Please close the other window; this notice then disappears by itself.",
     tabModalForce:"Continue anyway (not recommended)",
     snapLocalHead:"Local backups (this window)",
+    kindLiveDead:"disconnected — reconnecting …",
+    kindLiveUnsent:"unsent changes!",
     a11yStatus:"Status: {status}", a11ySize:"Effort: {size}", a11ySizeImplicit:"Effort: at least {size} (assumed)", a11yTags:"Assigned: {names}", a11yId:"ID: #{id}", a11yDeps:"depends on: {ids}", a11yFolded:"collapsed, {n} hidden", a11yEffective:"effective: {status}", heldTooltip:"effectively {eff} — itself already {own}, waiting on dependencies", a11yOptional:"optional", a11yFocusMark:"look here", a11yLink:"has link",
     hint_indent:"Indentation (2 spaces or a tab) defines the hierarchy.",
     hint_all:"sub-task, all required", hint_any:"alternative, choose one",
@@ -2758,11 +2762,13 @@ const I18N = {
     storeFailedWarn:"No se pudo guardar en el navegador: su almacenamiento probablemente está lleno. Los cambios pueden perderse al recargar; libera espacio borrando documentos sin uso o estados anteriores.",
     tabConflictWarn:"Werkbaum está abierto en otra pestaña — ambas escriben en la misma lista de documentos y gana la última en guardar. Mejor trabaja en una sola pestaña.",
     liveUnsentWarn:"Tus cambios NO han llegado al servidor desde hace {min} minutos — solo existen en esta ventana. Guarda antes de cerrar (Ctrl+S o el botón de cámara).",
-    liveEndedWarn:"La conexión en vivo con este documento del servidor ha terminado — los cambios ya no se comparten. Recarga para reconectar.",
+    liveEndedWarn:"La conexión en vivo con este documento del servidor se ha perdido — Werkbaum se reconecta automáticamente. Hasta entonces, los cambios quedan solo en esta ventana.",
     tabModalTitle:"Werkbaum está abierto más de una vez",
     tabModalText:"Esta aplicación está abierta en otra ventana o pestaña. Ambas escriben en el mismo almacén de documentos — la última en guardar sobrescribe a la otra. Cierra la otra ventana; este aviso desaparecerá solo.",
     tabModalForce:"Continuar de todos modos (no recomendado)",
     snapLocalHead:"Copias locales (esta ventana)",
+    kindLiveDead:"desconectado — reconectando …",
+    kindLiveUnsent:"¡cambios sin enviar!",
     a11yStatus:"Estado: {status}", a11ySize:"Esfuerzo: {size}", a11ySizeImplicit:"Esfuerzo: al menos {size} (asumido)", a11yTags:"Responsable: {names}", a11yId:"ID: #{id}", a11yDeps:"depende de: {ids}", a11yFolded:"plegado, {n} ocultos", a11yEffective:"efectivo: {status}", heldTooltip:"efectivamente {eff} — por sí mismo ya {own}, espera dependencias", a11yOptional:"opcional", a11yFocusMark:"mirar aquí", a11yLink:"con enlace",
     hint_indent:"La sangría (2 espacios o un tabulador) define la jerarquía.",
     hint_all:"subtarea, todas obligatorias", hint_any:"alternativa, elige una",
@@ -2890,11 +2896,13 @@ const I18N = {
     storeFailedWarn:"L'enregistrement dans le navigateur a échoué — son stockage est probablement plein. Les modifications peuvent être perdues au rechargement ; libérez de l'espace en supprimant des documents inutilisés ou des états antérieurs.",
     tabConflictWarn:"Werkbaum est ouvert dans un autre onglet — les deux écrivent dans la même liste de documents et le dernier à enregistrer l'emporte. Mieux vaut travailler dans un seul onglet.",
     liveUnsentWarn:"Tes modifications ne sont PAS arrivées au serveur depuis {min} minutes — elles n'existent que dans cette fenêtre. Enregistre avant de fermer (Ctrl+S ou le bouton appareil photo).",
-    liveEndedWarn:"La connexion en direct à ce document serveur est terminée — les modifications ne sont plus partagées. Recharge pour te reconnecter.",
+    liveEndedWarn:"La connexion en direct à ce document serveur est interrompue — Werkbaum se reconnecte automatiquement. D'ici là, les modifications restent dans cette fenêtre.",
     tabModalTitle:"Werkbaum est ouvert plusieurs fois",
     tabModalText:"Cette application est ouverte dans une autre fenêtre ou un autre onglet. Les deux écrivent dans le même stockage de documents — le dernier à enregistrer écrase l'autre. Ferme l'autre fenêtre ; cet avis disparaîtra de lui-même.",
     tabModalForce:"Continuer quand même (déconseillé)",
     snapLocalHead:"Sauvegardes locales (cette fenêtre)",
+    kindLiveDead:"déconnecté — reconnexion …",
+    kindLiveUnsent:"modifications non envoyées !",
     a11yStatus:"Statut : {status}", a11ySize:"Effort : {size}", a11ySizeImplicit:"Effort : au moins {size} (supposé)", a11yTags:"Responsable : {names}", a11yId:"ID : #{id}", a11yDeps:"dépend de : {ids}", a11yFolded:"replié, {n} masqués", a11yEffective:"effectif : {status}", heldTooltip:"effectivement {eff} — lui-même déjà {own}, en attente de dépendances", a11yOptional:"facultatif", a11yFocusMark:"regarder ici", a11yLink:"avec lien",
     hint_indent:"L'indentation (2 espaces ou une tabulation) définit la hiérarchie.",
     hint_all:"sous-tâche, toutes requises", hint_any:"alternative, en choisir une",
@@ -3022,11 +3030,13 @@ const I18N = {
     storeFailedWarn:"Zapis w przeglądarce nie powiódł się — jego pamięć jest zapewne pełna. Zmiany mogą przepaść przy przeładowaniu; zwolnij miejsce, usuwając nieużywane dokumenty lub wcześniejsze stany.",
     tabConflictWarn:"Werkbaum jest otwarty w innej karcie — obie zapisują tę samą listę dokumentów i wygrywa ta, która zapisze ostatnia. Najlepiej pracować w jednej karcie.",
     liveUnsentWarn:"Twoje zmiany NIE dotarły na serwer od {min} minut — istnieją tylko w tym oknie. Zapisz przed zamknięciem (Ctrl+S lub przycisk aparatu).",
-    liveEndedWarn:"Połączenie na żywo z tym dokumentem serwera zostało zakończone — zmiany nie są już udostępniane. Przeładuj, aby połączyć się ponownie.",
+    liveEndedWarn:"Połączenie na żywo z tym dokumentem serwera zostało przerwane — Werkbaum łączy się ponownie automatycznie. Do tego czasu zmiany pozostają tylko w tym oknie.",
     tabModalTitle:"Werkbaum jest otwarty więcej niż raz",
     tabModalText:"Ta aplikacja jest otwarta w innym oknie lub karcie. Obie zapisują do tego samego magazynu dokumentów — ostatni zapis nadpisuje drugi. Zamknij drugie okno; ten komunikat zniknie sam.",
     tabModalForce:"Kontynuuj mimo to (niezalecane)",
     snapLocalHead:"Lokalne kopie (to okno)",
+    kindLiveDead:"rozłączono — ponowne łączenie …",
+    kindLiveUnsent:"niewysłane zmiany!",
     a11yStatus:"Status: {status}", a11ySize:"Nakład: {size}", a11ySizeImplicit:"Nakład: co najmniej {size} (założony)", a11yTags:"Przypisano: {names}", a11yId:"ID: #{id}", a11yDeps:"zależy od: {ids}", a11yFolded:"zwinięte, ukrytych: {n}", a11yEffective:"efektywnie: {status}", heldTooltip:"efektywnie {eff} — sam już {own}, czeka na zależności", a11yOptional:"opcjonalny", a11yFocusMark:"spójrz tutaj", a11yLink:"z linkiem",
     hint_indent:"Wcięcie (2 spacje lub tabulator) definiuje hierarchię.",
     hint_all:"podzadanie, wszystkie wymagane", hint_any:"alternatywa, wybierz jedną",
@@ -3154,11 +3164,13 @@ const I18N = {
     storeFailedWarn:"Не удалось сохранить в браузере — его хранилище, вероятно, заполнено. Изменения могут потеряться при перезагрузке; освободите место, удалив ненужные документы или прежние состояния.",
     tabConflictWarn:"Werkbaum открыт в другой вкладке — обе пишут в один список документов, и побеждает та, что сохранит последней. Лучше работать в одной вкладке.",
     liveUnsentWarn:"Ваши изменения НЕ доходят до сервера уже {min} мин — они существуют только в этом окне. Сохраните перед закрытием (Ctrl+S или кнопка камеры).",
-    liveEndedWarn:"Живое соединение с этим серверным документом завершено — изменения больше не передаются. Перезагрузите, чтобы переподключиться.",
+    liveEndedWarn:"Живое соединение с этим серверным документом прервано — Werkbaum переподключается автоматически. До тех пор изменения остаются только в этом окне.",
     tabModalTitle:"Werkbaum открыт несколько раз",
     tabModalText:"Приложение открыто в другом окне или вкладке. Оба пишут в одно хранилище документов — последний сохранивший перезаписывает другого. Закройте другое окно; это сообщение исчезнет само.",
     tabModalForce:"Продолжить всё равно (не рекомендуется)",
     snapLocalHead:"Локальные копии (это окно)",
+    kindLiveDead:"нет связи — переподключение …",
+    kindLiveUnsent:"неотправленные изменения!",
     a11yStatus:"Статус: {status}", a11ySize:"Оценка: {size}", a11ySizeImplicit:"Оценка: не меньше {size} (предполагается)", a11yTags:"Ответственные: {names}", a11yId:"ID: #{id}", a11yDeps:"зависит от: {ids}", a11yFolded:"свёрнуто, скрыто: {n}", a11yEffective:"фактически: {status}", heldTooltip:"фактически {eff} — сам уже {own}, ждёт зависимости", a11yOptional:"необязательно", a11yFocusMark:"смотрите здесь", a11yLink:"со ссылкой",
     hint_indent:"Отступ (2 пробела или табуляция) задаёт иерархию.",
     hint_all:"подзадача, все обязательны", hint_any:"альтернатива, выберите одну",
@@ -3286,11 +3298,13 @@ const I18N = {
     storeFailedWarn:"ब्राउज़र में सहेजना विफल रहा — संभवतः उसका संग्रहण भर गया है। पुनः लोड करने पर बदलाव खो सकते हैं; अनुपयोगी दस्तावेज़ या पिछली स्थितियाँ हटाकर जगह बनाएँ।",
     tabConflictWarn:"Werkbaum एक और ब्राउज़र टैब में खुला है — दोनों एक ही दस्तावेज़ सूची में लिखते हैं, और आख़िर में सहेजने वाला जीतता है। बेहतर है कि एक ही टैब में काम करें।",
     liveUnsentWarn:"आपके बदलाव {min} मिनट से सर्वर तक नहीं पहुँचे — वे केवल इस विंडो में मौजूद हैं। बंद करने से पहले सहेजें (Ctrl+S या कैमरा बटन)।",
-    liveEndedWarn:"इस सर्वर दस्तावेज़ से लाइव कनेक्शन समाप्त हो गया है — बदलाव अब साझा नहीं होते। दोबारा जोड़ने के लिए पुनः लोड करें।",
+    liveEndedWarn:"इस सर्वर दस्तावेज़ से लाइव कनेक्शन टूट गया है — Werkbaum अपने आप फिर जुड़ता है। तब तक बदलाव केवल इसी विंडो में रहते हैं।",
     tabModalTitle:"Werkbaum एक से अधिक बार खुला है",
     tabModalText:"यह ऐप किसी और विंडो या टैब में भी खुला है। दोनों एक ही दस्तावेज़ भंडार में लिखते हैं — आख़िर में सहेजने वाला दूसरे को मिटा देता है। कृपया दूसरी विंडो बंद करें; यह सूचना अपने आप हट जाएगी।",
     tabModalForce:"फिर भी जारी रखें (अनुशंसित नहीं)",
     snapLocalHead:"स्थानीय प्रतियाँ (यह विंडो)",
+    kindLiveDead:"संपर्क टूटा — फिर जोड़ रहा है …",
+    kindLiveUnsent:"बिना भेजे बदलाव!",
     a11yStatus:"स्थिति: {status}", a11ySize:"आकार: {size}", a11ySizeImplicit:"आकार: कम से कम {size} (अनुमानित)", a11yTags:"जिम्मेदार: {names}", a11yId:"आईडी: #{id}", a11yDeps:"निर्भर: {ids}", a11yFolded:"समेटा हुआ, {n} छिपे", a11yEffective:"प्रभावी: {status}", heldTooltip:"प्रभावी रूप से {eff} — स्वयं {own} है, निर्भरताओं की प्रतीक्षा में", a11yOptional:"वैकल्पिक", a11yFocusMark:"यहाँ देखें", a11yLink:"लिंक सहित",
     hint_indent:"इंडेंट (2 स्पेस या टैब) पदानुक्रम तय करता है।",
     hint_all:"उप-कार्य, सभी आवश्यक", hint_any:"विकल्प, एक चुनें",
@@ -3418,11 +3432,13 @@ const I18N = {
     storeFailedWarn:"无法保存到浏览器——其存储空间可能已满。重新加载时更改可能丢失；请删除不再使用的文档或以前的状态以腾出空间。",
     tabConflictWarn:"Werkbaum 已在另一个浏览器标签页中打开——两者写入同一份文档列表，最后保存者生效。最好只在一个标签页中工作。",
     liveUnsentWarn:"你的更改已有 {min} 分钟未到达服务器——它们只存在于此窗口中。关闭前请先保存（Ctrl+S 或相机按钮）。",
-    liveEndedWarn:"与此服务器文档的实时连接已结束——更改不再共享。重新加载以重新连接。",
+    liveEndedWarn:"与此服务器文档的实时连接已断开——Werkbaum 会自动重连。在此之前，更改只保留在此窗口中。",
     tabModalTitle:"Werkbaum 已多处打开",
     tabModalText:"此应用正同时在另一个窗口或标签页中打开。两者写入同一份文档存储——后保存者会覆盖对方。请关闭另一个窗口；此提示会自行消失。",
     tabModalForce:"仍要继续（不推荐）",
     snapLocalHead:"本地备份（此窗口）",
+    kindLiveDead:"已断开——正在重连 …",
+    kindLiveUnsent:"有未发送的更改！",
     a11yStatus:"状态：{status}", a11ySize:"工作量：{size}", a11ySizeImplicit:"工作量：至少 {size}（假定）", a11yTags:"负责人：{names}", a11yId:"ID：#{id}", a11yDeps:"依赖：{ids}", a11yFolded:"已折叠，隐藏 {n} 项", a11yEffective:"实际：{status}", heldTooltip:"实际为 {eff}——自身已是 {own}，等待依赖完成", a11yOptional:"可选", a11yFocusMark:"看这里", a11yLink:"含链接",
     hint_indent:"缩进（2 个空格或制表符）定义层级。",
     hint_all:"子任务，全部必需", hint_any:"备选项，择其一",
@@ -3550,11 +3566,13 @@ const I18N = {
     storeFailedWarn:"ブラウザーへの保存に失敗しました — ストレージが満杯の可能性があります。再読み込みで変更が失われることがあります。不要なドキュメントや以前の状態を削除して空きを作ってください。",
     tabConflictWarn:"Werkbaum が別のタブでも開いています — 両方が同じドキュメント一覧に書き込み、最後に保存した方が勝ちます。1 つのタブでの作業をおすすめします。",
     liveUnsentWarn:"変更が {min} 分間サーバーに届いていません — この変更はこのウィンドウにしか存在しません。閉じる前に保存してください（Ctrl+S またはカメラボタン）。",
-    liveEndedWarn:"このサーバー文書とのライブ接続は終了しました — 変更は共有されなくなっています。再読み込みで再接続します。",
+    liveEndedWarn:"このサーバー文書とのライブ接続が切れています — Werkbaum は自動的に再接続します。それまで変更はこのウィンドウにのみ残ります。",
     tabModalTitle:"Werkbaum が複数開かれています",
     tabModalText:"このアプリは別のウィンドウまたはタブでも開かれています。両方が同じ文書ストレージに書き込むため、最後に保存した側が他方を上書きします。もう一方のウィンドウを閉じてください。この通知は自動的に消えます。",
     tabModalForce:"それでも続行（非推奨）",
     snapLocalHead:"ローカルの控え（このウィンドウ）",
+    kindLiveDead:"切断 — 再接続中 …",
+    kindLiveUnsent:"未送信の変更あり！",
     a11yStatus:"ステータス: {status}", a11ySize:"規模: {size}", a11ySizeImplicit:"規模: 少なくとも {size}（想定）", a11yTags:"担当: {names}", a11yId:"ID: #{id}", a11yDeps:"依存先: {ids}", a11yFolded:"折りたたみ中、{n} 件非表示", a11yEffective:"実効: {status}", heldTooltip:"実効では {eff} — 自身は既に {own}、依存待ち", a11yOptional:"任意", a11yFocusMark:"ここを見る", a11yLink:"リンクあり",
     hint_indent:"インデント（スペース2つまたはタブ）で階層を定義します。",
     hint_all:"サブタスク、すべて必須", hint_any:"選択肢、1つを選ぶ",
@@ -3949,8 +3967,18 @@ function updateDocName(){
       const label = {shipped: 'docGroupShipped', own: 'docGroupOwn',
                      server: 'docGroupSources', url: 'docGroupSources'}[art];
       const host = serverHostOf(d.id);
-      kindEl.textContent = t(label) + (host ? ' · ' + host : '');
-    } else kindEl.textContent = '';
+      /* Verbindungs-Status am Chip (D90-Nachtrag): Die zeilenlose Warnung
+         unten übersieht man leicht (Nutzer-Befund) — getrennt bzw.
+         ungesendet steht deshalb warnfarben OBEN neben dem Namen, kurz.
+         Getrennt heißt zugleich: die Wiederverbindung läuft schon. */
+      const tot = art === 'server' && !liveState;
+      const unsent = !tot && liveWarning && liveWarning.type === 'liveUnsent';
+      kindEl.classList.toggle('warn', tot || !!unsent);
+      kindEl.textContent =
+        tot    ? t(label) + ' · ' + t('kindLiveDead') :
+        unsent ? t(label) + ' · ' + t('kindLiveUnsent') :
+                 t(label) + (host ? ' · ' + host : '');
+    } else { kindEl.textContent = ''; kindEl.classList.remove('warn'); }
   }
   /* Aus einer URL geladene Dokumente (D23): die vollständige Quelle in den
      Tooltip, da der Name in der Titelzeile mit Ellipse abgeschnitten wird.
@@ -5215,10 +5243,42 @@ function rescueSnapshot(docId, text){
     persistSnaps(snaps, localStorage);
 }
 
+/* Eine tote Sitzung heilt sich SELBST (Nutzer-Einwand zu D89: „Ohne Reload
+   ist wieder alles tot?" — nein): Der Wachhund versucht die Wiederverbindung,
+   alle 10 s, solange das aktive Dokument ein Server-Dokument ohne Sitzung
+   ist. Ungesendeter Text bleibt dabei STEHEN und geht als Diff an den Server
+   (die keepMine-Semantik aus dem Konflikt-Band) — die Wiederverbindung darf
+   nicht kosten, was sie retten soll. */
+let reconnectBusy = false, reconnectNext = 0;
+async function reconnectLive(d){
+  if(reconnectBusy || Date.now() < reconnectNext) return;
+  reconnectBusy = true;
+  try{
+    const urls = live.liveUrls(d.id.slice(5), location.href);
+    if(!urls) return;
+    const doc = await fetchJson(urls.doc);
+    if(activeId !== d.id || liveState) return;   /* inzwischen umgeschaltet oder verbunden */
+    const serverText = live.normalize(doc.content || '');
+    liveState = {urls, id: d.id, version: doc.version, shadow: live.lines(serverText),
+                 pushTimer: null, feedAbort: null, busy: false};
+    if(live.normalize(src.value) !== serverText) pushLive();
+    runFeed();
+    if(sourceWarning && (sourceWarning.type === 'liveLoad' || sourceWarning.type === 'liveStale')){
+      sourceWarning = null;
+      render();
+    }
+  }catch(_){
+    reconnectNext = Date.now() + 10000;   /* Backoff — auch ein gelöschtes Dokument kostet so nur ein GET je 10 s */
+  }finally{
+    reconnectBusy = false;
+  }
+}
+
 let unsyncedSince = 0;
 setInterval(() => {
   const d = activeDoc();
   const tot = !!(d && String(d.id).startsWith('live:') && !liveState);
+  if(tot) reconnectLive(d);
   const offen = !tot && livePendingChanges();
   if(offen){ if(!unsyncedSince) unsyncedSince = Date.now(); }
   else unsyncedSince = 0;
@@ -5229,6 +5289,7 @@ setInterval(() => {
   if(JSON.stringify(neu) !== JSON.stringify(liveWarning)){
     liveWarning = neu;
     render();
+    updateDocName();   /* der Chip-Status (D90-Nachtrag) hängt am selben Zustand */
   }
 }, 5000);
 
@@ -5293,11 +5354,17 @@ async function pushLive(meilenstein){
     sitzung.shadow = live.applyOps(
       foreign.length ? live.applyOps(basis, foreign) : basis, meine);
     sitzung.version = result.version;
-    /* Ein gelungener Abgleich räumt eine liegengebliebene Live-Warnung mit
-       weg — „nicht geladen" neben funktionierendem Senden wäre eine Lüge. */
-    if(sourceWarning && (sourceWarning.type === 'liveLoad' || sourceWarning.type === 'liveStale')){
-      sourceWarning = null;
+    /* Ein gelungener Abgleich räumt liegengebliebene Live-Warnungen SOFORT
+       weg — „nicht geladen" oder „ungesendet" neben funktionierendem Senden
+       wäre eine Lüge, und der Wachhund-Tick kann gedrosselt sein (1/min in
+       verborgenen Fenstern). */
+    unsyncedSince = 0;
+    const stale = sourceWarning && (sourceWarning.type === 'liveLoad' || sourceWarning.type === 'liveStale');
+    if(stale) sourceWarning = null;
+    if(stale || liveWarning){
+      liveWarning = null;
       render();
+      updateDocName();
     }
     if(foreign.length) applyForeign(basis, foreign, sitzung.shadow, sitzung.version);
   }catch(err){
@@ -5308,6 +5375,11 @@ async function pushLive(meilenstein){
 }
 
 function handlePushError(err){
+  /* Der Fehlerzeitpunkt verankert die Ungesendet-Uhr (D89-Nachtrag): Der
+     Wachhund-Takt kann in verborgenen Fenstern auf 1/min gedrosselt sein —
+     erst beim ersten Tick zu starten verschöbe die 30-s-Aussage dort um
+     Minuten. */
+  if(!unsyncedSince) unsyncedSince = Date.now();
   if(err && err.status === 409 && err.body){
     /* Der andere Weg in denselben Zustand: Unser Senden hat das Rennen gegen
        den Feed gewonnen, und der Server hat die Überschneidung gesehen. */

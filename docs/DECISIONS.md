@@ -7742,3 +7742,54 @@ der Sprachwechsel zieht mit („Included"); auf 375 px liegt das Label
 vollständig im Bild und die Chip-Zeile bleibt im D81-Layout (Kopf 95 px =
 Kopfzeile + Chip-Zeile). Reine UI-Verdrahtung, Browser-geprüft
 (D54-Nachtrag-3-Grenze); `docKind()` selbst ist seit D81 headless getestet.
+
+**Nachtrag — die Sitzung heilt sich selbst, und der Zustand steht am
+Namens-Chip.** Zwei Nutzer-Befunde beim ersten Ausprobieren: Die zeilenlose
+`liveEnded`-Warnung steht „unten versteckt (das übersieht man leicht)", und
+„Reload to reconnect" hieß: Ohne Zutun bleibt alles tot — „wer da als User
+nicht aufpasst, tippt wieder stundenlang". Beides behoben, und zwar besser
+als gewünscht (gewünscht war ein Reload-Angebot):
+
+- **Automatische Wiederverbindung.** Der Wachhund versucht bei toter Sitzung
+  alle 10 s einen Neuaufbau (`reconnectLive`). Ungesendeter Text bleibt dabei
+  STEHEN und geht als Diff an den Server — die keepMine-Semantik des
+  Konflikt-Bands; eine Wiederverbindung, die den Text verwürfe, kostete
+  genau das, was sie retten soll. Ein gelöschtes Dokument kostet der Backoff
+  ein GET je 10 s. Damit deckt derselbe Mechanismus auch den gescheiterten
+  Erstabruf ab (die halb initialisierte Sitzung aus dem Haupttext): tot ab
+  Start, verbunden nach spätestens ~15 s, sobald der Server antwortet.
+- **Der Verbindungszustand steht OBEN, warnfarben, am Dokumentart-Label**
+  (D90): „Geteilt · getrennt — verbindet neu …" bzw.
+  „Geteilt · ungesendete Änderungen!" statt „Geteilt · host" — kurz, wie
+  gefordert; die ausführliche zeilenlose Warnung bleibt darunter bestehen.
+  Der `liveEnded`-Text sagt jetzt, dass die Wiederverbindung von selbst
+  läuft, statt zum Reload aufzufordern.
+- **Die Ungesendet-Uhr ankert am Push-Fehler**, nicht am ersten Wachhund-Tick:
+  In verborgenen Fenstern drosselt Chrome die Timer auf 1/min (dieselbe
+  Grenze wie beim Modal-Timeout) — erst beim Tick zu starten verschöbe die
+  30-s-Aussage dort um Minuten. Genau daran wäre die Messung fast als
+  „geht nicht" gescheitert, dabei tickte nur der verborgene Automations-Tab
+  langsam.
+
+**Der gemeldete Auslöser ließ sich nicht nachstellen:** Zweites Fenster auf
+demselben Dokument öffnen und schließen lässt die Sitzung des ersten
+nachweislich leben (getippt, angekommen). Die plausibelste Erklärung des
+beobachteten `liveEnded` ist die **seit dem Start tote Sitzung** (ein
+einmalig gescheiterter Erstabruf) — vor D89 der stumme Zustand, jetzt
+benannt und seit diesem Nachtrag selbstheilend.
+
+**Fenster schließen aus dem Modal heraus geht nicht** — `window.close()`
+wirkt nur auf selbst geöffnete Fenster (Browser-Sicherheit). Was ginge, ist
+eine **Übergabe**: ein Knopf „Hier weiterarbeiten", auf den sich das andere
+Fenster selbst parkt (nicht mehr schreibt, Hinweis-Überlagerung). Als Idee
+notiert, nicht gebaut — eine eigene Entscheidung über
+Mehr-Fenster-Semantik.
+
+**Nachgemessen** im Browser gegen das lokale Backend: Seite bei totem
+Backend geladen → Chip „Shared · disconnected — reconnecting …" (warnfarben),
+Warnung benennt die automatische Wiederverbindung; während der Trennung
+getippt; Backend gestartet, **nichts geklickt** → nach ≤ 20 s Chip wieder
+„Shared · host", getippter Text auf dem Server (Version 3), Warnbereich
+leer — die Netze räumen sich selbst weg. Der Ungesendet-Zustand
+(Sitzung lebt, Patches scheitern) färbt den Chip ebenso; gemessen mit dem
+Fehler-Anker gegen die Timer-Drosselung.

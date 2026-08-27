@@ -19,6 +19,8 @@ reverse.
 
 ## 2026-08-27
 
+- A dead live session now reconnects by itself — unsent text stays in the editor and goes out as a diff once the server answers again
+- The connection state stands next to the document name: disconnected or unsent changes turn the kind label amber, instead of only a warning below the diagram
 - The document kind now stands in grey behind the name chip — Included, Local or Shared with the server's host, the same words as the menu groups
 - A second Werkbaum window now raises a modal dialog in both windows — it closes by itself as soon as the other window is gone
 - A standing warning appears when changes have not reached the server for 30 seconds — whatever the reason: an open conflict bar, a dead session, the network

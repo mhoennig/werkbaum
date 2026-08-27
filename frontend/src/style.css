@@ -92,6 +92,8 @@
     flex:0 0 auto;margin-left:8px;color:var(--muted);
     font-size:.72rem;white-space:nowrap;
   }
+  /* Verbindungs-Status am Chip (D90-Nachtrag): getrennt/ungesendet in Warnfarbe */
+  .dockind.warn{color:var(--warn);font-weight:600}
   /* Der Auslöser sieht jetzt nach Menü aus: gerahmter Chip mit Pfeil — die
      frühere nackte Beschriftung in der Panel-Zeile war als Knopf nicht zu
      erkennen (der Anlass von D81). */
