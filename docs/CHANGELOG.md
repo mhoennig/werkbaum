@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-27
 
+- Creating Taiga tickets from nodes recorded as planned: a story per node from the node window, sub-packages as tasks picked in a dialog, through a backend proxy — the ticket ref comes back as the node id
 - The unassigned pill in the people bar shows each language's short form now — German `N.N.`, English `TBD` — with the long wording in the tooltip
 - `pull-doc --open` opens the fetched document in IntelliJ IDEA afterwards — also when nothing changed
 - A dead live session now reconnects by itself — unsent text stays in the editor and goes out as a diff once the server answers again

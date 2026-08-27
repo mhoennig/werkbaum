@@ -199,11 +199,17 @@
         | [?] #idea.drift.fixtures: Both parsers test against the same fixtures (S)
         | [?] #idea.drift.js: Run the one JS parser inside the IDE (M)
   - [?] #trk: Tracker integration (XL)  %% exactly one of these, hence =
-    = [?] #trk.taiga: Taiga (L) https://taiga.io
+    = [?] #trk.taiga: Taiga (XL) https://taiga.io
       - [ ] #trk.resolve: Resolve "#123" over the REST API (M)
         - [ ] #trk.resolve.read: Read title, link and status (S)
         - [ ] #trk.resolve.map: Map the workflow onto the states (S)
       - [?] #trk.write: Write the status back (M) :#trk.resolve
+      - [ ] #trk.create: Create tickets from nodes (L)
+        - [ ] #trk.create.proxy: Backend proxy with named endpoints (M)
+        - [ ] #trk.create.login: Log in to Taiga, token stays in the browser (S) :#trk.create.proxy
+        - [ ] #trk.create.story: A "create story" action in the node window (S) :#trk.create.login
+        - [ ] #trk.create.tasks: Sub-packages become tasks, picked in a dialog (M) :#trk.create.story
+        - [ ] #trk.create.ref: The ticket ref becomes the node id (S) :#trk.create.story
       - [-] #trk.plugin: A plugin inside Taiga itself (L)  %% legacy frontend, self-hosted only
     = [?] #trk.tenzu: Tenzu, the successor (XXL) https://tenzu.net
     = [ ] #trk.none: No tracker, plain text is enough (XS)
@@ -1143,6 +1149,40 @@
 #trk.write
   The other direction: change a status in the plan and the ticket follows.
   Only worth doing once reading it is trustworthy.
+
+#trk.create
+  One click in the node window turns a node into a Taiga ticket. The cut
+  follows the Kanban view actually in use: stories are the cards and tasks
+  live inside them — so a story per node, and tasks only under a node that
+  already carries a story. Decisions in D91.
+
+#trk.create.proxy
+  A few named endpoints in the Werkbaum backend (auth, projects, user
+  stories, tasks) relay to the Taiga instance configured server-side. No
+  CORS trouble and no open relay — the target URL is never a request
+  parameter — and /api/v1/info announces the feature, so the button only
+  appears where a backend answers.
+
+#trk.create.login
+  Taiga's token API behind the proxy: the token lives in the browser and is
+  only passed through, the backend stores nothing. The password crosses the
+  proxy once at login and is never logged.
+
+#trk.create.story
+  "Create story" in the node window: pick the project from your list — asked
+  on every creation, so nothing stale is remembered — and the story is
+  created. A node that already carries a ticket ref is left alone.
+
+#trk.create.tasks
+  The second action also creates the direct sub-packages as tasks under the
+  story, chosen in a checkbox dialog: preselected are required and optional
+  children plus the realized alternatives of a |/= group; discarded ones
+  never appear, finished ones start unchecked.
+
+#trk.create.ref
+  The returned ref (#123, #US-123) is written back into the line as the node
+  id, undoable — the reserved ticket reference of SPEC §11, and the marker
+  that keeps a second click from creating the ticket twice.
 
 #trk.plugin
   Rejected: a plugin inside Taiga means its legacy frontend and works only in

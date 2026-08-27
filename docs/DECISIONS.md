@@ -7821,3 +7821,70 @@ neben der Langform: **Die Pille zeigt das Kürzel, Tooltip und `aria-label`
 die Langform** — ein Kürzel, das nirgends aufgelöst wird, wäre nur ein
 Rätsel. Nachgemessen im Browser: de-Pille „N.N." mit Tooltip
 „ohne Zuständigen: 29 % …", en-Pille „TBD" mit „unassigned: 29% …".
+
+## D91 — Ticket-Anlage aus Knoten: Proxy, zwei Aktionen, Häkchen-Dialog — festgelegt, noch nicht gebaut
+Evaluation, wie aus einem Werkbaum-Knoten ein Taiga-Ticket wird; entschieden
+als Multiple-Choice-Runde, festgehalten als Plan-Knoten (`#trk.create`),
+**bewusst ungebaut** — dieselbe Form wie beim Nutzen-Feature (SPEC §11).
+
+**Der Zuschnitt folgt der Kanban-Ansicht, die tatsächlich benutzt wird:**
+Dort sind **Stories die Karten**, Tasks stecken darin — und „storyless
+tasks" existieren in Taiga zwar (die API erlaubt Tasks ohne `user_story`),
+sind aber nur im Sprint-Taskboard in einer Extra-Sektion sichtbar, im Kanban
+gar nicht. Also: **eine Story je Knoten, Tasks nur unter einem Knoten, der
+schon eine Story trägt.** Taigas Hierarchie endet bei Epic → Story → Task
+(Tasks haben keine Subtasks) — die Abbildung eines beliebig tiefen
+Werkbaum-Baums ist damit immer ein Schnitt von höchstens drei Ebenen. Das
+ist Arbeitsteilung, kein Verlust: Taiga trackt die grobe Arbeit, Werkbaum
+die feine Zerlegung. Ein **Epic-Modus** (Knoten als Epic, Kinder als
+Stories, Enkel als Tasks) ist erwogen und **zurückgestellt** — ein zweiter
+Modus mit eigener UI-Frage; wer ein Epic braucht, wartet auf eine eigene
+Entscheidung.
+
+**Zugang: Backend-Proxy mit schmalen, benannten Endpunkten** (auth,
+projects, userstories, tasks) — kein transparenter Durchreich-Proxy: Der
+wäre ein offenes Relay auf die Taiga-Instanz und bräche den
+API-First-Stil des Backends (D76). Die **Taiga-Basis-URL ist
+Server-Konfiguration** (env, wie das Master-Passwort, D77), nie
+Request-Parameter — die SSRF-Falle naiver Proxies. Das **Token bleibt im
+Browser**, der Proxy reicht nur den Authorization-Header durch; das Backend
+speichert nichts und braucht kein Konten-Modell (serverseitige Tokens wären
+die Ausbaustufe nach dem Owner-Passwort). Der Auth-Endpunkt sieht das
+Passwort einmal im Durchflug — Request-Bodies dort nie loggen.
+`/api/v1/info` meldet das Feature (`taiga`), der Knopf erscheint nur, wo
+ein konfiguriertes Backend antwortet — dasselbe Muster wie die
+Teilen-Lebendprobe (D81-Nachtrag). Verworfen: **direkt aus der App**
+(hängt am CORS der Taiga-Instanz — messbar, aber jederzeit durch eine
+Server-Einstellung kündbar) und **CLI zuerst** (kann später dieselben
+Proxy-Endpunkte nutzen). Nebengewinn des Proxys: Der spätere
+Status-Rückweg braucht zwingend eine Server-Seite — Taiga-**Webhooks**
+erreichen keinen Browser.
+
+**Zwei Aktionen im Knoten-Fenster:** „Story anlegen" und „Story +
+Teilpakete als Tasks". Die zweite zeigt einen **Häkchen-Dialog** über die
+direkten Kinder (Nutzer-Entscheidung — maximale Kontrolle statt einer
+stillen Regel): **vorbelegt** sind Pflicht- und optionale (`+`) Kinder
+sowie die **realisierten** Alternativen einer `|`/`=`-Gruppe (ist nichts
+realisiert, ist die Wahl nicht getroffen — nichts vorbelegt); verworfene
+(`[-]`) erscheinen gar nicht, **erledigte (`[x]`/`[^]`) starten
+abgewählt** — dort ist nichts mehr zu tun, und angelegt wird ohnehin alles
+offen (Status-Übernahme ist das spätere Sync-Kapitel, `#trk.write`).
+
+**Das Projekt wird bei jeder Anlage gefragt** (Nutzer-Entscheidung):
+Projektliste des eingeloggten Nutzers, nichts gemerkt — kein veralteter
+Merker, ein Klick mehr je Ticket. Verworfen: fest im Backend (alle Pläne
+in einem Projekt), je Dokument gemerkt, im Notationstext (bräuchte eine
+SPEC-Festlegung).
+
+**Die Ticket-Ref wird als Knoten-ID zurückgeschrieben** — undo-fähig über
+die vorhandene Maschinerie (D53/D63), für Story und Tasks gleichermaßen
+(Taiga vergibt Refs projektweit über alle Typen). Das ist wörtlich die
+reservierte Ticket-Referenz aus SPEC §11 („oft ist die Ticket-Kennung die
+natürliche Knoten-ID", D34) und zugleich der Idempotenz-Marker: Ein Knoten,
+der schon eine Ref trägt, wird nicht erneut angelegt.
+
+**Offen bis zum Bauen:** die zwei Messfragen an die echte Instanz —
+Auth-Typ (`normal`/`ldap`, das LDAP-Plugin nutzt einen eigenen `type`) und
+das Ref-Muster für die Tracker-Erkennung (`#123` vs. `#US-123`,
+D34-Nachtrag). An der Notation ändert sich nichts; `llms.md` bleibt
+unberührt.
