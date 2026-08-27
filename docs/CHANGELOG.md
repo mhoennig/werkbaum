@@ -19,6 +19,10 @@ reverse.
 
 ## 2026-08-27
 
+- If Werkbaum is open in a second browser tab, a warning says so — both tabs write the same document list, and the last one to save wins
+- Reloading a URL document no longer asks — a page reload discards local changes silently anyway, so the question promised a protection that did not exist
+- Deleting your last document now says that a fresh example will take its place
+- Fix: the reload button also showed for shared documents and would have loaded the API's JSON answer as text, pushing it to everyone
 - An owner password for shared plans recorded as planned: creating a document returns it once, management will bind to it, an admin can reclaim
 - Shared documents are left, not deleted: their row shows a leave action with its own icon and wording — the document stays on the server, and its link lands on the clipboard
 - The document menu's groups are named Included, Local and Shared now — "yours" and "sources" said less than where a document lives

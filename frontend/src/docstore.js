@@ -76,6 +76,15 @@ export function storeDocs(storage, docs, allKeys){
   }
 }
 
+/* Gehört ein localStorage-Schlüssel zur Dokument-Ablage? Für die
+   Fremd-Tab-Erkennung (D84): Das storage-Ereignis anderer Tabs nennt den
+   Schlüssel — nur Dokument-Schlüssel heißen „ein anderer Tab schreibt in
+   dieselbe Liste". */
+export function isDocKey(k){
+  const s = String(k == null ? '' : k);
+  return s === LS_DOCS || s === LS_ACTIVE || s === LS_SRC || s.startsWith(DOC_TEXT_PREFIX);
+}
+
 /* Die Tastendruck-Hälfte: nur der Text EINES Dokuments plus der Spiegel.
    Anders als bis D82 schreibt der Tastendruck damit direkt in die echte
    Ablage — eine „Spiegel gewinnt"-Regel beim Laden braucht das neue Schema

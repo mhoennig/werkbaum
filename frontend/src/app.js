@@ -9,7 +9,7 @@ import { LS_SNAPS, SNAP_EVERY, parseSnaps, addSnapshot, persistSnaps, snapLabel 
   from './snapshots.js';
 import { FILE_ACCEPT, FILE_TYPES, saveFileName } from './localfile.js';
 import { LIVE_PARAM, SOURCE_PARAM, ETHERPAD_PARAM, docSearch, docKind } from './docurl.js';
-import { readDocs, storeDocs, storeDocText, LS_DOCS, LS_ACTIVE, LS_SRC } from './docstore.js';
+import { readDocs, storeDocs, storeDocText, isDocKey, LS_DOCS, LS_ACTIVE, LS_SRC } from './docstore.js';
 /* Neuigkeiten (D58): die git-Historie, zur BAUZEIT eingelesen (Vite-Plugin in
    vite.config.js). Zur Laufzeit gibt es kein git — und keinen Server, der
    nachliefern könnte (D11/D19). Leer, wo git nicht erreichbar war. */
@@ -87,6 +87,18 @@ let sourceWarning = null;
    Verlust fiel erst beim Neuladen auf. Persistent, bis ein Schreiben wieder
    gelingt; zeilenlos und zuoberst. */
 let storeWarning = null;
+/* Ein ANDERER Tab schreibt in dieselbe Dokument-Ablage (D84): Das
+   storage-Ereignis feuert nur in fremden Tabs desselben Ursprungs — genau
+   das richtige Signal. Kein Sync (der letzte Flush gewinnt weiterhin, wie
+   immer), aber kein STILLER Verlust mehr: Die Warnung bleibt stehen,
+   solange dieser Tab lebt — die Lage ändert sich ja nicht dadurch, dass
+   der andere Tab gerade nichts schreibt. */
+let tabWarning = null;
+window.addEventListener('storage', e => {
+  if(tabWarning || !e.key || !isDocKey(e.key)) return;
+  tabWarning = {type: 'tabConflict'};
+  render();
+});
 function noteStore(ok){
   const neu = ok ? null : {type: 'storeFailed'};
   const wechsel = (!!storeWarning) !== (!!neu);
@@ -148,6 +160,7 @@ function render(){
      (?sourceUrl nicht ladbar, D23) gehört keiner Zeile und bleibt über
      Neu-Renderings bestehen, bis das Laden gelingt. */
   let warnings = sourceWarning ? [sourceWarning].concat(parsed.warnings) : parsed.warnings;
+  if(tabWarning) warnings = [tabWarning].concat(warnings);       /* fremder Tab schreibt mit (D84) */
   if(storeWarning) warnings = [storeWarning].concat(warnings);   /* Datenverlust droht — zuoberst (D82) */
 
   if(!roots.length){
@@ -2260,6 +2273,7 @@ const I18N = {
     docNew:"Neues Dokument", docRename:"Umbenennen", docDelete:"Löschen",
     docNewName:"Unbenannt",
     docDeleteConfirm:"Dokument „{name}“ löschen?",
+    docDeleteLastConfirm:"Dokument „{name}“ löschen? Es ist das letzte — danach steht wieder das mitgelieferte Beispiel da.",
     docLeave:"Verlassen – nur aus der eigenen Liste entfernen",
     docLeaveConfirm:"„{name}“ verlassen? Es wird nur aus deiner Liste entfernt — auf dem Server bleibt es bestehen, und sein Link liegt danach in der Zwischenablage.",
     docRestore:"Original wiederherstellen",
@@ -2315,6 +2329,7 @@ const I18N = {
     sourceLoadWarn:"„{url}“ konnte nicht geladen werden ({error}). Die Datei muss per http(s) erreichbar sein und CORS erlauben (Access-Control-Allow-Origin).",
     padGoneWarn:"Dieser Link zeigt auf ein Etherpad-Pad. Die Etherpad-Anbindung gibt es nicht mehr — gemeinsames Arbeiten läuft jetzt über ein Werkbaum-Backend (?live=…). Der Text des Pads lässt sich dort einmal einfügen und dann zu zweit bearbeiten.",
     storeFailedWarn:"Speichern im Browser fehlgeschlagen — vermutlich ist der Speicher voll. Änderungen können beim Neuladen verloren gehen; Platz schaffen: nicht mehr gebrauchte Dokumente oder frühere Stände löschen.",
+    tabConflictWarn:"Werkbaum ist in einem weiteren Browser-Tab geöffnet — beide schreiben in dieselbe Dokumentenliste, und der zuletzt speichernde gewinnt. Am besten nur in einem Tab arbeiten.",
     a11yStatus:"Status: {status}", a11ySize:"Aufwand: {size}", a11ySizeImplicit:"Aufwand: mindestens {size} (angenommen)", a11yTags:"Zuständig: {names}", a11yId:"ID: #{id}", a11yDeps:"hängt ab von: {ids}", a11yFolded:"eingeklappt, {n} verborgen", a11yEffective:"effektiv: {status}", heldTooltip:"effektiv {eff} — selbst schon {own}, wartet auf Abhängigkeiten", a11yOptional:"optional", a11yFocusMark:"hierhin schauen", a11yLink:"verlinkt",
     hint_indent:"Einrückung (2 Leerzeichen oder Tab) definiert die Hierarchie.",
     hint_all:"Teilpaket, alle erforderlich", hint_any:"Alternative, eine wählen",
@@ -2376,6 +2391,7 @@ const I18N = {
     docNew:"New document", docRename:"Rename", docDelete:"Delete",
     docNewName:"Untitled",
     docDeleteConfirm:"Delete document “{name}”?",
+    docDeleteLastConfirm:"Delete document “{name}”? It is the last one — the shipped example will take its place.",
     docLeave:"Leave – removes it from your list only",
     docLeaveConfirm:"Leave “{name}”? It is only removed from your list — it stays on the server, and its link is placed on your clipboard.",
     docRestore:"Restore original",
@@ -2431,6 +2447,7 @@ const I18N = {
     sourceLoadWarn:"Could not load “{url}” ({error}). The file must be reachable via http(s) and allow CORS (Access-Control-Allow-Origin).",
     padGoneWarn:"This link points at an Etherpad pad. The Etherpad connection is gone — collaboration now runs through a Werkbaum backend (?live=…). Paste the pad’s text there once, then edit it together.",
     storeFailedWarn:"Saving in the browser failed — its storage is probably full. Changes may be lost on reload; free space by deleting unused documents or earlier states.",
+    tabConflictWarn:"Werkbaum is open in another browser tab — both write to the same document list, and the last one to save wins. Best work in a single tab.",
     a11yStatus:"Status: {status}", a11ySize:"Effort: {size}", a11ySizeImplicit:"Effort: at least {size} (assumed)", a11yTags:"Assigned: {names}", a11yId:"ID: #{id}", a11yDeps:"depends on: {ids}", a11yFolded:"collapsed, {n} hidden", a11yEffective:"effective: {status}", heldTooltip:"effectively {eff} — itself already {own}, waiting on dependencies", a11yOptional:"optional", a11yFocusMark:"look here", a11yLink:"has link",
     hint_indent:"Indentation (2 spaces or a tab) defines the hierarchy.",
     hint_all:"sub-task, all required", hint_any:"alternative, choose one",
@@ -2492,6 +2509,7 @@ const I18N = {
     docNew:"Nuevo documento", docRename:"Renombrar", docDelete:"Eliminar",
     docNewName:"Sin título",
     docDeleteConfirm:"¿Eliminar el documento «{name}»?",
+    docDeleteLastConfirm:"¿Eliminar el documento «{name}»? Es el último: el ejemplo incluido volverá a ocupar su lugar.",
     docLeave:"Salir – solo se quita de tu lista",
     docLeaveConfirm:"¿Salir de «{name}»? Solo se quita de tu lista: sigue en el servidor y su enlace queda en el portapapeles.",
     docRestore:"Restaurar original",
@@ -2547,6 +2565,7 @@ const I18N = {
     sourceLoadWarn:"No se pudo cargar «{url}» ({error}). El archivo debe ser accesible por http(s) y permitir CORS (Access-Control-Allow-Origin).",
     padGoneWarn:"Este enlace apunta a un pad de Etherpad. La conexión con Etherpad ya no existe: ahora se colabora a través de un backend de Werkbaum (?live=…). Pega allí el texto del pad una vez y editadlo juntos.",
     storeFailedWarn:"No se pudo guardar en el navegador: su almacenamiento probablemente está lleno. Los cambios pueden perderse al recargar; libera espacio borrando documentos sin uso o estados anteriores.",
+    tabConflictWarn:"Werkbaum está abierto en otra pestaña — ambas escriben en la misma lista de documentos y gana la última en guardar. Mejor trabaja en una sola pestaña.",
     a11yStatus:"Estado: {status}", a11ySize:"Esfuerzo: {size}", a11ySizeImplicit:"Esfuerzo: al menos {size} (asumido)", a11yTags:"Responsable: {names}", a11yId:"ID: #{id}", a11yDeps:"depende de: {ids}", a11yFolded:"plegado, {n} ocultos", a11yEffective:"efectivo: {status}", heldTooltip:"efectivamente {eff} — por sí mismo ya {own}, espera dependencias", a11yOptional:"opcional", a11yFocusMark:"mirar aquí", a11yLink:"con enlace",
     hint_indent:"La sangría (2 espacios o un tabulador) define la jerarquía.",
     hint_all:"subtarea, todas obligatorias", hint_any:"alternativa, elige una",
@@ -2608,6 +2627,7 @@ const I18N = {
     docNew:"Nouveau document", docRename:"Renommer", docDelete:"Supprimer",
     docNewName:"Sans titre",
     docDeleteConfirm:"Supprimer le document « {name} » ?",
+    docDeleteLastConfirm:"Supprimer le document « {name} » ? C'est le dernier — l'exemple fourni reprendra sa place.",
     docLeave:"Quitter – ne le retire que de votre liste",
     docLeaveConfirm:"Quitter « {name} » ? Il n'est retiré que de votre liste — il reste sur le serveur et son lien est copié dans le presse-papiers.",
     docRestore:"Restaurer l’original",
@@ -2663,6 +2683,7 @@ const I18N = {
     sourceLoadWarn:"Impossible de charger « {url} » ({error}). Le fichier doit être accessible en http(s) et autoriser CORS (Access-Control-Allow-Origin).",
     padGoneWarn:"Ce lien pointe vers un pad Etherpad. La connexion Etherpad n’existe plus — la collaboration passe désormais par un backend Werkbaum (?live=…). Collez-y une fois le texte du pad, puis modifiez-le à plusieurs.",
     storeFailedWarn:"L'enregistrement dans le navigateur a échoué — son stockage est probablement plein. Les modifications peuvent être perdues au rechargement ; libérez de l'espace en supprimant des documents inutilisés ou des états antérieurs.",
+    tabConflictWarn:"Werkbaum est ouvert dans un autre onglet — les deux écrivent dans la même liste de documents et le dernier à enregistrer l'emporte. Mieux vaut travailler dans un seul onglet.",
     a11yStatus:"Statut : {status}", a11ySize:"Effort : {size}", a11ySizeImplicit:"Effort : au moins {size} (supposé)", a11yTags:"Responsable : {names}", a11yId:"ID : #{id}", a11yDeps:"dépend de : {ids}", a11yFolded:"replié, {n} masqués", a11yEffective:"effectif : {status}", heldTooltip:"effectivement {eff} — lui-même déjà {own}, en attente de dépendances", a11yOptional:"facultatif", a11yFocusMark:"regarder ici", a11yLink:"avec lien",
     hint_indent:"L'indentation (2 espaces ou une tabulation) définit la hiérarchie.",
     hint_all:"sous-tâche, toutes requises", hint_any:"alternative, en choisir une",
@@ -2724,6 +2745,7 @@ const I18N = {
     docNew:"Nowy dokument", docRename:"Zmień nazwę", docDelete:"Usuń",
     docNewName:"Bez nazwy",
     docDeleteConfirm:"Usunąć dokument „{name}”?",
+    docDeleteLastConfirm:"Usunąć dokument „{name}”? To ostatni — jego miejsce zajmie dołączony przykład.",
     docLeave:"Opuść – usuwa tylko z twojej listy",
     docLeaveConfirm:"Opuścić „{name}”? Zniknie tylko z twojej listy — na serwerze pozostaje, a jego link trafi do schowka.",
     docRestore:"Przywróć oryginał",
@@ -2779,6 +2801,7 @@ const I18N = {
     sourceLoadWarn:"Nie udało się wczytać „{url}” ({error}). Plik musi być dostępny przez http(s) i zezwalać na CORS (Access-Control-Allow-Origin).",
     padGoneWarn:"Ten link prowadzi do pada Etherpad. Połączenia z Etherpadem już nie ma — wspólna praca odbywa się teraz przez backend Werkbaum (?live=…). Wklej tam raz tekst pada i edytujcie go razem.",
     storeFailedWarn:"Zapis w przeglądarce nie powiódł się — jego pamięć jest zapewne pełna. Zmiany mogą przepaść przy przeładowaniu; zwolnij miejsce, usuwając nieużywane dokumenty lub wcześniejsze stany.",
+    tabConflictWarn:"Werkbaum jest otwarty w innej karcie — obie zapisują tę samą listę dokumentów i wygrywa ta, która zapisze ostatnia. Najlepiej pracować w jednej karcie.",
     a11yStatus:"Status: {status}", a11ySize:"Nakład: {size}", a11ySizeImplicit:"Nakład: co najmniej {size} (założony)", a11yTags:"Przypisano: {names}", a11yId:"ID: #{id}", a11yDeps:"zależy od: {ids}", a11yFolded:"zwinięte, ukrytych: {n}", a11yEffective:"efektywnie: {status}", heldTooltip:"efektywnie {eff} — sam już {own}, czeka na zależności", a11yOptional:"opcjonalny", a11yFocusMark:"spójrz tutaj", a11yLink:"z linkiem",
     hint_indent:"Wcięcie (2 spacje lub tabulator) definiuje hierarchię.",
     hint_all:"podzadanie, wszystkie wymagane", hint_any:"alternatywa, wybierz jedną",
@@ -2840,6 +2863,7 @@ const I18N = {
     docNew:"Новый документ", docRename:"Переименовать", docDelete:"Удалить",
     docNewName:"Без названия",
     docDeleteConfirm:"Удалить документ «{name}»?",
+    docDeleteLastConfirm:"Удалить документ «{name}»? Он последний — его место снова займёт встроенный пример.",
     docLeave:"Покинуть – удаляется только из вашего списка",
     docLeaveConfirm:"Покинуть «{name}»? Он исчезнет только из вашего списка — на сервере он останется, а его ссылка будет в буфере обмена.",
     docRestore:"Восстановить оригинал",
@@ -2895,6 +2919,7 @@ const I18N = {
     sourceLoadWarn:"Не удалось загрузить «{url}» ({error}). Файл должен быть доступен по http(s) и разрешать CORS (Access-Control-Allow-Origin).",
     padGoneWarn:"Эта ссылка ведёт на пад Etherpad. Подключения к Etherpad больше нет — совместная работа теперь идёт через бэкенд Werkbaum (?live=…). Вставьте туда текст пада один раз и редактируйте вместе.",
     storeFailedWarn:"Не удалось сохранить в браузере — его хранилище, вероятно, заполнено. Изменения могут потеряться при перезагрузке; освободите место, удалив ненужные документы или прежние состояния.",
+    tabConflictWarn:"Werkbaum открыт в другой вкладке — обе пишут в один список документов, и побеждает та, что сохранит последней. Лучше работать в одной вкладке.",
     a11yStatus:"Статус: {status}", a11ySize:"Оценка: {size}", a11ySizeImplicit:"Оценка: не меньше {size} (предполагается)", a11yTags:"Ответственные: {names}", a11yId:"ID: #{id}", a11yDeps:"зависит от: {ids}", a11yFolded:"свёрнуто, скрыто: {n}", a11yEffective:"фактически: {status}", heldTooltip:"фактически {eff} — сам уже {own}, ждёт зависимости", a11yOptional:"необязательно", a11yFocusMark:"смотрите здесь", a11yLink:"со ссылкой",
     hint_indent:"Отступ (2 пробела или табуляция) задаёт иерархию.",
     hint_all:"подзадача, все обязательны", hint_any:"альтернатива, выберите одну",
@@ -2956,6 +2981,7 @@ const I18N = {
     docNew:"नया दस्तावेज़", docRename:"नाम बदलें", docDelete:"हटाएँ",
     docNewName:"बिना शीर्षक",
     docDeleteConfirm:"दस्तावेज़ „{name}“ हटाएँ?",
+    docDeleteLastConfirm:"दस्तावेज़ „{name}“ हटाएँ? यह आख़िरी है — इसकी जगह फिर से साथ आया उदाहरण आ जाएगा।",
     docLeave:"छोड़ें – केवल आपकी सूची से हटता है",
     docLeaveConfirm:"„{name}“ छोड़ें? यह केवल आपकी सूची से हटेगा — सर्वर पर बना रहेगा, और इसका लिंक क्लिपबोर्ड में रख दिया जाएगा।",
     docRestore:"मूल पुनर्स्थापित करें",
@@ -3011,6 +3037,7 @@ const I18N = {
     sourceLoadWarn:"„{url}“ लोड नहीं हो सका ({error})। फ़ाइल http(s) से उपलब्ध होनी चाहिए और CORS की अनुमति देनी चाहिए (Access-Control-Allow-Origin)।",
     padGoneWarn:"यह लिंक एक Etherpad पैड की ओर इशारा करता है। Etherpad कनेक्शन अब नहीं है — साझा काम अब Werkbaum बैकएंड (?live=…) से होता है। पैड का टेक्स्ट वहाँ एक बार चिपकाएँ और मिलकर संपादित करें।",
     storeFailedWarn:"ब्राउज़र में सहेजना विफल रहा — संभवतः उसका संग्रहण भर गया है। पुनः लोड करने पर बदलाव खो सकते हैं; अनुपयोगी दस्तावेज़ या पिछली स्थितियाँ हटाकर जगह बनाएँ।",
+    tabConflictWarn:"Werkbaum एक और ब्राउज़र टैब में खुला है — दोनों एक ही दस्तावेज़ सूची में लिखते हैं, और आख़िर में सहेजने वाला जीतता है। बेहतर है कि एक ही टैब में काम करें।",
     a11yStatus:"स्थिति: {status}", a11ySize:"आकार: {size}", a11ySizeImplicit:"आकार: कम से कम {size} (अनुमानित)", a11yTags:"जिम्मेदार: {names}", a11yId:"आईडी: #{id}", a11yDeps:"निर्भर: {ids}", a11yFolded:"समेटा हुआ, {n} छिपे", a11yEffective:"प्रभावी: {status}", heldTooltip:"प्रभावी रूप से {eff} — स्वयं {own} है, निर्भरताओं की प्रतीक्षा में", a11yOptional:"वैकल्पिक", a11yFocusMark:"यहाँ देखें", a11yLink:"लिंक सहित",
     hint_indent:"इंडेंट (2 स्पेस या टैब) पदानुक्रम तय करता है।",
     hint_all:"उप-कार्य, सभी आवश्यक", hint_any:"विकल्प, एक चुनें",
@@ -3072,6 +3099,7 @@ const I18N = {
     docNew:"新建文档", docRename:"重命名", docDelete:"删除",
     docNewName:"未命名",
     docDeleteConfirm:"删除文档“{name}”？",
+    docDeleteLastConfirm:"删除文档“{name}”？这是最后一个——自带示例将重新取代它。",
     docLeave:"离开——仅从你的列表中移除",
     docLeaveConfirm:"离开“{name}”？它只会从你的列表中移除——仍保留在服务器上，其链接会放入剪贴板。",
     docRestore:"恢复原始版本",
@@ -3127,6 +3155,7 @@ const I18N = {
     sourceLoadWarn:"无法加载“{url}”（{error}）。该文件必须可通过 http(s) 访问并允许 CORS（Access-Control-Allow-Origin）。",
     padGoneWarn:"此链接指向一个 Etherpad pad。Etherpad 连接已移除——协作现在通过 Werkbaum 后端（?live=…）进行。把 pad 的文本粘贴过去一次，然后一起编辑。",
     storeFailedWarn:"无法保存到浏览器——其存储空间可能已满。重新加载时更改可能丢失；请删除不再使用的文档或以前的状态以腾出空间。",
+    tabConflictWarn:"Werkbaum 已在另一个浏览器标签页中打开——两者写入同一份文档列表，最后保存者生效。最好只在一个标签页中工作。",
     a11yStatus:"状态：{status}", a11ySize:"工作量：{size}", a11ySizeImplicit:"工作量：至少 {size}（假定）", a11yTags:"负责人：{names}", a11yId:"ID：#{id}", a11yDeps:"依赖：{ids}", a11yFolded:"已折叠，隐藏 {n} 项", a11yEffective:"实际：{status}", heldTooltip:"实际为 {eff}——自身已是 {own}，等待依赖完成", a11yOptional:"可选", a11yFocusMark:"看这里", a11yLink:"含链接",
     hint_indent:"缩进（2 个空格或制表符）定义层级。",
     hint_all:"子任务，全部必需", hint_any:"备选项，择其一",
@@ -3188,6 +3217,7 @@ const I18N = {
     docNew:"新規ドキュメント", docRename:"名前を変更", docDelete:"削除",
     docNewName:"無題",
     docDeleteConfirm:"ドキュメント「{name}」を削除しますか？",
+    docDeleteLastConfirm:"ドキュメント「{name}」を削除しますか？これが最後です — 同梱のサンプルが再び置かれます。",
     docLeave:"退出 – 自分のリストから外すだけ",
     docLeaveConfirm:"「{name}」から退出しますか？自分のリストから外れるだけで、サーバーには残ります。リンクはクリップボードに入ります。",
     docRestore:"オリジナルを復元",
@@ -3243,6 +3273,7 @@ const I18N = {
     sourceLoadWarn:"「{url}」を読み込めませんでした（{error}）。ファイルは http(s) でアクセス可能で、CORS（Access-Control-Allow-Origin）を許可する必要があります。",
     padGoneWarn:"このリンクは Etherpad のパッドを指しています。Etherpad 連携は廃止されました。共同編集は Werkbaum バックエンド（?live=…）で行います。パッドの本文を一度貼り付ければ、複数人で編集できます。",
     storeFailedWarn:"ブラウザーへの保存に失敗しました — ストレージが満杯の可能性があります。再読み込みで変更が失われることがあります。不要なドキュメントや以前の状態を削除して空きを作ってください。",
+    tabConflictWarn:"Werkbaum が別のタブでも開いています — 両方が同じドキュメント一覧に書き込み、最後に保存した方が勝ちます。1 つのタブでの作業をおすすめします。",
     a11yStatus:"ステータス: {status}", a11ySize:"規模: {size}", a11ySizeImplicit:"規模: 少なくとも {size}（想定）", a11yTags:"担当: {names}", a11yId:"ID: #{id}", a11yDeps:"依存先: {ids}", a11yFolded:"折りたたみ中、{n} 件非表示", a11yEffective:"実効: {status}", heldTooltip:"実効では {eff} — 自身は既に {own}、依存待ち", a11yOptional:"任意", a11yFocusMark:"ここを見る", a11yLink:"リンクあり",
     hint_indent:"インデント（スペース2つまたはタブ）で階層を定義します。",
     hint_all:"サブタスク、すべて必須", hint_any:"選択肢、1つを選ぶ",
@@ -3753,7 +3784,11 @@ function updateDocButtons(){
       neu.disabled = d.text === shipped.text && d.name === shipped.name;
       neu.title = t('docRestore');
       neu.setAttribute('aria-label', t('docRestore'));
-    } else if(d && (d.source || fileHandles.has(d.id))){
+    /* NICHT für Server-Dokumente: adoptLive() setzt zwar `source`, aber dort
+       hält der Feed den Stand aktuell — und ein fetchRemote auf die
+       Dokument-Adresse lüde die JSON-Antwort der API als Text (D84). */
+    } else if(d && !String(d.id).startsWith('live:')
+              && (d.source || fileHandles.has(d.id))){
       neu.hidden = false; neu.disabled = false;
       neu.title = t('docReload');
       neu.setAttribute('aria-label', t('docReload'));
@@ -3790,10 +3825,12 @@ function restoreDoc(id){
    stehen — der verweigerte Dialog IST die Antwort. */
 async function reloadDoc(){
   const d = activeDoc();
-  if(!d) return;
+  if(!d || String(d.id).startsWith('live:')) return;   /* Server-Dokumente hält der Feed aktuell (D84) */
   if(shippedStateOf(d.id)){ restoreDoc(d.id); return; }
-  if(!window.confirm(t('docReloadConfirm', {name: d.name}))) return;
   if(d.source){
+    /* KEINE Rückfrage (D84): Die URL ist die Quelle der Wahrheit (D23) —
+       jedes Neuladen der Seite verwirft lokale Änderungen ohnehin still.
+       Eine Rückfrage nur am Knopf versprach einen Schutz, den es nicht gibt. */
     try{
       d.text = await fetchRemote(d.source);
       sourceWarning = null;
@@ -3807,6 +3844,7 @@ async function reloadDoc(){
   }
   const h = fileHandles.get(d.id);
   if(!h) return;
+  if(!window.confirm(t('docReloadConfirm', {name: d.name}))) return;
   try{
     let perm = await h.queryPermission({mode: 'read'});
     if(perm === 'prompt') perm = await h.requestPermission({mode: 'read'});
@@ -4215,7 +4253,11 @@ function removeDocLocally(d){
 function deleteDoc(id){
   const d = docs.find(x => x.id === id);
   if(!d) return;
-  if(!window.confirm(t('docDeleteConfirm', {name: d.name}))) return;
+  /* Beim LETZTEN Dokument sagt die Rückfrage, was danach dasteht (D84):
+     Der Editor steht nie leer, es entsteht ein frisches Beispiel — vorher
+     hieß es nur „löschen?", und dann erschien still etwas Neues. */
+  const letztes = docs.length === 1;
+  if(!window.confirm(t(letztes ? 'docDeleteLastConfirm' : 'docDeleteConfirm', {name: d.name}))) return;
   removeDocLocally(d);
 }
 /* Verlassen (D81-Nachtrag 5): für Geteilte — dem Dokument auf dem Server

@@ -51,7 +51,11 @@
                                       (localStorage-Quota, D82): Datenverlust
                                       droht beim Neuladen; zeilenlos, steht
                                       zuoberst und verschwindet, sobald ein
-                                      Schreiben wieder gelingt */
+                                      Schreiben wieder gelingt
+   - tabConflict   { }              — ein weiterer Tab schreibt in dieselbe
+                                      Dokument-Ablage (D84): der letzte Flush
+                                      gewinnt; zeilenlos, bleibt bis zum
+                                      Neuladen stehen */
 
 import { esc } from './render.js';
 
@@ -104,6 +108,8 @@ function build(w, t, esc){
       return t('liveStaleWarn', {error: esc(w.error)});
     case 'storeFailed':
       return t('storeFailedWarn');
+    case 'tabConflict':
+      return t('tabConflictWarn');
     default:
       return `${esc(String(w.type))} (${w.line ?? '?'})`;
   }

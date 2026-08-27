@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readDocs, storeDocs, storeDocText, docTextKey,
+import { readDocs, storeDocs, storeDocText, docTextKey, isDocKey,
          LS_DOCS, LS_SRC, DOC_TEXT_PREFIX } from '../src/docstore.js';
 
 /* Storage-Attrappe mit Zähler — die Vergleich-vor-Schreiben-Regel ist nur
@@ -99,5 +99,21 @@ describe('docstore — Index + Text je Dokument (D83)', () => {
     expect(readDocs(s).docs[0].name).toBe('x');
     const voll = {getItem: () => null, setItem: () => { throw new Error('QuotaExceeded'); }, removeItem: () => {}};
     expect(() => storeDocs(voll, [A], [])).toThrow();
+  });
+});
+
+describe('isDocKey — Fremd-Tab-Erkennung (D84)', () => {
+  it('erkennt Index, aktives Dokument, Spiegel und Text-Schlüssel', () => {
+    expect(isDocKey(LS_DOCS)).toBe(true);
+    expect(isDocKey('werkbaum-active')).toBe(true);
+    expect(isDocKey(LS_SRC)).toBe(true);
+    expect(isDocKey(DOC_TEXT_PREFIX + 'live:https://x/api/v1/documents/a')).toBe(true);
+  });
+
+  it('fremde Schlüssel und Ansichts-Zustand sind keine Dokument-Schlüssel', () => {
+    expect(isDocKey('werkbaum-ui')).toBe(false);
+    expect(isDocKey('werkbaum-lang')).toBe(false);
+    expect(isDocKey('werkbaum-snaps')).toBe(false);
+    expect(isDocKey(null)).toBe(false);
   });
 });

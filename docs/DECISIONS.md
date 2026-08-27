@@ -7246,3 +7246,47 @@ Papierkorb. Werkzeug-Lehre am Rande: Ein noch offener, veralteter Test-Tab
 flushte bei jedem Sichtbarkeitswechsel seinen alten Speicherstand über die
 Inszenierung (Last-Writer-Wins zwischen Tabs — kein neues Verhalten, aber
 eine Falle für Speicher-Tests: alte Tabs erst schließen).
+
+## D84 — Drei kleine Ungereimtheiten und ein Fund: Reload, letztes Dokument, fremder Tab
+Aus der Nutzer-Frage „Gibt es noch weitere ähnliche Ungereimtheiten?" entstand
+eine Liste von zehn Punkten; die Entscheidungen dazu fielen als
+Multiple-Choice-Runde, umgesetzt in drei Paketen. Dies ist **Paket A** — die
+drei kleinen, nur im Frontend:
+
+**1. Der Neu-laden-Knopf fragt bei URL-Dokumenten nicht mehr nach.** Die
+Rückfrage („lokale Änderungen gehen verloren") versprach einen Schutz, den es
+nicht gibt: Jedes Neuladen der **Seite** verwirft lokale Änderungen an einem
+URL-Dokument ohnehin still — die URL ist die Quelle der Wahrheit (D23). Bei
+**Datei-Dokumenten** bleibt die Rückfrage: Dort gibt es den stillen
+Konkurrenzweg nicht.
+
+**Dabei ein echter Fehler gefunden: Der Neu-laden-Knopf erschien auch bei
+Server-Dokumenten** — `adoptLive()` setzt `source`, und der Knopf prüfte nur
+darauf. Ein Druck hätte die **JSON-Antwort der API** als Notationstext geladen
+und per Live-Diff an alle Mitschreiber gepusht. Jetzt sind `live:`-Dokumente
+an beiden Stellen ausgenommen (Knopf-Sichtbarkeit und `reloadDoc()` selbst) —
+der Feed hält sie ohnehin aktuell.
+
+**2. Die Rückfrage beim letzten Dokument sagt, was danach dasteht.** Der
+Editor steht nie leer (D22): Wer sein letztes Dokument löscht, bekommt still
+ein frisches Beispiel. Die Rückfrage trägt das jetzt („Es ist das letzte —
+danach steht wieder das mitgelieferte Beispiel da.", `docDeleteLastConfirm`,
+neun Sprachen); das Verhalten bleibt unverändert.
+
+**3. Ein fremder Tab wird erkannt und gemeldet.** Zwei offene Tabs schreiben
+in dieselbe Dokument-Ablage, der letzte Flush gewinnt — schon immer so, aber
+nirgends benannt (bei den D83-Tests dreimal hineingelaufen). Das
+`storage`-Ereignis feuert genau in den **anderen** Tabs desselben Ursprungs;
+`isDocKey()` (docstore.js, getestet) filtert auf Dokument-Schlüssel, und die
+zeilenlose Warnung `tabConflict` bleibt bis zum Neuladen stehen — die Lage
+ändert sich nicht dadurch, dass der andere Tab gerade pausiert. Bewusst
+**kein** Sync: Erkennen ist der Schritt, der stillen Verlust beendet; ein
+echter Tab-Abgleich wäre ein eigener Umbau mit eigenen Konfliktfragen.
+
+**Nachgemessen** im Browser: URL-Dokument lädt am Knopf ohne Rückfrage frisch
+(0 confirm-Aufrufe, Text ersetzt); beim aktiven Server-Dokument ist der Knopf
+verborgen; die normale und die Letztes-Dokument-Rückfrage tragen die
+richtigen Texte, Abbruch lässt alles stehen; und die Tab-Warnung erschien
+durch **echtes** Tippen in einem zweiten Tab (kein synthetisches Ereignis —
+das storage-Ereignis kommt nur aus fremden Fenstern). 531 Tests, davon 2 neue
+für `isDocKey`.
