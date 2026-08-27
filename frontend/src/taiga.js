@@ -24,6 +24,53 @@ export function ticketRefOf(n){
   return m ? m[1] : null;
 }
 
+/* Die Adresse eines Tickets im Taiga-FRONTEND (D91-Nachtrag 5): Stories
+   liegen unter `/us/`, Tasks unter `/task/` — das Präfix trägt den Typ,
+   genau dafür schreibt Werkbaum es (SPEC §11). Ohne Web-Basis, Projekt-Slug
+   oder gültige Ref gibt es keine Adresse (null). */
+export function ticketUrl(web, slug, ref){
+  const m = /^(US|T)-(\d+)$/.exec(ref || '');
+  if(!m || !web || !slug) return null;
+  return web + '/project/' + slug + '/' + (m[1] === 'US' ? 'us' : 'task') + '/' + m[2];
+}
+
+/* Die Ticket-Referenz unter der Schreibmarke (Strg+Klick im Text,
+   D91-Nachtrag 5): ein FREISTEHENDES `#US-123`/`#T-1234`-Token im Baumteil.
+   Dieselben Ausschlüsse wie beim Abhängigkeits-Sprung (D67): nicht im
+   Kommentar, nicht im Beschreibungsteil hinter `---`, nicht innerhalb einer
+   URL. In einer Abhängigkeitsliste (`:#US-123`) ist die Ref nicht
+   freistehend — dort behält Strg+Klick den Sprung zur Zeile. Liefert
+   {ref, line} (Zeile 1-basiert) oder null. */
+export function ticketRefAt(text, caret){
+  const sol = text.lastIndexOf('\n', caret - 1) + 1;
+  let eol = text.indexOf('\n', caret);
+  if(eol === -1) eol = text.length;
+  const before = text.slice(0, sol);
+  for(const l of before.split('\n')){
+    if(/^\s*-{3,}\s*$/.test(l)) return null;
+  }
+  const line = text.slice(sol, eol);
+  const col = caret - sol;
+  const k = line.indexOf('%%');
+  if(k !== -1 && col >= k) return null;
+  const head = k === -1 ? line : line.slice(0, k);
+  const u = /https?:\/\/\S+/.exec(head);
+  if(u && col > u.index && col < u.index + u[0].length) return null;
+  const re = /(^|\s)#((?:US|T)-\d+)/g;
+  let m;
+  while((m = re.exec(head))){
+    const p = m.index + m[1].length;
+    const end = p + 1 + m[2].length;
+    /* Kein Treffer mitten in einem längeren Token (`#US-123abc`) — hinter
+       den Ziffern darf kein weiteres ID-Zeichen stehen (der Doppelpunkt als
+       Trenner, §1, ist keines). */
+    if(/[\p{L}\p{N}._-]/u.test(head[end] || '')) continue;
+    if(col >= p && col <= end)
+      return {ref: m[2], line: before.split('\n').length};
+  }
+  return null;
+}
+
 /* Das Token, das an die Zeile geschrieben wird. */
 export function refToken(kind, ref){ return '#' + kind + '-' + ref; }
 export function slugToken(slug){ return '&taiga.' + slug; }

@@ -19,6 +19,8 @@ reverse.
 
 ## 2026-08-27
 
+- Ctrl+click a ticket ref like `#US-123` — in the text or on its node — opens the ticket in Taiga's web UI; the node window carries an open button, which is the way on touch
+- The backend names the Taiga web address now (`WERKBAUM_TAIGA_WEB_URL`, reported by `/api/v1/info`) — without it, creating tickets still works and opening is simply absent
 - A ticket ref like `#US-123` in a node title no longer breaks across two lines at its hyphen
 - Create a Taiga story from a diagram node: the node window offers "create story" and "create story + tasks" — log in once (the token stays in the browser), pick the project, and the ref lands in the line as `#US-123`, undoable
 - Sub-packages become Taiga tasks via a checkbox dialog: required and optional children start checked, in `|`/`=` groups only realized alternatives, done children unchecked, discarded ones absent — each created task writes its `#T-…` ref to its line

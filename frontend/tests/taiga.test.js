@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/parser.js';
 import { taigaSlugs } from '../src/model.js';
-import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken } from '../src/taiga.js';
+import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt } from '../src/taiga.js';
 
 /* Schlagworte `&tag` (SPEC §1, D91): Extraktion im Parser und die
    `taiga.*`-Vererbung in model.js — der erste Konsument der reservierten
@@ -178,5 +178,67 @@ describe('appendToken — Token ans sichtbare Zeilenende (D91)', () => {
     const zeile = appendToken('- Teilbaum', slugToken('mi-intern'));
     const { roots } = parse(zeile);
     expect(roots[0].marks).toEqual(['taiga.mi-intern']);
+  });
+});
+
+/* Ticket-Links (D91-Nachtrag 5): die Adresse im Taiga-Frontend und die
+   Ref-Erkennung unter der Schreibmarke (Strg+Klick). */
+
+describe('ticketUrl — Adresse im Taiga-Frontend', () => {
+  it('Stories unter /us/, Tasks unter /task/ — das Präfix trägt den Typ', () => {
+    expect(ticketUrl('https://plan.example', 'mi-kunde', 'US-123'))
+      .toBe('https://plan.example/project/mi-kunde/us/123');
+    expect(ticketUrl('https://plan.example', 'mi-kunde', 'T-45'))
+      .toBe('https://plan.example/project/mi-kunde/task/45');
+  });
+
+  it('ohne Web-Basis, Slug oder gültige Ref: keine Adresse', () => {
+    expect(ticketUrl(null, 'mi-kunde', 'US-1')).toBe(null);
+    expect(ticketUrl('https://plan.example', null, 'US-1')).toBe(null);
+    expect(ticketUrl('https://plan.example', 'mi-kunde', 'ABC-1')).toBe(null);
+    expect(ticketUrl('https://plan.example', 'mi-kunde', 'US-1x')).toBe(null);
+  });
+});
+
+describe('ticketRefAt — die Ref unter der Schreibmarke', () => {
+  const at = (text, needle) => text.indexOf(needle);
+
+  it('trifft ein freistehendes Token, über seine ganze Breite', () => {
+    const text = '- Login bauen #US-123 (M)';
+    const p = at(text, '#US-123');
+    expect(ticketRefAt(text, p)).toEqual({ref: 'US-123', line: 1});
+    expect(ticketRefAt(text, p + 7)).toEqual({ref: 'US-123', line: 1});
+    /* das Leerzeichen davor gehört nicht mehr zum Token */
+    expect(ticketRefAt(text, p - 1)).toBe(null);
+  });
+
+  it('nennt die richtige Zeile', () => {
+    const text = '- A\n  - B #T-77';
+    expect(ticketRefAt(text, at(text, '#T-77') + 2)).toEqual({ref: 'T-77', line: 2});
+  });
+
+  it('mit Trenn-Doppelpunkt dahinter (§1) bleibt es ein Treffer', () => {
+    const text = '- #US-123: Titel dazu';
+    expect(ticketRefAt(text, at(text, 'US') + 1)).toEqual({ref: 'US-123', line: 1});
+  });
+
+  it('in einem Abhängigkeits-Token ist die Ref nicht freistehend', () => {
+    const text = '- A :#US-123';
+    expect(ticketRefAt(text, at(text, 'US') + 1)).toBe(null);
+  });
+
+  it('kein Treffer neben dem Token, im Kommentar, in der URL, hinter ---', () => {
+    expect(ticketRefAt('- A #US-1 B', 0)).toBe(null);
+    const c = '- A %% siehe #US-123';
+    expect(ticketRefAt(c, at(c, 'US'))).toBe(null);
+    const u = '- A https://x.example/#US-123 dazu';
+    expect(ticketRefAt(u, at(u, 'US'))).toBe(null);
+    const d = '- A\n---\n#US-123\n  Text';
+    expect(ticketRefAt(d, at(d, 'US'))).toBe(null);
+  });
+
+  it('kein Treffer mitten in einem längeren Token', () => {
+    const text = '- A #US-123abc B';
+    expect(ticketRefAt(text, at(text, 'US'))).toBe(null);
   });
 });

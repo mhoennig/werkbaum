@@ -1018,6 +1018,18 @@ verknüpft (siehe D25):
   ist schon als `unknownDep` gewarnt). Kein Sprung im Kommentar, im
   Beschreibungsteil hinter `---` und innerhalb einer URL; Alt+Klick behält
   daneben unverändert seine Richtung ins Diagramm. Siehe D67.
+- **Text/Diagramm → Taiga:** **Strg+Klick** auf eine **freistehende**
+  Ticket-Referenz (`#US-123`/`#T-1234`, §11) im Text — und ebenso auf einen
+  Knoten, dessen Zeile eine solche Ref trägt — öffnet das Ticket im
+  Taiga-Frontend (neuer Tab, `noopener`); im Knoten-Fenster steht dafür
+  zusätzlich ein Öffnen-Knopf (auf Touch der einzige Weg — dort gibt es kein
+  Strg). Voraussetzung: Das Backend meldet die Web-Basis der Instanz
+  (`GET /info`, `taigaWeb`) und der Teilbaum ist per `&taiga.<slug>` (§1)
+  einem Projekt zugeordnet; fehlt eines, geschieht still nichts (wie beim
+  Abhängigkeits-Sprung). In einem `:#…`-Token ist die Ref **nicht**
+  freistehend — dort behält Strg+Klick den Sprung zur Zeile; die
+  D67-Ausschlüsse (Kommentar, Beschreibungsteil, URL) gelten auch hier.
+  Siehe D91-Nachtrag 5.
 - Der **einfache** Klick bleibt unverändert der Link (§6): Ein Knoten mit URL
   öffnet sie weiterhin im neuen Tab. Deshalb Alt und nicht der einfache Klick.
 - **Auffindbarkeit:** Solange **Alt gedrückt** ist, zeigen alle Knoten den
