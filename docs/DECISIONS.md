@@ -7041,3 +7041,15 @@ cross-origin.
 Abbruch tut nichts; die Probe gegen das echte Backend liefert
 `{name:"editor-backend"}`. `infoUrl()` liegt headless in live.js (39
 Live-Tests, +1).
+
+**Nachtrag 2 — Wiederherstellen fliegt aus den Menü-Zeilen wieder raus.**
+Nutzer-Einwand nach dem ersten Arbeiten damit: Im Menü ließe sich ein
+**ungeöffnetes** Dokument zurücksetzen — „was keinen Sinn ergäbe". Der
+Einwand trifft: Wiederherstellen verwirft Änderungen, und wer das Dokument
+nicht vor sich hat, sieht nicht, was er verwirft. Umbenennen und Löschen
+bleiben je Zeile (dort ist der Blick auf den Inhalt nicht nötig — der Name
+steht da, und Löschen fragt nach); Wiederherstellen wirkt nur noch über den
+**Neu-laden-Knopf der Editor-Titelzeile**, also auf das geöffnete Dokument.
+`restoreDoc()` prüft das selbst (`d.id !== activeId` → nichts), statt sich
+auf den Aufrufer zu verlassen. Der D81-Haupttext oben beschreibt insoweit
+den Zwischenstand von einem Tag.

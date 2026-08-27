@@ -155,10 +155,12 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Text in den Editor. `saveSrc()` schreibt den Editortext ins aktive Dokument.
   Der Wähler ist eine **Brotkrume im App-Kopf** (`#docTrigger`/`#docMenu`,
   „Werkbaum › Name", D81); das Menü gruppiert nach Dokumentart (`docKind()` in
-  docurl.js, headless getestet) und trägt Umbenennen/Löschen/Wiederherstellen
-  als Symbole **je Zeile** — `renameDoc/deleteDoc/restoreDoc` nehmen deshalb
-  eine **id**, nicht das aktive Dokument, und Verwaltungs-Aktionen lassen das
-  Menü offen. Die Editor-Titelzeile heißt wieder „Text-Editor" und trägt die
+  docurl.js, headless getestet) und trägt Umbenennen/Löschen als Symbole
+  **je Zeile** — `renameDoc/deleteDoc` nehmen deshalb eine **id**, nicht das
+  aktive Dokument, und Verwaltungs-Aktionen lassen das Menü offen.
+  Wiederherstellen gibt es im Menü bewusst **nicht** (D81-Nachtrag 2): Es
+  läuft über den Neu-laden-Knopf der Titelzeile und wirkt nur auf das
+  geöffnete Dokument — `restoreDoc()` prüft das selbst. Die Editor-Titelzeile heißt wieder „Text-Editor" und trägt die
   Stand-Knöpfe (`saveBtn`/`snapAddBtn`/`snapBtn`/`reloadBtn`/`shareBtn` in der
   `.standgroup`); ihren Zustand setzt `updateDocButtons()` — aufgerufen aus
   `updateDocName()` UND am `input`-Ereignis, denn die Abweichung vom

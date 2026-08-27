@@ -532,9 +532,10 @@
 
 #ed.docs.picker
   The app header reads "Werkbaum > name": the chip opens the menu, grouped by
-  kind (shipped, yours, sources), with rename, delete and restore on each row.
-  It scrolls as a whole instead of being cut off on small screens, and on the
-  phone it is reachable from both panes.
+  kind (shipped, yours, sources), with rename and delete on each row. Restore
+  lives on the editor title bar's reload button instead, acting only on the
+  open document. The menu scrolls as a whole instead of being cut off on
+  small screens, and on the phone it is reachable from both panes.
 
 #ed.docs.url
   A link can carry the address of a text file, which is then fetched on every

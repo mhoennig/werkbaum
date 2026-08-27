@@ -3571,15 +3571,17 @@ function serverHostOf(id){
   if(!roh.startsWith('live:')) return null;
   try{ return new URL(roh.slice(5)).host; }catch(_){ return null; }
 }
-/* Kleine Zeilen-Icons (Feather-Stil wie überall): Stift, Papierkorb,
-   Wiederherstellen. Als Konstanten, damit der Renderer lesbar bleibt. */
+/* Kleine Zeilen-Icons (Feather-Stil wie überall): Stift, Papierkorb.
+   Als Konstanten, damit der Renderer lesbar bleibt. */
 const IC_RENAME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>';
 const IC_DELETE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>';
-const IC_RESTORE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.7 5v5.5h5.5"/><path d="M4 15a8.5 8.5 0 1 0 .5-7.5L1.7 10.5"/></svg>';
 /* Eine Menüzeile: Wählen-Knopf + Zeilen-Aktionen als GESCHWISTER — ein Knopf
    im Knopf wäre ungültiges HTML. Die Aktionen sind immer sichtbar (Touch
-   kennt kein Hover): Umbenennen und Löschen überall, Wiederherstellen nur an
-   einem mitgelieferten Dokument, das vom Auslieferungsstand abweicht. */
+   kennt kein Hover): Umbenennen und Löschen, beides überall. Wiederherstellen
+   gibt es hier bewusst NICHT (D81-Nachtrag 2): Es wirkt über den
+   Neu-laden-Knopf der Editor-Titelzeile nur auf das geöffnete Dokument —
+   ein ungeöffnetes zurückzusetzen, ohne zu sehen, was man verwirft, ergäbe
+   keinen Sinn. */
 function docRowHtml(d){
   if(d.id === renamingId){
     /* Inline-Umbenennen direkt im Menü (kein window.prompt — das ist in
@@ -3593,8 +3595,6 @@ function docRowHtml(d){
      verriete den Unterschied. */
   const host = serverHostOf(d.id);
   const zusatz = host ? `<span class="docitem-where">${esc(host)}</span>` : '';
-  const shipped = shippedStateOf(d.id);
-  const abweichend = shipped && (d.text !== shipped.text || d.name !== shipped.name);
   const iconBtn = (act, label, svg, extra) =>
     `<button type="button" class="dociconbtn${extra || ''}" data-act="${act}" ` +
     `title="${esc(label)}" aria-label="${esc(label)}">${svg}</button>`;
@@ -3604,7 +3604,6 @@ function docRowHtml(d){
     `<span class="doccheck" aria-hidden="true">✓</span>` +
     `<span class="docitem-name">${esc(d.name)}</span>${zusatz}</button>` +
     `<span class="docacts">` +
-    (abweichend ? iconBtn('restore', t('docRestore'), IC_RESTORE) : '') +
     iconBtn('rename', t('docRename'), IC_RENAME) +
     iconBtn('delete', t('docDelete'), IC_DELETE, ' docdelbtn') +
     `</span></div>`;
@@ -3682,22 +3681,21 @@ function updateDocButtons(){
     speichern.title = t('docSaveFile') + (h ? '\n' + h.name : '');
   }
 }
-/* Wiederherstellen gilt jetzt je Zeile des Menüs UND — für das aktive
-   Dokument — dem Neu-laden-Knopf der Titelzeile. */
+/* Original wiederherstellen — erreichbar über den Neu-laden-Knopf der
+   Editor-Titelzeile und damit nur für das GEÖFFNETE mitgelieferte Dokument
+   (D81-Nachtrag 2): Ein ungeöffnetes zurückzusetzen, ohne zu sehen, was man
+   verwirft, ergäbe keinen Sinn. */
 function restoreDoc(id){
   const d = docs.find(x => x.id === id);
   const shipped = d && shippedStateOf(d.id);
-  if(!shipped) return;
+  if(!shipped || d.id !== activeId) return;
   if(!window.confirm(t('docRestoreConfirm', {name: d.name}))) return;
   d.text = shipped.text;
   d.name = shipped.name;
-  if(d.id === activeId){
-    foldOverrides.clear();
-    loadActiveIntoEditor();
-  }
+  foldOverrides.clear();
+  loadActiveIntoEditor();
   persistDocs();
-  if(!docMenu.hidden) renderDocMenu();
-  updateDocButtons();
+  if(!docMenu.hidden) renderDocMenu();   /* der Name kann sich zurückgeändert haben */
 }
 /* Aus der Quelle neu laden (D81): mitgeliefert → Original wiederherstellen;
    URL-Dokument → frisch holen (die URL ist die Quelle der Wahrheit, D23);
@@ -4964,7 +4962,6 @@ docList.addEventListener('click', e => {
     if(!id) return;
     if(akt.dataset.act === 'rename') renameDoc(id);
     else if(akt.dataset.act === 'delete') deleteDoc(id);
-    else if(akt.dataset.act === 'restore') restoreDoc(id);
     return;
   }
   const btn = e.target.closest('.docpick');
