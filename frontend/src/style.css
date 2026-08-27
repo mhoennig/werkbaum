@@ -775,6 +775,10 @@
   }
   /* Nur die dunkle (statuslose) Wurzel — Begründung beim Falt-Chip oben. */
   .root-node:not(.st-idee):not(.st-geplant):not(.st-arbeit):not(.st-durchstich):not(.st-fertig):not(.st-prod):not(.st-highrisk):not(.st-verworfen) .nid{color:rgba(255,255,255,.75)}
+  /* Ticket-Referenz im Label (SPEC §11): als Ganzes gehalten — der Browser
+     bräche eine zu breit geratene Zeile sonst am Bindestrich mitten im Token
+     (`#US-`/`123`). Die Spanne setzt render.js (markTicketRefs). */
+  .node .tref{white-space:nowrap}
   /* Der Knopf trägt das Zeichen selbst statt eines Icons — in der Größe der
      SVGs daneben, damit die Kopfzeile ihre Höhe behält. */
   .copybtn.idsbtn span{

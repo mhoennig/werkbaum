@@ -565,7 +565,9 @@ Siehe D29.
   trifft der 23-px-Abzweig die Mitte der **ersten Zeile** (die Zeilenhöhe
   bleibt fest); der Optional-Kreis (§9) sitzt auf dem Abzweig, nicht auf der
   Knotenmitte. Der Grafikexport misst die gerenderten Zeilen und gibt sie als
-  einzelne Textzeilen aus.
+  einzelne Textzeilen aus. Eine **Ticket-Referenz** im Label (`#US-123` /
+  `#T-1234`, §11) bricht dabei **nie mitten im Token** um — auch nicht am
+  Bindestrich, an dem der Browser eine zu breit geratene Zeile sonst bricht.
 - Dasselbe gilt **waagerecht**: Im horizontalen Fächer trifft der Stiel die
   **Knotenmitte**, nicht die Mitte der Zelle. Beides fällt nur zusammen, solange
   der Knoten in seiner Zelle zentriert steht — ein Knoten mit any-of-Kindern

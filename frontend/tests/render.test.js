@@ -182,3 +182,26 @@ describe('showIds — die ID in einer eigenen Zeile über dem Titel', () => {
     expect(html).toContain('&lt;b: X');
   });
 });
+
+/* Ticket-Referenzen im Label (SPEC §11) sind als Ganzes gehalten: eine
+   `tref`-Spanne mit `white-space:nowrap`, damit der Browser eine zu breit
+   geratene Zeile nicht am Bindestrich mitten im Token bricht. */
+describe('renderTreeHtml — Ticket-Referenzen brechen nicht um', () => {
+  const one = text => renderTreeHtml(parse(text).roots, {t, cheapSet: new Set()}).html;
+
+  it('umspannt eine freistehende Ref im Label', () => {
+    expect(one('- Login bauen #auth #US-123'))
+      .toContain('<span class="tref">#US-123</span>');
+    expect(one('- #x: Detail #T-4567 klären'))
+      .toContain('<span class="tref">#T-4567</span>');
+  });
+
+  it('umspannt auch den D60-Knoten, dessen Label die Ref ist', () => {
+    expect(one('- #US-123')).toContain('<span class="tref">#US-123</span>');
+  });
+
+  it('lässt Zitier-Klammern und Nicht-Refs in Ruhe', () => {
+    expect(one('- Erwähnt (#US-123) nur #x')).not.toContain('tref');
+    expect(one('- #auth: Backend-US-123 Modul')).not.toContain('tref');
+  });
+});

@@ -93,6 +93,18 @@ export function wrapLabel(label, max = 32){
   return lines;
 }
 
+/* Ticket-Referenzen (`#US-123`/`#T-1234`, SPEC §11) im Label bleiben ein
+   Stück: `wrapLabel()` bricht nur an Leerzeichen, aber der Browser bricht
+   eine Zeile, die breiter als `max-width` gerät (32ch misst die Ziffer „0",
+   Buchstaben sind breiter), zusätzlich an jedem BINDESTRICH — und eine Ref,
+   die als `#US-`/`123` über zwei Zeilen geht, ist nicht mehr als Ref zu
+   lesen. Läuft auf dem schon escapten Label-Text; die Spanne enthält nur
+   Text, `labelLines()` (Grafikexport) misst ihre Textknoten unverändert mit. */
+function markTicketRefs(html){
+  return html.replace(/(^|\s)(#(?:US|T)-\d+)(?=\s|$)/g,
+    (all, pre, ref) => `${pre}<span class="tref">${ref}</span>`);
+}
+
 /* Barrierefreier Name eines Knotens: Label + Status + Aufwand + Zuständige +
    Link. Die visuellen Badges (Größe, Tags, ↗) sind aria-hidden — ihre
    Information steckt hier, sonst würde der Screenreader Kryptisches („M",
@@ -272,7 +284,7 @@ function nodeHtml(n, extra, opts, fold){
                    Der `textContent` behielte sonst keine Wortgrenze, und alles,
                    was den Knotentext liest (Export, Fokusmarken-Schlüssel),
                    bekäme zusammengeklebte Wörter. */
-                esc(wrapLabel(n.label).join('\n')) +
+                markTicketRefs(esc(wrapLabel(n.label).join('\n'))) +
                 /* ”-Marke (D40): macht die sonst unsichtbare Beschreibung
                    auffindbar (Lehre aus D25) — spiegelt das "-Zeichen der
                    Notation. Nicht im Export: Der Text selbst kann dort nicht

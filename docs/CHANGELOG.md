@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-27
 
+- A ticket ref like `#US-123` in a node title no longer breaks across two lines at its hyphen
 - Create a Taiga story from a diagram node: the node window offers "create story" and "create story + tasks" — log in once (the token stays in the browser), pick the project, and the ref lands in the line as `#US-123`, undoable
 - Sub-packages become Taiga tasks via a checkbox dialog: required and optional children start checked, in `|`/`=` groups only realized alternatives, done children unchecked, discarded ones absent — each created task writes its `#T-…` ref to its line
 - The project dialog is prefilled from the inherited `&taiga.slug` keyword, and a creation without or against the inherited assignment writes the keyword back to the node's line
