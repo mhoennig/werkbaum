@@ -2260,6 +2260,8 @@ const I18N = {
     docNew:"Neues Dokument", docRename:"Umbenennen", docDelete:"Löschen",
     docNewName:"Unbenannt",
     docDeleteConfirm:"Dokument „{name}“ löschen?",
+    docLeave:"Verlassen – nur aus der eigenen Liste entfernen",
+    docLeaveConfirm:"„{name}“ verlassen? Es wird nur aus deiner Liste entfernt — auf dem Server bleibt es bestehen, und sein Link liegt danach in der Zwischenablage.",
     docRestore:"Original wiederherstellen",
     docRestoreConfirm:"„{name}“ auf den mitgelieferten Stand zurücksetzen? Eigene Änderungen gehen verloren.",
     docOpenFile:"Datei öffnen…", docSaveFile:"Als Datei speichern (Strg+S)",
@@ -2374,6 +2376,8 @@ const I18N = {
     docNew:"New document", docRename:"Rename", docDelete:"Delete",
     docNewName:"Untitled",
     docDeleteConfirm:"Delete document “{name}”?",
+    docLeave:"Leave – removes it from your list only",
+    docLeaveConfirm:"Leave “{name}”? It is only removed from your list — it stays on the server, and its link is placed on your clipboard.",
     docRestore:"Restore original",
     docRestoreConfirm:"Reset “{name}” to the shipped version? Your changes will be lost.",
     docOpenFile:"Open file…", docSaveFile:"Save as file (Ctrl+S)",
@@ -2488,6 +2492,8 @@ const I18N = {
     docNew:"Nuevo documento", docRename:"Renombrar", docDelete:"Eliminar",
     docNewName:"Sin título",
     docDeleteConfirm:"¿Eliminar el documento «{name}»?",
+    docLeave:"Salir – solo se quita de tu lista",
+    docLeaveConfirm:"¿Salir de «{name}»? Solo se quita de tu lista: sigue en el servidor y su enlace queda en el portapapeles.",
     docRestore:"Restaurar original",
     docRestoreConfirm:"¿Restablecer «{name}» a la versión incluida? Tus cambios se perderán.",
     docOpenFile:"Abrir archivo…", docSaveFile:"Guardar como archivo (Ctrl+S)",
@@ -2602,6 +2608,8 @@ const I18N = {
     docNew:"Nouveau document", docRename:"Renommer", docDelete:"Supprimer",
     docNewName:"Sans titre",
     docDeleteConfirm:"Supprimer le document « {name} » ?",
+    docLeave:"Quitter – ne le retire que de votre liste",
+    docLeaveConfirm:"Quitter « {name} » ? Il n'est retiré que de votre liste — il reste sur le serveur et son lien est copié dans le presse-papiers.",
     docRestore:"Restaurer l’original",
     docRestoreConfirm:"Réinitialiser « {name} » à la version livrée ? Vos modifications seront perdues.",
     docOpenFile:"Ouvrir un fichier…", docSaveFile:"Enregistrer comme fichier (Ctrl+S)",
@@ -2716,6 +2724,8 @@ const I18N = {
     docNew:"Nowy dokument", docRename:"Zmień nazwę", docDelete:"Usuń",
     docNewName:"Bez nazwy",
     docDeleteConfirm:"Usunąć dokument „{name}”?",
+    docLeave:"Opuść – usuwa tylko z twojej listy",
+    docLeaveConfirm:"Opuścić „{name}”? Zniknie tylko z twojej listy — na serwerze pozostaje, a jego link trafi do schowka.",
     docRestore:"Przywróć oryginał",
     docRestoreConfirm:"Przywrócić „{name}” do dostarczonej wersji? Twoje zmiany zostaną utracone.",
     docOpenFile:"Otwórz plik…", docSaveFile:"Zapisz jako plik (Ctrl+S)",
@@ -2830,6 +2840,8 @@ const I18N = {
     docNew:"Новый документ", docRename:"Переименовать", docDelete:"Удалить",
     docNewName:"Без названия",
     docDeleteConfirm:"Удалить документ «{name}»?",
+    docLeave:"Покинуть – удаляется только из вашего списка",
+    docLeaveConfirm:"Покинуть «{name}»? Он исчезнет только из вашего списка — на сервере он останется, а его ссылка будет в буфере обмена.",
     docRestore:"Восстановить оригинал",
     docRestoreConfirm:"Вернуть «{name}» к поставляемой версии? Ваши изменения будут потеряны.",
     docOpenFile:"Открыть файл…", docSaveFile:"Сохранить как файл (Ctrl+S)",
@@ -2944,6 +2956,8 @@ const I18N = {
     docNew:"नया दस्तावेज़", docRename:"नाम बदलें", docDelete:"हटाएँ",
     docNewName:"बिना शीर्षक",
     docDeleteConfirm:"दस्तावेज़ „{name}“ हटाएँ?",
+    docLeave:"छोड़ें – केवल आपकी सूची से हटता है",
+    docLeaveConfirm:"„{name}“ छोड़ें? यह केवल आपकी सूची से हटेगा — सर्वर पर बना रहेगा, और इसका लिंक क्लिपबोर्ड में रख दिया जाएगा।",
     docRestore:"मूल पुनर्स्थापित करें",
     docRestoreConfirm:"„{name}“ को मूल संस्करण पर लौटाएँ? आपके परिवर्तन खो जाएँगे।",
     docOpenFile:"फ़ाइल खोलें…", docSaveFile:"फ़ाइल के रूप में सहेजें (Ctrl+S)",
@@ -3058,6 +3072,8 @@ const I18N = {
     docNew:"新建文档", docRename:"重命名", docDelete:"删除",
     docNewName:"未命名",
     docDeleteConfirm:"删除文档“{name}”？",
+    docLeave:"离开——仅从你的列表中移除",
+    docLeaveConfirm:"离开“{name}”？它只会从你的列表中移除——仍保留在服务器上，其链接会放入剪贴板。",
     docRestore:"恢复原始版本",
     docRestoreConfirm:"将“{name}”重置为随附版本？您的更改将丢失。",
     docOpenFile:"打开文件…", docSaveFile:"另存为文件（Ctrl+S）",
@@ -3172,6 +3188,8 @@ const I18N = {
     docNew:"新規ドキュメント", docRename:"名前を変更", docDelete:"削除",
     docNewName:"無題",
     docDeleteConfirm:"ドキュメント「{name}」を削除しますか？",
+    docLeave:"退出 – 自分のリストから外すだけ",
+    docLeaveConfirm:"「{name}」から退出しますか？自分のリストから外れるだけで、サーバーには残ります。リンクはクリップボードに入ります。",
     docRestore:"オリジナルを復元",
     docRestoreConfirm:"「{name}」を同梱版に戻しますか？変更内容は失われます。",
     docOpenFile:"ファイルを開く…", docSaveFile:"ファイルとして保存 (Ctrl+S)",
@@ -3628,10 +3646,11 @@ function serverHostOf(id){
   if(!roh.startsWith('live:')) return null;
   try{ return new URL(roh.slice(5)).host; }catch(_){ return null; }
 }
-/* Kleine Zeilen-Icons (Feather-Stil wie überall): Stift, Papierkorb.
-   Als Konstanten, damit der Renderer lesbar bleibt. */
+/* Kleine Zeilen-Icons (Feather-Stil wie überall): Stift, Papierkorb, Tür mit
+   Pfeil (Verlassen). Als Konstanten, damit der Renderer lesbar bleibt. */
 const IC_RENAME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>';
 const IC_DELETE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>';
+const IC_LEAVE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>';
 /* Eine Menüzeile: Wählen-Knopf + Zeilen-Aktionen als GESCHWISTER — ein Knopf
    im Knopf wäre ungültiges HTML. Die Aktionen sind immer sichtbar (Touch
    kennt kein Hover): Löschen überall, Umbenennen nur bei NICHT
@@ -3665,7 +3684,14 @@ function docRowHtml(d){
     `<span class="docitem-name">${esc(d.name)}</span>${zusatz}</button>` +
     `<span class="docacts">` +
     (shippedStateOf(d.id) ? '' : iconBtn('rename', t('docRename'), IC_RENAME)) +
-    iconBtn('delete', t('docDelete'), IC_DELETE, ' docdelbtn') +
+    /* Geteilte (Server- wie URL-Dokumente) werden VERLASSEN, nicht gelöscht
+       (D81-Nachtrag 5): Die Aktion tut lokal dasselbe, ist für den Benutzer
+       aber eine andere — dem Dokument selbst geschieht nichts, man gibt nur
+       seinen Listeneintrag auf. Eigenes Wort, eigenes Icon (Tür mit Pfeil),
+       eigene Rückfrage — und bewusst NICHT die rote Gefahr-Färbung. */
+    (['server', 'url'].includes(docKind(d.id, SHIPPED_IDS))
+      ? iconBtn('leave', t('docLeave'), IC_LEAVE)
+      : iconBtn('delete', t('docDelete'), IC_DELETE, ' docdelbtn')) +
     `</span></div>`;
 }
 function renderDocMenu(){
@@ -4167,10 +4193,10 @@ function commitRename(){
   finishNewDoc();
 }
 function cancelRename(){ renamingId = null; renderDocMenu(); finishNewDoc(); }
-function deleteDoc(id){
-  const d = docs.find(x => x.id === id);
-  if(!d) return;
-  if(!window.confirm(t('docDeleteConfirm', {name: d.name}))) return;
+/* Der gemeinsame Kern von Löschen und Verlassen: den Eintrag samt lokaler
+   Anhängsel entfernen. Die beiden Aktionen unterscheiden sich für den
+   Benutzer (Wort, Icon, Rückfrage — D81-Nachtrag 5), lokal tun sie dasselbe. */
+function removeDocLocally(d){
   if(liveState && liveState.id === d.id) stopLive();  /* dito fürs Server-Dokument (D76) */
   if(fileHandles.has(d.id)){ fileHandles.delete(d.id); idbDeleteHandle(d.id); }   /* mit dem Dokument geht sein Datei-Handle (D72) */
   docs = docs.filter(x => x.id !== d.id);
@@ -4185,6 +4211,25 @@ function deleteDoc(id){
   }
   persistDocs();
   if(!docMenu.hidden) renderDocMenu();
+}
+function deleteDoc(id){
+  const d = docs.find(x => x.id === id);
+  if(!d) return;
+  if(!window.confirm(t('docDeleteConfirm', {name: d.name}))) return;
+  removeDocLocally(d);
+}
+/* Verlassen (D81-Nachtrag 5): für Geteilte — dem Dokument auf dem Server
+   bzw. hinter der URL geschieht NICHTS, nur der eigene Listeneintrag geht.
+   Der Eintrag ist zugleich das Lesezeichen: Der Link wandert deshalb in die
+   Zwischenablage (die Rückfrage sagt es an) — wer ihn nirgends sonst hat,
+   verlöre sonst den Rückweg. */
+async function leaveDoc(id){
+  const d = docs.find(x => x.id === id);
+  if(!d || !['server', 'url'].includes(docKind(d.id, SHIPPED_IDS))) return;
+  if(!window.confirm(t('docLeaveConfirm', {name: d.name}))) return;
+  const link = location.origin + location.pathname + docSearch('', d.id);
+  try{ await navigator.clipboard.writeText(link); }catch(_){}
+  removeDocLocally(d);
 }
 /* ---------- Lokale Dateien öffnen und speichern (D72, Stufe 1) ----------
    Der klassische Weg, der in jedem Browser läuft: Datei-Input zum Öffnen,
@@ -5025,6 +5070,7 @@ docList.addEventListener('click', e => {
     if(!id) return;
     if(akt.dataset.act === 'rename') renameDoc(id);
     else if(akt.dataset.act === 'delete') deleteDoc(id);
+    else if(akt.dataset.act === 'leave') leaveDoc(id);
     return;
   }
   const btn = e.target.closest('.docpick');

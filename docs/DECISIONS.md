@@ -7208,3 +7208,41 @@ weitergegeben hat. Erwogen waren auch „Im Browser · Im Netz" (ortsbasiert)
 und „Lokal · Extern"; die gewählte Form ist die knappste, die alle drei
 Gruppen mit einem Wort trifft. In allen neun Sprachen nachgezogen
 (en: Included · Local · Shared).
+
+**Nachtrag 5 — Geteilte werden VERLASSEN, nicht gelöscht.** Nutzer-Frage:
+Was tut das Löschen bei einem geteilten Dokument — verschwindet es vom
+Server? Es verschwindet **nur lokal**: Der Client ruft nie das
+Server-DELETE, das Dokument und die Arbeit aller anderen bleiben, und der
+Link öffnet es jederzeit wieder. Richtig so — das Zeilen-Symbol darf nicht
+die destruktivste Aktion der App sein. Aber der Benutzer konnte es nicht
+wissen: Wort, Icon und Rückfrage waren dieselben wie beim echten Löschen.
+
+**Entschieden (Nutzer): eine eigene Aktion „Verlassen"** für die ganze
+Geteilt-Gruppe (Server- UND URL-Dokumente — eine Regel je Gruppe), mit
+allem, was eine eigene Aktion ausmacht: das Wort (die vertraute Metapher
+geteilter Ordner und Gruppen; erwogen und verworfen: „Vergessen" — deckt
+URL-Dokumente besser, ist aber weniger etabliert — und „Trennen" — klingt
+nach Verbindungszustand statt Listeneintrag), das Icon (Tür mit Pfeil,
+Log-out-Idiom, statt Papierkorb), die Rückfrage (benennt, dass nur der
+eigene Listeneintrag geht) und die Farbe (normales Hover statt der
+Gefahr-Färbung des Papierkorbs — nichts Destruktives). Das **Verhalten** ist
+dasselbe wie beim lokalen Löschen (`removeDocLocally()`, der gemeinsame
+Kern) — für den Benutzer sind es trotzdem zwei verschiedene Dinge, und
+genau das sagt die Oberfläche jetzt.
+
+**Der Listeneintrag ist zugleich das Lesezeichen** — wer den Link nirgends
+sonst hat, verlöre den Rückweg. Beim Verlassen wandert er deshalb in die
+Zwischenablage (gebaut aus `docSearch('', id)`, derselben getesteten Regel
+wie die Adresszeile, D80); die Rückfrage sagt es an. Neue Schlüssel
+`docLeave`/`docLeaveConfirm` in neun Sprachen.
+
+**Nachgemessen** im Browser an inszenierten Geteilten (Server- und
+URL-Dokument): beide Zeilen tragen Stift + Tür statt Papierkorb, ohne rote
+Hover-Färbung; die Rückfrage nennt Liste, Server und Zwischenablage; nach
+dem Bestätigen liegt der `?live=`- bzw. `?sourceUrl=`-Link lesbar in der
+Zwischenablage, die Zeile ist weg, das Menü bleibt offen, die
+Text-Schlüssel sind abgeräumt; mitgelieferte und lokale Zeilen behalten den
+Papierkorb. Werkzeug-Lehre am Rande: Ein noch offener, veralteter Test-Tab
+flushte bei jedem Sichtbarkeitswechsel seinen alten Speicherstand über die
+Inszenierung (Last-Writer-Wins zwischen Tabs — kein neues Verhalten, aber
+eine Falle für Speicher-Tests: alte Tabs erst schließen).
