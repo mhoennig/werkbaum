@@ -1,6 +1,6 @@
 import './style.css';
 import { parse, setFoldMark, expandShortIds, shortIdClosed } from './parser.js';
-import { computeCheapPlan, overloadedAssignee, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, presetFoldSet, lineTargets } from './model.js';
+import { computeCheapPlan, overloadedAssignee, assigneeLoads, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, presetFoldSet, personFoldSet, allTags, lineTargets } from './model.js';
 import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning, warningText } from './warnings.js';
 import * as live from './live.js';
@@ -52,6 +52,7 @@ const INITIAL = `%% Project structure – Sprint 14
 const src  = document.getElementById('src');
 const out  = document.getElementById('out');
 const warnBox = document.getElementById('warn');
+const peopleBar = document.getElementById('peopleBar');
 /* Zeilennummern-Streifen (D33) — hier oben geholt, weil render() ihn füllt. */
 const srcWrap = document.getElementById('srcWrap');
 const lineNoBox = document.getElementById('lineNos');
@@ -130,6 +131,16 @@ let newsDay = null, newsKeySet = null;
    Textmarken, gelten nur für die Sitzung und fallen beim Dokumentwechsel weg.
    `foldByLine` ist der Zustand des letzten Renders für Klick/Tastatur. */
 let foldOverrides = new Map(), foldByLine = new Map();
+/* Personen-Linse (SPEC §9, D87): `lens` ist null (aus) oder `{tag}` — der
+   Personen-Tag bzw. `tag: null` für „ohne Zuständigen". REIN Ansicht und
+   Sitzungssache: Sie überlagert den Faltzustand nur für die Darstellung,
+   in den Text wird nichts geschrieben — in einem geteilten Dokument ginge
+   der persönliche Filter sonst als Textänderung an alle (D76/D38).
+   `lensOverrides` sind Hand-Faltungen WÄHREND der Linse (Label-Pfad-Schlüssel
+   wie `foldOverrides`); Ausschalten stellt den textdefinierten Zustand
+   wieder her. */
+let lens = null, lensOverrides = new Map();
+function clearLens(){ lens = null; lensOverrides.clear(); }
 /* Zeile -> Zeile des sichtbaren Vertreters (D38-Nachtrag 4): Für Zeilen in
    eingeklappten Teilbäumen zeigt sie auf den nächsten sichtbaren Vorfahren;
    `nodeOfLine()` greift darauf zurück, wenn die Zeile keinen DOM-Knoten hat. */
@@ -163,11 +174,17 @@ function render(){
   if(tabWarning) warnings = [tabWarning].concat(warnings);       /* fremder Tab schreibt mit (D84) */
   if(storeWarning) warnings = [storeWarning].concat(warnings);   /* Datenverlust droht — zuoberst (D82) */
 
+  /* Personen-Linse (D87): erlischt, sobald es die Person (oder überhaupt
+     Tags) im Dokument nicht mehr gibt — sonst zeigte sie auf nichts. */
+  const docTags = allTags(roots);
+  if(lens && (!docTags.length || (lens.tag !== null && !docTags.includes(lens.tag)))) clearLens();
+
   if(!roots.length){
     out.innerHTML = `<div class="empty">${esc(t('empty'))}</div>`;
     freshSet = new Set();
     foldByLine = new Map();
     lineTargetMap = new Map();
+    peopleBar.hidden = true;
   } else {
     /* Günstigster Pfad auf der Dependency Closure (D42): scheitert die exakte
        Suche an zu vielen gekoppelten Gruppen, wird die gierige Schätzung
@@ -215,14 +232,20 @@ function render(){
        er hier eigens für die Prüfung gerechnet (dieselbe Rechnung, die sonst
        ohnehin je Tastendruck läuft). */
     let presetSet = null, presetMatch = true;
-    if(foldCycleApplied >= 0){
+    /* Bei aktiver Linse (D87) ruht die Prüfung: Die Faltung ist dann
+       Linsen-Sache, der Text unverändert — die Reihum-Position bleibt. */
+    if(foldCycleApplied >= 0 && !lens){
       const mode = FOLD_CYCLE[foldCycleApplied];
       const cs = (mode === 'path' && !cheapPathOn) ? computeCheapPlan(roots).set : cheapSet;
       presetSet = presetFoldSet(roots, mode, cs);
     }
+    /* Personen-Linse (D87): Ihr Faltzustand ERSETZT den textdefinierten für
+       die Darstellung — überlagert nur von Hand-Faltungen während der Linse. */
+    const lensSet = lens ? personFoldSet(roots, lens.tag) : null;
     keys.forEach((key, n) => {
-      const ov = foldOverrides.get(key);
-      const collapsed = (ov !== undefined ? ov : initFold.has(n)) && n.children.length > 0;
+      const ov = lensSet ? lensOverrides.get(key) : foldOverrides.get(key);
+      const base = lensSet ? lensSet.has(n) : initFold.has(n);
+      const collapsed = (ov !== undefined ? ov : base) && n.children.length > 0;
       if(collapsed) collapsedSet.add(n);
       foldByLine.set(n.line, {key, collapsed, canFold: n.children.length > 0});
       if(presetSet && n.children.length > 0 && collapsed !== presetSet.has(n)) presetMatch = false;
@@ -234,9 +257,21 @@ function render(){
     const r = renderTreeHtml(roots, {t, showDiscarded, cheapPath: cheapPathOn, cheapSet, showIds,
                                      freshSet, collapsedSet,
                                      effStatus: effectiveStatus(roots),
-                                     overloadTag: overload ? overload.tag : null});
+                                     overloadTag: overload ? overload.tag : null,
+                                     lensTag: lens ? lens.tag : null});
     out.innerHTML = r.html;
     warnings = warnings.concat(r.warnings);
+    /* Personen-Leiste (D87): Belastung je Person aus der offenen Pfad-Arbeit
+       (dasselbe Maß wie die D71-Warnung). Bei ausgeschaltetem Pfad-Umschalter
+       wird der Pfad eigens gerechnet — die Leiste fragt nach dem Pfad, nicht
+       nach seiner Anzeige (die D75-Linie des 'path'-Presets). Die
+       Bernstein-Färbung des Engpasses bleibt dagegen am SICHTBAREN Pfad. */
+    if(docTags.length){
+      const loadSet = cheapPathOn ? cheapSet : computeCheapPlan(roots).set;
+      renderPeopleBar(roots, docTags, loadSet, overload);
+    } else {
+      peopleBar.hidden = true;
+    }
   }
 
   warnings = warnings.slice().sort((a, b) => (a.line || 0) - (b.line || 0));
@@ -267,6 +302,49 @@ function render(){
   updateLeanBtn();    /* Stationen des Pfads haben sich geändert (D47) */
   updateFoldBtn();    /* Icon + Tooltip = nächster Schritt des Durchschalters (D75) */
 }
+
+/* ---------- Personen-Leiste (SPEC §9, D87) ----------
+   Je Person eine Pille mit Belastungs-Balken; ein Tipp schaltet die Linse
+   (nur ihre Knoten, alles andere gefaltet), der zweite hebt sie auf, ein
+   Tipp auf eine andere wechselt. Angezeigt werden ANTEILE, keine absoluten
+   Zahlen — die Größen sind ordinal, jede Summe ist eine Näherung (D46).
+   Der Rest ohne Zuständigen bekommt einen eigenen Eintrag, damit die Balken
+   ehrlich auf 100 % summieren; sein Klick zeigt, wofür noch niemand
+   eingeteilt ist. Sortiert nach Last, bei Gleichstand Dokumentreihenfolge. */
+function renderPeopleBar(roots, docTags, loadSet, overload){
+  const {loads, total} = assigneeLoads(roots, loadSet);
+  const share = l => total > 0 ? Math.round(l / total * 100) : 0;
+  const entries = docTags.map(tg => ({tag: tg, pct: share(loads.get(tg) || 0)}))
+    .sort((a, b) => b.pct - a.pct || docTags.indexOf(a.tag) - docTags.indexOf(b.tag));
+  let assigned = 0;
+  loads.forEach(l => { assigned += l; });
+  const rest = total - assigned;
+  if(rest > 0) entries.push({tag: null, pct: share(rest)});
+  peopleBar.innerHTML = entries.map(e => {
+    const active = !!lens && lens.tag === e.tag;
+    const label = e.tag === null ? t('peopleUnassigned') : e.tag;
+    const tip = t('peopleShare', {share: e.pct}) + ' · ' +
+                t(active ? 'peopleLensOff' : 'peopleLensOn');
+    const warm = overload && e.tag !== null && overload.tag === e.tag;
+    return `<button type="button" class="pbperson" aria-pressed="${active}"` +
+      (e.tag === null ? ' data-nobody' : ` data-tag="${esc(e.tag)}"`) +
+      ` title="${esc(label)}: ${esc(tip)}" aria-label="${esc(label)}: ${esc(tip)}">` +
+      `<span class="tag${warm ? ' overload' : ''}${e.tag === null ? ' nobody' : ''}" aria-hidden="true">${esc(label)}</span>` +
+      `<span class="pbbar" aria-hidden="true"><span class="pbfill" style="width:${e.pct}%"></span></span>` +
+      `<span class="pbpct" aria-hidden="true">${e.pct}%</span></button>`;
+  }).join('');
+  peopleBar.hidden = false;
+}
+
+peopleBar.addEventListener('click', e => {
+  const b = e.target && e.target.closest ? e.target.closest('.pbperson') : null;
+  if(!b) return;
+  const tag = ('nobody' in b.dataset) ? null : b.dataset.tag;
+  const same = !!lens && lens.tag === tag;
+  clearLens();
+  if(!same) lens = {tag};
+  render();
+});
 
 /* Fokusmarke `!!!` (SPEC §1): Der erste markierte Knoten wird ins Bild geholt —
    aber nur, wenn sich die Marke **geändert** hat. Sonst zöge jeder Neubau des
@@ -1290,6 +1368,10 @@ function writeAllFoldMarks(roots, want){
    bei ausgeschaltetem Pfad-Umschalter (die Voreinstellung fragt nach dem
    Pfad, nicht nach seiner Anzeige). */
 function applyFoldPreset(mode){
+  /* Der Durchschalter arbeitet auf dem TEXT-Faltzustand — eine aktive
+     Personen-Linse (D87) endet damit; sonst schriebe er Marken, die man
+     unter der Linse gar nicht sieht. */
+  clearLens();
   const roots = parse(src.value).roots;
   if(!roots.length) return;
   const cs = mode === 'path' ? computeCheapPlan(roots).set : null;
@@ -1310,6 +1392,16 @@ function toggleFold(el){
   const line = +el.dataset.line;
   const st = foldByLine.get(line);
   if(!st || !st.canFold) return;
+  /* Bei aktiver Personen-Linse (D87) bleibt die Hand-Faltung in deren
+     Sitzungs-Überlagerung — in den Text geschrieben würde sonst der
+     persönliche Filter, in geteilten Dokumenten für alle. */
+  if(lens){
+    lensOverrides.set(st.key, !st.collapsed);
+    render();
+    const again2 = out.querySelector('.node[data-line="' + line + '"]');
+    if(again2) again2.focus({preventScroll: true});
+    return;
+  }
   foldOverrides.set(st.key, !st.collapsed);
   /* Das Schreiben löst per `input`-Ereignis schon ein render() aus. */
   if(writeFoldToText(line, !st.collapsed)) foldOverrides.clear();
@@ -2326,6 +2418,11 @@ const I18N = {
     sizeConflictTooltip:"Die Teilpakete übersteigen zusammen die angegebene Größe",
     cheapApproxWarn:"Zu viele gekoppelte Alternativgruppen für die exakte Suche — der günstigste Pfad ist gierig geschätzt (je Gruppe lokal gewählt).",
     assigneeOverloadWarn:"@{tag} trägt {share} % der offenen Arbeit auf dem günstigsten Pfad ({stations} von {total} Stationen) — mögliche Engstelle.",
+    peopleBarLabel:"Zuständige",
+    peopleUnassigned:"ohne Zuständigen",
+    peopleShare:"{share} % der offenen Arbeit auf dem günstigsten Pfad",
+    peopleLensOn:"Klick: nur diese Knoten zeigen, alles andere zuklappen",
+    peopleLensOff:"Klick: Filter aufheben",
     st_idee:"Idee", st_geplant:"geplant", st_arbeit:"in Arbeit", st_durchstich:"Durchstich",
     st_fertig:"fertig", st_prod:"in Produktion", st_highrisk:"High Risk", st_verworfen:"verworfen",
     unknownStatusWarn:"Zeile {line}: unbekanntes Statuszeichen „{code}“ — als neutral dargestellt.",
@@ -2447,6 +2544,11 @@ const I18N = {
     sizeConflictTooltip:"The sub-packages together exceed the given size",
     cheapApproxWarn:"Too many coupled alternative groups for the exact search — the cheapest path is a greedy estimate (chosen locally per group).",
     assigneeOverloadWarn:"@{tag} carries {share}% of the open work on the cheapest path ({stations} of {total} stations) — a possible bottleneck.",
+    peopleBarLabel:"Assignees",
+    peopleUnassigned:"unassigned",
+    peopleShare:"{share}% of the open work on the cheapest path",
+    peopleLensOn:"Click: show only these nodes, fold everything else",
+    peopleLensOff:"Click: remove the filter",
     st_idee:"idea", st_geplant:"planned", st_arbeit:"in progress", st_durchstich:"walking skeleton",
     st_fertig:"done", st_prod:"in production", st_highrisk:"high risk", st_verworfen:"discarded",
     unknownStatusWarn:"Line {line}: unknown status code “{code}” — shown as neutral.",
@@ -2568,6 +2670,11 @@ const I18N = {
     sizeConflictTooltip:"Los subpaquetes juntos superan el tamaño indicado",
     cheapApproxWarn:"Demasiados grupos de alternativas acoplados para la búsqueda exacta — el camino más barato es una estimación voraz (elección local por grupo).",
     assigneeOverloadWarn:"@{tag} lleva el {share} % del trabajo pendiente en el camino más barato ({stations} de {total} estaciones) — posible cuello de botella.",
+    peopleBarLabel:"Responsables",
+    peopleUnassigned:"sin responsable",
+    peopleShare:"{share} % del trabajo pendiente en el camino más barato",
+    peopleLensOn:"Clic: mostrar solo estos nodos y plegar el resto",
+    peopleLensOff:"Clic: quitar el filtro",
     st_idee:"idea", st_geplant:"planificado", st_arbeit:"en curso", st_durchstich:"prototipo funcional",
     st_fertig:"terminado", st_prod:"en producción", st_highrisk:"alto riesgo", st_verworfen:"descartado",
     unknownStatusWarn:"Línea {line}: código de estado desconocido «{code}» — mostrado como neutral.",
@@ -2689,6 +2796,11 @@ const I18N = {
     sizeConflictTooltip:"Les sous-lots dépassent ensemble la taille indiquée",
     cheapApproxWarn:"Trop de groupes d’alternatives couplés pour la recherche exacte — le chemin le moins cher est une estimation gloutonne (choix local par groupe).",
     assigneeOverloadWarn:"@{tag} porte {share} % du travail restant sur le chemin le moins cher ({stations} stations sur {total}) — goulot d’étranglement possible.",
+    peopleBarLabel:"Responsables",
+    peopleUnassigned:"sans responsable",
+    peopleShare:"{share} % du travail restant sur le chemin le moins cher",
+    peopleLensOn:"Clic : n’afficher que ces nœuds, replier le reste",
+    peopleLensOff:"Clic : retirer le filtre",
     st_idee:"idée", st_geplant:"planifié", st_arbeit:"en cours", st_durchstich:"squelette fonctionnel",
     st_fertig:"terminé", st_prod:"en production", st_highrisk:"risque élevé", st_verworfen:"abandonné",
     unknownStatusWarn:"Ligne {line} : code de statut inconnu « {code} » — affiché comme neutre.",
@@ -2810,6 +2922,11 @@ const I18N = {
     sizeConflictTooltip:"Podzadania razem przekraczają podany rozmiar",
     cheapApproxWarn:"Zbyt wiele sprzężonych grup alternatyw dla dokładnego wyszukiwania — najtańsza ścieżka jest oszacowana zachłannie (wybór lokalny w każdej grupie).",
     assigneeOverloadWarn:"@{tag} niesie {share} % otwartej pracy na najtańszej ścieżce ({stations} z {total} stacji) — możliwe wąskie gardło.",
+    peopleBarLabel:"Odpowiedzialni",
+    peopleUnassigned:"bez odpowiedzialnego",
+    peopleShare:"{share} % otwartej pracy na najtańszej ścieżce",
+    peopleLensOn:"Klik: pokaż tylko te węzły, resztę zwiń",
+    peopleLensOff:"Klik: usuń filtr",
     st_idee:"pomysł", st_geplant:"zaplanowane", st_arbeit:"w toku", st_durchstich:"działający szkielet",
     st_fertig:"gotowe", st_prod:"w produkcji", st_highrisk:"wysokie ryzyko", st_verworfen:"odrzucone",
     unknownStatusWarn:"Wiersz {line}: nieznany znak statusu „{code}” — pokazany jako neutralny.",
@@ -2931,6 +3048,11 @@ const I18N = {
     sizeConflictTooltip:"Подзадачи вместе превышают указанный размер",
     cheapApproxWarn:"Слишком много связанных групп альтернатив для точного поиска — самый дешёвый путь оценён жадно (локальный выбор в каждой группе).",
     assigneeOverloadWarn:"@{tag} несёт {share} % открытой работы на самом дешёвом пути ({stations} из {total} станций) — возможное узкое место.",
+    peopleBarLabel:"Ответственные",
+    peopleUnassigned:"без ответственного",
+    peopleShare:"{share} % открытой работы на самом дешёвом пути",
+    peopleLensOn:"Клик: показать только эти узлы, остальное свернуть",
+    peopleLensOff:"Клик: снять фильтр",
     st_idee:"идея", st_geplant:"запланировано", st_arbeit:"в работе", st_durchstich:"сквозной прототип",
     st_fertig:"готово", st_prod:"в эксплуатации", st_highrisk:"высокий риск", st_verworfen:"отклонено",
     unknownStatusWarn:"Строка {line}: неизвестный код статуса «{code}» — показан как нейтральный.",
@@ -3052,6 +3174,11 @@ const I18N = {
     sizeConflictTooltip:"उप-पैकेज मिलकर दिए गए आकार से बड़े हैं",
     cheapApproxWarn:"सटीक खोज के लिए बहुत सारे युग्मित विकल्प-समूह — सबसे सस्ता पथ लालची अनुमान है (प्रति समूह स्थानीय चयन)।",
     assigneeOverloadWarn:"@{tag} सबसे सस्ते पथ पर खुले काम का {share}% उठाए हुए है ({total} में से {stations} स्टेशन) — संभावित अड़चन।",
+    peopleBarLabel:"ज़िम्मेदार",
+    peopleUnassigned:"बिना ज़िम्मेदार",
+    peopleShare:"सबसे सस्ते पथ पर खुले काम का {share}%",
+    peopleLensOn:"क्लिक: केवल ये नोड दिखाएँ, बाकी सब समेटें",
+    peopleLensOff:"क्लिक: फ़िल्टर हटाएँ",
     st_idee:"विचार", st_geplant:"नियोजित", st_arbeit:"प्रगति पर", st_durchstich:"कार्यशील ढाँचा",
     st_fertig:"पूर्ण", st_prod:"उत्पादन में", st_highrisk:"उच्च जोखिम", st_verworfen:"अस्वीकृत",
     unknownStatusWarn:"पंक्ति {line}: अज्ञात स्थिति कोड „{code}“ — तटस्थ रूप में दिखाया गया।",
@@ -3173,6 +3300,11 @@ const I18N = {
     sizeConflictTooltip:"子项合计超出所标注的尺寸",
     cheapApproxWarn:"耦合的备选组过多，无法精确搜索——最便宜路径为贪心估计（每组就地选择）。",
     assigneeOverloadWarn:"@{tag} 承担最便宜路径上 {share}% 的未完成工作（{total} 个站点中的 {stations} 个）——可能的瓶颈。",
+    peopleBarLabel:"负责人",
+    peopleUnassigned:"未分配",
+    peopleShare:"最便宜路径上未完成工作的 {share}%",
+    peopleLensOn:"点击：只显示这些节点，折叠其余部分",
+    peopleLensOff:"点击：取消筛选",
     st_idee:"想法", st_geplant:"已计划", st_arbeit:"进行中", st_durchstich:"可运行骨架",
     st_fertig:"已完成", st_prod:"已上线", st_highrisk:"高风险", st_verworfen:"已放弃",
     unknownStatusWarn:"第 {line} 行：未知状态代码“{code}”——显示为中性。",
@@ -3294,6 +3426,11 @@ const I18N = {
     sizeConflictTooltip:"サブパッケージの合計が指定サイズを超えています",
     cheapApproxWarn:"結合された選択肢グループが多すぎるため厳密探索は不可 — 最安パスは貪欲法による推定です（グループごとに局所選択）。",
     assigneeOverloadWarn:"@{tag} が最安パスの未完了作業の {share}% を担っています（全 {total} 駅中 {stations} 駅）— ボトルネックの可能性。",
+    peopleBarLabel:"担当者",
+    peopleUnassigned:"担当者なし",
+    peopleShare:"最安パスの未完了作業の {share}%",
+    peopleLensOn:"クリック：このノードだけを表示し、他を折りたたむ",
+    peopleLensOff:"クリック：フィルターを解除",
     st_idee:"アイデア", st_geplant:"計画済み", st_arbeit:"作業中", st_durchstich:"ウォーキングスケルトン",
     st_fertig:"完了", st_prod:"本番稼働", st_highrisk:"高リスク", st_verworfen:"破棄",
     unknownStatusWarn:"{line} 行目: 不明なステータス記号「{code}」— 中立として表示。",
@@ -4237,6 +4374,7 @@ document.addEventListener('pointerdown', e => {
 });
 
 function loadActiveIntoEditor(){ const d = activeDoc(); src.value = d ? d.text : '';
+  clearLens();   /* die Personen-Linse (D87) gilt je Dokument-Sitzung */
   /* Vergleichsstand für den nächsten Snapshot (D54): Ohne ihn legte der
      erste Takt nach dem Öffnen auch ein unverändertes Dokument weg. */
   snapBase = src.value; closeSnapMenu();

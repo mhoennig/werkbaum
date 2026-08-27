@@ -7446,3 +7446,82 @@ lokales Dokument zeigt unverändert seine lokalen Stände. Der Namens-Dialog
 beim Beitreten blockiert nichts (die Automation wies ihn ab — Dokument lädt,
 nichts gemerkt, nächstes Mal wird wieder gefragt). 531 Frontend-Tests und
 der Backend-`check` grün.
+
+## D87 — Personen-Leiste mit Personen-Linse: eine Fläche für Filter und Belastung
+Gewünscht: je `@`-Person die zuständigen Knoten hervorheben und alles andere
+zuklappen — auch unter den explizit benannten Knoten —, dazu eine
+Belastungsanzeige je Person. Zwei Bedienideen standen im Raum (Menü-Knopf im
+Diagramm-Kopf oder die Namens-Pillen als Leiste unterm Diagramm); die
+Entscheidungen fielen als Multiple-Choice-Runde:
+
+**Die Leiste, nicht der Knopf** — und der Ausschlag ist das zweite Feature:
+Ein Kopf-Knopf wäre das zwölfte Element in einer dreimal zurechtgemessenen
+Zeile (D47/D56/D75) und zeigte die Belastung erst hinter einem Klick. Die
+Leiste trägt beides in einer Fläche — Pille, Balken, Tipp = Linse — und
+erscheint **nur bei Dokumenten mit Tags**: Für tag-lose Pläne (auch den
+mitgelieferten) kostet sie nichts.
+
+**Die Linse ist die erste bewusst rein sichtbare Faltung.** D38 schreibt
+Falten in den Text — richtig für „so wird dieses Dokument eröffnet", falsch
+für „zeig mir Annas Arbeit": In einem geteilten Dokument (D76) ginge der
+persönliche Filter als Textänderung an alle Mitschreiber. Die Linse nutzt
+deshalb nur die Darstellung (Sitzungszustand wie die News-Vorführung, D58);
+Hand-Faltungen währenddessen bleiben in einer eigenen Überlagerung
+(`lensOverrides`), der Falt-Durchschalter beendet die Linse (er arbeitet auf
+dem Text-Zustand), und die Reihum-Prüfung des Durchschalters ruht solange —
+sonst würfe der Linsen-Zustand die Position um, obwohl der Text unverändert
+ist. **Export und Druck folgen ihr trotzdem** (Nutzer-Entscheidung): Die
+D38-Regel „exportiert wird die sichtbare Struktur, eingeklappte Knoten tragen
+▸ n" gilt wie überall — „Annas Sicht als Bild teilen" funktioniert damit von
+selbst.
+
+**Die Falt-Regel (`personFoldSet`, headless in model.js):** Zu klappt, wer
+den Tag **selbst trägt** (das „▸ n" vertritt das Paket — mit der
+D71-Vererbung ist alles darunter ohnehin dessen) und wer in seinem Teilbaum
+**gar nichts** von der Person hat; offen bleiben genau die Vorfahren-Pfade.
+Der interessante Fall ist getestet: Ein fremd getaggtes Paket, das tief innen
+einen Knoten der gesuchten Person enthält, bleibt **offen** — die eigenen
+Tags eines Knotens entscheiden nur über ihn, nicht über den Pfad hindurch.
+Nicht faltbare Blatt-Geschwister auf offenen Pfaden bleiben sichtbar —
+dieselbe Eigenschaft wie beim `path`-Preset (D75); welche Knoten gemeint
+sind, sagt die **petrol gefärbte Pille** der Person (die Engpass-Warnfarbe
+gewinnt: eine Warnung wiegt schwerer als eine Auswahl).
+
+**„Ohne Zuständigen" ist ein eigener, klickbarer Eintrag** (gestrichelte
+Pille — ein Loch, keine Person): Die Anteile summieren damit ehrlich auf
+100 % (D71: Unzugewiesenes verwässert sie ohnehin), und seine Linse zeigt,
+wofür noch niemand eingeteilt ist — jeder Knoten mit **eigenen** Tags klappt
+zu, die Grenze ins zugewiesene Gebiet. Für Unzugewiesen taugt die
+Personen-Regel nicht: „kein Tag" ist vorfahren-abgeschlossen (die Wurzel
+wäre ihr eigener äußerster Vertreter), die Grenz-Formulierung ist die
+tragfähige Umkehrung.
+
+**Belastung: Anteile, keine absoluten Zahlen** (Nutzer-Entscheidung). Die
+Größen sind ordinal (D46) — jede Summe ist eine Näherung, und eine Punktzahl
+suggerierte Präzision, die die Schätzskala nicht hat. Gerechnet wird mit dem
+vorhandenen D71-Maß (`assigneeLoads`: Marginalkosten der offenen Pfad-Arbeit,
+Vererbung, geteilte Beiträge) — **eine** Kostenrechnung im System, Warnung
+und Anzeige sagen dieselbe Zahl. Bei ausgeschaltetem Pfad-Umschalter wird der
+Pfad eigens gerechnet (die D75-Linie: die Frage gilt dem Pfad, nicht seiner
+Anzeige); die Bernstein-Färbung der Engpass-Person bleibt dagegen am
+sichtbaren Pfad und färbt auch die Leisten-Pille.
+
+**Eine Person zur Zeit** (Nutzer-Entscheidung): Tipp wechselt, zweiter Tipp
+auf dieselbe schaltet aus — Mehrfachauswahl kann später dazukommen, umgekehrt
+nicht. Die Linse erlischt von selbst, wenn es die Person (oder überhaupt
+Tags) im Dokument nicht mehr gibt, und beim Dokumentwechsel
+(`loadActiveIntoEditor`, die eine Stelle aus D80).
+
+**Nebengewinn, notiert:** SPEC §11 reserviert `&tag` ausdrücklich bis zum
+ersten Konsumenten — „Filter-/Hervorheben-Linse" ist dort wörtlich genannt.
+Diese Linse baut genau die Mechanik; Schlagworte bekämen sie später
+geschenkt.
+
+**Nachgemessen** im Browser an einem Tag-Plan (anna/ben, elf Knoten): Leiste
+ben 50 % · anna 21 % · ohne Zuständigen 29 % (Summe 100). Annas Linse:
+`Backend` und `Frontend` als „▸ 2", `Infra` offen mit ihrem CI-Blatt, beide
+anna-Pillen petrol, Text byte-identisch. Bens Linse hält annas Backend
+**offen** (sein API liegt darin). Hand-Faltung während der Linse ändert den
+Text nicht; Ausschalten stellt den textdefinierten Zustand wieder her;
+Unzugewiesen-Linse klappt genau die getaggten Pakete zu. Tag-loses Dokument:
+keine Leiste. 538 Tests, davon 7 neue in `tests/lens.test.js`.

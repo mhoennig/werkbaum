@@ -528,6 +528,57 @@ export function presetFoldSet(roots, mode, cheapSet){
   return set;
 }
 
+/* ---------- Personen-Linse (SPEC §9, D87) ----------
+   Vollständiger Faltzustand für „zeig mir die Arbeit von @tag": offen bleiben
+   nur die VORFAHREN der Knoten, die den Tag tragen; die getaggten Knoten
+   selbst klappen zu — ihr „▸ n" vertritt das Paket, und mit der Vererbung
+   (D71: wer das Paket hat, hat die Teilpakete) ist alles darunter ohnehin
+   ihres. Ein getaggter Knoten OHNE Kinder bleibt als Blatt stehen (es gibt
+   nichts zu falten); nicht faltbare Geschwister auf offenen Pfaden bleiben
+   sichtbar — dieselbe Eigenschaft wie beim 'path'-Preset (D75), die
+   Pillen-Hervorhebung sagt, welche gemeint sind.
+   `tag === null` ist die Unzugewiesen-Linse: Jeder Knoten mit EIGENEN Tags
+   klappt zu (die Grenze ins zugewiesene Gebiet) — sichtbar bleibt die
+   Struktur, deren Marge niemandem gehört. */
+export function personFoldSet(roots, tag){
+  const set = new Set();
+  if(tag === null){
+    const walk = ns => {
+      for(const n of ns){
+        if(n.children.length && n.tags && n.tags.length) set.add(n);
+        walk(n.children);
+      }
+    };
+    walk(roots);
+    return set;
+  }
+  const hasTag = n => (n.tags || []).includes(tag) || n.children.some(hasTag);
+  const walk = ns => {
+    for(const n of ns){
+      if(n.children.length){
+        if((n.tags || []).includes(tag) || !hasTag(n)) set.add(n);
+        walk(n.children);
+      }
+    }
+  };
+  walk(roots);
+  return set;
+}
+
+/* Alle vergebenen Personen-Tags in Dokumentreihenfolge — die Einträge der
+   Personen-Leiste (D87). */
+export function allTags(roots){
+  const tags = [];
+  const walk = ns => {
+    for(const n of ns){
+      for(const tg of n.tags || []) if(!tags.includes(tg)) tags.push(tg);
+      walk(n.children);
+    }
+  };
+  walk(roots);
+  return tags;
+}
+
 /* key -> Status-Schlüssel ('' für neutrale Knoten) über den ganzen Baum. */
 export function statusByKey(roots){
   const map = new Map();

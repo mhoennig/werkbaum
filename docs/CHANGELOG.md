@@ -19,6 +19,8 @@ reverse.
 
 ## 2026-08-27
 
+- A people bar below the diagram shows each `@person` with their share of the open work on the cheapest path — plus an entry for what is assigned to nobody
+- Tapping a person filters the diagram to their nodes: everything else folds, their packages stand collapsed as `▸ n`, their pills turn teal — a view-only lens that never writes into the text
 - Folding regions in the text editor recorded as an idea in the plan — view-only and local, unrelated to the diagram's fold marks, deliberately not sized yet
 - Fix: the root node's fold chip was white-on-pastel and barely visible — it now looks like every other node's, and the description mark and id line on a coloured root are readable too
 - The caret on a node off the cheapest path now highlights only the ring — the fill stays pale instead of jumping back to full colour

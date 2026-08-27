@@ -641,6 +641,33 @@
   .panel.right{background:rgba(255,255,255,.6);position:relative}
   .warnings{padding:0 16px 14px;font-size:.8rem;color:var(--warn)}
   .warnings div{margin-top:4px}
+  /* Personen-Leiste (SPEC §9/D87): je Person eine Pille mit Belastungs-Balken,
+     Tipp schaltet die Personen-Linse. Erscheint nur bei Dokumenten mit
+     @-Tags; auf dem Telefon scrollt sie waagerecht statt umzubrechen (kein
+     Aufklapp-Inhalt darin, die D50-Falle greift also nicht). */
+  .peoplebar{
+    display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+    padding:0 16px 10px;
+  }
+  .pbperson{
+    display:flex;gap:7px;align-items:center;
+    border:1px solid rgba(36,52,71,.18);border-radius:999px;
+    background:var(--card);cursor:pointer;
+    padding:3px 10px 3px 4px;font:inherit;
+  }
+  .pbperson:hover{border-color:var(--or)}
+  .pbperson[aria-pressed="true"]{border-color:var(--or);box-shadow:0 0 0 1.5px var(--or);background:rgba(15,118,110,.06)}
+  .pbperson .tag{box-shadow:none}
+  /* „ohne Zuständigen": gestrichelte Pille — es ist ein Loch, keine Person. */
+  .pbperson .tag.nobody{border-style:dashed;color:var(--muted);background:var(--card)}
+  .pbbar{
+    width:64px;height:6px;border-radius:999px;overflow:hidden;
+    background:rgba(36,52,71,.1);
+  }
+  .pbfill{display:block;height:100%;background:var(--or);border-radius:999px}
+  .pbpct{font-size:.68rem;color:var(--muted);min-width:3ch;text-align:right}
+  body.mobile .peoplebar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:0 10px 8px}
+  .panel.collapsed .peoplebar{display:none}
   .empty{color:var(--muted);font-size:.85rem;padding:8px 4px}
 
   /* Zoom-Steuerung: schwebt unten rechts über dem Diagramm. */
@@ -890,6 +917,10 @@
      Hälfte der offenen Pfad-Arbeit trägt — Warnfarbe wie das
      Größen-Konflikt-Badge (D62); der Export liest die gemessenen Farben. */
   .tag.overload{background:var(--warn);color:#fff;border-color:var(--warn)}
+  /* Personen-Linse (D87): die Pille der gewählten Person in Petrol — welche
+     der sichtbaren Knoten ihr gehören. Die Engpass-Warnfarbe gewinnt (der
+     Renderer vergibt nur eine der beiden Klassen). */
+  .tag.lens{background:var(--or);color:#fff;border-color:var(--or)}
   .ghost-node{
     position:relative;margin-top:14px;
     border:1.5px dashed var(--warn);
@@ -1551,7 +1582,7 @@
   @media print{
     html,body{height:auto!important;overflow:visible!important;background:#fff!important}
     header,.panel.editor,.gutter,.panel.right .panel-head,
-    .warnings,.zoomctl,.site-footer,.nodetip,.aclist{display:none!important}
+    .warnings,.zoomctl,.site-footer,.nodetip,.aclist,.peoplebar{display:none!important}
     .app,.app.side{display:block!important;max-width:none!important;width:auto!important;
       height:auto!important;margin:0!important;gap:0!important}
     .panel.right{grid-area:auto!important;background:#fff!important;border:0!important;

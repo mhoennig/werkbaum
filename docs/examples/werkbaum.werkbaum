@@ -87,6 +87,9 @@
       - [^] #ed.fold.write: Folding writes the mark back into the text (S)  %% one undo step
       - [^] #ed.fold.preset: The fold button cycles through four presets (S)  %% M-and-smaller, off-path, all, none — see D44/D75
     + [?] #ed.textfold: Fold regions in the text editor, next to the line numbers  %% view-only, unrelated to the > marks; not sized yet
+    - [x] #ed.lens: A people bar with a person lens (M)
+      - [x] #ed.lens.fold: One person's nodes, everything else folds (S)  %% view-only, never written into the text
+      - [x] #ed.lens.load: A load bar per person, shares of the open path work (S)  %% the D71 measure
     - [^] #ed.snaps: Earlier states of a document, every ten minutes (S)  %% only when something changed
       - [^] #ed.snaps.manual: Save a state by hand, before a larger change (XS)  %% ten minutes is the wrong beat for that moment
     - [^] #ed.files: Open and save .werkbaum files (S)
@@ -618,6 +621,21 @@
   > fold marks that describe the diagram. A plain textarea cannot hide
   lines, so this hinges on the parked editor-rebuild question (CodeMirror,
   D76); deliberately not sized yet.
+
+#ed.lens
+  A bar below the diagram, one pill per @person, shown only when the
+  document carries tags at all. Tapping a pill filters the diagram to that
+  person's work; an extra entry shows what is assigned to nobody.
+
+#ed.lens.fold
+  The lens keeps only the ancestor paths to the person's nodes open; their
+  tagged packages stand collapsed. Deliberately view-only: written fold
+  marks would push a personal filter to everyone in a shared document.
+
+#ed.lens.load
+  Each pill carries a bar with the person's share of the open work on the
+  cheapest path — the same measure as the bottleneck warning, shares
+  rather than absolute numbers because the sizes are ordinal.
 
 #ed.snaps
   A safety net against mishaps: the text is put aside every ten minutes, but

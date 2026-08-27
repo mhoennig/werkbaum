@@ -208,8 +208,13 @@ function nodeHtml(n, extra, opts, fold){
      Nur direkte Tags haben eine Pille; geerbte Zuständigkeit (die in die
      Rechnung eingeht) hat nichts, das sich färben ließe. */
   const hot = tag => opts.overloadTag === tag && opts.cheapSet.has(n) && !isDone(n);
+  /* Personen-Linse (SPEC §9/D87): die Pille der gewählten Person hebt sich in
+     Petrol — sie sagt, WELCHE der sichtbaren Knoten gemeint sind (nicht
+     faltbare Geschwister bleiben ja stehen). Die Warnfarbe des Engpasses
+     gewinnt: eine Warnung wiegt schwerer als eine Auswahl. */
+  const pillCls = tag => hot(tag) ? ' overload' : (opts.lensTag === tag ? ' lens' : '');
   const tagsHtml = n.tags && n.tags.length
-    ? `<span class="tags" aria-hidden="true">${n.tags.map(tag => `<span class="tag${hot(tag) ? ' overload' : ''}">${esc(tag)}</span>`).join('')}</span>`
+    ? `<span class="tags" aria-hidden="true">${n.tags.map(tag => `<span class="tag${pillCls(tag)}">${esc(tag)}</span>`).join('')}</span>`
     : '';
   /* Das implizite Größen-Badge macht eine KOSTENANNAHME sichtbar (D18) —
      seit D66 die aus den Teilpaketen geschätzte Größe statt pauschal M. An

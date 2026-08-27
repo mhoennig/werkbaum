@@ -760,6 +760,41 @@ Termine sagt die Warnung nichts (das tut in dieser Notation ohnehin nichts,
   keine Pille und damit keine Färbung. Bei ausgeschaltetem Pfad entfällt
   beides — ohne Pfad gibt es keine offene Front.
 
+### Personen-Leiste und Personen-Linse
+Trägt das Dokument `@`-Tags (§7), steht unter dem Diagramm eine **Leiste mit
+einer Pille je Person** samt **Belastungs-Balken**: ihr Anteil an der offenen
+Arbeit des günstigsten Pfads — dasselbe Maß wie der Zuständigen-Engpass
+(oben), mit Vererbung und geteilten Beiträgen; die Bernstein-Färbung der
+Engpass-Person erscheint auch hier. Angezeigt werden **Anteile, keine
+absoluten Zahlen** — die Größen sind ordinal, jede Summe ist eine Näherung.
+Der Rest **ohne Zuständigen** bekommt einen eigenen, gestrichelten Eintrag,
+damit die Anteile auf 100 % summieren. Gerechnet wird auch bei
+ausgeschaltetem Pfad-Umschalter (wie die `path`-Voreinstellung des
+Falt-Durchschalters: die Frage gilt dem Pfad, nicht seiner Anzeige). Ohne
+Tags gibt es die Leiste nicht.
+
+Ein **Tipp auf eine Pille schaltet die Personen-Linse**: Sichtbar bleiben nur
+die Vorfahren-Pfade zu den Knoten dieser Person; die getaggten Knoten selbst
+stehen **eingeklappt** da — ihr „▸ n“ vertritt das Paket, und mit der
+Vererbung ist alles darunter ohnehin ihres. Ihre Personen-Pillen an den
+sichtbaren Knoten färben sich petrol (die Engpass-Warnfarbe gewinnt). Nicht
+faltbare Geschwister auf offenen Pfaden bleiben stehen — dieselbe
+Eigenschaft wie bei der Pfad-Voreinstellung des Falt-Durchschalters. Der
+Eintrag „ohne Zuständigen“ zeigt als Linse die Struktur, deren Arbeit
+niemandem gehört: Jeder Knoten mit eigenen Tags klappt zu. Ein zweiter Tipp
+hebt die Linse auf, ein Tipp auf eine andere Person wechselt; es gilt
+höchstens eine zugleich.
+
+Die Linse ist **reine Ansicht und Sitzungssache**: Anders als das Falten (§9,
+`>`/`<`) schreibt sie **nichts** in den Text — in einem geteilten Dokument
+(`?live=`) ginge der persönliche Filter sonst als Textänderung an alle.
+Hand-Faltungen während der Linse bleiben ebenso in der Sitzung;
+Dokumentwechsel und Neuladen setzen zurück, der Falt-Durchschalter beendet
+die Linse (er arbeitet auf dem Text-Faltzustand). **Grafikexport und Druck
+folgen der sichtbaren Faltung** wie überall — „die Sicht einer Person als
+Bild teilen“ funktioniert damit von selbst; die Leiste selbst erscheint in
+beiden nicht.
+
 ### Diagramm aus einer URL laden (`?sourceUrl=`)
 Der Editor kann den Notationstext aus einer externen Textdatei beziehen:
 `…?sourceUrl=https://example.org/plan.txt` (relative Angaben werden gegen die
