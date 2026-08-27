@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-27
 
+- `pull-doc --open` opens the fetched document in IntelliJ IDEA afterwards — also when nothing changed
 - A dead live session now reconnects by itself — unsent text stays in the editor and goes out as a diff once the server answers again
 - The connection state stands next to the document name: disconnected or unsent changes turn the kind label amber, instead of only a warning below the diagram
 - The document kind now stands in grey behind the name chip — Included, Local or Shared with the server's host, the same words as the menu groups

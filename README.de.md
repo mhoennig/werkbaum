@@ -131,8 +131,8 @@ gewöhnliches Label. Die Marke bleibt stehen, bis jemand sie löscht.
 <datei>` holt das Dokument (auch ein `?live=`-Link funktioniert) und schreibt
 es in die Datei; mit `--git-commit` wird es zusätzlich in das git-Worktree der
 Datei committet — Datum, Titel und Version in der Nachricht, kein Commit ohne
-Änderung. Per Cron aufgerufen archiviert sich der Plan von selbst; siehe
-`docs/DECISIONS.md` D88.
+Änderung. Per Cron aufgerufen archiviert sich der Plan von selbst; `--open`
+öffnet die Datei danach in IntelliJ IDEA. Siehe `docs/DECISIONS.md` D88.
 
 Das Backend einrichten: siehe [backend/README.md](backend/README.md) und
 `docs/DECISIONS.md` D76.

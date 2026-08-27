@@ -125,7 +125,8 @@ deletes it.
 fetches the document (a `?live=` link works too) and writes it to the file;
 with `--git-commit` it also commits it into the file's git worktree — date,
 title and version in the message, and no commit when nothing changed. Run it
-from cron and the plan archives itself; see `docs/DECISIONS.md` D88.
+from cron and the plan archives itself; `--open` opens the file in IntelliJ
+IDEA afterwards. See `docs/DECISIONS.md` D88.
 
 Setting up the backend: see [backend/README.md](backend/README.md) and
 `docs/DECISIONS.md` D76.

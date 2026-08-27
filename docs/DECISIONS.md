@@ -7793,3 +7793,16 @@ getippt; Backend gestartet, **nichts geklickt** → nach ≤ 20 s Chip wieder
 leer — die Netze räumen sich selbst weg. Der Ungesendet-Zustand
 (Sitzung lebt, Patches scheitern) färbt den Chip ebenso; gemessen mit dem
 Fehler-Anker gegen die Timer-Drosselung.
+
+**Nachtrag 2 — `--open` öffnet die Datei danach in IntelliJ IDEA.**
+Nutzerwunsch; als eigener Schalter neben `--git-commit` (beide in beliebiger
+Reihenfolge vor den Argumenten, unbekannte Schalter sind ein lauter Fehler).
+Geöffnet wird **auch Unverändertes** — wer `--open` sagt, will die Datei
+sehen, nicht nur ihren Wandel. Der Aufruf läuft als `(idea … &)` in einer
+Subshell, damit der Lauf nicht am Editor hängt; fehlt `idea` im PATH, gibt es
+einen Hinweis auf stderr, aber Exit 0 — der eigentliche Auftrag (holen,
+committen) ist gelungen, und ein gedruckter Hinweis ist kein stiller Fehler.
+Nachgemessen mit einem Log-Stub im PATH: `--git-commit --open` committet und
+öffnet, `--open` allein öffnet auch den unveränderten Stand, ohne Schalter
+kein Aufruf, ohne `idea` im PATH der Hinweis, `--commit` (Tippfehler) bricht
+mit Meldung ab.
