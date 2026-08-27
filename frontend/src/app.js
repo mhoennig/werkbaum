@@ -2268,6 +2268,9 @@ const I18N = {
     snapTooltip:"Frühere Stände dieses Dokuments", snapMenuAria:"Frühere Stände",
     snapNone:"Noch keine früheren Stände – gesichert wird auf Knopfdruck und alle 10 Minuten, sobald sich etwas geändert hat.",
     snapAddTooltip:"Aktuellen Stand jetzt sichern",
+    liveNameAsk:"Dein Name für die anderen (erscheint in der Historie des geteilten Dokuments; leer = anonym):",
+    snapNoneLive:"Noch keine früheren Stände auf dem Server — Meilensteine entstehen nach Schreibpausen und mit dem Kamera-Knopf.",
+    snapRollbackConfirm:"Auf den Stand von {when} zurücksetzen? Das gilt für alle, die dieses Dokument bearbeiten — als neue Version, nichts geht verloren.",
     idsTooltip:"Knoten-IDs vor dem Titel einblenden",
     snapLines:"{n} Zeilen",
     docNew:"Neues Dokument", docRename:"Umbenennen", docDelete:"Löschen",
@@ -2386,6 +2389,9 @@ const I18N = {
     snapTooltip:"Earlier states of this document", snapMenuAria:"Earlier states",
     snapNone:"No earlier states yet – one is kept on demand and every 10 minutes, once something has changed.",
     snapAddTooltip:"Save the current state now",
+    liveNameAsk:"Your name for the others (shown in the shared document's history; empty = anonymous):",
+    snapNoneLive:"No earlier states on the server yet — milestones appear after writing pauses and with the camera button.",
+    snapRollbackConfirm:"Roll back to the state of {when}? This applies to everyone editing this document — as a new version, nothing is lost.",
     idsTooltip:"Show node ids before the title",
     snapLines:"{n} lines",
     docNew:"New document", docRename:"Rename", docDelete:"Delete",
@@ -2504,6 +2510,9 @@ const I18N = {
     snapTooltip:"Estados anteriores de este documento", snapMenuAria:"Estados anteriores",
     snapNone:"Aún no hay estados anteriores: se guarda uno al pulsar el botón y cada 10 minutos, cuando algo ha cambiado.",
     snapAddTooltip:"Guardar ahora el estado actual",
+    liveNameAsk:"Tu nombre para los demás (aparece en el historial del documento compartido; vacío = anónimo):",
+    snapNoneLive:"Aún no hay estados anteriores en el servidor: los hitos surgen tras pausas de escritura y con el botón de cámara.",
+    snapRollbackConfirm:"¿Volver al estado de {when}? Vale para todos los que editan este documento: como versión nueva, nada se pierde.",
     idsTooltip:"Mostrar los id de nodo antes del título",
     snapLines:"{n} líneas",
     docNew:"Nuevo documento", docRename:"Renombrar", docDelete:"Eliminar",
@@ -2622,6 +2631,9 @@ const I18N = {
     snapTooltip:"États antérieurs de ce document", snapMenuAria:"États antérieurs",
     snapNone:"Pas encore d’état antérieur : un état est conservé sur demande et toutes les 10 minutes, dès que quelque chose a changé.",
     snapAddTooltip:"Enregistrer l’état actuel maintenant",
+    liveNameAsk:"Votre nom pour les autres (visible dans l'historique du document partagé ; vide = anonyme) :",
+    snapNoneLive:"Pas encore d'états antérieurs sur le serveur — les jalons naissent après une pause d'écriture et avec le bouton appareil photo.",
+    snapRollbackConfirm:"Revenir à l'état de {when} ? Cela vaut pour tous ceux qui éditent ce document — en nouvelle version, rien n'est perdu.",
     idsTooltip:"Afficher les identifiants de nœud avant le titre",
     snapLines:"{n} lignes",
     docNew:"Nouveau document", docRename:"Renommer", docDelete:"Supprimer",
@@ -2740,6 +2752,9 @@ const I18N = {
     snapTooltip:"Wcześniejsze stany tego dokumentu", snapMenuAria:"Wcześniejsze stany",
     snapNone:"Brak wcześniejszych stanów – zapisywany jest na żądanie i co 10 minut, gdy coś się zmieni.",
     snapAddTooltip:"Zapisz bieżący stan teraz",
+    liveNameAsk:"Twoje imię dla innych (widoczne w historii udostępnionego dokumentu; puste = anonimowo):",
+    snapNoneLive:"Na serwerze nie ma jeszcze wcześniejszych stanów — kamienie milowe powstają po przerwach w pisaniu i przyciskiem aparatu.",
+    snapRollbackConfirm:"Wrócić do stanu z {when}? Dotyczy wszystkich edytujących ten dokument — jako nowa wersja, nic nie przepada.",
     idsTooltip:"Pokaż identyfikatory węzłów przed tytułem",
     snapLines:"wierszy: {n}",
     docNew:"Nowy dokument", docRename:"Zmień nazwę", docDelete:"Usuń",
@@ -2858,6 +2873,9 @@ const I18N = {
     snapTooltip:"Прежние состояния этого документа", snapMenuAria:"Прежние состояния",
     snapNone:"Прежних состояний пока нет — они сохраняются по нажатию кнопки и каждые 10 минут, если что-то изменилось.",
     snapAddTooltip:"Сохранить текущее состояние сейчас",
+    liveNameAsk:"Ваше имя для остальных (видно в истории общего документа; пусто = анонимно):",
+    snapNoneLive:"На сервере пока нет прежних состояний — вехи возникают после пауз в наборе и по кнопке камеры.",
+    snapRollbackConfirm:"Вернуться к состоянию от {when}? Это касается всех, кто редактирует документ — новой версией, ничего не теряется.",
     idsTooltip:"Показывать идентификаторы узлов перед заголовком",
     snapLines:"строк: {n}",
     docNew:"Новый документ", docRename:"Переименовать", docDelete:"Удалить",
@@ -2976,6 +2994,9 @@ const I18N = {
     snapTooltip:"इस दस्तावेज़ की पिछली स्थितियाँ", snapMenuAria:"पिछली स्थितियाँ",
     snapNone:"अभी कोई पिछली स्थिति नहीं — बटन दबाने पर और कुछ बदलने पर हर 10 मिनट में एक सहेजी जाती है।",
     snapAddTooltip:"मौजूदा स्थिति अभी सहेजें",
+    liveNameAsk:"दूसरों के लिए आपका नाम (साझा दस्तावेज़ के इतिहास में दिखता है; खाली = अनाम):",
+    snapNoneLive:"सर्वर पर अभी कोई पिछली स्थिति नहीं — पड़ाव लिखने के विराम के बाद और कैमरा बटन से बनते हैं।",
+    snapRollbackConfirm:"{when} की स्थिति पर लौटें? यह इस दस्तावेज़ को संपादित करने वाले सभी पर लागू होगा — नई वर्शन के रूप में, कुछ नहीं खोता।",
     idsTooltip:"शीर्षक से पहले नोड आईडी दिखाएँ",
     snapLines:"{n} पंक्तियाँ",
     docNew:"नया दस्तावेज़", docRename:"नाम बदलें", docDelete:"हटाएँ",
@@ -3094,6 +3115,9 @@ const I18N = {
     snapTooltip:"此文档的早期状态", snapMenuAria:"早期状态",
     snapNone:"暂无早期状态——可随时手动保存；内容有变动时，也会每 10 分钟保存一次。",
     snapAddTooltip:"立即保存当前状态",
+    liveNameAsk:"你展示给其他人的名字（显示在共享文档的历史中；留空 = 匿名）：",
+    snapNoneLive:"服务器上还没有以前的状态——里程碑在写作停顿后以及通过相机按钮产生。",
+    snapRollbackConfirm:"回退到 {when} 的状态？这对所有编辑此文档的人生效——作为新版本，不会丢失任何内容。",
     idsTooltip:"在标题前显示节点 ID",
     snapLines:"{n} 行",
     docNew:"新建文档", docRename:"重命名", docDelete:"删除",
@@ -3212,6 +3236,9 @@ const I18N = {
     snapTooltip:"このドキュメントの以前の状態", snapMenuAria:"以前の状態",
     snapNone:"以前の状態はまだありません — ボタンを押したとき、および変更があれば 10 分ごとに保存されます。",
     snapAddTooltip:"現在の状態を今すぐ保存",
+    liveNameAsk:"他の人に表示される名前（共有ドキュメントの履歴に表示。空欄 = 匿名）：",
+    snapNoneLive:"サーバーにはまだ以前の状態がありません — マイルストーンは書き込みの合間とカメラボタンで生まれます。",
+    snapRollbackConfirm:"{when} の状態に戻しますか？このドキュメントを編集する全員に適用されます — 新しいバージョンとして、何も失われません。",
     idsTooltip:"タイトルの前にノード ID を表示",
     snapLines:"{n} 行",
     docNew:"新規ドキュメント", docRename:"名前を変更", docDelete:"削除",
@@ -3887,6 +3914,10 @@ function loadSnaps(){ snaps = parseSnaps(localStorage.getItem(LS_SNAPS)); }
 function snapshotNow(manuell){
   const d = activeDoc();
   if(!d) return false;
+  /* Server-Dokumente: Die Historie führt der Server (D86) — lokale Stände
+     wären irreführend (sie enthalten fremde Änderungen, D76) und im Menü
+     ohnehin unsichtbar. */
+  if(String(d.id).startsWith('live:')) return false;
   const text = src.value;
   if(!addSnapshot(snaps, d.id, text, Date.now(), {base: snapBase, manual: manuell})) return false;
   snapBase = text;
@@ -3904,6 +3935,7 @@ const snapAddBtn = document.getElementById('snapAddBtn');
 const snapMenu = document.getElementById('snapMenu');
 
 function renderSnapMenu(){
+  if(liveActive()){ renderServerHistory(); return; }
   const d = activeDoc();
   const list = d ? (snaps[d.id] || []) : [];
   snapMenu.innerHTML = '';
@@ -3945,6 +3977,65 @@ function closeSnapMenu(){
   snapMenu.hidden = true;
   snapBtn.setAttribute('aria-expanded', 'false');
 }
+/* Frühere Stände eines GETEILTEN Dokuments: die Meilenstein-Historie des
+   Servers (D76 sah das vor, D86 baut es). Gezeigt werden die Stände VOR dem
+   aktuellen — „Frühere Stände" eben; das „geändert von" ist der
+   selbstgewählte Anzeigename und damit eine Behauptung, kein Nachweis. */
+async function renderServerHistory(){
+  const sitzung = liveState;
+  snapMenu.innerHTML = '';
+  const lade = document.createElement('div');
+  lade.className = 'snapempty';
+  lade.textContent = '…';
+  snapMenu.appendChild(lade);
+  let eintraege;
+  try{ eintraege = await fetchJson(sitzung.urls.doc + '/history'); }
+  catch(err){ lade.textContent = (err && err.message) || String(err); return; }
+  if(liveState !== sitzung || snapMenu.hidden) return;   /* inzwischen zu oder umgeschaltet */
+  snapMenu.innerHTML = '';
+  const max = Math.max(0, ...eintraege.map(x => x.version));
+  const fruehere = eintraege.filter(x => x.version !== max).reverse();   /* neueste zuoberst */
+  if(!fruehere.length){
+    const p = document.createElement('div');
+    p.className = 'snapempty';
+    p.textContent = t('snapNoneLive');
+    snapMenu.appendChild(p);
+    return;
+  }
+  fruehere.forEach(x => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'snapitem';
+    b.setAttribute('role', 'menuitem');
+    b.innerHTML = '<span></span><span class="snapsize"></span>';
+    b.firstChild.textContent = snapLabel(Date.parse(x.timestamp), lang, Date.now());
+    b.lastChild.textContent = x.displayName || '';
+    b.addEventListener('click', e => { e.stopPropagation(); rollbackToVersion(x); });
+    snapMenu.appendChild(b);
+  });
+}
+/* Rücksprung als SERVER-Rollback (ROLLED_BACK, D76/D86): Er geschieht für
+   alle nachvollziehbar auf dem Server — als neue Version, nichts geht
+   verloren — statt als riesiges eigenes Diff dieses Clients. Deshalb mit
+   Rückfrage: Er trifft alle Mitschreiber. */
+async function rollbackToVersion(eintrag){
+  const sitzung = liveState;
+  closeSnapMenu();
+  const wann = snapLabel(Date.parse(eintrag.timestamp), lang, Date.now());
+  if(!window.confirm(t('snapRollbackConfirm', {when: wann}))) return;
+  try{
+    const doc = await fetchJson(sitzung.urls.doc + '/restore', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({version: eintrag.version}),
+    });
+    if(liveState === sitzung) adoptLive(doc);
+  }catch(err){
+    sourceWarning = {type: 'liveLoad', url: sitzung.urls.doc + '/restore',
+                     error: (err && err.message) || String(err)};
+    render();
+  }
+}
 snapBtn.addEventListener('click', e => {
   e.stopPropagation();
   snapMenu.hidden ? openSnapMenu() : closeSnapMenu();
@@ -3956,9 +4047,17 @@ snapBtn.addEventListener('click', e => {
    der Liste. Einen doppelten Eintrag zu erzwingen kostete nur einen der 20
    Plätze (D54-Nachtrag). Ein offenes Menü bleibt offen und zeichnet neu, dort
    sieht man den neuen Eintrag entstehen. */
-snapAddBtn.addEventListener('click', e => {
+snapAddBtn.addEventListener('click', async e => {
   e.stopPropagation();
-  snapshotNow(true);
+  if(liveActive()){
+    /* Geteilt: als SERVER-Meilenstein (D86) — eine lokale Momentaufnahme
+       wäre dort irreführend, sie enthielte fremde Änderungen (D76). Ein
+       wartendes Debounce-Diff geht dabei gleich mit. */
+    if(liveState.pushTimer){ clearTimeout(liveState.pushTimer); liveState.pushTimer = null; }
+    await pushLive(true);
+  } else {
+    snapshotNow(true);
+  }
   flashBtn(snapAddBtn);
 });
 document.addEventListener('click', e => {
@@ -4726,6 +4825,7 @@ function loadLive(){ startLive(urlParam(LIVE_PARAM)); }
    ein Server-Dokument im Wähler (D80). */
 async function startLive(raw){
   if(!raw) return;
+  ensureDisplayName();   /* wer mitschreibt, darf sagen, wer er ist (D86) */
   const urls = live.liveUrls(raw, location.href);
   if(!urls){
     sourceWarning = {type:'liveLoad', url: raw, error: 'not a Werkbaum document URL'};
@@ -4794,11 +4894,15 @@ function scheduleLivePush(){
                                    LIVE_DEBOUNCE_MS);
 }
 
-async function pushLive(){
+/* [meilenstein]: Der Kamera-Knopf hält den Stand als SERVER-Meilenstein fest
+   (D86) — dann darf das Diff auch leer sein: Die leere Änderung bumpt die
+   Version und markiert sie als Meilenstein, genau das ist „Stand jetzt
+   sichern" auf einem geteilten Dokument. */
+async function pushLive(meilenstein){
   if(!liveActive() || liveConflict || liveState.busy) return;
   const now = live.lines(live.normalize(src.value));
   const ops = live.computeOps(liveState.shadow, now);
-  if(!ops.length) return;
+  if(!ops.length && !meilenstein) return;
 
   /* Die Sitzung selbst festhalten, nicht nur ihre Felder: Wer während des
      Sendens auf ein anderes Dokument umschaltet, beendet sie (D80) — die
@@ -4822,6 +4926,7 @@ async function pushLive(){
       displayName: displayName(),
       seq,
       ops,
+      milestone: meilenstein || undefined,
     };
     const result = await fetchJson(sitzung.urls.content, {
       method: 'PATCH',
@@ -5061,6 +5166,19 @@ const LS_NAME = 'werkbaum-name';
 function displayName(){
   try{ return localStorage.getItem(LS_NAME) || undefined; }catch(_){ return undefined; }
 }
+/* Der Anzeigename (D86): selbstgewählt, im Browser gemerkt, geht mit jedem
+   Patch mit und füllt das „geändert von" der Server-Historie. Einmal gefragt —
+   auch die leere Antwort wird gemerkt (anonym bleiben ist eine Antwort,
+   Nachfragen bei jedem Öffnen wäre Gängelung); Abbruch fragt beim nächsten
+   Mal erneut. Ohne Anmeldung bleibt der Name eine Behauptung (D76). */
+function ensureDisplayName(){
+  try{
+    if(localStorage.getItem(LS_NAME) !== null) return;
+    const eingabe = window.prompt(t('liveNameAsk'), '');
+    if(eingabe === null) return;
+    localStorage.setItem(LS_NAME, eingabe.trim());
+  }catch(_){}
+}
 
 /* ---------- Ein Dokument auf den Server legen (D76) ----------
    Der Weg vom lokalen Dokument zum gemeinsam bearbeitbaren: anlegen, dorthin
@@ -5113,6 +5231,7 @@ async function serverBaseOrAsk(){
 async function putOnServer(){
   const d = activeDoc();
   if(!d) return;
+  ensureDisplayName();   /* D86 */
   const basis = await serverBaseOrAsk();
   if(!basis) return;
 

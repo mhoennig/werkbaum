@@ -19,6 +19,9 @@ reverse.
 
 ## 2026-08-27
 
+- On shared documents the history button shows the server's milestones — loading one is a rollback for everyone, as a new version, nothing lost
+- The camera button turns the current state of a shared document into a server milestone instead of a local snapshot
+- Joining or sharing a document asks once for a display name — it fills the history's "changed by" and stays a claim, not a proof
 - Renaming a shared document now renames it for everyone: the pencil patches the server title, and the change feed hands the new name to every open editor
 - URL documents lost their pencil — their name is the URL, and a local name would not survive the next load
 - If Werkbaum is open in a second browser tab, a warning says so — both tabs write the same document list, and the last one to save wins

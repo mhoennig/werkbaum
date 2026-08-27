@@ -129,7 +129,15 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Änderung nach einem Reload für eine Wiederholung und tut nichts), und der
   **Konflikt entsteht beim Tippen**, nicht erst beim Senden — der Server kennt
   den ungesendeten Text nicht. Fremde Änderungen werden bewusst **nicht**
-  undo-fähig eingespielt.
+  undo-fähig eingespielt. **Frühere Stände sind bei Server-Dokumenten die
+  SERVER-Meilensteine** (D86): `renderSnapMenu()` verzweigt bei `liveActive()`
+  auf `renderServerHistory()`, die Kamera schickt `pushLive(true)` (leeres
+  Diff erlaubt, `milestone:true`), Laden ist ein Server-Rollback
+  (`POST /restore`, ROLLED_BACK für alle) — und `snapshotNow()` sammelt für
+  `live:`-Dokumente KEINE lokalen Stände (sie enthielten fremde Arbeit und
+  überschrieben sie beim Laden als eigenes Diff). Der Anzeigename
+  (`ensureDisplayName()`, einmal gefragt, leer = anonym gemerkt) geht mit
+  jedem Patch mit.
   **Der Feed liefert die EIGENE Änderung zurück** (D76-Nachtrag 9): Er
   beantwortet „was ist seit Version N geschehen", und wer mitgeschrieben hat,
   steht nicht in der Frage. Wacht er im Moment des eigenen Sendens auf, hielte

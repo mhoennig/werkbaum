@@ -155,6 +155,8 @@
       - [?] #col.live.cursors: Cursors and who else is here (S)
       - [ ] #col.live.owner: An owner password guards managing a shared plan (M)  %% returned once on creation, admin can reclaim
       - [x] #col.live.rename: Renaming reaches everyone (S)  %% PATCH /title + RENAMED in the feed, see D85
+      - [x] #col.live.history: Earlier states come from the server (M)  %% milestones in the clock menu, rollback for everyone, see D86
+      - [x] #col.live.name: A self-chosen display name (XS)  %% fills "changed by", a claim, not a proof
       - [-] #col.live.ws: Transport over a websocket (S)  %% plain HTTP turned out to be enough
       - [-] #col.live.own: A merge algorithm of our own (XL)  %% solved problem, do not reinvent
   - [?] #mmd: Mermaid plugin (XL)
@@ -923,6 +925,17 @@
   The title is server metadata, so renaming patches it with a version check
   and the change feed hands the new title to every client in plain text. URL
   documents lost their pencil instead - their name is the URL.
+
+#col.live.history
+  On a shared document the clock button lists the server's milestone history
+  instead of local snapshots - those would contain other people's work and
+  overwrite everyone when loaded. The camera makes a server milestone, and
+  loading an earlier state is a server-side rollback: a new version for
+  everyone, nothing lost.
+
+#col.live.name
+  Asked once when joining or sharing, kept in the browser, sent with every
+  patch. Without accounts it is a claim, not a proof.
 
 #col.live.cursors
   Seeing where the others are. A by-product of the merge layer rather than a

@@ -7331,3 +7331,45 @@ den Inhalt stehen; Feed samt Titel; veraltete Version ⇒ 409; leerer Titel ⇒
 BUILD SUCCESSFUL samt Coverage. Werkzeuggrenze wie in D76-Nachtrag 7: Der
 Automations-Tab meldet sich dauerhaft als verborgen — der Feed lief nur mit
 gestellter Sichtbarkeit.
+
+## D86 — Frühere Stände eines geteilten Dokuments kommen vom Server
+Paket C der Ungereimtheiten-Liste (D84), der schwerste Punkt: Der
+Verlaufs-Knopf zeigte bei geteilten Dokumenten die **lokalen**
+Momentaufnahmen — und die enthalten fremde Änderungen; ein alter Stand hätte
+beim Laden die Arbeit aller als eigenes Riesen-Diff überschrieben. D76 hatte
+die Server-Meilensteine für genau diesen Knopf vorgesehen; jetzt sind sie da.
+
+**Der Verlaufs-Knopf zeigt bei Geteilten die Meilenstein-Historie des
+Servers** (`GET /history`, jetzt samt `clientId`/`displayName` — das
+„geändert von"). Gelistet werden die Stände **vor** dem aktuellen („Frühere
+Stände" eben); rechts steht der Anzeigename des Urhebers. **Laden ist ein
+Server-Rollback** (`POST /restore {version}`, `ROLLED_BACK`, D76): Der
+Rücksprung geschieht für alle nachvollziehbar auf dem Server — als neue
+Version, nichts geht verloren — statt als eigenes Diff dieses Clients.
+Deshalb mit Rückfrage: Er trifft alle Mitschreiber. **Die Kamera** legt bei
+Geteilten einen **Server-Meilenstein** an (`pushLive(true)`: ein wartendes
+Debounce-Diff geht mit, und auch das leere Diff ist erlaubt — es bumpt die
+Version als Meilenstein, genau das ist „Stand jetzt sichern"). Lokale
+Momentaufnahmen sammelt `snapshotNow()` für Server-Dokumente **gar nicht
+mehr** — die Historie führt der Server, und im Menü wären sie ohnehin
+unsichtbar. Für lokale Dokumente ändert sich nichts.
+
+**Der Anzeigename** (Punkt 9 der Liste, mit hinein gebaut): Beim ersten
+Teilen oder Beitreten fragt ein Dialog einmal nach dem Namen —
+`ensureDisplayName()`, gemerkt im Browser, geht mit jedem Patch mit und
+füllt das „geändert von" der Historie. Auch die **leere** Antwort wird
+gemerkt (anonym bleiben ist eine Antwort; Nachfragen bei jedem Öffnen wäre
+Gängelung), nur Abbruch fragt beim nächsten Mal erneut. Ohne Anmeldung
+bleibt der Name eine Behauptung, kein Nachweis (D76) — die API-Beschreibung
+sagt das ausdrücklich.
+
+**Nachgemessen** Ende-zu-Ende gegen das lokal laufende Backend: Leere
+Historie zeigt den eigenen Leertext; Tippen + Kamera erzeugt den
+Server-Meilenstein mit `displayName: Anna`; nach einer zweiten Änderung
+listet das Menü zwei frühere Stände (der aktuelle fehlt, rechts der Name);
+der Rollback auf den ältesten stellt den Text im Client zurück und steht auf
+dem Server als `ROLLED_BACK`-Version 4 mit dem Inhalt von Version 1. Ein
+lokales Dokument zeigt unverändert seine lokalen Stände. Der Namens-Dialog
+beim Beitreten blockiert nichts (die Automation wies ihn ab — Dokument lädt,
+nichts gemerkt, nächstes Mal wird wieder gefragt). 531 Frontend-Tests und
+der Backend-`check` grün.

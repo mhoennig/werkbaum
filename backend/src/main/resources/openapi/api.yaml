@@ -481,6 +481,15 @@ components:
         timestamp:
           type: string
           format: date-time
+        clientId:
+          type: string
+          description: Fehlt bei Aenderungen ohne Absender (etwa ueber PUT).
+        displayName:
+          type: string
+          description: >
+            Selbstgewaehlt und ohne Anmeldung eine Behauptung - in der
+            Oberflaeche nicht wie ein Nachweis darstellen. Traegt das
+            "geaendert von" der Historie (D86).
 
     TitlePatchRequest:
       type: object

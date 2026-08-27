@@ -193,5 +193,7 @@ class DocumentsController(
         content = content,
         changeType = ApiHistoryEntry.ChangeType.valueOf(changeType.name),
         timestamp = timestamp,
+        clientId = author?.clientId,
+        displayName = author?.displayName,
     )
 }
