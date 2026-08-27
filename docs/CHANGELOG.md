@@ -17,6 +17,10 @@ the git history of `docs/examples/werkbaum.werkbaum`. A day can therefore carry
 a link without having a note (someone forgot to write one) — but never the
 reverse.
 
+## 2026-08-27
+
+- Fix: sharing from an instance without its own backend (GitHub Pages) failed with HTTP 405 — the share button now probes the default address and asks for the server instead
+
 ## 2026-08-26
 
 - The document picker moved into the app header: `Werkbaum › name` opens the menu — on the phone it is reachable from both panes, and the name takes over the subtitle line

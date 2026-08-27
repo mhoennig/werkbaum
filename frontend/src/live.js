@@ -77,6 +77,14 @@ export function documentsUrl(base){
   return String(base).replace(/\/+$/, '') + '/api/v1/documents';
 }
 
+/* Lebendprobe (D77): antwortet hier wirklich ein Werkbaum-Backend? Vor dem
+   Teilen gefragt, denn die Vorgabe „eigene Herkunft" stimmt nur auf der
+   produktiven Installation — auf einer statischen Instanz (GitHub Pages)
+   bekäme der POST sonst ein kryptisches 405 (D81-Nachtrag). */
+export function infoUrl(base){
+  return String(base).replace(/\/+$/, '') + '/api/v1/info';
+}
+
 /* ------------------------------------------------------------------ Zeilen */
 
 /* Zeilenenden auf LF (SPEC §12). Der Server normalisiert beim Speichern

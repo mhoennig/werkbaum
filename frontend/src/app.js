@@ -4866,27 +4866,47 @@ function displayName(){
 const SERVER_PARAM = 'server';
 const LS_SERVER = 'werkbaum-server';
 
+/* Antwortet unter dieser Basis wirklich ein Werkbaum-Backend? Die Lebendprobe
+   `/api/v1/info` (D77), bevor blind gePOSTet wird. */
+async function probeServer(basis){
+  try{
+    const info = await fetchJson(live.infoUrl(basis));
+    return !!(info && info.name);
+  }catch(_){ return false; }
+}
+
 /* Wohin? Reihenfolge und Begründung stehen in live.js. Was dort nicht
    hingehört, ist der letzte Ausweg: fragen und die Antwort merken — ein
-   Dialog ist keine entscheidbare Regel. */
-function serverBaseOrAsk(){
+   Dialog ist keine entscheidbare Regel.
+
+   Die Vorgabe „eigene Herkunft" stimmt nur, wo das Backend wirklich dahinter
+   liegt (produktive Installation, D77) — auf GitHub Pages oder einer anderen
+   statischen Instanz gibt es keins, und der POST endete dort mit einem
+   kryptischen 405 (D81-Nachtrag). Deshalb wird die Vorgabe erst per
+   Lebendprobe geprüft und sonst GEFRAGT; gemerkt wird nur eine Adresse, die
+   die Probe besteht — ein Tippfehler klemmt sich so nicht fest. Eine
+   eingegebene Adresse, die nicht antwortet, wird trotzdem versucht: Der
+   POST-Fehlerpfad nennt dann ehrlich, was nicht erreichbar war. */
+async function serverBaseOrAsk(){
   const offen = liveState ? liveState.urls.doc : null;
   let gemerkt = null;
   try{ gemerkt = localStorage.getItem(LS_SERVER); }catch(_){}
   const basis = live.serverBase(urlParam(SERVER_PARAM) || gemerkt, offen, location.href);
-  if(basis) return basis;
+  if(basis && await probeServer(basis)) return basis;
 
   const eingabe = window.prompt(t('docToServerAsk'), 'https://');
   if(!eingabe) return null;
   const geprueft = live.serverBase(eingabe, null, location.href);
-  if(geprueft){ try{ localStorage.setItem(LS_SERVER, geprueft); }catch(_){} }
+  if(geprueft && await probeServer(geprueft)){
+    try{ localStorage.setItem(LS_SERVER, geprueft); }catch(_){}
+  }
   return geprueft;
 }
 
 async function putOnServer(){
   const d = activeDoc();
   if(!d) return;
-  const basis = serverBaseOrAsk();
+  const basis = await serverBaseOrAsk();
   if(!basis) return;
 
   try{

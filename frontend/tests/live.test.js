@@ -1,7 +1,7 @@
 import {describe, it, expect} from 'vitest';
 import {
   liveUrls, normalize, lines, text, computeOps, applyOps,
-  mapLine, caretToLineCol, lineColToCaret, feedAction, serverBase, documentsUrl,
+  mapLine, caretToLineCol, lineColToCaret, feedAction, serverBase, documentsUrl, infoUrl,
 } from '../src/live.js';
 
 describe('Adressen', () => {
@@ -193,6 +193,12 @@ describe('Basis-Adresse des Backends', () => {
     expect(serverBase(null, null, seite)).toBe('https://werkbaum.example');
     expect(documentsUrl(serverBase(null, null, seite)))
       .toBe('https://werkbaum.example/api/v1/documents');
+  });
+
+  it('die Lebendprobe fragt /api/v1/info an der Basis (D81-Nachtrag)', () => {
+    expect(infoUrl('https://werkbaum.example')).toBe('https://werkbaum.example/api/v1/info');
+    expect(infoUrl('https://werkbaum.example/unterverzeichnis/'))
+      .toBe('https://werkbaum.example/unterverzeichnis/api/v1/info');
   });
 
   it('der ?server=-Parameter hat Vorrang', () => {

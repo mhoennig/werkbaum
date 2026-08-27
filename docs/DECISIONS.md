@@ -7006,3 +7006,38 @@ stellt Text und Knopfzustände zurück, ohne das Menü zu schließen; Löschen
 eines nicht-aktiven Dokuments lässt den Editor unangetastet; auf dem Telefon
 ist der Wähler aus dem Diagramm-Bereich erreichbar und der Wechsel rendert
 183 Knoten, langer Name füllt die 335-px-Chipzeile mit Ellipse.
+
+**Nachtrag — vor dem Teilen wird die Basis-Adresse per Lebendprobe geprüft.**
+Gemeldet vom ersten echten Druck auf den neuen Teilen-Knopf: „Server-Dokument
+nicht geladen: https://mhoennig.github.io/api/v1/documents (HTTP 405)." Die
+Ursache liegt nicht im Knopf, sondern in der Vorgabe aus D76-Nachtrag 8: Die
+Basis-Adresse ist die **eigene Herkunft** — richtig auf der produktiven
+Installation (dort liegt `/api/` per Proxy dahinter, D77), falsch auf jeder
+statischen Instanz. GitHub Pages beantwortet den POST mit 405, und die
+Meldung führte auf die falsche Fährte („ist die Adresse eine
+Dokument-Adresse?"). Der Fehler war schon vor D81 da; der Knopf in der
+Titelzeile hat ihn nur sichtbar gemacht — im Menü hat ihn dort schlicht
+niemand gedrückt.
+
+**Gefixt mit der Lebendprobe, die es schon gibt:** `GET /api/v1/info` (D77,
+gebaut genau als „antwortet hier die Anwendung?"). `serverBaseOrAsk()` prüft
+die Vorgabe damit, **bevor** gePOSTet wird; besteht sie nicht, wird
+**gefragt** — der vorhandene Dialog samt gemerkter Antwort. Gemerkt wird nur
+eine Adresse, die die Probe besteht: Ein Tippfehler klemmt sich nicht fest
+(und eine gemerkte Adresse, deren Backend verschwindet, heilt sich beim
+nächsten Teilen von selbst — Probe scheitert, es wird neu gefragt). Eine
+eingegebene Adresse, die nicht antwortet, wird trotzdem versucht — der
+POST-Fehlerpfad nennt dann ehrlich, was nicht erreichbar war, statt dass der
+Dialog stumm wieder aufgeht.
+
+**Von Pages aus funktioniert das Teilen damit wirklich:** Das Backend erlaubt
+CORS `*` (D76-Nachtrag 7) — wer auf `mhoennig.github.io` arbeitet und im
+Dialog `https://werkbaum.javagil.de` einträgt, legt sein Dokument dort ab.
+Gemessen aus dem Browser: Die Probe gegen die stabile Instanz besteht
+cross-origin.
+
+**Nachgemessen** am Dev-Server (dieselbe Lage wie Pages: keine eigene
+`/api/`): Teilen öffnet jetzt den Adress-Dialog statt der 405-Warnung,
+Abbruch tut nichts; die Probe gegen das echte Backend liefert
+`{name:"editor-backend"}`. `infoUrl()` liegt headless in live.js (39
+Live-Tests, +1).
