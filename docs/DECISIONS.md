@@ -7888,3 +7888,41 @@ Auth-Typ (`normal`/`ldap`, das LDAP-Plugin nutzt einen eigenen `type`) und
 das Ref-Muster für die Tracker-Erkennung (`#123` vs. `#US-123`,
 D34-Nachtrag). An der Notation ändert sich nichts; `llms.md` bleibt
 unberührt.
+
+**Nachtrag — die Zielinstanz ist vermessen (2026-08-27):**
+`https://plan.hostsharing.net` ist das Frontend; die **API liegt auf einem
+eigenen Host**, `https://plan-api.hostsharing.net/api/v1/` (aus `conf.json`
+gelesen — die Proxy-Konfiguration braucht also die API-URL, nicht die aus
+der Adresszeile). Gemessen, nicht angenommen:
+
+- **Auth-Typ: `ldap`** (`loginFormType: "ldap"`; der leere
+  `type:"ldap"`-Request zeigt zugleich den **Fallback auf `normal`** — das
+  LDAP-Plugin probiert beides). Die erste der beiden offenen Messfragen ist
+  damit beantwortet; der Login-Request lautet `{type:"ldap", username,
+  password}`.
+- **CORS ist komplett offen**: `Access-Control-Allow-Origin: *`,
+  `authorization` unter den erlaubten Headern, alle Methoden. **Der
+  Direkt-Weg aus dem Browser funktionierte heute also** — das
+  CORS-Argument für den Proxy trägt an dieser Instanz nicht. Die
+  Entscheidung bleibt trotzdem beim Proxy: Die übrigen Gründe (Basis-URL
+  als Server-Konfiguration, kein Secrets-Wildwuchs, der spätere
+  Webhook-Rückweg, Unabhängigkeit von einer jederzeit änderbaren
+  Server-Einstellung) stehen unabhängig vom CORS — aber es ist ehrlich zu
+  sagen, dass der billigste Einstieg hier auch ohne Backend ginge.
+- Alle gebrauchten Endpunkte vorhanden (`auth`, `projects`, `userstories`,
+  `tasks`, `epics`); `publicRegisterEnabled: false`, `eventsUrl: null`
+  (kein Taiga-Events-Websocket konfiguriert).
+
+**Vormerker OIDC:** Die Instanz wird demnächst auf OIDC-Login umgestellt.
+Damit fällt der Passwort-Login weg — der Token entsteht dann über einen
+Browser-Redirect-Flow direkt gegen Taiga, landet aber weiterhin im Browser;
+für den Proxy ändert sich nichts (er reicht nur den Bearer durch), der
+Auth-Durchreich-Endpunkt wird dann durch den Redirect-Flow ersetzt. Ein
+reines CLI mit Passwort-Login stürbe mit der Umstellung — ein Grund mehr,
+das CLI (wenn es kommt) auf ein vorhandenes Token statt auf Login zu
+bauen. **Gebaut wird gegen das aktuelle Verfahren** (`ldap`); die
+OIDC-Anpassung ist ein eigener, kleiner Schritt am Login-Endpunkt.
+
+Offen bleibt nur noch das **Ref-Muster** (`#123` vs. `#US-123`) — das
+braucht einen eingeloggten Blick in ein echtes Projekt und liegt beim
+Bauen.
