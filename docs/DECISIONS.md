@@ -8210,3 +8210,54 @@ durchweg 0) — geprüft ist deshalb über Ereignisse und **berechnete** Stile,
 nicht am Bild. Dieselbe Sorte Grenze wie D57 (`focus()` ohne Fensterfokus
 feuert keine Fokus-Ereignisse): Der Tastaturweg musste synthetisch angestoßen
 werden.
+
+**Nachtrag 7 — Status zurückschreiben: niemand gewinnt von selbst
+(2026-08-27).** Entschieden, noch nicht gebaut (SPEC §11). Der Ticket-Stand
+wird seit Nachtrag 6 gelesen; damit steht die Frage im Raum, die `#trk.write`
+blockiert hat: **Was gilt, wenn Ticket und Statusbox Verschiedenes sagen?**
+
+**Gewählt (Nutzer): keiner automatisch — die Abweichung wird markiert und mit
+zwei ausdrücklichen Knöpfen angeboten** (*nach Taiga schreiben* / *aus Taiga
+übernehmen*). Die beiden naheliegenden Antworten sind damit verworfen, jede
+aus ihrem eigenen Grund:
+
+- **„Der Text gewinnt"** — das ist, was der Plan-Knoten heute verspricht
+  („change a status in the plan and the ticket follows"), und es liegt auf
+  der D14-Linie. Es schreibt aber selbsttätig in ein **fremdes, geteiltes**
+  System: Ein veralteter Plan zöge Tickets rückwärts, und von allen
+  Änderungen, die dieses Werkzeug machen kann, ist die in Taiga die am
+  schwersten zurückzunehmende.
+- **„Taiga gewinnt"** — der Tracker ist die operative Wahrheit, dort bewegt
+  das Team täglich Karten. Dann schriebe das Werkzeug aber fortlaufend im
+  **Notationstext**, in einem geteilten Dokument (`?live=`) für alle sichtbar,
+  und die Statusbox wäre keine Autoren-Aussage mehr, sondern gespiegelte
+  Fremddaten. Genau davor steht seit D14 die Hausregel.
+- **„Zeitstempel entscheidet"** war gar nicht baubar: Werkbaum hat keine
+  Änderungszeit **je Knoten** — der Text ist das ganze Format (D14). Man
+  müsste dafür Metadaten erfinden, die die Notation bewusst nicht hat.
+
+Die gewählte Form kostet je Abweichung einen Klick, und wer nie klickt, hat
+dauerhaft zwei Wahrheiten nebeneinander — **benannt und in Kauf genommen**:
+Sichtbar sind sie dann immerhin, und das ist mehr, als es vor Nachtrag 6 gab.
+Sie liegt auf derselben Linie wie die Anlage (D91-Nachtrag 4: ein Knopf im
+Knoten-Fenster, nichts geschieht nebenbei) und wie das Zurückschreiben der
+Faltung (D38-Nachtrag 2: geschrieben wird nur, was der Zustand wirklich
+hergibt).
+
+**Geschrieben wird nur, was die Abbildung kennt** (Nutzer): die fünf
+Zustände aus Nachtrag 6. `[?]` Idee, `[!]` High Risk, `[-]` verworfen und der
+neutrale Knoten haben in Taigas Vorgabe-Workflow keine Entsprechung und
+lassen das Ticket **unangetastet**; das Fenster sagt, warum. Erwogen und
+zurückgestellt: eine eigene Aktion „Ticket schließen" für `[-]` (die einzige
+Randlage mit klarer Entsprechung) und das Warten auf die konfigurierbare
+Abbildung (`#trk.resolve.map`) — beides kann später dazukommen, ohne diese
+Festlegung zu brechen.
+
+**Was das Bauen zusätzlich braucht** (hier notiert, damit es niemanden
+überrascht): Taiga nimmt zum Schreiben die **Status-Id** des Projekts, nicht
+den Namen — die Spaltennamen sind je Projekt frei, der Proxy braucht also
+`/userstory-statuses` bzw. `/task-statuses` je Projekt und trifft die Spalte
+über den Namen aus der Abbildung; findet er sie nicht, wird nicht geschrieben.
+Und ein `PATCH` verlangt die `version` des Tickets (optimistisches Sperren):
+Hat jemand dazwischen geändert, meldet sich der Konflikt, statt ihn zu
+überschreiben — dieselbe Haltung wie beim Live-Editing (D76).

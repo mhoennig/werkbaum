@@ -1390,6 +1390,29 @@ wird im Knoten-Fenster gezeigt (§9) — gelesen, nie geschrieben; das
 Freie Schlagworte liegen **nicht** mehr auf `#` — siehe `&tag` unten; damit
 ist die frühere Dreifach-Rolle von `#` aufgelöst (D34).
 
+### Status zurückschreiben — festgelegt, noch nicht gebaut
+
+Der Ticket-Stand wird gelesen (§9). Der Abgleich in die andere Richtung ist
+entschieden, aber ungebaut; die Regeln stehen hier, bevor sie gebaut werden.
+
+- **Niemand gewinnt von selbst.** Weicht der gelesene Ticket-Status von der
+  Statusbox des Knotens ab, wird die Abweichung im Knoten-Fenster
+  **markiert** und mit **zwei ausdrücklichen Aktionen** angeboten: *nach
+  Taiga schreiben* (Statusbox → Ticket) und *aus Taiga übernehmen*
+  (Ticket-Status → Statusbox). Kein Takt, kein stiller Abgleich, keine
+  Richtung, die die andere überstimmt.
+- **Übernehmen ist eine gewöhnliche Textänderung**: Die Statusbox wird
+  geschrieben wie beim Falten (§9) — undo-fähig, in einem geteilten Dokument
+  für alle sichtbar. Sonst gilt weiter, dass der Text die Quelle der Wahrheit
+  ist und kein Werkzeug ihn ungefragt umschreibt.
+- **Geschrieben wird nur, was die Abbildung kennt** (§9, die fünf Zustände).
+  `[?]`, `[!]`, `[-]` und der neutrale Knoten haben keine Entsprechung und
+  lassen das Ticket **unangetastet**; das Fenster sagt, warum. Erfunden wird
+  nichts — dieselbe Haltung wie beim Lesen, wo ein unbekannter Spaltenname
+  unabgebildet bleibt.
+- Beide Richtungen betreffen **einen** Knoten. Eine Sammelaktion über einen
+  Teilbaum ist offen und wird, wenn sie kommt, hier festgelegt.
+
 ### Schlagworte (`&tag`)
 
 Die **Schreibweise ist umgesetzt** — Definition jetzt in §1 (Zeichenmenge wie
