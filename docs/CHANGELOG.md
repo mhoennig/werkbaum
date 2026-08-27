@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-27
 
+- Folding regions in the text editor recorded as an idea in the plan — view-only and local, unrelated to the diagram's fold marks, deliberately not sized yet
 - Fix: the root node's fold chip was white-on-pastel and barely visible — it now looks like every other node's, and the description mark and id line on a coloured root are readable too
 - The caret on a node off the cheapest path now highlights only the ring — the fill stays pale instead of jumping back to full colour
 - On shared documents the history button shows the server's milestones — loading one is a rollback for everyone, as a new version, nothing lost
