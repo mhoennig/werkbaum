@@ -205,14 +205,14 @@
         - [ ] #trk.resolve.read: Read title, link and status (S)
         - [ ] #trk.resolve.map: Map the workflow onto the states (S)
       - [?] #trk.write: Write the status back (M) :#trk.resolve
-      - [x] #trk.create: Create tickets from nodes (XL)
+      - [^] #trk.create: Create tickets from nodes (XL)
         - [^] #trk.create.proxy: Backend proxy with named endpoints (M)
         - [^] #trk.create.login: Log in to Taiga, token stays in the browser (S) :#trk.create.proxy
         - [^] #trk.create.project: The project comes from the inherited tag (S) :#not.tag.project
         - [^] #trk.create.story: A "create story" action in the node window (S) :#trk.create.login
         - [^] #trk.create.tasks: Sub-packages become tasks, picked in a dialog (M) :#trk.create.story
         - [^] #trk.create.ref: The ref lands in the line beside the id (S) :#trk.create.story
-      - [x] #trk.open: Open a ticket ref in Taiga (S) :#trk.create.ref,#not.tag.project
+      - [^] #trk.open: Open a ticket ref in Taiga (S) :#trk.create.ref,#not.tag.project
       - [-] #trk.plugin: A plugin inside Taiga itself (L)  %% legacy frontend, self-hosted only
     = [?] #trk.tenzu: Tenzu, the successor (XXL) https://tenzu.net
     = [ ] #trk.none: No tracker, plain text is enough (XS)
