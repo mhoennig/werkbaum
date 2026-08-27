@@ -202,7 +202,7 @@
   - [~] #trk: Tracker integration (XL)  %% exactly one of these, hence =
     = [~] #trk.taiga: Taiga (XL) https://taiga.io
       - [/] #trk.resolve: Resolve "#US-123" over the REST API (M)
-        - [x] #trk.resolve.read: Read title, link and status (S)
+        - [^] #trk.resolve.read: Read title, link and status (S)
         - [/] #trk.resolve.map: Map the workflow onto the states (S)
       - [?] #trk.write: Write the status back (M) :#trk.resolve
       - [^] #trk.create: Create tickets from nodes (XL)
