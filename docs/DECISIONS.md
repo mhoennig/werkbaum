@@ -7706,3 +7706,39 @@ sind jetzt alle laut oder abgestellt; tritt es erneut auf, benennt die
 Warnung den Zustand, und die Sicherungen halten den Text. Unabhängig davon
 kann `tools/pull-doc --git-commit` (D88) per Cron eine Git-Historie des
 Server-Dokuments führen — ein Netz außerhalb des Browsers.
+
+## D90 — Die Dokumentart steht grau hinter dem Namens-Chip
+Nutzerwunsch, unmittelbar aus dem D89-Vorfall: Hinter der Brotkrume
+(„Werkbaum › Name", D81) soll erkennbar sein, was für ein Dokument vorn ist —
+als Symbol oder „einfach in grau derselbe String wie im Dokumenten-Menü für
+die Abschnitte". Gebaut ist die zweite Variante: **dieselben Begriffe wie die
+Menü-Gruppen** (Mitgeliefert · Lokal · Geteilt, D81-Nachtrag 4), klein und
+grau hinter dem Chip; bei Server-Dokumenten mit dem **Host** dahinter
+(„Geteilt · werkbaum.javagil.de") — dieselbe Auskunft wie in der Menüzeile
+(D76-Nachtrag 8). Keine neue Symbolsprache, keine neuen i18n-Schlüssel: Die
+Gruppen-Begriffe existieren in neun Sprachen, und Wiedererkennung zwischen
+Chip und Menü ist der Zweck.
+
+**Der Anlass macht die Wahl leicht:** Beim D89-Vorfall lag vermutlich die
+**lokale Kopie** gleichen Namens vorn (die beim Teilen absichtlich stehen
+bleibt, D76-Nachtrag 8) — im Editor von der geteilten Fassung nicht zu
+unterscheiden, nur der Teilen-Knopf verriet es dem, der wusste, worauf er
+achtet. Jetzt steht der Unterschied dauerhaft neben dem Namen: „Lokal"
+gegen „Geteilt · host". Die vier Arten aus dem Wunsch (app/local/sourceUrl/
+live) fallen auf die drei Gruppen-Begriffe zusammen — dieselbe Entscheidung
+wie im Menü (D81-Nachtrag 4: URL- und Server-Dokumente sind beide
+„Geteilt"), und die Unterscheidung, die vor Verlust schützt, ist
+Lokal↔Geteilt, nicht URL↔Server.
+
+**Bei langen Namen bleibt die Art stehen** (`flex:0 0 auto`), der Name
+bekommt die Ellipse — die Art ist die Information, die vor Verwechslung
+schützt. Kein `aria-hidden`: Anders als Größen-Badge und Pillen ist der
+Text keine Doppelung, ein Screenreader erfährt ihn sonst nirgends an
+dieser Stelle.
+
+**Nachgemessen** im Browser: „Geteilt · 127.0.0.1:8080" am Server-Dokument,
+„Mitgeliefert" am Beispiel, „Lokal" an einem frisch angelegten Dokument;
+der Sprachwechsel zieht mit („Included"); auf 375 px liegt das Label
+vollständig im Bild und die Chip-Zeile bleibt im D81-Layout (Kopf 95 px =
+Kopfzeile + Chip-Zeile). Reine UI-Verdrahtung, Browser-geprüft
+(D54-Nachtrag-3-Grenze); `docKind()` selbst ist seit D81 headless getestet.

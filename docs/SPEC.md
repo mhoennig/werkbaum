@@ -564,7 +564,9 @@ der Titelzeile schaltet ein **Knopf** auf den anderen um; er zeigt das Ziel
 weder Splitter noch Min/Normal/Max-Buttons — es ist nichts zu teilen. Die
 Bereichstitel („DIAGRAMM", „TEXT-EDITOR") entfallen; die Zeile wird für
 Umschalter und Aktionen gebraucht. Der **Dokumenten-Wähler** steht als
-Brotkrume im App-Kopf („Werkbaum › Name", D81) und ist damit aus **beiden**
+Brotkrume im App-Kopf („Werkbaum › Name", D81; dahinter steht grau die
+**Dokumentart** — Mitgeliefert · Lokal · Geteilt, bei Server-Dokumenten samt
+Host, D90) und ist damit aus **beiden**
 Bereichen erreichbar; sein Name übernimmt hier die Zeile des Untertitels —
 es kommt keine Fläche hinzu. Die übrigen
 **Aktions-Knöpfe** bleiben rechts in der Titelzeile und werden mit

@@ -83,7 +83,15 @@
      Ellipse kürzt, statt die Werkzeuge rechts zu verdrängen. */
   .brandgroup{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto}
   .crumb-sep{color:var(--muted);opacity:.6;font-size:1.05rem;flex:0 0 auto;user-select:none}
-  .docwrap{position:relative;display:inline-flex;min-width:0}
+  .docwrap{position:relative;display:inline-flex;align-items:center;min-width:0}
+  /* Dokumentart hinter dem Chip (D90): grau und klein — Auskunft, kein Knopf.
+     flex:0 0 auto, damit bei langen Namen der Name die Ellipse bekommt und
+     die Art stehen bleibt (sie ist die Information, die vor Verwechslung
+     schützt). */
+  .dockind{
+    flex:0 0 auto;margin-left:8px;color:var(--muted);
+    font-size:.72rem;white-space:nowrap;
+  }
   /* Der Auslöser sieht jetzt nach Menü aus: gerahmter Chip mit Pfeil — die
      frühere nackte Beschriftung in der Panel-Zeile war als Knopf nicht zu
      erkennen (der Anlass von D81). */

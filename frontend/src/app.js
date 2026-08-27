@@ -3938,6 +3938,20 @@ const docList = document.getElementById('docList');
 function updateDocName(){
   const d = activeDoc();
   if(docNameEl) docNameEl.textContent = d ? d.name : '';
+  /* Dokumentart hinter dem Chip (D90): dieselben Begriffe wie die
+     Menü-Abschnitte — vor allem gegen die Verwechslung „lokale Kopie statt
+     geteiltem Dokument" (der D89-Vorfall). Bei Server-Dokumenten mit Host,
+     wie in der Menüzeile. */
+  const kindEl = document.getElementById('docKindLabel');
+  if(kindEl){
+    if(d){
+      const art = docKind(d.id, SHIPPED_IDS);
+      const label = {shipped: 'docGroupShipped', own: 'docGroupOwn',
+                     server: 'docGroupSources', url: 'docGroupSources'}[art];
+      const host = serverHostOf(d.id);
+      kindEl.textContent = t(label) + (host ? ' · ' + host : '');
+    } else kindEl.textContent = '';
+  }
   /* Aus einer URL geladene Dokumente (D23): die vollständige Quelle in den
      Tooltip, da der Name in der Titelzeile mit Ellipse abgeschnitten wird.
      Muss nach applyLang erneut laufen — das setzt data-i18n-title zurück. */
