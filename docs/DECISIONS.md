@@ -975,6 +975,47 @@ Export und Druck waren nie betroffen — dort zeichnet `diagramToSvg()` die
 Punkte nach den Knoten (Reihenfolge statt Stapelung), und die Cursor-Zeile
 erscheint ohnehin nicht (D25 oben).
 
+**Nachtrag 4 — auf einem zurückgetretenen Knoten hebt die Cursor-Zeile nur
+noch den Ring hervor, die Füllung bleibt blass.** Gemeldet: Steht der Cursor
+auf der Zeile eines Knotens, der nicht auf dem günstigsten Pfad liegt, ging
+das Ausgrauen durch die Hervorhebung verloren — der Knoten stand plötzlich in
+voller Statusfarbe da. Das war der Preis der Ausnahme aus dem Nachtrag oben
+(`.cheap-on .node:not(.cheap).current{opacity:1;filter:none}`): Sie stellte
+den **ganzen** Knoten wieder her, weil `opacity`/`filter` am Element auch den
+`box-shadow` treffen — ein Ring auf einem 0,32-gedimmten Element ist
+unsichtbar, das war ja der ursprüngliche Befund. Die Ausnahme war damit
+richtig begründet und trotzdem zu grob: Sie kostete die Pfad-Aussage („hier
+wird nichts getan") für die Dauer des bloßen Hinsehens.
+
+**Jetzt bleibt der Knoten voll deckend, und die Blässe wird nachgebildet** —
+so bekommt der Ring die volle Stärke, ohne dass die Füllung sie bekommt:
+
+- Ein **Papier-Wasch** als `background-image` (68 % `--paper` über der
+  Statusfarbe) ergibt rechnerisch dasselbe wie 0,32 Deckkraft über dem hellen
+  Grund.
+- **Text- und Rahmenfarbe** wechseln auf das gedimmte Grau. Dass dabei die
+  acht Status-Rahmenfarben auf ein einheitliches Grau fallen, ist kein
+  Verlust: Bei 0,32 Deckkraft waren sie ohnehin nicht mehr zu unterscheiden.
+- Die **Kinder** (Größen-Badge, Pillen, Chips, Falt-Chip) dimmen einzeln per
+  `opacity:.32` — genau das, was vorher die Element-Deckkraft mit ihnen tat.
+  `.ext` ist ausgenommen: Es erbt die schon gefadete Textfarbe und wäre sonst
+  doppelt gedimmt.
+
+`fresh`, `focusmark` und `done` sind per `:not()` ausgeschlossen — deren
+Volle-Stärke-Ausnahmen (D28, D32, D46-Nachtrag) haben eigene Gründe und
+gelten unverändert. Puls-Ring (`::after`), Schlagschatten und `scale(1.04)`
+bleiben in voller Stärke: Die Tiefe ist der Hervorhebungs-Kanal, die Füllung
+gehört dem Pfad. Export und Druck sind unberührt — `diagramToSvg()` liest
+`backgroundColor`, nicht `background-image`, und die Cursor-Zeile erscheint
+dort ohnehin nicht.
+
+**Nachgemessen** im Browser: Cursor auf einem gedimmten Knoten → `opacity 1`,
+Ring vollständig im `box-shadow`, Wasch-Gradient gesetzt, Text
+`rgba(36,52,71,.35)`, Kind-Badge 0,32; der gedimmte Nachbarknoten unverändert
+(0,32, kein Wasch); Cursor auf einem Pfad-Knoten → kein Wasch, volle Farbe,
+Ring wie immer. Reine CSS-Änderung, keine testbare Regel (dieselbe Grenze wie
+bei aller Knoten-Optik).
+
 ## D26 — Legende scrollbar: eigener Container statt `<details>`, plus Splitter
 Die Legende („Agenda") im Editor-Panel war zu hoch für ihren Platz und wurde
 **abgeschnitten** statt scrollbar zu sein — obwohl `.hint` seit jeher

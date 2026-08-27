@@ -911,16 +911,32 @@
      der wahrscheinlichsten Gründe, überhaupt zu zeigen. Anders als beim
      optionalen Knoten (D29), wo das Zurücktreten die Aussage IST. */
   .cheap-on .node:not(.cheap).focusmark{opacity:1;filter:none}
-  /* Und dasselbe für die Cursor-Zeile (D25-Nachtrag) — die Ausnahme fehlte hier
-     als einzige, obwohl der Fall der häufigste ist: Der Umschalter ist
-     voreingestellt an, und jeder optionale Knoten und jede nicht gewählte
-     Alternative ist „nicht auf dem Pfad" (im mitgelieferten Beispiel 7 von 18
-     Knoten). Gemessen auf `+ [?] Dark mode`: Deckkraft 0,32 — der Ring war dort
-     praktisch unsichtbar. Wo der Cursor steht, muss sichtbar bleiben, egal wie
-     der Pfad entschieden hat; anders als beim optionalen Knoten (D29), wo das
-     Zurücktreten die Aussage IST, ist hier gar keine Aussage über den Plan
-     gemeint — es ist eine Editierhilfe. */
-  .cheap-on .node:not(.cheap).current{opacity:1;filter:none}
+  /* Die Cursor-Zeile auf einem zurückgetretenen Knoten (D25-Nachtrag 4): Nur
+     der RING wird hervorgehoben, die Füllung bleibt blass. Die erste Fassung
+     stellte den ganzen Knoten auf volle Stärke — dann verlor er beim bloßen
+     Hineinsetzen des Cursors seine Pfad-Aussage („nicht nötig"). Ganz gedimmt
+     lassen geht aber auch nicht: opacity/filter am Element treffen den
+     box-shadow mit, der Ring wäre unsichtbar (der ursprüngliche D25-Befund).
+     Deshalb bleibt der Knoten voll deckend, und die Blässe wird NACHGEBILDET:
+     - background-image legt einen Papier-Wasch (68 %) ÜBER die Statusfarbe —
+       rechnerisch dasselbe wie 0,32 Deckkraft über dem hellen Grund;
+     - Text- und Rahmenfarbe wechseln auf das gedimmte Grau (der Unterschied
+       der acht Status-Rahmenfarben ist bei 0,32 ohnehin nicht mehr zu sehen);
+     - die Kinder (Badges, Pillen, Chips) dimmen einzeln per opacity — genau
+       so, wie es vorher die Element-Deckkraft tat. `.ext` ist ausgenommen:
+       es erbt die schon gefadete Textfarbe und wäre sonst doppelt gedimmt.
+     fresh/focusmark/done sind ausgeschlossen — deren Ausnahmen (volle Stärke)
+     haben je eigene Gründe und gelten weiter. Der Puls-Ring (::after) und der
+     Schlagschatten bleiben unberührt in voller Stärke. */
+  .cheap-on .node:not(.cheap):not(.fresh):not(.focusmark):not(.done).current{
+    opacity:1;filter:none;
+    background-image:linear-gradient(rgba(243,246,249,.68),rgba(243,246,249,.68));
+    border-color:rgba(107,122,140,.4);
+    color:rgba(36,52,71,.35);
+  }
+  .cheap-on .node:not(.cheap):not(.fresh):not(.focusmark):not(.done).current > :not(.ext){
+    opacity:.32;filter:saturate(.4);
+  }
   /* Erledigtes tritt NIE zurück (D46-Nachtrag). D46 hatte das schon entschieden
      — „sie auszublassen hieße, sie sähen aus wie eine verworfene Alternative" —,
      die Regel griff aber nur für erledigte Knoten AUF dem Pfad. Ein fertiger
