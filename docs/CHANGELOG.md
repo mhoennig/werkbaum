@@ -17,6 +17,11 @@ the git history of `docs/examples/werkbaum.werkbaum`. A day can therefore carry
 a link without having a note (someone forgot to write one) — but never the
 reverse.
 
+## 2026-08-28
+
+- The create buttons in the node window are recut: one "create story" button always opens the dialog with project choice and sub-package checkboxes — unchecking covers the story-only case
+- A "create task" button appears where an ancestor node already carries a story: the task lands in that story without any dialog — project and story follow from the tree, only an error gets a surface
+
 ## 2026-08-27
 
 - Where a ticket and the plan disagree, the node window says so and offers both directions as explicit buttons — nothing happens by itself

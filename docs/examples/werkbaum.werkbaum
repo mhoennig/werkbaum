@@ -211,6 +211,7 @@
         - [^] #trk.create.project: The project comes from the inherited tag (S) :#not.tag.project
         - [^] #trk.create.story: A "create story" action in the node window (S) :#trk.create.login
         - [^] #trk.create.tasks: Sub-packages become tasks, picked in a dialog (M) :#trk.create.story
+        - [x] #trk.create.task: A dialog-free "create task" under a story ancestor (S) :#trk.create.tasks,#trk.resolve.read
         - [^] #trk.create.ref: The ref lands in the line beside the id (S) :#trk.create.story
       - [^] #trk.open: Open a ticket ref in Taiga (S) :#trk.create.ref,#not.tag.project
       - [-] #trk.plugin: A plugin inside Taiga itself (L)  %% legacy frontend, self-hosted only
@@ -1192,10 +1193,18 @@
   created. A node that already carries a ticket ref is left alone.
 
 #trk.create.tasks
-  The second action also creates the direct sub-packages as tasks under the
+  The story dialog also creates the direct sub-packages as tasks under the
   story, chosen in a checkbox dialog: preselected are required and optional
   children plus the realized alternatives of a |/= group; discarded ones
-  never appear, finished ones start unchecked.
+  never appear, finished ones start unchecked. Unchecking everything covers
+  the story-only case, so there is just one create-story button.
+
+#trk.create.task
+  Where an ancestor node already carries a story ref, the node window offers
+  "create task": the task lands in that story, without any dialog — project
+  and story follow from the tree. Ancestors with a task ref are skipped
+  (Taiga tasks have no subtasks), and the button is absent where a &taiga
+  tag in between would resolve the new ref against the wrong project.
 
 #trk.create.project
   The dialog's project choice is prefilled from the nearest (&taiga.slug)

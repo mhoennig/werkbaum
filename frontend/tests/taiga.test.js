@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/parser.js';
 import { taigaSlugs } from '../src/model.js';
-import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt, refParts, ticketApiPath, mapTaigaStatus, taigaStatusName, pickStatus, statusApiPath, statusListPath } from '../src/taiga.js';
+import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt, refParts, ticketApiPath, mapTaigaStatus, taigaStatusName, pickStatus, statusApiPath, statusListPath, storyAncestor } from '../src/taiga.js';
 import { setStatusBox } from '../src/parser.js';
 
 /* Schlagworte `&tag` (SPEC §1, D91): Extraktion im Parser und die
@@ -144,6 +144,47 @@ describe('taskCandidates — Vorbelegung des Häkchen-Dialogs (D91)', () => {
 
   it('ein Blatt hat keine Kandidaten', () => {
     expect(kids('- P')).toEqual([]);
+  });
+});
+
+describe('storyAncestor — der nächste Vorfahr mit Story-Ref (D91-Nachtrag 9)', () => {
+  const find = (text, label) => {
+    const { roots } = parse(text);
+    let node = null;
+    (function w(ns){ for(const n of ns){ if(n.label === label) node = n; w(n.children); } })(roots);
+    return {roots, node};
+  };
+
+  it('findet den nächsten Vorfahren mit US-Ref', () => {
+    const {roots, node} = find('- A #US-1\n  - B #US-2\n    - C', 'C');
+    const anc = storyAncestor(roots, node);
+    expect(anc.ref).toBe('US-2');
+    expect(anc.node.label).toBe('B');
+  });
+
+  it('überspringt Vorfahren mit Task-Ref — die Task gehört in die Story darüber', () => {
+    const {roots, node} = find('- A #US-1\n  - B #T-7\n    - C', 'C');
+    expect(storyAncestor(roots, node).ref).toBe('US-1');
+  });
+
+  it('null ohne Story-Vorfahren — auch wenn der Knoten selbst eine Ref trägt', () => {
+    const {roots, node} = find('- A\n  - B #US-9', 'B');
+    expect(storyAncestor(roots, node)).toBe(null);
+  });
+
+  it('null am Wurzelknoten', () => {
+    const {roots, node} = find('- A #US-1', 'A');
+    expect(storyAncestor(roots, node)).toBe(null);
+  });
+
+  it('null für einen Knoten, der nicht im Baum steht', () => {
+    const {roots} = find('- A #US-1\n  - B', 'B');
+    expect(storyAncestor(roots, {label: 'fremd', children: []})).toBe(null);
+  });
+
+  it('die Ref darf auch die Knoten-ID selbst sein (D60)', () => {
+    const {roots, node} = find('- #US-42\n  - Kind', 'Kind');
+    expect(storyAncestor(roots, node).ref).toBe('US-42');
   });
 });
 

@@ -8331,3 +8331,58 @@ Wer i18n-Texte mit Anführungszeichen schreibt, nimmt die typografischen
 (`„…“`, `«…»`, `“…”`) und prüft die Datei einmal mit `npx esbuild src/app.js
 --outfile=…` — das ist die schnellste ehrliche Syntaxprobe für eine Datei,
 die kein Test anfasst.
+
+**Nachtrag 9 — die Anlage-Knöpfe neu geschnitten: ein Story-Knopf mit
+Dialog, ein dialogfreier Task-Knopf (2026-08-28).** Nutzerwunsch nach dem
+ersten Arbeiten mit der Anlage: statt „Story anlegen"/„Story + Tasks
+anlegen" **ein** „Story anlegen" (mit dem Häkchen-Dialog über die
+Teilpakete, wie bisher bei der zweiten Aktion) und daneben **„Task
+anlegen"** — nur dort, wo ein übergeordneter Knoten schon eine Story trägt,
+denn in der wird die Task angelegt; „für Task-Anlegen braucht man dann auch
+keine Auswahl". Die Entscheidungen des Baus:
+
+- **Der eine Story-Knopf trägt den Dialog immer** — wer nur die Story will,
+  wählt die Häkchen ab (an einem Blatt gibt es ohnehin keine). Der frühere
+  Story-only-Knopf entfällt ersatzlos; ein Knopf, dessen ganze Aussage „wie
+  der andere, nur ohne Häkchen" ist, war einer zu viel.
+- **„Task anlegen" hängt am nächsten Vorfahren mit `#US-…`-Ref**
+  (`storyAncestor`, headless in taiga.js). Vorfahren mit **Task**-Ref werden
+  übersprungen: Taiga-Tasks haben keine Subtasks (D91), die Task eines
+  Task-Knotens gehört in die Story darüber.
+- **Ohne Dialog, weil es nichts zu wählen gibt:** Das Projekt folgt aus dem
+  geerbten `&taiga.<slug>`, die Story aus dem Baum. Das weicht bewusst von
+  der Haupttext-Festlegung „das Projekt wird bei jeder Anlage gefragt" ab —
+  hier hätte die Frage genau eine richtige Antwort, und eine Frage mit einer
+  Antwort ist keine. Der Story-Dialog fragt unverändert.
+- **Der Knopf entfällt, wo ein `&taiga.*` zwischen Story und Knoten den Slug
+  übersteuert:** Die Ref an so einer Zeile würde später gegen das **falsche**
+  Projekt aufgelöst (Fenster, Öffnen, Status) — lieber kein Knopf als eine
+  Adresse, die lügt.
+- **Drei Umläufe, kein Backend-Umbau:** Mitgliederliste (die Projekt-Id zum
+  Slug — der Lese-Endpunkt trägt keine), Story-Detail per `by_ref` (die
+  Story-Id, das `id`-Feld liefert Nachtrag 6 schon), `POST /tasks`.
+- **Der Erfolg zeigt sich als Ref an der Zeile** (der Neubau ist die
+  Rückmeldung, wie beim Falten); nur ein **Fehler** bekommt eine Fläche —
+  ein kleiner Dialog mit Taigas Meldung (Ok-Knopf verborgen, Abbrechen
+  schließt), kein `window.alert` (D22-Lehre). Ein Slug außerhalb der eigenen
+  Projekte meldet sich mit eigenem Text (`taigaTaskNoProject`).
+- i18n: `taigaTaskBtn`/`taigaTaskNoProject` neu ×9, `taigaTasksBtn` entfällt.
+
+**Nachgemessen** Ende-zu-Ende im Browser gegen das lokale Backend mit
+Taiga-Stub, alle vier Knopf-Konstellationen: Story + Task unter einem
+Story-Vorfahren; nur Story bei übersteuerndem Slug; nur Story ohne
+Story-Vorfahren; keine Anlage-Knöpfe an einer Ref (dort Stand + Öffnen wie
+gehabt). Der Task-Klick schreibt `#T-201` an die Zeile, ohne Dialog;
+Stub-Mitschnitt: `projects` → `by_slug` → `by_ref` → `POST /tasks
+{project: 7, user_story: 1234}`. Der Story-Knopf auf einem Knoten mit
+Kindern öffnet den Dialog mit Projekt-Vorbelegung und beiden Häkchen; der
+Fremd-Slug-Fehlerpfad zeigt den Dialog mit Taigas Meldung und lässt die
+Zeile unangetastet. 602 Tests (6 neue für `storyAncestor`); Gegenprobe per
+Mutation: ohne das Überspringen der Task-Refs fällt genau der danach
+benannte Test.
+
+**Werkzeug-Notiz:** Die JavaScript-Ausführung des Prüf-Panes lebt in einer
+**isolierten Welt** — ein überschriebenes `window.confirm` erreicht die
+Seite nicht (Klicks schon: das DOM ist geteilt, die JS-Objekte nicht). Eine
+Rückfrage lässt sich dort also nicht wegstubben; Aufräumen, das durch eine
+Rückfrage führt, geht stattdessen über die Ablage selbst (D83-Schema).

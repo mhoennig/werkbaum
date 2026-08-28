@@ -656,17 +656,20 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   `render()`. Die letzten drei sind beim Bauen zuerst vergessen worden.
 - **Taiga-Ticket-Anlage (D91):** Die entscheidbaren Regeln liegen headless in
   `taiga.js` (`ticketRefOf` = Idempotenz-Marker, `taskCandidates` =
-  Dialog-Vorbelegung, `appendToken` = Token vor `%%` und vor der
-  Fortsetzungsmarke ` \`); die `taiga.*`-Vererbung rechnet `taigaSlugs()` in
-  model.js. app.js verdrahtet: `refreshTaiga()` fragt je Basis EINMAL
-  `GET /info` (`taiga`-Flag; Aufruf aus Boot und `followActiveDoc`),
-  `appendTaigaActions()` hängt die zwei Knöpfe ins Knoten-Fenster (nur ohne
-  vorhandene Ref), `taigaCreate()` führt Login → Projekt-Dialog →
-  Anlegen → Ref-Rückschreiben. Geschrieben wird über `replaceTextUndoable`
-  (Fokus/Undo/Schreibmarke, D53) — nie `src.value =`. Das Token liegt als
-  `werkbaum-taiga` im localStorage (nur Token, nie ein Passwort); ein 401
-  löscht es und fragt neu. Fehler erscheinen IM Dialog, nicht als
-  `window.alert` (in manchen Kontexten unterdrückt, D22-Lehre).
+  Dialog-Vorbelegung, `storyAncestor` = der nächste Vorfahr mit Story-Ref,
+  `appendToken` = Token vor `%%` und vor der Fortsetzungsmarke ` \`); die
+  `taiga.*`-Vererbung rechnet `taigaSlugs()` in model.js. app.js verdrahtet:
+  `refreshTaiga()` fragt je Basis EINMAL `GET /info` (`taiga`-Flag; Aufruf
+  aus Boot und `followActiveDoc`), `appendTaigaActions()` hängt die Knöpfe
+  ins Knoten-Fenster (nur ohne vorhandene Ref): `taigaCreate()` = Login →
+  Projekt-Dialog samt Häkchen → Anlegen → Ref-Rückschreiben; `taigaTask()`
+  (D91-Nachtrag 9) legt unter einem Story-Vorfahren dialogfrei eine Task an
+  — nur wenn der geerbte Slug am Knoten der des Vorfahren ist, sonst löste
+  die Ref später gegen das falsche Projekt auf. Geschrieben wird über
+  `replaceTextUndoable` (Fokus/Undo/Schreibmarke, D53) — nie `src.value =`.
+  Das Token liegt als `werkbaum-taiga` im localStorage (nur Token, nie ein
+  Passwort); ein 401 löscht es und fragt neu. Fehler erscheinen IM Dialog,
+  nicht als `window.alert` (in manchen Kontexten unterdrückt, D22-Lehre).
 - **Ticket-Stand lesen (D91-Nachtrag 6):** `ticketApiPath()` baut den
   Proxy-Pfad (getrennte by_ref-Endpunkte je Typ, Slug kodiert),
   `mapTaigaStatus()` bildet Taigas Statusnamen auf `STATUS_BY_CODE` ab —

@@ -150,6 +150,31 @@ export function ticketRefAt(text, caret){
   return null;
 }
 
+/* Der nächste Vorfahr mit einer STORY-Ref (D91-Nachtrag 9): Unter so einem
+   Knoten wird ein Teilpaket direkt als Task angelegt — in dessen Story, ohne
+   eigenen Dialog (Projekt und Story folgen aus dem Baum, es gibt nichts zu
+   wählen). Vorfahren mit Task-Ref (`T-…`) werden übersprungen: Taiga-Tasks
+   haben keine Subtasks, die Task eines Task-Knotens gehört in die Story
+   darüber. null, wenn es keinen gibt oder der Knoten nicht im Baum steht. */
+export function storyAncestor(roots, node){
+  let result = null, hit = false;
+  (function w(ns, chain){
+    for(const n of ns){
+      if(hit) return;
+      if(n === node){
+        hit = true;
+        for(let i = chain.length - 1; i >= 0; i--){
+          const r = ticketRefOf(chain[i]);
+          if(r && r.startsWith('US-')){ result = {node: chain[i], ref: r}; return; }
+        }
+        return;
+      }
+      w(n.children || [], chain.concat(n));
+    }
+  })(roots, []);
+  return result;
+}
+
 /* Das Token, das an die Zeile geschrieben wird. */
 export function refToken(kind, ref){ return '#' + kind + '-' + ref; }
 export function slugToken(slug){ return '&taiga.' + slug; }
