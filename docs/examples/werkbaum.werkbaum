@@ -211,7 +211,7 @@
         - [^] #trk.create.project: The project comes from the inherited tag (S) :#not.tag.project
         - [^] #trk.create.story: A "create story" action in the node window (S) :#trk.create.login
         - [^] #trk.create.tasks: Sub-packages become tasks, picked in a dialog (M) :#trk.create.story
-        - [x] #trk.create.task: A dialog-free "create task" under a story ancestor (S) :#trk.create.tasks,#trk.resolve.read
+        - [^] #trk.create.task: A dialog-free "create task" under a story ancestor (S) :#trk.create.tasks,#trk.resolve.read
         - [^] #trk.create.ref: The ref lands in the line beside the id (S) :#trk.create.story
       - [^] #trk.open: Open a ticket ref in Taiga (S) :#trk.create.ref,#not.tag.project
       - [-] #trk.plugin: A plugin inside Taiga itself (L)  %% legacy frontend, self-hosted only
