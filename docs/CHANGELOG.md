@@ -19,6 +19,8 @@ reverse.
 
 ## 2026-08-28
 
+- The Taiga buttons in the node window sit side by side in one row now — the window grows a little wider for them, and they wrap only when space truly runs out
+- The open button moved into the ticket box's action row, next to write and take, and its label shrank to "Open #US-123" — the neighbours say where
 - "Link ticket" in the node window binds an existing Taiga story or task to a node: paste the ticket's URL — it carries project, type and number by itself — or enter a ref or bare number
 - A bare number is resolved by probing story then task, and the ticket's subject is shown before anything is written — you link what you saw
 - Linking appends the ref and, where needed, the `&taiga.slug` tag in one undo step, and pre-fills the ticket cache so window and divergence mark agree at once

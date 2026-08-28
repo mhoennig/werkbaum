@@ -1060,6 +1060,10 @@
     box-shadow:0 8px 24px rgba(36,52,71,.3);
     padding:10px 30px 10px 12px;font-size:.78rem;line-height:1.45;
   }
+  /* Mit Taiga-Knöpfen darf das Fenster breiter werden, damit die Aktionen
+     nebeneinander stehen (D91-Nachtrag 11); die 21rem bleiben das Maß für
+     reine Text-Fenster. */
+  .nodetip.tipwide{max-width:min(31rem, calc(100vw - 24px))}
   .nodetip[hidden]{display:none}
   .nodetip-x{
     position:absolute;top:2px;right:2px;width:26px;height:26px;

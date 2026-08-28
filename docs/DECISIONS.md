@@ -8533,3 +8533,38 @@ Undos nehmen die beiden Verknüpfungen je in einem Schritt zurück. 628
 Frontend-Tests (11 neue); Gegenproben per Mutation: Kleinschreibung aus dem
 Ref-Muster → genau der Normalisierungs-Test fällt, URL-Wächter aus
 `foreignTaigaUrl` → genau der danach benannte.
+
+**Nachtrag 12 — die Taiga-Knöpfe stehen in einer Zeile (2026-08-28).**
+Nutzerwunsch: nebeneinander, „mehrzeilig nur, wenn der Platz nicht
+ausreicht". Genau das ist flex-wrap — und trotzdem stapelten die Knöpfe
+praktisch immer, aus zwei Gründen, beide gemessen statt geraten:
+
+- **Zwei getrennte Container:** Schreiben/Übernehmen saßen in der
+  `tk-act`-Zeile der Ticket-Box, der ↗-Öffnen-Knopf in einem eigenen
+  `.nodetip-taiga` darunter — immer zwei Zeilen, unabhängig vom Platz.
+  Jetzt gibt es EINE Aktions-Zeile: `paintTicket` baut sie, `paintDiff`
+  füllt seine Knöpfe hinein, der Öffnen-Knopf kommt dazu (und steht damit
+  auch im Idle-/Fehler-Fall neben „Stand holen" bzw. ↻). Nebengewinn: Weil
+  der Knopf jetzt IN der Ticket-Box lebt, ist „in Taiga" in seinem Label
+  redundant geworden — `taigaOpenBtn` heißt in allen neun Sprachen nur noch
+  „{ref} öffnen"; den Kontext sagen die Nachbarknöpfe.
+- **Das Fenster war zu schmal:** 21rem (336px) sind das Maß für
+  Text-Fenster; schon zwei deutsche Knöpfe brauchten mehr. Mit Taiga-Knöpfen
+  trägt das Fenster die Klasse `tipwide` (max. 31rem, weiter durch
+  `100vw − 24px` geklemmt) — die Zahl ist gemessen, nicht geschätzt: Die
+  drei deutschen Anlege-Knöpfe brauchen 425px, die Abweichungs-Zeile mit
+  gekürztem Öffnen-Knopf 440px, beide passen in die 454px Innenbreite;
+  bei 30rem fehlten der zweiten Zeile genau 4px. Die Klasse wird beim
+  Fenster-Aufbau auch wieder HERUNTERGENOMMEN — das Element wird
+  wiederverwendet, sonst bliebe ein Text-Fenster breit.
+
+Umbrochen wird weiterhin, wo der Platz wirklich fehlt (Telefon: die Klemme
+auf `100vw − 24px` greift, gemessen 351px bei 375px Breite; sehr lange Refs
+ebenso) — genau die Ausnahme, die der Wunsch benennt.
+
+**Nachgemessen** im Browser gegen Backend + Stub, deutsche Oberfläche (die
+längsten Labels): drei Anlege-Knöpfe eine Zeile, „→ nach Taiga schreiben ·
+← aus Taiga übernehmen · ↗ #US-123 öffnen" eine Zeile (Fenster 484px); ein
+Ref-Knoten ohne Projekt-Slug (keine Knöpfe) fällt auf 336px zurück —
+`tipwide` ist weg. 628 Tests unverändert (reine UI-Verdrahtung,
+Browser-geprüft — die D54-Nachtrag-3-Grenze).
