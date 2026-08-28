@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-08-28
 
+- Folding or unfolding a node keeps it in place on screen now: the scroll position follows the layout shift, so the clicked node no longer jumps away
 - The node window no longer opens on hover: click a node to open it, click again or elsewhere to close — folding and moving across the tree stay snappy
 - A linked node's plain click now opens the window everywhere, like on touch — the URL sits behind the ↗ button, and Enter on the focused node or Ctrl+click still open it directly
 - The Taiga buttons in the node window sit side by side in one row now — the window grows a little wider for them, and they wrap only when space truly runs out

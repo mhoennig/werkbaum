@@ -1465,11 +1465,24 @@ function applyFoldPreset(mode){
    sonst risse die Tastaturbedienung ab (das alte Element ist weg) — aber ohne
    das Knoten-Fenster zu rufen: Falten ist genau die Geste, der das Fenster im
    Weg stand (D92), und die `:focus-visible`-Heuristik ist beim
-   programmatischen Fokus nicht verlässlich genug für diese Zusage. */
+   programmatischen Fokus nicht verlässlich genug für diese Zusage.
+   Und er behält seine POSITION IM BILD (D38-Nachtrag 5): Der Neubau verschiebt
+   den Inhalt (der Teilbaum ändert die Breite alles Umliegenden), der Scrollstand
+   von `.diagram` bliebe stehen — der geklickte Knoten spränge. Vorher wird seine
+   Sichtfenster-Position gemessen, danach der Scrollstand um die Differenz
+   nachgezogen. Beide Rects sind Viewport-Koordinaten des ungezoomten
+   Scroll-Containers (der `zoom` sitzt auf #out DARIN), die Differenz ist also
+   direkt scrollbar; am Rand klemmt der Browser — bestmöglich statt exakt. */
 let suppressTipFocus = false;
-function refocusNode(line){
+function refocusNode(line, before){
   const again = out.querySelector('.node[data-line="' + line + '"]');
   if(!again) return;
+  if(before){
+    const after = again.getBoundingClientRect();
+    const sc = document.querySelector('.diagram');
+    sc.scrollLeft += after.left - before.left;
+    sc.scrollTop  += after.top  - before.top;
+  }
   suppressTipFocus = true;      /* focusin läuft synchron im focus() */
   again.focus({preventScroll: true});
   suppressTipFocus = false;
@@ -1478,20 +1491,21 @@ function toggleFold(el){
   const line = +el.dataset.line;
   const st = foldByLine.get(line);
   if(!st || !st.canFold) return;
+  const before = el.getBoundingClientRect();
   /* Bei aktiver Personen-Linse (D87) bleibt die Hand-Faltung in deren
      Sitzungs-Überlagerung — in den Text geschrieben würde sonst der
      persönliche Filter, in geteilten Dokumenten für alle. */
   if(lens){
     lensOverrides.set(st.key, !st.collapsed);
     render();
-    refocusNode(line);
+    refocusNode(line, before);
     return;
   }
   foldOverrides.set(st.key, !st.collapsed);
   /* Das Schreiben löst per `input`-Ereignis schon ein render() aus. */
   if(writeFoldToText(line, !st.collapsed)) foldOverrides.clear();
   else render();
-  refocusNode(line);
+  refocusNode(line, before);
 }
 
 /* Klick auf das Falt-Zeichen ▾/▸ klappt um. preventDefault, weil das Zeichen

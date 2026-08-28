@@ -1214,7 +1214,10 @@ als kleiner **gerahmter Chip**, damit das Klickziel zu treffen ist (D64; das
 nackte Glyph war zu klein). Klick auf das Zeichen klappt um — der einfache
 Klick auf den Knoten selbst
 öffnet das Knoten-Fenster (§9, D92); Tastatur: **←** klappt zu, **→** klappt
-auf am fokussierten Knoten (WAI-ARIA-Baum-Idiom).
+auf am fokussierten Knoten (WAI-ARIA-Baum-Idiom). Der umgeklappte Knoten
+**behält dabei seine Position im Bild**: Der Neubau verschiebt den Inhalt,
+der Scrollstand wird um die Differenz nachgezogen — soweit der Rand es
+zulässt (D38-Nachtrag 5).
 
 - **Anfangszustand aus dem Text (§1):** `>` klappt ein. `<` holt seinen
   Teilbaum hervor, indem die Faltung die Pfad-Ebenen **hinunterwandert**:

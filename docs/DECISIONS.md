@@ -2695,6 +2695,46 @@ eingeklappte Elternknoten trägt Ring und Puls; Alt+Klick fokussiert ihn
 ausgeblendeten verworfenen Zeile und ihrem Kind → weiterhin keine
 Hervorhebung. 377 Tests, davon 5 neue in `tests/fold.test.js`.
 
+**Nachtrag 5 — der umgeklappte Knoten behält seine Position im Bild
+(2026-08-28).** Gemeldet als Frage: „Ist es hinzubekommen, dass beim
+Auf-/Zuklappen eines Knotens dieser seine Position auf dem Canvas
+beibehält?" Der Sprung hatte eine einfache Ursache: `toggleFold` baut den
+Baum neu, und im horizontalen Fächer steht ein Elternknoten **zentriert über
+seinem Teilbaum** — klappt der zu, schrumpft die Zelle und der Knoten rückt
+um die halbe Breitendifferenz nach links, während der Scrollstand von
+`.diagram` stehen bleibt. Gemessen am Testbaum: **421 px** Versatz für ein
+Paket mit vier M-Kindern — der geklickte Knoten war nach dem Klick woanders.
+
+**Der Anker: vorher messen, nachher nachziehen.** `toggleFold` hält vor dem
+Neubau das `getBoundingClientRect()` des Knotens fest; `refocusNode` — die
+Stelle, die nach dem Neubau ohnehin denselben Knoten wiederfindet (per
+`data-line`, das Falten ändert keine Zeilennummern) — misst das neue Rect
+und verschiebt `scrollLeft`/`scrollTop` von `.diagram` um die Differenz.
+Beide Rects sind Viewport-Koordinaten des **ungezoomten** Scroll-Containers
+(der `zoom` sitzt auf `#out` darin, D17-Nachtrag 2) — die Differenz ist
+also direkt scrollbar, ohne Zoom-Rückrechnung; nachgemessen bei Zoom 0,8:
+1 px Abweichung (Rundung).
+
+**Am Rand klemmt der Browser — bestmöglich statt exakt.** Steht das
+Diagramm ganz links (`scrollLeft` 0) und der Knoten will nach der Korrektur
+weiter links stehen, gibt es nichts zu scrollen: Der Inhalt ist physisch
+gerückt, der Knoten springt dann doch (gemessen: −421 px bei Klemme auf 0).
+Das ist der ehrliche Rest — eine Gegenkorrektur per `transform` o. Ä. wäre
+eine zweite Positionswahrheit neben dem Layout.
+
+**Gilt für alle Wege durch `toggleFold`:** Falt-Chip, Tastatur ←/→ und die
+Hand-Faltung unter der Personen-Linse (D87). Der **Falt-Durchschalter**
+(D75) bleibt außen vor — er baut den ganzen Baum um, es gibt keinen einen
+Knoten, an dem man ankern könnte.
+
+**Nachgemessen** im Browser (Testbaum 31 Knoten, 6560 px breit in 1183 px
+Sichtfenster): Zu- und Aufklappen von „Paket 3" mittig im Bild → dx 0 px,
+dy 1 px über die Rundreise; die Korrektur bewegte den Scrollstand um exakt
+die 421 px des Versatzes; Klemm-Fall wie oben; Zoom-Gegenprobe 0,8 → 1 px.
+Der Falt-Chip-Klick öffnet weiterhin kein Knoten-Fenster (D92). 628 Tests
+unverändert — die Korrektur ist DOM-Geometrie und damit Browser-geprüft
+(dieselbe Grenze wie `alignStems()`, D29).
+
 ## D39 — Effektiver Status: die Farbe sagt die Wahrheit, die Marke die Box
 Mit den Abhängigkeiten (D37) gibt es zwei Aussagen je Knoten: was in der
 Statusbox steht (intrinsisch) und wie weit er wirklich ist (effektiv, §4).
