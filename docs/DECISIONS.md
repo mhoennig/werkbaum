@@ -8471,3 +8471,65 @@ lebenden Seite umschreibt, bekommt beim Reload deren Gedächtnis zurück;
 wiederhergestellt wird ein Dokument als gewöhnliche Änderung über das
 Textfeld. Und der Debug-Reset hängt am `confirm`, das die isolierte Welt
 des Prüf-Panes nicht stubben kann (Nachtrag 9) — er ist dort wirkungslos.
+
+**Nachtrag 11 — „Ticket verknüpfen": ein bestehendes Ticket an den Knoten
+binden (2026-08-28).** Nutzerwunsch: Wer eine Story oder Task schon in Taiga
+hat, soll sie im Werkbaum eintragen können — „klar, kann man einfach
+`#US-1234` schreiben, aber der User braucht ja ggf. auch die Taiga
+Projekt-ID". Die Antwort auf genau dieses Problem liegt in Taiga selbst:
+**Die URL des Tickets trägt alles** — `…/project/<slug>/us/123` bzw.
+`…/task/45` enthalten Slug, Typ und Nummer (dieselbe Form, die `ticketUrl`
+seit Nachtrag 5 vorwärts baut). Wer auf dem Ticket steht, kopiert die
+Adresszeile; die Projekt-Frage stellt sich nicht. Die Entscheidungen
+(Multiple-Choice: URL/Ref-Feld, die Such-Ausbaustufe zurückgestellt):
+
+- **Ein Knopf „Taiga: Ticket verknüpfen"** im Knoten-Fenster, neben den
+  Anlege-Knöpfen und wie sie nur an Knoten ohne Ref (die Ref ist der
+  Idempotenz-Marker). **Ein Eingabefeld, drei Formen** (`parseTicketInput`,
+  headless): die Taiga-URL (Slug/Typ/Nummer aus dem Pfad, die
+  Projekt-Auswahl tritt zurück), eine Ref (`US-123`/`T-45`, `#` und
+  Kleinschreibung erlaubt, normalisiert) oder eine **nackte Nummer** — so
+  zeigt Taiga sie. Die ist eindeutig auflösbar: Taigas Zähler läuft je
+  Projekt über beide Typen gemeinsam (Nachtrag 2), probiert wird Story,
+  dann Task über die vorhandenen Lese-Endpunkte — genau einer trifft, kein
+  neuer Backend-Endpunkt.
+- **Verknüpft wird, was man gesehen hat:** Aufgelöst wird schon beim Tippen
+  (400 ms Ruhe, überholte Antworten verwirft ein Zähler), und der
+  **Betreff steht im Dialog**, bevor der Verknüpfen-Knopf freigibt — eine
+  blind eingetragene Nummer ist der Fehler, den der Dialog verhindern soll.
+  Tipp-Zwischenstände sind still (kein Fehler beim halben Token); „kein
+  Ticket" und Taiga-Fehler stehen im Dialog.
+- **Eine URL von einer fremden Taiga-Instanz wird benannt, nicht
+  verknüpft** (`foreignTaigaUrl` gegen die konfigurierte Web-Basis): Slug
+  und Nummer würden gegen UNSERE Instanz aufgelöst und träfen dort
+  womöglich ein fremdes Ticket gleicher Nummer. Ohne Web-Basis ist nichts
+  zu prüfen — dann wacht die Betreff-Bestätigung allein.
+- **Geschrieben wird wie bei der Anlage:** Ref-Token an die Zeile, dazu
+  `&taiga.<slug>`, wenn der Teilbaum keine oder eine andere Zuordnung hat
+  (dieselbe Regel wie Nachtrag 3/4), ein Undo-Schritt. Der beim Auflösen
+  geholte Stand füllt den **Ticket-Cache** gleich mit — Fenster und
+  Abweichungs-Marke (Nachtrag 10) stimmen ohne weiteren Abruf.
+- **Zurückgestellt: die durchsuchbare Ticket-Liste** (Taigas
+  `/search`-Endpunkt hinter einem neuen Proxy-Weg) — mehr Komfort, ein
+  eigener Bau; das URL-Feld deckt den Arbeitsfluss ab, in dem man das
+  Ticket ohnehin vor sich hat.
+
+Der Plan-Knoten `#trk.link` (S) kippte prompt die Größenprüfung des eigenen
+Plans (`#trk.taiga` XL mit nun 30+2 ≥ 32, D62) — ehrlich nachgezogen auf
+XXL, danach wieder 0 Warnungen (dieselbe Kaskade wie bei D64).
+
+**Nachgemessen** Ende-zu-Ende im Browser gegen das lokale Backend mit
+Taiga-Stub (dessen `by_ref` dafür ref-bewusst wurde — 404 auf Unbekanntes,
+sonst wäre die Nummer-Probe nicht prüfbar): Die eingefügte Story-URL zeigt
+`#US-123 · Login bauen (Taiga-Fassung)` und sperrt die Projekt-Auswahl;
+Verknüpfen schreibt `#US-123` an die Zeile OHNE redundantes Schlagwort
+(geerbter Slug = gewählter). Die nackte `1234` läuft über US-404 auf
+`#T-1234 · API-Teil`. Die fremde Instanz und die fehlende `999` stehen als
+Meldung im Dialog, der Knopf bleibt gesperrt. Eine Ref mit abweichender
+Projektwahl schreibt `&taiga.mi-intern #US-123`. Das Fenster des
+verknüpften Knotens zeigt den Stand aus dem Cache (0 weitere
+`by_ref`-Abfragen im Stub-Mitschnitt) samt der Abweichungs-Knöpfe; zwei
+Undos nehmen die beiden Verknüpfungen je in einem Schritt zurück. 628
+Frontend-Tests (11 neue); Gegenproben per Mutation: Kleinschreibung aus dem
+Ref-Muster → genau der Normalisierungs-Test fällt, URL-Wächter aus
+`foreignTaigaUrl` → genau der danach benannte.

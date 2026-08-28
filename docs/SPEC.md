@@ -1416,6 +1416,12 @@ wird sie von selbst die ID. Erstreckt sich ein Plan über **mehrere**
 Taiga-Projekte, benennt das Schlagwort `&taiga.<slug>` (unten) das Projekt
 je Teilbaum — eine Ref wird gegen das Projekt des nächsten Vorfahren mit so
 einem Tag aufgelöst. Siehe D91-Nachträge 2 und 3.
+An die Zeile kommt die Ref beim **Anlegen** eines Tickets aus dem Knoten
+ebenso wie beim **Verknüpfen** mit einem bestehenden — dort genügt als
+Eingabe die Taiga-URL des Tickets, die Projekt, Typ und Nummer selbst trägt;
+eine nackte Nummer wird per Probe aufgelöst (Story, dann Task — Taigas
+Zähler ist je Projekt gemeinsam). Verknüpft wird erst nach Anzeige des
+Betreffs (D91-Nachtrag 11).
 Der **Stand** eines so bezeichneten Tickets (Betreff, Status, Zuständiger)
 wird im Knoten-Fenster gezeigt (§9); weicht er von der Statusbox ab, sind
 dort beide Richtungen als ausdrückliche Aktionen zu haben — von selbst

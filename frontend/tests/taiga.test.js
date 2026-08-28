@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/parser.js';
 import { taigaSlugs } from '../src/model.js';
-import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt, refParts, ticketApiPath, mapTaigaStatus, taigaStatusName, pickStatus, statusApiPath, statusListPath, storyAncestor, collectTicketRefs, bulkPath, ticketDiverges, refVisibleInLabel } from '../src/taiga.js';
+import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt, refParts, ticketApiPath, mapTaigaStatus, taigaStatusName, pickStatus, statusApiPath, statusListPath, storyAncestor, collectTicketRefs, bulkPath, ticketDiverges, refVisibleInLabel, parseTicketInput, foreignTaigaUrl } from '../src/taiga.js';
 import { setStatusBox } from '../src/parser.js';
 
 /* Schlagworte `&tag` (SPEC §1, D91): Extraktion im Parser und die
@@ -506,5 +506,58 @@ describe('setStatusBox — die Statusbox im Text setzen (SPEC §1)', () => {
     expect(n.size).toBe('M');
     expect(n.tags).toEqual(['anna']);
     expect(ticketRefOf(n)).toBe('US-1');
+  });
+});
+
+/* „Ticket verknüpfen" (D91-Nachtrag 11): die Eingabe des Dialogs — Taiga-URL,
+   Ref mit Präfix oder nackte Nummer — und die Fremd-Instanz-Prüfung. */
+
+describe('parseTicketInput — URL, Ref oder Nummer (D91-Nachtrag 11)', () => {
+  it('liest eine Story-URL: Slug, Typ und Nummer kommen aus dem Pfad', () => {
+    expect(parseTicketInput('https://plan.example.test/project/mi-kunde/us/123'))
+      .toEqual({kind: 'url', origin: 'https://plan.example.test', slug: 'mi-kunde', ref: 'US-123'});
+  });
+  it('liest eine Task-URL', () => {
+    expect(parseTicketInput('https://plan.example.test/project/mi-kunde/task/45'))
+      .toEqual({kind: 'url', origin: 'https://plan.example.test', slug: 'mi-kunde', ref: 'T-45'});
+  });
+  it('verträgt Schrägstrich am Ende und Query — die Adresszeile, wie sie kommt', () => {
+    expect(parseTicketInput('https://plan.example.test/project/p/us/7/?kanban-status=1').ref).toBe('US-7');
+  });
+  it('lehnt fremde Taiga-Pfade ab (Kanban, Backlog, Epics)', () => {
+    expect(parseTicketInput('https://plan.example.test/project/p/kanban')).toBeNull();
+    expect(parseTicketInput('https://plan.example.test/project/p/epic/3')).toBeNull();
+  });
+  it('liest eine Ref mit Präfix, # und Kleinschreibung erlaubt, normalisiert', () => {
+    expect(parseTicketInput('US-123')).toEqual({kind: 'ref', ref: 'US-123'});
+    expect(parseTicketInput('#us-123')).toEqual({kind: 'ref', ref: 'US-123'});
+    expect(parseTicketInput(' t-45 ')).toEqual({kind: 'ref', ref: 'T-45'});
+  });
+  it('liest eine nackte Nummer — der Typ bleibt offen (Probe im Dialog)', () => {
+    expect(parseTicketInput('123')).toEqual({kind: 'nr', nr: '123'});
+    expect(parseTicketInput('#123')).toEqual({kind: 'nr', nr: '123'});
+  });
+  it('Tipp-Zwischenstände und Fremdes sind null, kein Fehler', () => {
+    expect(parseTicketInput('')).toBeNull();
+    expect(parseTicketInput('US-')).toBeNull();
+    expect(parseTicketInput('Backend')).toBeNull();
+    expect(parseTicketInput('ftp://plan.example.test/project/p/us/1')).toBeNull();
+  });
+});
+
+describe('foreignTaigaUrl — fremde Instanz wird benannt, nicht verknüpft', () => {
+  const url = parseTicketInput('https://andere.example.org/project/p/us/1');
+  it('erkennt die fremde Herkunft gegen die konfigurierte Web-Basis', () => {
+    expect(foreignTaigaUrl(url, 'https://plan.example.test')).toBe(true);
+  });
+  it('dieselbe Herkunft ist keine fremde', () => {
+    const eigene = parseTicketInput('https://plan.example.test/project/p/us/1');
+    expect(foreignTaigaUrl(eigene, 'https://plan.example.test')).toBe(false);
+  });
+  it('ohne Web-Basis ist nichts zu prüfen — die Betreff-Bestätigung wacht', () => {
+    expect(foreignTaigaUrl(url, null)).toBe(false);
+  });
+  it('gilt nur für URLs — Ref und Nummer haben keine Herkunft', () => {
+    expect(foreignTaigaUrl(parseTicketInput('US-1'), 'https://plan.example.test')).toBe(false);
   });
 });

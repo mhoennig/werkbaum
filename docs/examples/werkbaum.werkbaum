@@ -200,7 +200,7 @@
         | [?] #idea.drift.fixtures: Both parsers test against the same fixtures (S)
         | [?] #idea.drift.js: Run the one JS parser inside the IDE (M)
   - [~] #trk: Tracker integration (XL)  %% exactly one of these, hence =
-    = [~] #trk.taiga: Taiga (XL) https://taiga.io
+    = [~] #trk.taiga: Taiga (XXL) https://taiga.io
       - [/] #trk.resolve: Resolve "#US-123" over the REST API (M)
         - [^] #trk.resolve.read: Read title, link and status (S)
         - [/] #trk.resolve.map: Map the workflow onto the states (S)
@@ -216,6 +216,7 @@
         - [^] #trk.create.tasks: Sub-packages become tasks, picked in a dialog (M) :#trk.create.story
         - [^] #trk.create.task: A dialog-free "create task" under a story ancestor (S) :#trk.create.tasks,#trk.resolve.read
         - [^] #trk.create.ref: The ref lands in the line beside the id (S) :#trk.create.story
+      - [x] #trk.link: Link an existing ticket to a node (S) :#trk.resolve.read
       - [^] #trk.open: Open a ticket ref in Taiga (S) :#trk.create.ref,#not.tag.project
       - [-] #trk.plugin: A plugin inside Taiga itself (L)  %% legacy frontend, self-hosted only
     = [?] #trk.tenzu: Tenzu, the successor (XXL) https://tenzu.net
@@ -1198,6 +1199,14 @@
   ticket in Taiga's web UI; the node window carries an open button, the way
   on touch. Needs the instance's web address (server configuration,
   reported by /info) and the inherited &taiga.slug project (D91-Nachtrag 5).
+
+#trk.link
+  "Link ticket" in the node window binds an EXISTING Taiga ticket to a
+  node: paste the ticket's URL — it carries project, type and number by
+  itself — or enter a ref or bare number, resolved by probing story then
+  task. The subject is shown before anything is written; linking appends
+  the ref token and, where needed, the &taiga.slug tag, one undo step
+  (D91-Nachtrag 11).
 
 #trk.create.proxy
   A few named endpoints in the Werkbaum backend (auth, projects, user

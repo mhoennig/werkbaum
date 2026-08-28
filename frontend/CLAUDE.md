@@ -665,7 +665,11 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Projekt-Dialog samt Häkchen → Anlegen → Ref-Rückschreiben; `taigaTask()`
   (D91-Nachtrag 9) legt unter einem Story-Vorfahren dialogfrei eine Task an
   — nur wenn der geerbte Slug am Knoten der des Vorfahren ist, sonst löste
-  die Ref später gegen das falsche Projekt auf. Geschrieben wird über
+  die Ref später gegen das falsche Projekt auf; `taigaLink()`
+  (D91-Nachtrag 11) verknüpft ein BESTEHENDES Ticket — `parseTicketInput`
+  (URL/Ref/nackte Nummer) und `foreignTaigaUrl` (fremde Instanz) headless,
+  die nackte Nummer wird per Probe Story-dann-Task aufgelöst, der Betreff
+  steht im Dialog, bevor Ok freigibt. Geschrieben wird über
   `replaceTextUndoable` (Fokus/Undo/Schreibmarke, D53) — nie `src.value =`.
   Das Token liegt als `werkbaum-taiga` im localStorage (nur Token, nie ein
   Passwort); ein 401 löscht es und fragt neu. Fehler erscheinen IM Dialog,

@@ -44,6 +44,45 @@ export function ticketUrl(web, slug, ref){
   return web + '/project/' + slug + '/' + (p.kind === 'US' ? 'us' : 'task') + '/' + p.nr;
 }
 
+/* Die Eingabe des Verknüpfen-Dialogs (D91-Nachtrag 11): Was hat der Nutzer
+   da eingefügt? Drei Formen, absteigend nach Vollständigkeit —
+   - die **Taiga-URL** eines Tickets (die Adresszeile, `ticketUrl` rückwärts):
+     sie trägt Slug, Typ und Nummer selbst, keine weitere Frage;
+   - eine **Ref** mit Typ-Präfix (`US-123`/`T-45`, `#` und Kleinschreibung
+     erlaubt — normalisiert wird auf die Schreibweise der Tokens);
+   - eine **nackte Nummer** (`123`/`#123`, so zeigt Taiga sie): der Typ ist
+     offen und wird per Probe aufgelöst — Taigas Zähler läuft je Projekt über
+     beide Typen gemeinsam, genau einer trifft.
+   Alles andere ist null — der Dialog bleibt dann still (Tipp-Zwischenstände
+   sind kein Fehler). */
+export function parseTicketInput(text){
+  const s = (text || '').trim();
+  if(!s) return null;
+  if(/^https?:\/\//i.test(s)){
+    let u;
+    try{ u = new URL(s); }catch(_){ return null; }
+    const m = /^\/project\/([^/]+)\/(us|task)\/(\d+)\/?$/.exec(u.pathname);
+    if(!m) return null;
+    return {kind: 'url', origin: u.origin, slug: m[1],
+            ref: (m[2] === 'us' ? 'US-' : 'T-') + m[3]};
+  }
+  const r = /^#?(us|t)-(\d+)$/i.exec(s);
+  if(r) return {kind: 'ref', ref: r[1].toUpperCase() + '-' + r[2]};
+  const n = /^#?(\d+)$/.exec(s);
+  if(n) return {kind: 'nr', nr: n[1]};
+  return null;
+}
+
+/* Gehört eine eingefügte Ticket-URL zu einer ANDEREN Taiga-Instanz als der
+   konfigurierten Web-Basis? Dann wäre die Verknüpfung eine Lüge: Slug und
+   Nummer würden gegen UNSERE Instanz aufgelöst und träfen dort womöglich ein
+   fremdes Ticket gleicher Nummer. Ohne Web-Basis ist nichts zu prüfen —
+   die Bestätigung per Betreff bleibt dann der Wächter. */
+export function foreignTaigaUrl(parsed, web){
+  if(!parsed || parsed.kind !== 'url' || !web) return false;
+  try{ return parsed.origin !== new URL(web).origin; }catch(_){ return false; }
+}
+
 /* Der Pfad am Backend-Proxy zum LESEN eines Tickets (D91-Nachtrag 6),
    relativ zu `/api/v1/taiga`: zwei benannte Endpunkte statt eines mit
    Typ-Parameter, weil Taiga getrennte `by_ref`-Endpunkte hat. Der Slug

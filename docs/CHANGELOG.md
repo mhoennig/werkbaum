@@ -19,6 +19,10 @@ reverse.
 
 ## 2026-08-28
 
+- "Link ticket" in the node window binds an existing Taiga story or task to a node: paste the ticket's URL — it carries project, type and number by itself — or enter a ref or bare number
+- A bare number is resolved by probing story then task, and the ticket's subject is shown before anything is written — you link what you saw
+- Linking appends the ref and, where needed, the `&taiga.slug` tag in one undo step, and pre-fills the ticket cache so window and divergence mark agree at once
+- A ticket URL from a different Taiga instance is named as such instead of silently linking a same-numbered ticket on yours
 - One bulk request reads the status of all referenced tickets: the proxy fans the refs out right next to the Taiga instance, so the cost scales with the refs in the plan — not with a project that holds thousands of tickets
 - With a Taiga login, diverging tickets show up in the diagram: a ref whose ticket status no longer matches the node's box turns amber — as its own little badge where the ref is the node id and thus not part of the title
 - The bulk result pre-fills the node window's ticket cache, so hovering a ticket node usually needs no request of its own any more
