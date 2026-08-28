@@ -414,13 +414,16 @@ Größe als **Bereich** gelesen (Untergrenzen verdoppeln sich):
 
 ## 6. Links
 
-- Ein nacktes `https://…`-Token macht den ganzen Knoten klickbar
-  (neuer Tab, `rel="noopener"`); Kennzeichnung mit ↗ hinter dem Label.
-- **Ausnahme auf Touch-Geräten:** Dort öffnet der einfache Tipp nicht die URL,
-  sondern das Knoten-Fenster (§9) — der Link steht darin als eigener Knopf. Ohne
-  Zeiger gibt es keinen Tooltip, und ein einziger Tipp kann nicht beides tun;
-  „ansehen" ist die häufigere Absicht, und der Link bleibt einen Tipp entfernt.
-  Siehe D52.
+- Ein nacktes `https://…`-Token verlinkt den Knoten; Kennzeichnung mit ↗
+  hinter dem Label.
+- Geöffnet wird die URL über den **↗-Knopf im Knoten-Fenster** (§9; neuer
+  Tab, `rel="noopener"`): Der einfache Klick wie der einfache Tipp öffnen das
+  **Fenster**, nicht die URL — eine Geste kann nicht beides tun, „ansehen"
+  ist die häufigere Absicht, und der Link bleibt einen Klick entfernt
+  (D52 für Touch, D92 für den Zeiger). **Enter** am fokussierten Knoten und
+  **Strg+Klick** (Browser-Default, Hintergrund-Tab) öffnen die URL weiterhin
+  direkt — auf Zeilen mit Ticket-Referenz gewinnt bei Strg+Klick das
+  Taiga-Öffnen (§9).
 
 ## 7. Personen-Tags
 
@@ -469,11 +472,13 @@ Grafikexport: Der Text selbst kann dort nicht angezeigt werden, eine Marke
 ohne Ziel wäre Rauschen. Siehe D40.
 
 **Gezeigt wird das immer im eigenen Knoten-Fenster**, nicht im Tooltip des
-Browsers: am Zeiger nach kurzer Verzögerung beim Überfahren, bei Tastaturfokus
-sofort, auf Touch beim einfachen Tipp (§6). Ein `title` kann weder Absätze noch
-eine Linie und erscheint nie beim Tastaturfokus; das Fenster kann beides. Der
-Inhalt ist derselbe — die Beschreibung als Absatz, die Kurz-Fakten dahinter
-durch eine echte Linie abgesetzt. Siehe D57.
+Browsers: beim **einfachen Klick bzw. Tipp** auf den Knoten (ein zweiter
+schließt), bei **Tastaturfokus** sofort. Beim bloßen Überfahren mit dem
+Zeiger öffnet es **nicht** — das tat es zwischenzeitlich (D57) und stand
+damit dem Falten und dem Bewegen über den Baum im Weg (D92). Ein `title`
+kann weder Absätze noch eine Linie und erscheint nie beim Tastaturfokus; das
+Fenster kann beides. Der Inhalt ist derselbe — die Beschreibung als Absatz,
+die Kurz-Fakten dahinter durch eine echte Linie abgesetzt. Siehe D57, D92.
 
 - Das Fenster hängt am angetippten Knoten (kleine Spitze zu ihm hin) und weicht
   nach oben aus, wenn unten kein Platz ist. Der Knoten trägt, solange es offen
@@ -481,13 +486,12 @@ durch eine echte Linie abgesetzt. Siehe D57.
 - Es schließt beim Tipp daneben, beim erneuten Tipp auf denselben Knoten, mit
   **Esc**, über sein ×, beim Scrollen des Diagramms und bei jedem Neubau.
 - Ein **verlinkter** Knoten (§6) bekommt darin einen ↗-Knopf, der die URL im
-  neuen Tab öffnet — auf Touch ist das der Weg zum Link.
-- Der **Sprung-Hinweis** nennt hier den langen Druck statt Alt+Klick (§9,
+  neuen Tab öffnet — der einfache Klick/Tipp gehört dem Fenster (§6, D92).
+- Der **Sprung-Hinweis** nennt auf Touch den langen Druck statt Alt+Klick (§9,
   Sprung zwischen Diagramm und Text) — Alt gibt es auf dem Telefon nicht.
-- Reine Bedienhilfe: nicht im Grafikexport, nicht im Druck. Auf Geräten mit
-  Zeiger ändert sich nichts, dort bleibt es beim Tooltip.
+- Reine Bedienhilfe: nicht im Grafikexport, nicht im Druck.
 
-Siehe D52.
+Siehe D52, D92.
 
 **Ticket-Stand im Knoten-Fenster (§11).** Trägt die Zeile eine
 Ticket-Referenz (`#US-123` / `#T-1234`) und ist ihr Teilbaum per
@@ -519,8 +523,9 @@ es einen gibt, den **Zuständigen**.
     Farbe des Knotens ist die Rückmeldung.
 - Beide Richtungen betreffen **einen** Knoten; eine Sammelaktion über einen
   Teilbaum gibt es nicht.
-- Geholt wird erst, wenn das Fenster **kurz stehen bleibt** (nicht im
-  Vorüberfahren), und je Ticket **einmal je Sitzung** — ein ↻-Knopf im Fenster
+- Geholt wird erst, wenn das Fenster **kurz stehen bleibt** (nicht beim
+  Durch-Tabben von Knoten zu Knoten), und je Ticket **einmal je Sitzung** —
+  ein ↻-Knopf im Fenster
   holt neu. Ohne Anmeldung an der Instanz, ohne Projekt-Zuordnung oder ohne
   konfiguriertes Backend geschieht still nichts; ein Fehler steht als Zeile im
   Fenster.
@@ -1086,8 +1091,9 @@ verknüpft (siehe D25):
   freistehend — dort behält Strg+Klick den Sprung zur Zeile; die
   D67-Ausschlüsse (Kommentar, Beschreibungsteil, URL) gelten auch hier.
   Siehe D91-Nachtrag 5.
-- Der **einfache** Klick bleibt unverändert der Link (§6): Ein Knoten mit URL
-  öffnet sie weiterhin im neuen Tab. Deshalb Alt und nicht der einfache Klick.
+- Der **einfache** Klick gehört dem Knoten-Fenster (§6/§9, D92): Er öffnet die
+  Beschreibung, nicht die Zeile im Text. Deshalb Alt und nicht der einfache
+  Klick.
 - **Auffindbarkeit:** Solange **Alt gedrückt** ist, zeigen alle Knoten den
   Sprung-Cursor und der Knoten unter dem Zeiger einen Petrol-Ring — die Geste
   ist im Moment des Ausprobierens sichtbar, auch auf verlinkten Knoten. Dazu
@@ -1207,8 +1213,8 @@ Label: **▾** offen, **„▸ n“** eingeklappt (n = Zahl der verborgenen Knot
 als kleiner **gerahmter Chip**, damit das Klickziel zu treffen ist (D64; das
 nackte Glyph war zu klein). Klick auf das Zeichen klappt um — der einfache
 Klick auf den Knoten selbst
-bleibt der Link (§6); Tastatur: **←** klappt zu, **→** klappt auf am
-fokussierten Knoten (WAI-ARIA-Baum-Idiom).
+öffnet das Knoten-Fenster (§9, D92); Tastatur: **←** klappt zu, **→** klappt
+auf am fokussierten Knoten (WAI-ARIA-Baum-Idiom).
 
 - **Anfangszustand aus dem Text (§1):** `>` klappt ein. `<` holt seinen
   Teilbaum hervor, indem die Faltung die Pfad-Ebenen **hinunterwandert**:

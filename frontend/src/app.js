@@ -1462,7 +1462,18 @@ function applyFoldPreset(mode){
 /* Faltung umklappen (SPEC §9, D38). Gelingt das Zurückschreiben, ist der Text
    der Zustand — die Überlagerungen werden dann geleert, damit sie ihn nicht
    maskieren können. Nach dem Neubau bekommt derselbe Knoten den Fokus zurück,
-   sonst risse die Tastaturbedienung ab (das alte Element ist weg). */
+   sonst risse die Tastaturbedienung ab (das alte Element ist weg) — aber ohne
+   das Knoten-Fenster zu rufen: Falten ist genau die Geste, der das Fenster im
+   Weg stand (D92), und die `:focus-visible`-Heuristik ist beim
+   programmatischen Fokus nicht verlässlich genug für diese Zusage. */
+let suppressTipFocus = false;
+function refocusNode(line){
+  const again = out.querySelector('.node[data-line="' + line + '"]');
+  if(!again) return;
+  suppressTipFocus = true;      /* focusin läuft synchron im focus() */
+  again.focus({preventScroll: true});
+  suppressTipFocus = false;
+}
 function toggleFold(el){
   const line = +el.dataset.line;
   const st = foldByLine.get(line);
@@ -1473,16 +1484,14 @@ function toggleFold(el){
   if(lens){
     lensOverrides.set(st.key, !st.collapsed);
     render();
-    const again2 = out.querySelector('.node[data-line="' + line + '"]');
-    if(again2) again2.focus({preventScroll: true});
+    refocusNode(line);
     return;
   }
   foldOverrides.set(st.key, !st.collapsed);
   /* Das Schreiben löst per `input`-Ereignis schon ein render() aus. */
   if(writeFoldToText(line, !st.collapsed)) foldOverrides.clear();
   else render();
-  const again = out.querySelector('.node[data-line="' + line + '"]');
-  if(again) again.focus({preventScroll: true});
+  refocusNode(line);
 }
 
 /* Klick auf das Falt-Zeichen ▾/▸ klappt um. preventDefault, weil das Zeichen
@@ -1577,7 +1586,7 @@ out.addEventListener('touchend', e => {
      `preventDefault()` öffnete ein Link-Knoten zusätzlich seine URL — auf Touch
      ist der Link stattdessen ein Knopf IM Fenster. */
   e.preventDefault();
-  toggleNodeTip(tapped);
+  toggleNodeTip(tapped, true);
 }, {passive: false});
 out.addEventListener('touchcancel', disarmPress);
 out.addEventListener('contextmenu', e => { if(pressTimer || armedEl) e.preventDefault(); });
@@ -1605,14 +1614,14 @@ function closeNodeTip(){
   nodeTip.hidden = true;
 }
 
-function toggleNodeTip(el){
+function toggleNodeTip(el, touch){
   if(tipNode === el){ closeNodeTip(); return; }   /* zweiter Tipp schließt */
-  showNodeTip(el, true);
+  showNodeTip(el, touch);
 }
 
-/* `touch` unterscheidet die beiden Anlässe: Am Zeiger ist der ganze Knoten der
-   Link (§6), ein ↗-Knopf wäre dort ein zweiter Weg zum selben Ziel; und der
-   Sprung-Hinweis nennt Alt+Klick, den es auf dem Telefon nicht gibt. */
+/* `touch` wählt nur noch den Sprung-Hinweis (langer Druck statt Alt+Klick).
+   Der ↗-Knopf steht seit D92 an JEDEM verlinkten Knoten: Der einfache Klick
+   öffnet überall das Fenster, nicht mehr die URL — wie der Tipp auf Touch. */
 function showNodeTip(el, touch){
   closeNodeTip();
   const title = el.getAttribute('data-tip') || '';
@@ -1621,7 +1630,7 @@ function showNodeTip(el, touch){
   const desc = i >= 0 ? title.slice(0, i) : '';
   const roh = i >= 0 ? title.slice(i + sep.length) : title;
   const facts = touch ? roh.replace(t('jumpHint'), t('jumpHintTouch')) : roh;
-  const href = touch && el.tagName === 'A' ? el.getAttribute('href') : null;
+  const href = el.tagName === 'A' ? el.getAttribute('href') : null;
   /* Absätze: Leerzeilen trennen (SPEC §1), einzelne Zeilenumbrüche sind bloß
      der Umbruch der Quelldatei und werden zu Leerzeichen. Der `title` kann das
      nicht — er zeigt die harten Umbrüche und sah im schmalen Fenster
@@ -1661,49 +1670,41 @@ function placeNodeTip(el){
     Math.max(12, Math.min(anchorX - left, w - 12)).toFixed(1) + 'px');
 }
 
-/* ---------- Dasselbe Fenster am Zeiger und an der Tastatur (D57) ----------
+/* ---------- Dasselbe Fenster am Klick und an der Tastatur (D57, D92) ----------
    Es löst den nativen `title` ab: Der konnte weder Absätze noch eine Linie
    (der Trennstrich war aus 24 `─` gemalt, D40-Nachtrag) und erschien nie beim
-   Tastaturfokus. Beides kann das Fenster ohnehin schon — es wurde nur für
-   Touch gebaut (D52).
-
-   Die Verzögerung ist Absicht-Erkennung: Über einen dichten Baum fährt man
-   hinweg, ohne etwas wissen zu wollen. Beim Wechsel von Knoten zu Knoten
-   zeigt es sofort weiter — wer schon liest, wartet nicht noch einmal. */
-const TIP_DELAY = 350;
-let tipTimer = null, tipLeave = null;
-const finePointer = () => window.matchMedia('(hover:hover) and (pointer:fine)').matches;
-function cancelTipTimers(){
-  clearTimeout(tipTimer); clearTimeout(tipLeave);
-  tipTimer = tipLeave = null;
+   Tastaturfokus. Der Hover-Weg aus D57 ist ausgebaut (D92): Mit den
+   Taiga-Aktionen wurde das Fenster gewichtiger, und beim bloßen Ansteuern des
+   Falt-Chips stand es schon im Weg. Der einfache Klick öffnet es jetzt
+   überall — wie der Tipp auf Touch (D52); der Link eines Knotens ist damit
+   auch am Zeiger der ↗-Knopf IM Fenster (Strg+Klick und Enter behalten den
+   Browser-Default und öffnen die URL direkt). */
+out.addEventListener('click', e => {
+  if(e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+  if(e.detail === 0) return;   /* Enter am Link-Knoten bleibt der Link (D25) */
+  if(e.target && e.target.closest && e.target.closest('.fold')) return;
+  const el = nodeFromEvent(e);
+  if(!el) return;
+  e.preventDefault();          /* der Klick gehört dem Fenster, nicht der URL */
+  toggleNodeTip(el, false);
+});
+/* Tastaturfokus öffnet weiter sofort (D57) — aber nur echten
+   (`:focus-visible`): Auch der Mausklick fokussiert den Knoten, und dann
+   entschiede sonst der focusin statt des Klick-Handlers — der Toggle darüber
+   schlösse das eben geöffnete Fenster sofort wieder. */
+function kbFocus(el){
+  try{ return el.matches(':focus-visible'); }catch(_){ return false; }
 }
-out.addEventListener('pointerover', e => {
-  if(e.pointerType === 'touch' || !finePointer()) return;
-  const el = e.target.closest && e.target.closest('.node');
-  if(!el || el === tipNode) return;
-  cancelTipTimers();
-  /* Steht schon eines offen, ist die Absicht erwiesen — dann ohne Warten. */
-  tipTimer = setTimeout(() => showNodeTip(el, false), tipNode ? 0 : TIP_DELAY);
-});
-out.addEventListener('pointerout', e => {
-  if(e.pointerType === 'touch' || !finePointer()) return;
-  clearTimeout(tipTimer);
-  /* Nicht sofort zumachen: Der Weg ins Fenster führt über den Zwischenraum,
-     und dort ist der Zeiger kurz über keinem von beiden. */
-  clearTimeout(tipLeave);
-  tipLeave = setTimeout(() => {
-    if(!nodeTip.matches(':hover')) closeNodeTip();
-  }, 120);
-});
-nodeTip.addEventListener('pointerenter', cancelTipTimers);
-nodeTip.addEventListener('pointerleave', () => { closeNodeTip(); });
-/* Tastaturfokus: ohne Verzögerung — er ist bereits die ausdrückliche Absicht,
-   und ein `title` hat hier noch nie etwas gezeigt. */
 out.addEventListener('focusin', e => {
+  if(suppressTipFocus) return;   /* Fokus-Rückgabe nach dem Falten (D38/D92) */
   const el = e.target.closest && e.target.closest('.node');
-  if(el && el !== tipNode) showNodeTip(el, false);
+  if(el && el !== tipNode && kbFocus(el)) showNodeTip(el, false);
 });
 out.addEventListener('focusout', e => {
+  /* Fokus INS Fenster (die Knöpfe darin sind klick-fokussierbar) schließt
+     nicht — sonst verschwände der Knopf zwischen mousedown und mouseup und
+     sein Klick ginge verloren. */
+  if(e.relatedTarget && nodeTip.contains(e.relatedTarget)) return;
   const el = e.target.closest && e.target.closest('.node');
   if(el && el === tipNode) closeNodeTip();
 });

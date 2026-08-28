@@ -8568,3 +8568,68 @@ längsten Labels): drei Anlege-Knöpfe eine Zeile, „→ nach Taiga schreiben �
 Ref-Knoten ohne Projekt-Slug (keine Knöpfe) fällt auf 336px zurück —
 `tipwide` ist weg. 628 Tests unverändert (reine UI-Verdrahtung,
 Browser-geprüft — die D54-Nachtrag-3-Grenze).
+
+## D92 — Das Knoten-Fenster öffnet nur noch auf Klick, nicht mehr beim Überfahren
+Gemeldet vom Nutzer: „Mit mehr Funktionalität in dem Popup, so dass es auch
+träger geworden ist als der einfache Tooltip vorher, gibt es ein
+Usability-Problem: Wenn man nur einen Knoten auf-/zuklappen will, kommt schon
+das Popup." Das trifft die Sache: D57 hat dem Fenster den Hover gegeben, als
+es noch ein besserer Tooltip war — Beschreibung plus Kurz-Fakten. Seit D91
+trägt es Ticket-Stand, Anlege-, Verknüpfen- und Abgleich-Knöpfe und ist
+breiter geworden (`tipwide`, D91-Nachtrag 12); beim Ansteuern des Falt-Chips
+stand es regelmäßig schon im Weg. Ein Fenster mit Aktionen ist kein Tooltip
+mehr — es verdient eine ausdrückliche Geste.
+
+**Der einfache Klick öffnet, ein zweiter (oder daneben) schließt** — wörtlich
+die Touch-Regel aus D52, jetzt überall. Damit fällt zwangsläufig eine
+Entscheidung über die **verlinkten Knoten** (§6: der einfache Klick öffnete
+dort die URL): Eine Geste kann nicht beides tun, und D25 hat ausdrücklich
+abgelehnt, dass derselbe Klick je nach Knoten Verschiedenes tut. Also gilt
+die D52-Abwägung jetzt auch am Zeiger — „ansehen ist die häufigere Absicht,
+und der Link bleibt einen Klick entfernt": Der **↗-Knopf steht in jedem
+Fenster eines verlinkten Knotens**, nicht mehr nur auf Touch. Direkt zur URL
+führen weiterhin **Enter** am fokussierten Knoten (der native Weg; im
+Klick-Handler an `e.detail === 0` erkannt und durchgelassen) und
+**Strg+Klick** (Browser-Default, Hintergrund-Tab — auf Zeilen mit
+Ticket-Referenz gewinnt das Taiga-Öffnen, D91-Nachtrag 5, wie bisher).
+Alt+Klick (Sprung, D25) und der Falt-Chip (D38) sind im Handler ausgenommen
+und bleiben, was sie sind.
+
+**Tastaturfokus öffnet weiter sofort — aber nur echten.** Das war die
+verdeckte Falle des Umbaus: Auch der Mausklick fokussiert den Knoten, und der
+`focusin`-Handler (D57) hätte das Fenster geöffnet, bevor der Klick-Toggle es
+für „schon offen" hielte und sofort wieder schlösse — netto bliebe es zu.
+Unterschieden wird mit `:focus-visible`, der Browser-eigenen Heuristik, die
+D25-Nachtrag 2 für genau diese Frage schon vermessen hat (nach Mausklick
+falsch, nach Tab wahr). Nebenwirkung, bewusst hingenommen: Auch der
+programmatische Fokus nach Alt+Klick aus dem Text und nach dem
+Stationen-Knopf (D47) folgt der Heuristik — nach einer Maus-Geste öffnet dort
+kein Fenster mehr mit. Das passt zur Stoßrichtung dieses Eintrags: weniger
+ungefragte Fenster.
+
+**Und `focusout` darf den Knopf-Klick nicht mehr töten.** Mit dem Klick ist
+der Knoten beim offenen Fenster jetzt regelmäßig **fokussiert** — vorher
+(Hover) war er das nicht, und der `focusout`-Schließer war harmlos. Die
+Knöpfe im Fenster sind trotz `tabindex="-1"` klick-fokussierbar: mousedown
+auf einen Taiga-Knopf blurte den Knoten, `focusout` schlösse das Fenster
+zwischen mousedown und mouseup, und der Klick ginge an einem
+`display:none`-Element verloren. Deshalb schließt `focusout` nicht, wenn
+`relatedTarget` im Fenster liegt; Tab zum nächsten Knoten schließt weiter.
+
+**Ersatzlos weg:** die 350-ms-Öffnungs- und 120-ms-Schließ-Timer, die
+Sofort-Weiterreiche bei schon offenem Fenster, `pointerenter`/`pointerleave`
+am Fenster und die `finePointer`-Weiche — das Fenster ist jetzt auf allen
+Geräten dieselbe Klick-Sache, und ein einmal geöffnetes bleibt stehen, bis
+etwas es ausdrücklich schließt (zweiter Klick, Klick daneben, Esc, ×,
+Scrollen, Neubau — die D52-Liste, unverändert). Die 400-ms-Verzögerung des
+Ticket-Abrufs (D91-Nachtrag 6) bleibt: Sie schützt jetzt das Durch-Tabben
+statt des Vorüberfahrens, und der Bulk-Cache (D91-Nachtrag 10) macht sie
+ohnehin meist unsichtbar.
+
+**Der Preis, benannt:** Beim schnellen Überfliegen eines fremden Plans
+zeigte der Hover die Beschreibungen ohne Klick — das ist weg, je Knoten
+kostet es jetzt einen Klick. Die ”-Marke (D40) und der ↗ hinter dem Label
+sagen weiterhin, wo sich einer lohnt. Und ein Doppelklick öffnet und
+schließt in einem Zug — hinnehmbar, auf Knoten doppelklickt niemand
+absichtlich.
+

@@ -654,6 +654,15 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   Es schließt bei allem, was seine Aussage hinfällig macht — Tipp daneben,
   zweiter Tipp, Esc, ×, Diagramm-Scroll, Bereichswechsel, Sprung in den Text,
   `render()`. Die letzten drei sind beim Bauen zuerst vergessen worden.
+- **Das Knoten-Fenster öffnet auf Klick, nie auf Hover (D92):** Der einfache
+  Klick toggelt es überall (auch auf Link-Knoten — die URL ist der ↗-Knopf im
+  Fenster; Enter kommt als Klick mit `e.detail === 0` und wird durchgelassen).
+  Zwei Fallen: `focusin` öffnet nur bei `:focus-visible` — der Mausklick
+  fokussiert den Knoten ebenfalls, und ohne die Weiche schlösse der
+  Klick-Toggle das vom focusin geöffnete Fenster sofort wieder. Und
+  `focusout` schließt nicht, wenn `relatedTarget` im Fenster liegt — die
+  Knöpfe darin sind trotz `tabindex="-1"` klick-fokussierbar, sonst stirbt
+  der Knopf-Klick zwischen mousedown und mouseup.
 - **Taiga-Ticket-Anlage (D91):** Die entscheidbaren Regeln liegen headless in
   `taiga.js` (`ticketRefOf` = Idempotenz-Marker, `taskCandidates` =
   Dialog-Vorbelegung, `storyAncestor` = der nächste Vorfahr mit Story-Ref,

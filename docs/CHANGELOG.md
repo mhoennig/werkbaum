@@ -19,6 +19,8 @@ reverse.
 
 ## 2026-08-28
 
+- The node window no longer opens on hover: click a node to open it, click again or elsewhere to close — folding and moving across the tree stay snappy
+- A linked node's plain click now opens the window everywhere, like on touch — the URL sits behind the ↗ button, and Enter on the focused node or Ctrl+click still open it directly
 - The Taiga buttons in the node window sit side by side in one row now — the window grows a little wider for them, and they wrap only when space truly runs out
 - The open button moved into the ticket box's action row, next to write and take, and its label shrank to "Open #US-123" — the neighbours say where
 - "Link ticket" in the node window binds an existing Taiga story or task to a node: paste the ticket's URL — it carries project, type and number by itself — or enter a ref or bare number
