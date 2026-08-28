@@ -205,9 +205,9 @@
         - [^] #trk.resolve.read: Read title, link and status (S)
         - [/] #trk.resolve.map: Map the workflow onto the states (S)
       - [^] #trk.write: Write the status back (M) :#trk.resolve
-      - [x] #trk.bulk: Diverging tickets show up in the diagram (M) :#trk.resolve.read
-        - [x] #trk.bulk.proxy: One request fans out into by_ref queries server-side (S)
-        - [x] #trk.bulk.mark: A diverging ref turns amber on its node (S)
+      - [^] #trk.bulk: Diverging tickets show up in the diagram (M) :#trk.resolve.read
+        - [^] #trk.bulk.proxy: One request fans out into by_ref queries server-side (S)
+        - [^] #trk.bulk.mark: A diverging ref turns amber on its node (S)
       - [^] #trk.create: Create tickets from nodes (XL)
         - [^] #trk.create.proxy: Backend proxy with named endpoints (M)
         - [^] #trk.create.login: Log in to Taiga, token stays in the browser (S) :#trk.create.proxy
