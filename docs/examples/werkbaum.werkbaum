@@ -216,7 +216,7 @@
         - [^] #trk.create.tasks: Sub-packages become tasks, picked in a dialog (M) :#trk.create.story
         - [^] #trk.create.task: A dialog-free "create task" under a story ancestor (S) :#trk.create.tasks,#trk.resolve.read
         - [^] #trk.create.ref: The ref lands in the line beside the id (S) :#trk.create.story
-      - [x] #trk.link: Link an existing ticket to a node (S) :#trk.resolve.read
+      - [^] #trk.link: Link an existing ticket to a node (S) :#trk.resolve.read
       - [^] #trk.open: Open a ticket ref in Taiga (S) :#trk.create.ref,#not.tag.project
       - [-] #trk.plugin: A plugin inside Taiga itself (L)  %% legacy frontend, self-hosted only
     = [?] #trk.tenzu: Tenzu, the successor (XXL) https://tenzu.net
