@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/parser.js';
 import { taigaSlugs } from '../src/model.js';
-import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt, refParts, ticketApiPath, mapTaigaStatus, taigaStatusName, pickStatus, statusApiPath, statusListPath, storyAncestor } from '../src/taiga.js';
+import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt, refParts, ticketApiPath, mapTaigaStatus, taigaStatusName, pickStatus, statusApiPath, statusListPath, storyAncestor, collectTicketRefs, bulkPath, ticketDiverges, refVisibleInLabel } from '../src/taiga.js';
 import { setStatusBox } from '../src/parser.js';
 
 /* Schlagworte `&tag` (SPEC §1, D91): Extraktion im Parser und die
@@ -185,6 +185,96 @@ describe('storyAncestor — der nächste Vorfahr mit Story-Ref (D91-Nachtrag 9)'
   it('die Ref darf auch die Knoten-ID selbst sein (D60)', () => {
     const {roots, node} = find('- #US-42\n  - Kind', 'Kind');
     expect(storyAncestor(roots, node).ref).toBe('US-42');
+  });
+});
+
+describe('collectTicketRefs — die Refs eines Baums je Projekt (D91-Nachtrag 10)', () => {
+  const collect = text => {
+    const { roots } = parse(text);
+    return collectTicketRefs(roots, taigaSlugs(roots));
+  };
+
+  it('gruppiert nach dem geerbten Slug, mit Knoten und Zeile', () => {
+    const m = collect('- P &taiga.a\n  - S #US-1\n    - T #T-2\n- Q &taiga.b\n  - R #US-3');
+    expect([...m.keys()]).toEqual(['a', 'b']);
+    expect(m.get('a').map(e => e.ref)).toEqual(['US-1', 'T-2']);
+    expect(m.get('a')[0].node.line).toBe(2);
+    expect(m.get('b').map(e => e.ref)).toEqual(['US-3']);
+  });
+
+  it('ohne Slug fällt die Ref heraus — ohne Projekt ist sie nicht auflösbar', () => {
+    const m = collect('- P\n  - S #US-1');
+    expect(m.size).toBe(0);
+  });
+
+  it('Knoten ohne Ref stehen nicht darin', () => {
+    const m = collect('- P &taiga.a\n  - ohne Ref\n  - S #US-1');
+    expect(m.get('a').length).toBe(1);
+  });
+
+  it('ein übersteuernder Slug ordnet den Teilbaum seinem Projekt zu', () => {
+    const m = collect('- P &taiga.a\n  - S #US-1\n  - Fremd &taiga.b #US-9');
+    expect(m.get('a').map(e => e.ref)).toEqual(['US-1']);
+    expect(m.get('b').map(e => e.ref)).toEqual(['US-9']);
+  });
+});
+
+describe('bulkPath — der Bulk-Pfad am Proxy (D91-Nachtrag 10)', () => {
+  it('baut Slug (kodiert) und kommagetrennte Refs', () => {
+    expect(bulkPath('mi kunde', ['US-1', 'T-2']))
+      .toBe('/tickets?slug=mi%20kunde&refs=US-1,T-2');
+  });
+
+  it('dedupliziert — dieselbe Ref an zwei Knoten wird einmal geholt', () => {
+    expect(bulkPath('a', ['US-1', 'US-1', 'T-2'])).toBe('/tickets?slug=a&refs=US-1,T-2');
+  });
+
+  it('deckelt bei 200 — der benannte Server-Deckel', () => {
+    const viele = Array.from({length: 250}, (_, i) => 'US-' + i);
+    const pfad = bulkPath('a', viele);
+    expect(pfad.split(',').length).toBe(200);
+  });
+
+  it('null ohne Refs oder ohne Slug', () => {
+    expect(bulkPath('a', [])).toBe(null);
+    expect(bulkPath('', ['US-1'])).toBe(null);
+  });
+});
+
+describe('refVisibleInLabel — braucht die Marke ein Badge? (D91-Nachtrag 10)', () => {
+  const node = text => parse(text).roots[0];
+
+  it('mit eigener Knoten-ID bleibt die Ref im Label: sichtbar', () => {
+    expect(refVisibleInLabel(node('- #auth: Login #US-123'), 'US-123')).toBe(true);
+  });
+
+  it('als Knoten-ID steht sie nicht im Label: unsichtbar, Badge nötig', () => {
+    expect(refVisibleInLabel(node('- Login bauen #US-123'), 'US-123')).toBe(false);
+  });
+
+  it('ein D60-Knoten (die ID vertritt das Label) zählt als sichtbar', () => {
+    expect(refVisibleInLabel(node('- #US-123'), 'US-123')).toBe(true);
+  });
+});
+
+describe('ticketDiverges — die Abweichungs-Marke (D91-Nachtrag 10)', () => {
+  const node = text => parse(text).roots[0];
+
+  it('markiert, wo Ticket und Statusbox Verschiedenes sagen', () => {
+    expect(ticketDiverges(node('- [ ] A #US-1'), 'In progress')).toBe(true);
+  });
+
+  it('einig — keine Marke', () => {
+    expect(ticketDiverges(node('- [~] A #US-1'), 'In progress')).toBe(false);
+  });
+
+  it('ein unbekannter Spaltenname sagt nichts über den Plan', () => {
+    expect(ticketDiverges(node('- [ ] A #US-1'), 'Blocked upstream')).toBe(false);
+    expect(ticketDiverges(node('- [ ] A #US-1'), null)).toBe(false);
+  });
+
+  it('ein Knoten ohne Statusbox weicht von jedem abgebildeten Status ab', () => {
+    expect(ticketDiverges(node('- A #US-1'), 'New')).toBe(true);
   });
 });
 

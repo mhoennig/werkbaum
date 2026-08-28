@@ -19,6 +19,10 @@ reverse.
 
 ## 2026-08-28
 
+- One bulk request reads the status of all referenced tickets: the proxy fans the refs out right next to the Taiga instance, so the cost scales with the refs in the plan — not with a project that holds thousands of tickets
+- With a Taiga login, diverging tickets show up in the diagram: a ref whose ticket status no longer matches the node's box turns amber — as its own little badge where the ref is the node id and thus not part of the title
+- The bulk result pre-fills the node window's ticket cache, so hovering a ticket node usually needs no request of its own any more
+- The divergence mark is session knowledge and stays out of the SVG export and of print — what you share is the plan, not your fetch state
 - The create buttons in the node window are recut: one "create story" button always opens the dialog with project choice and sub-package checkboxes — unchecking covers the story-only case
 - A "create task" button appears where an ancestor node already carries a story: the task lands in that story without any dialog — project and story follow from the tree, only an error gets a surface
 

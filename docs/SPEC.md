@@ -529,6 +529,22 @@ es einen gibt, den **Zuständigen**.
 
 Siehe D91-Nachträge 6, 7 und 8.
 
+**Abweichungs-Marke im Diagramm.** Mit Anmeldung an der Instanz holt **eine
+Bulk-Anfrage je Projekt und Sitzung** den Stand aller referenzierten Tickets
+(der Proxy fächert sie serverseitig in Einzelabfragen auf — die Kosten
+skalieren mit den Refs im Plan, nie mit der Größe des Taiga-Projekts). Eine
+Ref, deren Ticket-Status **abgebildet** ist und nicht zur Statusbox des
+Knotens passt, färbt sich **warnfarben** — steht sie im Label, die Ref
+selbst; ist sie (nur) die Knoten-ID (§1: das erste `#`-Token), erscheint sie
+als kleines nachgestelltes Badge hinter dem Titel (die Bauform der ”-Marke).
+Ein unabgebildeter Spaltenname markiert nichts — er sagt nichts über den
+Plan. Die Einzelheiten samt der beiden Aktionen stehen wie gehabt im
+Knoten-Fenster; ein Ticket, das es nicht (mehr) gibt, markiert nichts, und
+ein Fehler der Hintergrund-Abfrage bleibt still. Ohne Anmeldung wird nichts
+geholt. Die Marke hängt an der Sitzung (Anmeldung, Abrufzeitpunkt) und
+erscheint deshalb **weder im Grafikexport noch im Druck** — exportiert wird
+der Plan, nicht der persönliche Abrufstand. Siehe D91-Nachtrag 10.
+
 **Die Knotenfarbe zeigt den effektiven Status (§4)**, nicht den intrinsischen —
 das Diagramm beantwortet „wie weit ist das wirklich?“. Wo der eigene Status
 **weiter** ist als der effektive (der Knoten wird von Abhängigkeiten

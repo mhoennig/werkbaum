@@ -684,6 +684,18 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   läuft schon beim Aufbau — sonst temporale Todeszone). Der
   `pointerdown`-Wächter lässt `.tabmodal-overlay` durch: Der Anmelde-Dialog
   gehört zu einer Aktion AUS dem Fenster und darf es nicht zumachen.
+- **Abweichungs-Marken im Diagramm (D91-Nachtrag 10):** `collectTicketRefs`,
+  `bulkPath` (dedupliziert, Deckel 200), `ticketDiverges` und
+  `refVisibleInLabel` liegen headless in taiga.js. app.js: `scheduleTaigaBulk`
+  holt je Slug EINMAL je Sitzung (nur mit Sitzung; Hintergrund-Fehler still),
+  füllt den `taigaTickets`-Cache vor und rendert — außer ein Knoten-Fenster
+  ist offen (der Neubau schlösse es), dann nur `markTicketDiffs`
+  (Klassen-Marken, räumt erst ab). Wo die Ref die **Knoten-ID** ist, steht
+  sie nicht im Label — der **Renderer** hängt dann ein `tref-badge` an
+  (`tdiffRefs`-Option, die D40-Bauform der ”-Marke: vor dem Messen, die
+  Geometrie stimmt). Nicht im Export (`excludeSel` + Label-Farbe kommt vom
+  Knoten), nicht im Druck, nicht im `aria-label` (benannte Grenze: der
+  Screenreader-Weg ist das Knoten-Fenster).
 - **Status zurückschreiben (D91-Nachtrag 7/8):** Weicht der Ticket-Status von
   der Statusbox ab, zeigt `paintDiff()` beides und bietet **zwei** Knöpfe —
   von selbst geschieht in keine Richtung etwas. `pushStatus()` sucht die

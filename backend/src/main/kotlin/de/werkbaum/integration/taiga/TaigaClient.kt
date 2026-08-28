@@ -11,6 +11,10 @@ import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.nio.charset.StandardCharsets
 import java.time.Duration
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
+import java.util.concurrent.Semaphore
 
 /** Keine Taiga-Instanz konfiguriert — der Proxy hat kein Ziel (503). */
 class TaigaNotConfiguredException :
@@ -59,6 +63,17 @@ data class TaigaTicketDetailData(
 data class TaigaStatusData(val id: Long, val name: String, val closed: Boolean?)
 
 /**
+ * Eine Ref der Bulk-Abfrage (D91-Nachtrag 10): `key` ist die Werkbaum-Ref
+ * (`US-123`), unter der die Antwort zurueckgeht; `task` und `nr` sind das
+ * zerlegte Praefix — der Typ steht in der Ref, genau dafuer schreibt
+ * Werkbaum ihn (SPEC par. 11).
+ */
+data class TaigaBulkRefData(val key: String, val task: Boolean, val nr: Long)
+
+/** Eine Anfrage, die schon der Proxy ablehnt (400) — kein Taiga-Fehler. */
+class TaigaBadRequestException(message: String) : RuntimeException(message)
+
+/**
  * Schmaler, benannter Client zur konfigurierten Taiga-Instanz (D91) — kein
  * Durchreich-Proxy: genau die vier Aufrufe, die die Ticket-Anlage braucht.
  *
@@ -70,6 +85,11 @@ data class TaigaStatusData(val id: Long, val name: String, val closed: Boolean?)
  */
 @Service
 class TaigaClient(private val properties: TaigaProperties) {
+
+    /* Der Faecher der Bulk-Abfrage: virtuelle Threads (praktisch kostenlos,
+       D76-Nachtrag 5), die Semaphore deckelt die GLEICHZEITIGEN Anfragen an
+       die fremde Instanz — Parallelitaet ja, Hammer nein. */
+    private val bulkPool = Executors.newVirtualThreadPerTaskExecutor()
 
     private val rest: RestClient = RestClient.builder()
         .requestFactory(
@@ -124,8 +144,10 @@ class TaigaClient(private val properties: TaigaProperties) {
      * Aufrufer aus dem Präfix der Ref (`US-`/`T-`, SPEC §11) — hier steht
      * nur, wohin gefragt wird.
      */
-    fun ticket(token: String, slug: String, ref: Long, task: Boolean): TaigaTicketDetailData {
-        val project = projectId(token, slug)
+    fun ticket(token: String, slug: String, ref: Long, task: Boolean): TaigaTicketDetailData =
+        detailByRef(token, projectId(token, slug), ref, task)
+
+    private fun detailByRef(token: String, project: Long, ref: Long, task: Boolean): TaigaTicketDetailData {
         val pfad = if (task) "/tasks/by_ref" else "/userstories/by_ref"
         val map = exchange {
             rest.get().uri(url("$pfad?project=$project&ref=$ref"))
@@ -133,6 +155,47 @@ class TaigaClient(private val properties: TaigaProperties) {
                 .retrieve().body(MAP)
         } ?: throw TaigaUnavailableException("Leere Antwort von Taiga ($pfad)")
         return detail(map)
+    }
+
+    /**
+     * Viele Tickets auf einmal (D91-Nachtrag 10): EIN Aufruf vom Browser, der
+     * Proxy fächert in `by_ref`-Einzelabfragen auf — parallel, mit
+     * **gedeckelter** Nebenläufigkeit (Höflichkeit gegenüber der fremden
+     * Instanz; Backend und Taiga sitzen beim selben Hoster, die Einzelabfrage
+     * kostet dort Millisekunden). Die Kosten skalieren mit den Refs im Plan,
+     * nie mit der Projektgröße — eine Projekt-Volliste holte bei Tausenden
+     * Tickets Megabytes, um fast alles wegzuwerfen.
+     *
+     * Eine Ref, die es nicht (mehr) gibt (Taiga-404), **fehlt still** in der
+     * Antwort — der Rest kommt trotzdem; jeder andere Fehler (401, Projekt
+     * unbekannt, Instanz weg) bricht die ganze Anfrage ab, denn er beträfe
+     * ohnehin jede einzelne Ref.
+     */
+    fun tickets(token: String, slug: String, refs: List<TaigaBulkRefData>): Map<String, TaigaTicketDetailData> {
+        val project = projectId(token, slug)
+        val sem = Semaphore(BULK_CONCURRENCY)
+        val futures = refs.map { r ->
+            bulkPool.submit(Callable {
+                sem.acquire()
+                try {
+                    r.key to detailByRef(token, project, r.nr, r.task)
+                } finally {
+                    sem.release()
+                }
+            })
+        }
+        val out = LinkedHashMap<String, TaigaTicketDetailData>()
+        for (f in futures) {
+            try {
+                val (key, wert) = f.get()
+                out[key] = wert
+            } catch (e: ExecutionException) {
+                val grund = e.cause
+                if (grund is TaigaUpstreamException && grund.status == 404) continue
+                throw grund ?: e
+            }
+        }
+        return out
     }
 
     /**
@@ -253,6 +316,8 @@ class TaigaClient(private val properties: TaigaProperties) {
             ?: throw TaigaUnavailableException("Unerwartete Taiga-Antwort: Feld '$key' fehlt")
 
     companion object {
+        /** Hoechstens so viele gleichzeitige Upstream-Anfragen je Bulk-Aufruf. */
+        private const val BULK_CONCURRENCY = 6
         private val MAP = object : ParameterizedTypeReference<Map<String, Any?>>() {}
         private val LIST = object : ParameterizedTypeReference<List<Map<String, Any?>>>() {}
     }

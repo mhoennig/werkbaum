@@ -8386,3 +8386,88 @@ benannte Test.
 Seite nicht (Klicks schon: das DOM ist geteilt, die JS-Objekte nicht). Eine
 Rückfrage lässt sich dort also nicht wegstubben; Aufräumen, das durch eine
 Rückfrage führt, geht stattdessen über die Ablage selbst (D83-Schema).
+
+**Nachtrag 10 — Bulk-Abfrage und Abweichungs-Marke: das Diagramm zeigt, wo
+Ticket und Plan auseinanderlaufen (2026-08-28).** Nutzerwunsch in zwei
+Schritten: erst die Frage nach einer Bulk-Abfrage („Einzelabfrage wäre
+wahrscheinlich zu langsam"), dann — auf den Befund, dass die Taiga-Projekte
+**Tausende** Stories und Tasks haben — die nach einem Vorfilter. Die
+Antwort auf beide ist dieselbe: **Der Filter sind die Refs im Plan, und
+angewandt wird er im Proxy.**
+
+- **`GET /taiga/tickets?slug=…&refs=US-1,T-2,…`** — EIN Aufruf vom Browser,
+  der Proxy fächert in `by_ref`-Einzelabfragen auf: **parallel** (virtuelle
+  Threads, D76-Nachtrag 5) mit **gedeckelter Nebenläufigkeit** (Semaphore,
+  6 gleichzeitig — Höflichkeit gegenüber der fremden Instanz). Die teure
+  Strecke Browser→Backend (~130 ms, gemessen) fällt einmal an; Backend und
+  Taiga-API sitzen beim selben Hoster, dort kosten die Einzelabfragen
+  Millisekunden. Die Kosten skalieren mit den Refs im Plan (Dutzende), nie
+  mit dem Projekt (Tausende) — die zuerst erwogene **Projekt-Volliste ist
+  damit verworfen**: Sie holte Megabytes, um fast alles wegzuwerfen, und
+  ließe Taiga je Anfrage eine große Liste rechnen.
+- **Ein Endpunkt für beide Typen:** Das Präfix jeder Ref trägt den Typ
+  (`US-`/`T-`, Nachtrag 2) — genau die Auflösung, für die Werkbaum es
+  schreibt. Antwort ist eine Map Ref → Stand (dieselben Felder wie der
+  Einzel-Abruf, samt `version` — der Bulk füllt den Ticket-Cache des
+  Knoten-Fensters vor, das Fenster braucht dann meist keinen Abruf mehr).
+- **Fehler-Semantik:** Eine Ref, die es nicht (mehr) gibt, **fehlt still**
+  in der Antwort — die übrigen kommen trotzdem; 401, unbekanntes Projekt
+  oder eine tote Instanz brechen die ganze Anfrage ab (sie beträfen jede
+  Ref). Ungültige Refs in der Liste sind ein **400, nicht still
+  übersprungen** (D59); doppelte werden vor dem Fächer zusammengelegt, und
+  bei **200 Refs** ist benannt Schluss (Client schneidet, Server lehnt ab).
+- **Die Marke:** Eine Ref, deren Ticket-Status abgebildet ist und nicht zur
+  Statusbox passt, färbt sich **warnfarben**. Beim Bauen fiel die Lücke des
+  Vorschlags auf: `- [ ] Login #US-123` macht die Ref zur **Knoten-ID**
+  (§1, erstes `#`-Token) — sie steht gar nicht im Label, es gibt nichts zu
+  färben. Für diesen Fall hängt der **Renderer** ein kleines nachgestelltes
+  Badge mit der Ref an (die D40-Bauform der ”-Marke: vor dem Messen, die
+  Geometrie stimmt); sichtbare Refs (eigene ID auf der Zeile, D60-Knoten)
+  färben sich selbst. Ein unabgebildeter Spaltenname markiert nichts —
+  dieselbe Regel wie im Fenster.
+- **Wann:** einmal je Projekt und Sitzung, angestoßen vom Neubau, von
+  `GET /info` (die Antwort kommt nach dem ersten Neubau) und von jeder
+  Anmeldung; ohne Anmeldung nie (die Nachtrag-6-Linie). Das Markieren aus
+  dem Cache ist kostenlos und läuft je Neubau mit; kommt der Bulk an,
+  rendert sein Callback — **außer** ein Knoten-Fenster ist offen (der Neubau
+  schlösse es): dann nur die Klassen-Marken, Badges kommen mit dem nächsten
+  Neubau. Einzel-Abrufe (↻, Schreiben) ziehen die Marken mit nach; nach
+  „nach Taiga schreiben" räumt `markTicketDiffs` erst ab und setzt neu —
+  sonst stünde die Marke auf einem Ticket, das wieder einig ist.
+- **Nicht im Export, nicht im Druck:** Die Marke hängt an der Sitzung
+  (Anmeldung, Abrufzeitpunkt) — exportiert wird der Plan, nicht der
+  persönliche Abrufstand (dieselbe Linie wie der gelbe Kranz, D28). Der
+  Export liest die Label-Farbe vom **Knoten**, nicht von der Spanne
+  (nachgemessen), das Badge ist per `excludeSel` ausgenommen, der Druck
+  blendet es aus. Und im `aria-label` steht die Abweichung nicht — sie ist
+  asynchrones Sitzungswissen, der Screenreader-Weg ist das Knoten-Fenster;
+  benannt als Grenze, nicht übersehen.
+- **Blass bleibt blass:** Auf einem vom Pfad zurückgetretenen Knoten dimmt
+  die Marke mit (die frontend/CLAUDE.md-Prüffrage ist gestellt): Anders als
+  bei `fresh`/`focusmark` ist die Aussage hier an einem nicht gebrauchten
+  Knoten auch weniger dringend, und erledigte Knoten treten seit D46 ohnehin
+  nie zurück.
+- **Messnotiz für später:** Ob Taigas Listen-Endpunkte eine **Ref-Liste**
+  als Filter nehmen (`?project=…&refs=…`), ist nicht gemessen — die API-Doku
+  ist dort dünn. Falls ja, tauscht der Proxy sein Inneres (ein Aufruf statt
+  Fächer), ohne dass sich am Endpunkt oder im Editor etwas ändert.
+
+**Nachgemessen** Ende-zu-Ende (lokales Backend + Taiga-Stub): Die
+Bulk-Antwort trägt beide Refs samt Status und `version` (curl); im Browser
+bekommt der Ref-als-ID-Knoten mit Abweichung das Badge in `--warn`
+(`rgb(180,83,9)`), der einige Knoten nichts, der Label-Ref färbt sich ohne
+Badge; der Stub-Mitschnitt zeigt je Bulk **einmal** `by_slug` und je
+eindeutiger Ref eine `by_ref`-Abfrage (Dedupe greift); das Knoten-Fenster
+liest danach aus dem Cache (kein weiterer Abruf); im exportierten SVG steht
+der Label-Ref genau einmal, in Knotenfarbe, ohne Badge und ohne Bernstein.
+Backend-`check` grün (5 neue Tests: Fächer mit Map, 404 fällt still,
+401 bricht ab, Bulk-E2E, ungültige Ref → 400); Frontend 617 Tests (15
+neue). Gegenproben per Mutation: 404-Überspringen entfernt → genau der
+danach benannte Test fällt (1 von 21); Dedupe entfernt → genau der eine.
+
+**Werkzeug-Notizen:** Der D82-Abschieds-Flush gewinnt gegen ein
+`localStorage.setItem` + `location.reload()` — wer den Speicher unter einer
+lebenden Seite umschreibt, bekommt beim Reload deren Gedächtnis zurück;
+wiederhergestellt wird ein Dokument als gewöhnliche Änderung über das
+Textfeld. Und der Debug-Reset hängt am `confirm`, das die isolierte Welt
+des Prüf-Panes nicht stubben kann (Nachtrag 9) — er ist dort wirkungslos.

@@ -220,6 +220,49 @@ class TaigaClientTest {
         client().ticket("tok-abc123", "mi-kunde", 123, task = false).version shouldBe 7L
     }
 
+    /* ---- Bulk-Lesen (D91-Nachtrag 10) ---- */
+
+    @Test
+    fun `tickets faechert je Ref auf und liefert die Map unter den Werkbaum-Refs`() {
+        routes["/api/v1/projects/by_slug"] = 200 to PROJECT_OK
+        routes["/api/v1/userstories/by_ref?project=7&ref=123"] = 200 to STORY_DETAIL
+        routes["/api/v1/tasks/by_ref?project=7&ref=1234"] = 200 to TASK_DETAIL
+        val map = client().tickets("tok-abc123", "mi-kunde", listOf(
+            TaigaBulkRefData("US-123", task = false, nr = 123),
+            TaigaBulkRefData("T-1234", task = true, nr = 1234),
+        ))
+
+        map.keys shouldBe setOf("US-123", "T-1234")
+        map["US-123"]!!.status shouldBe "In progress"
+        map["T-1234"]!!.status shouldBe "Done"
+        /* Die Projekt-Aufloesung laeuft EINMAL, nicht je Ref. */
+        requests.count { it.path == "/api/v1/projects/by_slug" } shouldBe 1
+    }
+
+    @Test
+    fun `eine Ref, die es nicht mehr gibt, fehlt still - die uebrigen kommen trotzdem`() {
+        routes["/api/v1/projects/by_slug"] = 200 to PROJECT_OK
+        routes["/api/v1/userstories/by_ref?project=7&ref=123"] = 200 to STORY_DETAIL
+        routes["/api/v1/userstories/by_ref?project=7&ref=999"] = 404 to NOT_FOUND
+        val map = client().tickets("tok-abc123", "mi-kunde", listOf(
+            TaigaBulkRefData("US-123", task = false, nr = 123),
+            TaigaBulkRefData("US-999", task = false, nr = 999),
+        ))
+
+        map.keys shouldBe setOf("US-123")
+    }
+
+    @Test
+    fun `ein abgelaufenes Token bricht die ganze Bulk-Anfrage ab`() {
+        routes["/api/v1/projects/by_slug"] = 200 to PROJECT_OK
+        routes["/api/v1/userstories/by_ref?project=7&ref=123"] = 401 to NOT_FOUND
+        val ex = shouldThrow<TaigaUpstreamException> {
+            client().tickets("tok-abc123", "mi-kunde",
+                listOf(TaigaBulkRefData("US-123", task = false, nr = 123)))
+        }
+        ex.status shouldBe 401
+    }
+
     @Test
     fun `ohne konfigurierte Instanz gibt es kein Ziel`() {
         val bare = TaigaClient(TaigaProperties(apiUrl = ""))
@@ -315,7 +358,10 @@ class TaigaClientTest {
                     body = ex.requestBody.readBytes().decodeToString(),
                 )
                 requests += recorded!!
-                val route = routes[ex.requestURI.path]
+                /* Query-genaue Route vor der Pfad-Route: Die Bulk-Abfrage
+                   trifft denselben Pfad mit verschiedenen Refs. */
+                val route = routes[ex.requestURI.path + "?" + (ex.requestURI.query ?: "")]
+                    ?: routes[ex.requestURI.path]
                 val status = route?.first ?: responseStatus
                 val bytes = (route?.second ?: responseBody).encodeToByteArray()
                 ex.responseHeaders.set("Content-Type", "application/json")

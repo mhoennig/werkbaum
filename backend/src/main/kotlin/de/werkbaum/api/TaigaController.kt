@@ -10,6 +10,8 @@ import de.werkbaum.generated.model.TaigaStatus
 import de.werkbaum.generated.model.TaigaStatusPatch
 import de.werkbaum.generated.model.TaigaTicket
 import de.werkbaum.generated.model.TaigaTicketDetail
+import de.werkbaum.integration.taiga.TaigaBadRequestException
+import de.werkbaum.integration.taiga.TaigaBulkRefData
 import de.werkbaum.integration.taiga.TaigaClient
 import de.werkbaum.integration.taiga.TaigaTicketDetailData
 import de.werkbaum.integration.taiga.TaigaTicketData
@@ -74,6 +76,33 @@ class TaigaController(private val client: TaigaClient) : TaigaApi {
             userStory = taigaTaskCreateRequest.userStory,
         )
         return created(ticket)
+    }
+
+    /* Bulk-Lesen (D91-Nachtrag 10): eine Anfrage vom Editor, der Fächer läuft
+       im Client. Die Refs kommen MIT Werkbaum-Präfix (`US-`/`T-`) — es trägt
+       den Typ; geparst wird streng, Ungültiges ist ein 400 statt still
+       übersprungen (D59-Linie). Doppelte Refs werden vor dem Fächer
+       zusammengelegt. */
+    override fun taigaTickets(
+        xTaigaToken: String,
+        slug: String,
+        refs: String,
+    ): ResponseEntity<Map<String, TaigaTicketDetail>> =
+        ResponseEntity.ok(
+            client.tickets(xTaigaToken, slug, parseBulkRefs(refs))
+                .mapValues { it.value.toApi() }
+        )
+
+    private fun parseBulkRefs(refs: String): List<TaigaBulkRefData> {
+        val teile = refs.split(',').distinct()
+        if (teile.size > MAX_BULK_REFS) {
+            throw TaigaBadRequestException("Höchstens $MAX_BULK_REFS Refs je Anfrage")
+        }
+        return teile.map { teil ->
+            val m = BULK_REF.matchEntire(teil)
+                ?: throw TaigaBadRequestException("Ungültige Ref: '$teil'")
+            TaigaBulkRefData(key = teil, task = m.groupValues[1] == "T", nr = m.groupValues[2].toLong())
+        }
     }
 
     /* Lesen (D91-Nachtrag 6): zwei Endpunkte statt eines mit Typ-Parameter —
@@ -146,4 +175,10 @@ class TaigaController(private val client: TaigaClient) : TaigaApi {
         ResponseEntity.status(HttpStatus.CREATED).body(
             TaigaTicket(id = ticket.id, ref = ticket.ref, subject = ticket.subject)
         )
+
+    companion object {
+        /** Höchstens so viele Refs je Bulk-Anfrage — mehr referenziert kein Plan. */
+        private const val MAX_BULK_REFS = 200
+        private val BULK_REF = Regex("(US|T)-(\\d{1,10})")
+    }
 }

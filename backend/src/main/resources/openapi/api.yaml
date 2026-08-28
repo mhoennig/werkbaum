@@ -606,6 +606,73 @@ paths:
         "503":
           $ref: "#/components/responses/TaigaNotConfigured"
 
+  /taiga/tickets:
+    get:
+      tags: [Taiga]
+      operationId: taigaTickets
+      summary: Den Stand vieler Tickets auf einmal lesen (Proxy)
+      description: >
+        Bulk-Lesen fuer die Abweichungs-Marken im Diagramm (D91-Nachtrag 10):
+        Der Editor stellt EINE Anfrage mit allen Refs eines Dokuments, der
+        Proxy faechert sie in `by_ref`-Einzelabfragen auf - parallel mit
+        gedeckelter Nebenlaeufigkeit, denn Backend und Taiga-Instanz sitzen
+        nah beieinander, der Browser nicht. Die Kosten skalieren mit den
+        Refs im Plan, nie mit der Groesse des Taiga-Projekts (dort koennen
+        Tausende Tickets liegen - eine Projekt-Volliste waere die falsche
+        Bulk-Einheit). Das Praefix jeder Ref traegt den Typ
+        (`US-`/`T-`, SPEC par. 11). Eine Ref, die es im Projekt nicht
+        (mehr) gibt, fehlt still in der Antwort - die uebrigen kommen
+        trotzdem; jeder andere Fehler (401, Projekt unbekannt, Taiga weg)
+        gilt der ganzen Anfrage.
+      parameters:
+        - $ref: "#/components/parameters/TaigaToken"
+        - $ref: "#/components/parameters/TaigaSlug"
+        - name: refs
+          in: query
+          required: true
+          description: >
+            Kommagetrennte Werkbaum-Refs (`US-123,T-1234`), hoechstens 200 -
+            mehr referenziert kein Plan, und der Deckel haelt den Faecher
+            endlich. Ungueltige Eintraege sind ein 400, nicht still
+            uebersprungen.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 4000
+      responses:
+        "200":
+          description: >
+            Map Werkbaum-Ref (`US-123`) auf den Ticket-Stand. Fehlende
+            Schluessel heissen: dieses Ticket gibt es im Projekt nicht (mehr).
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: "#/components/schemas/TaigaTicketDetail"
+        "400":
+          description: Refs-Liste ungueltig oder zu lang
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: Token fehlt oder ist abgelaufen
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Das Projekt zum Slug gibt es nicht
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "502":
+          $ref: "#/components/responses/TaigaUnavailable"
+        "503":
+          $ref: "#/components/responses/TaigaNotConfigured"
+
   /taiga/userstories/{ref}/status:
     patch:
       tags: [Taiga]

@@ -155,6 +155,31 @@ class TaigaApiTest {
     }
 
     @Test
+    fun `die Bulk-Abfrage liefert eine Map unter den Werkbaum-Refs`() {
+        val result = client.get()
+            .uri("/api/v1/taiga/tickets?slug=mi-kunde&refs=US-123,T-1234")
+            .header("X-Taiga-Token", "tok-abc123")
+            .exchange()
+            .returnResult(String::class.java)
+        result.status.value() shouldBe 200
+        result.responseBody!! shouldContain "\"US-123\""
+        result.responseBody!! shouldContain "\"T-1234\""
+        result.responseBody!! shouldContain "\"status\":\"In progress\""
+        result.responseBody!! shouldContain "\"status\":\"Done\""
+    }
+
+    @Test
+    fun `eine ungueltige Ref in der Bulk-Liste ist ein 400, nicht still uebersprungen`() {
+        val result = client.get()
+            .uri("/api/v1/taiga/tickets?slug=mi-kunde&refs=US-123,kaputt")
+            .header("X-Taiga-Token", "tok-abc123")
+            .exchange()
+            .returnResult(String::class.java)
+        result.status.value() shouldBe 400
+        result.responseBody!! shouldContain "kaputt"
+    }
+
+    @Test
     fun `ein Status wird per Ref gesetzt und antwortet mit dem neuen Stand`() {
         val result = client.patch()
             .uri("/api/v1/taiga/userstories/123/status?slug=mi-kunde")

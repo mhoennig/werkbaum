@@ -113,6 +113,58 @@ export function statusListPath(ref, slug){
     '?slug=' + encodeURIComponent(slug);
 }
 
+/* Alle Ticket-Refs eines Baums, gruppiert nach ihrem geerbten Projekt-Slug
+   (D91-Nachtrag 10): die Menge, die die Bulk-Abfrage holt — die Refs im Plan
+   sind der Filter, nie die Projektgröße. Knoten ohne Slug fallen heraus
+   (ohne Projekt ist eine Ref nicht auflösbar — dieselbe stille Regel wie
+   beim Öffnen, D91-Nachtrag 5). Map slug -> [{ref, node}]; dieselbe Ref an
+   mehreren Knoten steht mehrfach darin (markiert wird je Knoten),
+   dedupliziert wird erst im Anfrage-Pfad. */
+export function collectTicketRefs(roots, slugMap){
+  const out = new Map();
+  (function w(ns){
+    for(const n of ns){
+      const ref = ticketRefOf(n);
+      const slug = slugMap.get(n);
+      if(ref && slug){
+        if(!out.has(slug)) out.set(slug, []);
+        out.get(slug).push({ref, node: n});
+      }
+      w(n.children || []);
+    }
+  })(roots);
+  return out;
+}
+
+/* Der Bulk-Pfad am Proxy (eine Anfrage je Projekt): Refs dedupliziert und
+   bei 200 gedeckelt — der benannte Server-Deckel; mehr referenziert kein
+   Plan, und die ersten 200 markiert zu bekommen ist besser als wegen eines
+   400 gar keine. */
+export function bulkPath(slug, refs){
+  const uniq = [...new Set(refs)].slice(0, 200);
+  if(!uniq.length || !slug) return null;
+  return '/tickets?slug=' + encodeURIComponent(slug) + '&refs=' + uniq.join(',');
+}
+
+/* Steht die Ref sichtbar im LABEL des Knotens? Nein heißt: Sie ist (nur)
+   seine Knoten-ID (§1, erstes `#`-Token) — die Abweichungs-Marke braucht
+   dann ein Badge hinter dem Label als sichtbaren Träger (D91-Nachtrag 10).
+   Ein D60-Knoten (die ID vertritt das Label) zählt als sichtbar. */
+export function refVisibleInLabel(n, ref){
+  return new RegExp('(^|\\s)#' + ref + '(?=\\s|$)').test(n.label);
+}
+
+/* Weicht der Ticket-Status von der Statusbox des Knotens ab? (Die
+   Abweichungs-Marke im Diagramm, D91-Nachtrag 10.) Verglichen wird nur, was
+   abbildbar ist — ein unbekannter Spaltenname sagt nichts über den Plan
+   (dieselbe Regel wie im Knoten-Fenster). Ein Knoten OHNE Statusbox weicht
+   von jedem abgebildeten Ticket-Status ab — auch das zeigt das Fenster so. */
+export function ticketDiverges(node, statusName){
+  const ticket = mapTaigaStatus(statusName);
+  if(!ticket) return false;
+  return (node.status ? node.status.code : null) !== ticket.code;
+}
+
 /* Die Ticket-Referenz unter der Schreibmarke (Strg+Klick im Text,
    D91-Nachtrag 5): ein FREISTEHENDES `#US-123`/`#T-1234`-Token im Baumteil.
    Dieselben Ausschlüsse wie beim Abhängigkeits-Sprung (D67): nicht im

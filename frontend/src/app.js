@@ -1,7 +1,7 @@
 import './style.css';
 import { parse, setFoldMark, setStatusBox, expandShortIds, shortIdClosed } from './parser.js';
 import { computeCheapPlan, overloadedAssignee, assigneeLoads, freshProdSet, initialCollapsed, nodeKeys, effectiveStatus, presetFoldSet, personFoldSet, allTags, lineTargets, taigaSlugs } from './model.js';
-import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt, ticketApiPath, mapTaigaStatus, taigaStatusName, pickStatus, statusApiPath, statusListPath, storyAncestor } from './taiga.js';
+import { ticketRefOf, taskCandidates, appendToken, refToken, slugToken, ticketUrl, ticketRefAt, ticketApiPath, mapTaigaStatus, taigaStatusName, pickStatus, statusApiPath, statusListPath, storyAncestor, collectTicketRefs, bulkPath, ticketDiverges, refVisibleInLabel } from './taiga.js';
 import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning, warningText } from './warnings.js';
 import * as live from './live.js';
@@ -322,7 +322,8 @@ function render(){
                                      freshSet, collapsedSet,
                                      effStatus: effectiveStatus(roots),
                                      overloadTag: overload ? overload.tag : null,
-                                     lensTag: lens ? lens.tag : null});
+                                     lensTag: lens ? lens.tag : null,
+                                     tdiffRefs: ticketDiffBadgeMap(parsed.roots)});
     out.innerHTML = r.html;
     warnings = warnings.concat(r.warnings);
     /* Personen-Leiste (D87): Belastung je Person aus der offenen Pfad-Arbeit
@@ -365,6 +366,12 @@ function render(){
   updateFreshBtn();   /* Zähler folgt der gerade gerenderten Menge (D28) */
   updateLeanBtn();    /* Stationen des Pfads haben sich geändert (D47) */
   updateFoldBtn();    /* Icon + Tooltip = nächster Schritt des Durchschalters (D75) */
+  /* Abweichungs-Marken (D91-Nachtrag 10): aus dem Cache — kostenlos; die
+     Bulk-Abfrage selbst läuft je Slug nur einmal je Sitzung. Auf den
+     UNGEFILTERTEN roots, denn die Slug-Vererbung läuft über den ganzen
+     Baum; was nicht im DOM steht, überspringt das Markieren selbst. */
+  markTicketDiffs(parsed.roots);
+  scheduleTaigaBulk(parsed.roots);
 }
 
 /* ---------- Personen-Leiste (SPEC §9, D87) ----------
@@ -892,7 +899,7 @@ function diagramToSvg(){
     const deco = cs.textDecorationLine.includes('line-through') ? ' text-decoration="line-through"' : '';
     /* Seit Knoten umbrechen (D64), belegt ein Label mehrere Zeilenboxen — ein
        SVG-<text> bricht nicht von selbst; je gemessene Zeile ein Element. */
-    for(const ln of labelLines(node, '.size,.tags,.ext,.risk,.ownst,.desc-mark' + stripFold)){
+    for(const ln of labelLines(node, '.size,.tags,.ext,.risk,.ownst,.desc-mark,.tref-badge' + stripFold)){
       const cx = (ln.left + ln.right) / 2 + ox, cy = (ln.top + ln.bottom) / 2 + oy;
       parts.push(`<text x="${cx.toFixed(1)}" y="${(cy+5).toFixed(1)}" text-anchor="middle" fill="${cs.color}" font-size="14" font-weight="${cs.fontWeight}"${deco}>${esc(ln.text)}</text>`);
     }
@@ -1742,6 +1749,10 @@ function storeTaigaSession(s){
     if(s) localStorage.setItem(LS_TAIGA, JSON.stringify(s));
     else localStorage.removeItem(LS_TAIGA);
   }catch(_){}
+  /* Frisch angemeldet: die Abweichungs-Marken holen (D91-Nachtrag 10) —
+     sonst warteten sie auf den naechsten Tastendruck. Deckt jeden
+     Login-Weg ab, weil alle hier durchlaufen. */
+  if(s) scheduleTaigaBulk(parse(src.value).roots);
 }
 
 /* Welches Backend, und kann es Taiga? Dieselbe Basis-Herleitung wie beim
@@ -1767,6 +1778,9 @@ async function refreshTaiga(){
   }
   const info = await taigaProbeCache.get(basis);
   if(taigaBase === basis){ taigaOn = info.on; taigaWeb = info.web; }
+  /* Die Antwort kommt NACH dem ersten Neubau — die Bulk-Abfrage (D91-N10)
+     anstoßen, sonst wartete sie auf den nächsten Tastendruck. */
+  if(taigaOn) scheduleTaigaBulk(parse(src.value).roots);
 }
 
 function taigaFetch(path, options, token){
@@ -2020,6 +2034,7 @@ async function pushStatus(key, slug, ref, name, version){
     taigaTickets.set(key, {kind: 'err', msg: taigaErrText(err)});
   }
   repaintTicket(key);
+  markTicketDiffs(parse(src.value).roots);   /* die Marke folgt dem geschriebenen Stand */
 }
 
 /* Die Spalten je Projekt und Typ — einmal je Sitzung, wie der Ticket-Stand
@@ -2061,6 +2076,7 @@ async function loadTicket(key, slug, ref, interactive){
     taigaTickets.set(key, {kind: 'err', msg: taigaErrText(err)});
   }
   repaintTicket(key);
+  markTicketDiffs(parse(src.value).roots);   /* die Marke folgt dem frischen Stand */
 }
 
 /* Gemalt wird nur, wenn genau dieses Ticket noch im offenen Fenster steht —
@@ -2070,6 +2086,84 @@ function repaintTicket(key){
   if(!tipTicket || tipTicket.key !== key || !tipTicket.box.isConnected) return;
   paintTicket(tipTicket.box, key, tipTicket.slug, tipTicket.ref, tipTicket.line);
   if(tipNode) placeNodeTip(tipNode);
+}
+
+/* ---------- Abweichungs-Marken im Diagramm (D91-Nachtrag 10) ----------
+   Mit Anmeldung holt EINE Bulk-Anfrage je Projekt und Sitzung den Stand
+   aller referenzierten Tickets; eine Ref, deren Ticket-Status nicht zur
+   Statusbox des Knotens passt, färbt sich warnfarben (`tref-diff`) — die
+   Einzelheiten samt der zwei Knöpfe stehen wie gehabt im Knoten-Fenster.
+   Der Fächer läuft im Proxy: Die Kosten skalieren mit den Refs im Plan,
+   nie mit der Projektgröße. Ohne Anmeldung wird NICHTS geholt (die
+   D91-Nachtrag-6-Linie), und ein Hintergrund-Fehler bleibt still — kein
+   Dialog, keine Warnung; das Markieren aus dem Cache ist dagegen
+   kostenlos und läuft bei jedem Neubau mit. */
+const taigaBulkDone = new Set();   /* Slugs, die diese Sitzung schon geholt sind */
+
+function scheduleTaigaBulk(roots){
+  if(!taigaOn) return;
+  const session = taigaSession();
+  if(!session || !session.token) return;
+  for(const [slug, eintraege] of collectTicketRefs(roots, taigaSlugs(roots))){
+    if(taigaBulkDone.has(slug)) continue;
+    taigaBulkDone.add(slug);
+    const pfad = bulkPath(slug, eintraege.map(e => e.ref));
+    if(!pfad) continue;
+    taigaFetch(pfad, null, session.token).then(map => {
+      for(const [ref, data] of Object.entries(map || {})){
+        /* Ein schon einzeln geholtes Ticket bleibt stehen — es ist nie
+           älter als der Bulk (der läuft einmal, ganz am Anfang). */
+        const key = slug + '/' + ref;
+        if(!taigaTickets.has(key)) taigaTickets.set(key, {kind: 'ok', data});
+      }
+      /* Badges an unsichtbaren Refs brauchen den Neubau (Renderer, oben);
+         ein offenes Knoten-Fenster würde der aber schließen — dann nur die
+         Klassen-Marken, das Badge kommt mit dem nächsten Neubau. */
+      if(tipNode) markTicketDiffs(parse(src.value).roots);
+      else render();
+    }).catch(err => {
+      if(err && err.status === 401) storeTaigaSession(null);
+    });
+  }
+}
+
+/* Welche Knoten brauchen das Abweichungs-BADGE? Nur die, deren Ref nicht
+   im Label steht (sie ist die Knoten-ID, §1 — erstes `#`-Token) — sichtbare
+   Refs färben sich selbst (markTicketDiffs). Entschieden aus dem Cache zum
+   Zeitpunkt des Neubaus; kommt der Bulk später an, rendert sein Callback. */
+function ticketDiffBadgeMap(roots){
+  const map = new Map();
+  if(!taigaOn) return map;
+  for(const [slug, eintraege] of collectTicketRefs(roots, taigaSlugs(roots))){
+    for(const e of eintraege){
+      const st = taigaTickets.get(slug + '/' + e.ref);
+      if(st && st.kind === 'ok' && ticketDiverges(e.node, st.data.status)
+         && !refVisibleInLabel(e.node, e.ref)){
+        map.set(e.node.line, e.ref);
+      }
+    }
+  }
+  return map;
+}
+
+/* Die Marken aus dem Cache an die `tref`-Spannen legen — reine Anzeige, je
+   Neubau neu (das DOM ist frisch). Eingeklappte Knoten stehen nicht im DOM
+   und bleiben unmarkiert; ihr Ticket-Stand liegt trotzdem im Cache. */
+function markTicketDiffs(roots){
+  /* Erst räumen, dann setzen — nach „nach Taiga schreiben" stimmen Ticket
+     und Box wieder überein, ohne dass der Baum neu gebaut wurde. */
+  for(const alt of out.querySelectorAll('.tref-diff')) alt.classList.remove('tref-diff');
+  for(const [slug, eintraege] of collectTicketRefs(roots, taigaSlugs(roots))){
+    for(const e of eintraege){
+      const st = taigaTickets.get(slug + '/' + e.ref);
+      if(!st || st.kind !== 'ok' || !ticketDiverges(e.node, st.data.status)) continue;
+      const el = out.querySelector('.node[data-line="' + e.node.line + '"]');
+      if(!el) continue;
+      for(const span of el.querySelectorAll('.tref')){
+        if(span.textContent === '#' + e.ref) span.classList.add('tref-diff');
+      }
+    }
+  }
 }
 
 /* Strg+Klick (macOS auch Cmd) auf einen Knoten mit Ticket-Referenz öffnet

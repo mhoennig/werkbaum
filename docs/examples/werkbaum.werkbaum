@@ -205,6 +205,9 @@
         - [^] #trk.resolve.read: Read title, link and status (S)
         - [/] #trk.resolve.map: Map the workflow onto the states (S)
       - [^] #trk.write: Write the status back (M) :#trk.resolve
+      - [x] #trk.bulk: Diverging tickets show up in the diagram (M) :#trk.resolve.read
+        - [x] #trk.bulk.proxy: One request fans out into by_ref queries server-side (S)
+        - [x] #trk.bulk.mark: A diverging ref turns amber on its node (S)
       - [^] #trk.create: Create tickets from nodes (XL)
         - [^] #trk.create.proxy: Backend proxy with named endpoints (M)
         - [^] #trk.create.login: Log in to Taiga, token stays in the browser (S) :#trk.create.proxy
@@ -1157,6 +1160,27 @@
   Translating the tracker's workflow onto the eight states of the notation.
   The default five are mapped, an unknown column name stays unmapped and is
   shown as plain text; making the mapping configurable is still open.
+
+#trk.bulk
+  With a Taiga login, one bulk request per project and session reads the
+  status of every referenced ticket, and a ref whose ticket no longer
+  matches the node's status box turns amber. Details and both sync actions
+  stay in the node window; the mark is session knowledge and stays out of
+  export and print.
+
+#trk.bulk.proxy
+  GET /taiga/tickets takes the plan's refs and fans them out into by_ref
+  queries next to the Taiga instance, in parallel with capped concurrency.
+  The cost scales with the refs in the plan, never with a project holding
+  thousands of tickets - the refs themselves are the pre-filter. A ref that
+  no longer exists is silently absent; the bulk also pre-fills the node
+  window's ticket cache.
+
+#trk.bulk.mark
+  A visible ref colours itself; where the ref is the node id and thus not
+  part of the title, the renderer appends it as a small badge behind the
+  label - the same construction as the description mark. An unmapped column
+  name marks nothing: it says nothing about the plan.
 
 #trk.write
   The other direction. Neither side wins by itself: a difference between the

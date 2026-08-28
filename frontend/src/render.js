@@ -290,6 +290,16 @@ function nodeHtml(n, extra, opts, fold){
                    Notation. Nicht im Export: Der Text selbst kann dort nicht
                    erscheinen, eine Marke ohne Ziel wäre Rauschen. */
                 (n.desc ? '<span class="desc-mark" aria-hidden="true">”</span>' : '') +
+                /* Abweichungs-Badge (D91-Nachtrag 10): Wo die Ref die
+                   KNOTEN-ID ist, steht sie nicht im Label — die Marke
+                   braucht dann einen sichtbaren Träger. Welche Zeilen eines
+                   brauchen, entscheidet app.js aus dem Ticket-Cache; hier
+                   wird nur angehängt (Geometrie stimmt, weil es VOR dem
+                   Messen geschieht — die D40-Bauform der ”-Marke). Nicht im
+                   Export (Sitzungswissen): dort per excludeSel ausgenommen. */
+                (opts.tdiffRefs && opts.tdiffRefs.has(n.line)
+                  ? `<span class="tref tref-diff tref-badge" aria-hidden="true">#${esc(opts.tdiffRefs.get(n.line))}</span>`
+                  : '') +
                 (n.url ? '<span class="ext" aria-hidden="true">↗</span>' : '') +
                 riskMark +
                 sizeBadge +

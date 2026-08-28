@@ -8,6 +8,7 @@ import de.werkbaum.service.DocumentDeletedException
 import de.werkbaum.service.DocumentNotFoundException
 import de.werkbaum.service.InvalidPatchException
 import de.werkbaum.service.StalePatchSequenceException
+import de.werkbaum.integration.taiga.TaigaBadRequestException
 import de.werkbaum.integration.taiga.TaigaNotConfiguredException
 import de.werkbaum.integration.taiga.TaigaUnavailableException
 import de.werkbaum.integration.taiga.TaigaUpstreamException
@@ -88,6 +89,14 @@ class GlobalExceptionHandler {
             HttpStatus.SERVICE_UNAVAILABLE,
             ex.message ?: "Taiga nicht konfiguriert",
         ).apply { title = "Taiga nicht konfiguriert" }
+
+    /** Eine Anfrage, die schon der Proxy ablehnt (Refs-Liste der Bulk-Abfrage). */
+    @ExceptionHandler(TaigaBadRequestException::class)
+    fun handleTaigaBadRequest(ex: TaigaBadRequestException): ProblemDetail =
+        ProblemDetail.forStatusAndDetail(
+            HttpStatus.BAD_REQUEST,
+            ex.message ?: "Ungültige Anfrage",
+        ).apply { title = "Ungültige Anfrage" }
 
     @ExceptionHandler(TaigaUnavailableException::class)
     fun handleTaigaUnavailable(ex: TaigaUnavailableException): ProblemDetail =

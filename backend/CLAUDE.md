@@ -81,6 +81,15 @@ docs/SPEC.md §10 testen — niemals eine zweite, abweichende Grammatik pflegen.
   deshalb den `slug` (aus `&taiga.<slug>`, SPEC §1) und fragen erst
   `/projects/by_slug`, dann `by_ref` — der Slug kommt vom Client und wird
   **kodiert** angehängt, sonst hängte ein `&` darin einen weiteren Filter an.
+- **Bulk-Lesen (D91-Nachtrag 10):** `GET /taiga/tickets?slug=&refs=US-1,T-2`
+  fächert serverseitig in `by_ref`-Einzelabfragen auf — parallel (virtuelle
+  Threads) mit Semaphore-Deckel (6): Die Kosten skalieren mit den Refs im
+  Plan, nie mit der Projektgröße; eine Projekt-Volliste ist bei Tausenden
+  Tickets die falsche Bulk-Einheit. Eine 404-Ref fehlt still in der
+  Antwort-Map, jeder andere Fehler bricht die Anfrage ab; ungültige Refs
+  sind ein 400 (`TaigaBadRequestException`), Deckel 200, Dubletten werden
+  zusammengelegt. Messnotiz: Ob Taigas Listen-Endpunkte eine Ref-Liste als
+  Filter nehmen, ist offen — falls ja, tauscht nur das Innere des Proxys.
 - **Schreiben (D91-Nachtrag 8):** `PATCH /taiga/{userstories|tasks}/{ref}/status`
   nimmt die Status-**Id** (aus `GET /taiga/{userstory|task}-statuses?slug=`)
   und die zuletzt gelesene `version` — Taigas optimistische Sperre; ein

@@ -779,6 +779,15 @@
      bräche eine zu breit geratene Zeile sonst am Bindestrich mitten im Token
      (`#US-`/`123`). Die Spanne setzt render.js (markTicketRefs). */
   .node .tref{white-space:nowrap}
+  /* Abweichungs-Marke (D91-Nachtrag 10): Das Ticket hinter dieser Ref sagt
+     etwas anderes als die Statusbox — die Ref selbst wird warnfarben, kein
+     neues Element in den ohnehin dichten Knoten-Ecken. Nur Anzeige aus der
+     Sitzung: nicht im Grafikexport (der liest die Knotenfarbe, nicht die
+     Spanne) und nicht im Druck. */
+  .node .tref-diff{color:var(--warn);font-weight:600}
+  /* Das Badge für Refs, die (nur) die Knoten-ID sind — dort steht die Ref
+     sonst nirgends im Knoten. Klein und nachgestellt wie die ”-Marke. */
+  .node .tref-badge{margin-left:4px;font-size:.86em}
   /* Der Knopf trägt das Zeichen selbst statt eines Icons — in der Größe der
      SVGs daneben, damit die Kopfzeile ihre Höhe behält. */
   .copybtn.idsbtn span{
@@ -1635,6 +1644,10 @@
     *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
     /* Knoten nicht über den Seitenrand zerschneiden */
     #out li{break-inside:avoid}
+    /* Die Abweichungs-Marke hängt an der Sitzung (Anmeldung, Abrufzeit) —
+       gedruckt wird der Plan, nicht mein Abrufstand (D91-Nachtrag 10). */
+    .node .tref-diff{color:inherit!important;font-weight:inherit!important}
+    .node .tref-badge{display:none!important}
     /* Editierhilfe bzw. Zuruf, nicht drucken (D25, Fokusmarke SPEC §1).
        Bei der Cursor-Zeile gehören Erhebung und Puls mit dazu — sonst stünde ein
        Knoten im Druck grundlos vergrößert und schief zu seiner Anschlusslinie. */
