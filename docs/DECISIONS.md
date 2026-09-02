@@ -8974,6 +8974,38 @@ mit; Gegenprobe per Mutation gezogen — ohne die Zeile bleibt der Index ohne
 das Dokument, während Meta und Text dastehen. Sonst heilt sich der Index
 von selbst, weil `indexHint()` die Speicher-Schlüssel mitliest.
 
+**Nachtrag — die Auswahl im Sperr-Dialog ist ein Aufklapp-Feld
+(2026-09-02).** Gemeldet aus der produktiven Instanz: „Die Buttons mit den
+anderen Dokumenten überlappen sich und sind unleserlich." Die Ursache ist
+nicht die Zahl der Dokumente, sondern eine Flexbox-Falle: Die Liste war ein
+`flex`-Spaltenkasten mit gedeckelter Höhe (9rem), und ihre Knöpfe tragen
+serienmäßig `flex-shrink: 1` — statt zu scrollen, schrumpfte der Kasten sie
+unter ihre eigene Textzeile. Nachgemessen bei acht Dokumenten: 14,5 px
+Kastenhöhe gegen 32 px Inhalt, also 17,5 px Überstand je Knopf bei 4 px
+Abstand — die Beschriftungen liefen ineinander.
+
+Zwei Wege standen offen: `flex-shrink: 0` (dann scrollt die Liste wirklich)
+oder ein **Aufklapp-Feld**. Entschieden (Nutzer): das Aufklapp-Feld. Es ist
+**eine Zeile hoch, unabhängig von der Anzahl** — und der Dialog liegt in
+einem Kasten, der auf dem Telefon oder bei kleinem Editor-Panel ohnehin
+knapp ist; eine Liste, die mit der Dokumentenzahl wächst, bleibt dort auch
+scrollend unhandlich. Die Auswahl aus vielen gleichartigen Dingen ist
+zudem genau das, wofür ein Aufklapp-Feld die vertraute Geste ist.
+
+Gebaut mit dem vorhandenen Vokabular: die Kopfzeile ist jetzt ein echtes
+`<label for>`, das Feld trägt einen deaktivierten Platzhalter („—"), und
+die Auswahl schaltet sofort um — dieselbe Ein-Klick-Geste wie zuvor der
+Knopf. **Kein neuer i18n-Schlüssel**: Der Platzhalter ist ein Strich, den
+Kontext trägt das vorhandene `docLockOpenOther`.
+
+**Nachgemessen** im Browser bei acht Dokumenten: Feld 36 px hoch, kein
+Überstand (−2 px), Karte von 364 auf 256 px geschrumpft; die Auswahl
+schaltet um, der Dialog schließt, das Textfeld wird beschreibbar. **Benannt,
+nicht behoben:** Ist das Editor-Panel sehr flach (gemessen 172 px, weil das
+Diagramm die Höhe hat), ist die Karte immer noch höher als der getönte
+Grund, in dem sie steckt, und malt darüber hinaus. Lesbar bleibt sie; wen
+es stört, deckelt `.lockdlg` mit `max-height`.
+
 **Offen bleibt die Handarbeit** (RFC §10): installierte PWA neben einem Tab,
 Firefox, Safari, ein Browser ohne Locks-API. Werkzeuggrenzen wie gehabt —
 die Browser-Fläche war verborgen, getippt wurde per `value` + `input`

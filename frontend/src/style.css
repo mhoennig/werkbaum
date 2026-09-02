@@ -1734,14 +1734,16 @@
 }
 .lockdlg h2{margin:0 0 10px;font-size:1.05rem;color:var(--line)}
 .lockdlg p{margin:0 0 12px;line-height:1.45}
-.lockdlg-listhead{font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
-.lockdlg-list{display:flex;flex-direction:column;gap:4px;max-height:9rem;overflow-y:auto;margin:0 0 14px}
-.lockdlg-doc{
-  text-align:left;padding:6px 10px;font:inherit;cursor:pointer;
-  border:1px solid rgba(36,52,71,.3);border-radius:7px;background:none;color:var(--ink);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+.lockdlg-listhead{display:block;font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+/* Aufklapp-Feld statt Knopfliste: eine Zeile hoch, egal wie viele Dokumente
+   es gibt — die Liste schrumpfte ihre Knöpfe sonst unter deren eigene
+   Textzeile (D94-Nachtrag). */
+.lockdlg-pick{
+  display:block;width:100%;max-width:100%;box-sizing:border-box;margin:0 0 14px;
+  padding:6px 10px;font:inherit;cursor:pointer;
+  border:1px solid rgba(36,52,71,.3);border-radius:7px;background:var(--paper);color:var(--ink);
 }
-.lockdlg-doc:hover{border-color:var(--or)}
+.lockdlg-pick:hover{border-color:var(--or)}
 .lockdlg-btns{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
 .lockdlg-btns button{
   padding:7px 14px;border-radius:7px;font:inherit;cursor:pointer;

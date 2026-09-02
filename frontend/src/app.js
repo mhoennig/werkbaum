@@ -207,27 +207,35 @@ function enterLockDialog(id){
   ov.className = 'lockdlg-overlay';
   ov.innerHTML = '<div class="lockdlg" role="alertdialog" aria-modal="false">' +
     '<h2></h2><p></p>' +
-    '<div class="lockdlg-listhead"></div><div class="lockdlg-list" role="listbox"></div>' +
+    '<label class="lockdlg-listhead" for="lockdlgPick"></label>' +
+    '<select class="lockdlg-pick" id="lockdlgPick"></select>' +
     '<div class="lockdlg-btns">' +
     '<button type="button" class="lockdlg-view"></button>' +
     '<button type="button" class="lockdlg-edit"></button></div></div>';
   ov.querySelector('h2').textContent = t('docLockTitle', {name: d.name});
   ov.querySelector('p').textContent = t('docLockText');
   const kopf = ov.querySelector('.lockdlg-listhead');
-  const liste = ov.querySelector('.lockdlg-list');
+  const wahl = ov.querySelector('.lockdlg-pick');
   const andere = docs.filter(x => x.id !== id);
+  /* Ein Aufklapp-Feld statt einer Knopfliste: Die Liste wuchs mit der Zahl
+     der Dokumente, und in ihrem gedeckelten Kasten schrumpften die Knöpfe
+     (flex-shrink) unter ihre Textzeile — gemessen 14,5 px Kasten gegen
+     32 px Inhalt, also lief die Beschriftung in die nächste hinein. Ein
+     Aufklapp-Feld ist immer eine Zeile hoch, unabhängig von der Anzahl,
+     und die Auswahl ist die vertraute Geste dafür. */
   if(andere.length){
     kopf.textContent = t('docLockOpenOther');
+    const leer = document.createElement('option');
+    leer.value = ''; leer.textContent = '—'; leer.selected = true; leer.disabled = true;
+    wahl.appendChild(leer);
     for(const x of andere){
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'lockdlg-doc';
-      b.setAttribute('role', 'option');
-      b.textContent = x.name;
-      b.addEventListener('click', () => switchDoc(x.id));
-      liste.appendChild(b);
+      const o = document.createElement('option');
+      o.value = x.id;
+      o.textContent = x.name;
+      wahl.appendChild(o);
     }
-  } else { kopf.hidden = true; liste.hidden = true; }
+    wahl.addEventListener('change', () => { if(wahl.value) switchDoc(wahl.value); });
+  } else { kopf.hidden = true; wahl.hidden = true; }
   const ansehen = ov.querySelector('.lockdlg-view');
   const trotzdem = ov.querySelector('.lockdlg-edit');
   ansehen.textContent = t('docLockViewOnly');
