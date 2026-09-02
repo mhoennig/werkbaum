@@ -1701,9 +1701,10 @@
 .docpick[aria-checked="true"] .docitem-where{ color: inherit; opacity: .75; }
 
 /* ---------- Zwei-Fenster-Wächter (D89) ----------
-   Modaler Dialog, solange ein zweites lebendes Werkbaum-Fenster desselben
-   Browsers nachweisbar ist (Herzschlag); schließt sich von selbst, sobald
-   das andere Fenster zu ist. Über allem (Konflikt-Band liegt bei 1200). */
+   Der modale Dialog von D89 ist weg (RFC 002/D94): Er verbot ausgerechnet
+   den Fall, der funktioniert, und schützte nicht vor dem, wovor er warnte.
+   Übrig bleibt der Sperren-Dialog (unten) — die tabmodal-Klassen tragen
+   weiter die Taiga-Dialoge. */
 .tabmodal-overlay{
   position:fixed;inset:0;z-index:1300;
   background:rgba(36,52,71,.55);
@@ -1715,11 +1716,41 @@
 }
 .tabmodal h2{margin:0 0 10px;font-size:1.05rem;color:var(--line)}
 .tabmodal p{margin:0 0 14px;line-height:1.45}
-.tabmodal-force{
-  background:none;border:none;padding:0;cursor:pointer;
-  color:var(--muted);text-decoration:underline;font:inherit;font-size:.85em;
-}
 @media print{ .tabmodal-overlay{ display:none; } }
+
+/* ---------- Sperren-Dialog (RFC 002/D94, §6.5) ----------
+   Erscheint nur im Restfall — dasselbe nicht geteilte Dokument in beiden
+   Fenstern. Er liegt über dem Editor, nicht über allem: Diagramm und
+   Dokumenten-Menü bleiben bedienbar. */
+.src-wrap{position:relative}
+.lockdlg-overlay{
+  position:absolute;inset:0;z-index:70;
+  display:flex;align-items:center;justify-content:center;padding:16px;
+  background:rgba(36,52,71,.35);
+}
+.lockdlg{
+  background:var(--paper);border-radius:10px;max-width:420px;width:100%;
+  padding:18px 20px;box-shadow:0 12px 40px rgba(0,0,0,.35);
+}
+.lockdlg h2{margin:0 0 10px;font-size:1.05rem;color:var(--line)}
+.lockdlg p{margin:0 0 12px;line-height:1.45}
+.lockdlg-listhead{font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.lockdlg-list{display:flex;flex-direction:column;gap:4px;max-height:9rem;overflow-y:auto;margin:0 0 14px}
+.lockdlg-doc{
+  text-align:left;padding:6px 10px;font:inherit;cursor:pointer;
+  border:1px solid rgba(36,52,71,.3);border-radius:7px;background:none;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.lockdlg-doc:hover{border-color:var(--or)}
+.lockdlg-btns{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.lockdlg-btns button{
+  padding:7px 14px;border-radius:7px;font:inherit;cursor:pointer;
+  border:1px solid rgba(36,52,71,.3);background:none;color:var(--ink);
+}
+.lockdlg-edit{border-color:var(--warn)!important;color:var(--warn)!important}
+@media print{ .lockdlg-overlay{ display:none; } }
+/* „Nur ansehen" (§6.5 Ausweg 2): das Textfeld trägt seinen Zustand. */
+#src[readonly]{background:rgba(107,122,140,.08);color:var(--muted);cursor:default}
 
 /* ---------- Taiga-Anlege- und Anmeldedialog (D91) ----------
    Im tabmodal-Idiom (Overlay + Karte); nur die Innereien sind eigen. */

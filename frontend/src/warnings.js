@@ -52,10 +52,14 @@
                                       droht beim Neuladen; zeilenlos, steht
                                       zuoberst und verschwindet, sobald ein
                                       Schreiben wieder gelingt
-   - tabConflict   { }              — ein weiterer Tab schreibt in dieselbe
-                                      Dokument-Ablage (D84): der letzte Flush
-                                      gewinnt; zeilenlos, bleibt bis zum
-                                      Neuladen stehen
+    - tabConflict   { name, where }  — dasselbe nicht geteilte Dokument wird
+                                       in einem anderen Fenster bearbeitet
+                                       (RFC 002/D94, der Restfall): der letzte
+                                       Tastendruck gewinnt; zeilenlos, bleibt
+                                       stehen, solange das Dokument aktiv ist.
+                                       `where` ist ein i18n-Schlüssel für
+                                       „in der App" / „im Browser" — aus der
+                                       Sicht des eigenen Fensters gefolgert
    - liveUnsent    { min }          — Änderungen an einem Server-Dokument seit
                                       {min} Minuten nicht angekommen (D89):
                                       sie existieren nur in diesem Fenster;
@@ -117,7 +121,7 @@ function build(w, t, esc){
     case 'storeFailed':
       return t('storeFailedWarn');
     case 'tabConflict':
-      return t('tabConflictWarn');
+      return t('tabConflictWarn', {name: esc(w.name || ''), where: t(w.where || 'windowKindBrowser')});
     case 'liveUnsent':
       return t('liveUnsentWarn', {min: w.min});
     case 'liveEnded':

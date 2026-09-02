@@ -6,11 +6,17 @@ import { esc, renderTreeHtml, TIP_RULE } from './render.js';
 import { formatWarning, warningText } from './warnings.js';
 import * as live from './live.js';
 import { depFragment, collectIds, matchIds, depIdAt, idLine } from './autocomplete.js';
-import { LS_SNAPS, SNAP_EVERY, parseSnaps, addSnapshot, persistSnaps, snapLabel }
+import { SNAP_EVERY, addSnapshot, persistSnaps, snapLabel,
+         readAllSnaps, readSnapList }
   from './snapshots.js';
 import { FILE_ACCEPT, FILE_TYPES, saveFileName } from './localfile.js';
 import { LIVE_PARAM, SOURCE_PARAM, ETHERPAD_PARAM, docSearch, docKind } from './docurl.js';
-import { readDocs, storeDocs, storeDocText, isDocKey, LS_DOCS, LS_ACTIVE, LS_SRC } from './docstore.js';
+import { readDocs, writeDoc, writeIndexHint, removeDoc, expireTombstones, migrateV3,
+         storeDocText, readMeta, hasTombstone, isDocKey,
+         LS_ACTIVE, LS_SRC,
+         DOC_TEXT_PREFIX, DOC_META_PREFIX, DOC_GONE_PREFIX }
+  from './docstore.js';
+import { applyStorageEvent, lockDecision, lockName, createDirtySet } from './docsync.js';
 /* Neuigkeiten (D58): die git-Historie, zur BAUZEIT eingelesen (Vite-Plugin in
    vite.config.js). Zur Laufzeit gibt es kein git — und keinen Server, der
    nachliefern könnte (D11/D19). Leer, wo git nicht erreichbar war. */
@@ -89,79 +95,222 @@ let sourceWarning = null;
    Verlust fiel erst beim Neuladen auf. Persistent, bis ein Schreiben wieder
    gelingt; zeilenlos und zuoberst. */
 let storeWarning = null;
-/* Ein ANDERER Tab schreibt in dieselbe Dokument-Ablage (D84): Das
-   storage-Ereignis feuert nur in fremden Tabs desselben Ursprungs — genau
-   das richtige Signal. Kein Sync (der letzte Flush gewinnt weiterhin, wie
-   immer), aber kein STILLER Verlust mehr: Die Warnung bleibt stehen,
-   solange dieser Tab lebt — die Lage ändert sich ja nicht dadurch, dass
-   der andere Tab gerade nichts schreibt. */
+/* Ein ANDERES Fenster schreibt in die Dokument-Ablage (D84, nach RFC 002
+   §6.3/§6.6): Das storage-Ereignis feuert nur in fremden Fenstern desselben
+   Ursprungs — genau das richtige Signal. Die Warnung `tabConflict` erscheint
+   aber NUR noch im Restfall (dasselbe nicht-`live:`-Dokument in beiden
+   Fenstern — `foreignWrite` aus docsync.js); verschiedene Dokumente
+   kollidieren nicht mehr und bleiben still. Sie bleibt stehen, solange das
+   Dokument aktiv ist, und nennt es; die Lage ändert sich nicht dadurch, dass
+   der andere gerade nichts tippt. */
 let tabWarning = null;
+/* Ereignisse, die während des Starts ankommen (das andere Fenster tippt,
+   während dieses hochläuft): sammeln und nach dem Boot nachziehen — der
+   Handler ist damit registriert, bevor der erste Flush schreibt (§6.10). */
+const storageBacklog = [];
 window.addEventListener('storage', e => {
-  if(tabWarning || !e.key || !isDocKey(e.key)) return;
-  tabWarning = {type: 'tabConflict'};
-  render();
+  if(!e.key || !isDocKey(e.key)) return;
+  const ev = {key: e.key, oldValue: e.oldValue, newValue: e.newValue};
+  if(bootDone) applyForeignStorageEvent(ev);
+  else storageBacklog.push(ev);
 });
-/* Zwei lebende Fenster sind mehr als eine Fußnote (D89): Die zeilenlose
-   Warnung oben meldet nur, dass ein anderer Tab GESCHRIEBEN hat — ein
-   zweites offenes Fenster bekommt zusätzlich einen MODALEN Dialog, in beiden
-   Fenstern, bis das Problem behoben ist. Herzschlag über BroadcastChannel:
-   jedes Fenster meldet sich sekündlich; verstummt das andere (Abmeldung beim
-   Schließen, sonst 3 s Stille), schließt der Dialog sich von selbst — die
-   App läuft ohne weiteren Klick weiter. „Trotzdem fortfahren" ist die
-   Notluke und gilt nur, solange DIESES zweite Fenster lebt. */
 /* Wachhund-Warnung (D89): Ungesendete Live-Änderungen bzw. tote Sitzung.
    Gesetzt vom 5-s-Takt im Live-Abschnitt, gelesen von render(). */
 let liveWarning = null;
-const WIN_ID = Math.random().toString(36).slice(2);
-/* 75 s statt weniger Sekunden: Chrome drosselt die Timer verborgener Fenster
-   nach fünf Minuten auf einen Tick je MINUTE (dieselbe Umgebungsgrenze wie in
-   D79 gemessen) — ein kürzerer Timeout ließe den Dialog im sichtbaren Fenster
-   flackern, weil das verborgene nur noch minütlich schlägt. Das saubere
-   Schließen meldet sich ohnehin sofort ab (bye bei pagehide); der Timeout
-   fängt nur hart gestorbene Fenster. */
-const FOREIGN_DEAD_MS = 75000;
-let presenceChannel = null, tabModalEl = null;
-const foreignBeats = new Map();       /* fremde Fenster-Id -> letzter Herzschlag */
-const tabModalDismissed = new Set();  /* Notluke gilt je fremder Id, nicht je Sitzung:
-                                         ein NEUES zweites Fenster bekommt wieder den Dialog */
-try{ presenceChannel = new BroadcastChannel('werkbaum-presence'); }catch(_){}
-if(presenceChannel){
-  presenceChannel.onmessage = e => {
-    const m = e.data || {};
-    if(!m.id || m.id === WIN_ID) return;
-    if(m.type === 'hello') presenceChannel.postMessage({type: 'beat', id: WIN_ID});
-    if(m.type === 'hello' || m.type === 'beat') foreignBeats.set(m.id, Date.now());
-    if(m.type === 'bye'){ foreignBeats.delete(m.id); tabModalDismissed.delete(m.id); }
-    updateTabModal();
-  };
-  presenceChannel.postMessage({type: 'hello', id: WIN_ID});
-  setInterval(() => {
-    presenceChannel.postMessage({type: 'beat', id: WIN_ID});
-    for(const [id, wann] of foreignBeats)
-      if(Date.now() - wann > FOREIGN_DEAD_MS){ foreignBeats.delete(id); tabModalDismissed.delete(id); }
-    updateTabModal();
-  }, 1000);
-  addEventListener('pagehide', () => { try{ presenceChannel.postMessage({type: 'bye', id: WIN_ID}); }catch(_){} });
+/* ---------- Sperre je Dokument (RFC 002 §6.4/§6.5, D94) ----------
+   Der einzige Restfall — dasselbe nicht-`live:`-Dokument in beiden Fenstern
+   vorn — wird über die Web Locks API erkannt: atomar, sie fällt von selbst,
+   wenn das Fenster schließt oder abstürzt, und ein wartender Request weckt
+   das zweite Fenster, sobald der Halter loslässt. Der Präsenz-Kanal aus D89
+   (Herzschlag, Timeout, Notluke, modaler Dialog) ist damit ersatzlos weg.
+
+   Ohne Locks-API (file://, alte Browser) bleibt der storage-Rückfall: Ein
+   `foreignWrite` am eigenen aktiven Dokument ist der Beweis, dass ein
+   zweites Fenster darin schreibt — dann Warnung, ohne Dialog. */
+const hasLocks = typeof navigator !== 'undefined' && !!navigator.locks;
+let lockHeldId = null;        /* id, für die die Sperre gehalten wird */
+let lockTargetId = null;      /* id der letzten Anfrage (syncDocLock vergleicht) */
+let lockRelease = null;       /* löst die gehaltene Sperre (Callback-Promise) */
+let lockGen = 0;              /* Generation: ungültigt ausstehende Anfragen */
+let viewOnly = false;         /* Ausweg 2: „hier nur ansehen" (§6.5) */
+let docGoneElsewhere = false; /* aktives Dokument anderswo gelöscht (§6.5) */
+let lockDialogEl = null;      /* Dialog über dem Editor (§6.5) */
+function clearTabConflict(){
+  if(!tabWarning) return;
+  tabWarning = null;
+  render();
 }
-function updateTabModal(){
-  const offen = [...foreignBeats.keys()].some(id => !tabModalDismissed.has(id));
-  if(offen && !tabModalEl){
-    const ov = document.createElement('div');
-    ov.className = 'tabmodal-overlay';
-    ov.innerHTML = '<div class="tabmodal" role="alertdialog" aria-modal="true">' +
-      '<h2></h2><p></p><button type="button" class="tabmodal-force"></button></div>';
-    ov.querySelector('h2').textContent = t('tabModalTitle');
-    ov.querySelector('p').textContent = t('tabModalText');
-    const force = ov.querySelector('.tabmodal-force');
-    force.textContent = t('tabModalForce');
-    force.addEventListener('click', () => {
-      for(const id of foreignBeats.keys()) tabModalDismissed.add(id);
-      updateTabModal();
-    });
-    document.body.appendChild(ov);
-    tabModalEl = ov;
+function releaseDocLock(){
+  if(lockRelease){
+    const r = lockRelease;
+    lockRelease = null; lockHeldId = null;
+    r();
   }
-  if(!offen && tabModalEl){ tabModalEl.remove(); tabModalEl = null; }
+}
+/* Die Sperre folgt dem aktiven Dokument: Alte fallen, neue werden angefordert
+   (ifAvailable). Sie wird gehalten, solange das Dokument aktiv ist — die
+   Callback-Promise bleibt offen; der nächste Wechsel löst sie. */
+function syncDocLock(){
+  const d = activeDoc();
+  const id = d ? d.id : null;
+  if(id === lockTargetId) return;         /* schon gehalten oder angefragt */
+  acquireDocLock(id);
+}
+function acquireDocLock(id){
+  releaseDocLock();
+  lockTargetId = id;
+  docGoneElsewhere = false;
+  viewOnly = false;
+  src.readOnly = false;                   /* im Zweifel beschreibbar; der Dialog setzt es zurück */
+  closeLockDialog();
+  clearTabConflict();
+  /* live: nie, ohne Locks-API nie — dort warnt der storage-Rückfall (§6.4). */
+  if(!id || !lockDecision(id) || !hasLocks) return;
+  const gen = ++lockGen;
+  navigator.locks.request(lockName(id), {ifAvailable: true}, lock => {
+    if(gen !== lockGen) return;           /* inzwischen gewechselt */
+    if(!lock){ enterLockDialog(id); return; }   /* ein anderes Fenster hält es */
+    lockHeldId = id;
+    return new Promise(res => { lockRelease = res; lockArrived(id); });
+  }).catch(() => {});
+}
+/* Die Sperre ist da — vom ersten Anfordern oder weil das andere Fenster
+   losgelassen hat: beschreibbar, Label normal, Warnung räumt sich (§6.6). */
+function lockArrived(id){
+  if(id !== activeId) return;             /* inzwischen weggewechselt */
+  lockHeldId = id;
+  viewOnly = false;
+  src.readOnly = false;
+  closeLockDialog();
+  clearTabConflict();
+  updateDocName();
+}
+function waitInBackground(id){
+  if(!hasLocks || id == null) return;
+  const gen = lockGen;                    /* ungültig, sobald das Dokument wechselt */
+  navigator.locks.request(lockName(id), lock => {
+    if(gen !== lockGen || !lock) return;
+    lockHeldId = id;
+    return new Promise(res => { lockRelease = res; lockArrived(id); });
+  }).catch(() => {});
+}
+/* Die Sperre wurde NICHT bekommen — der Restfall. Dialog über dem Editor,
+   drei Auswege (§6.5); das Textfeld ist bis zur Wahl schreibgeschützt,
+   Diagramm und Menü bleiben bedienbar. */
+function enterLockDialog(id){
+  if(id !== activeId) return;
+  src.readOnly = true;
+  closeLockDialog();
+  const d = docs.find(x => x.id === id);
+  if(!d) return;                          /* inzwischen weg — nichts tun */
+  const ov = document.createElement('div');
+  ov.className = 'lockdlg-overlay';
+  ov.innerHTML = '<div class="lockdlg" role="alertdialog" aria-modal="false">' +
+    '<h2></h2><p></p>' +
+    '<div class="lockdlg-listhead"></div><div class="lockdlg-list" role="listbox"></div>' +
+    '<div class="lockdlg-btns">' +
+    '<button type="button" class="lockdlg-view"></button>' +
+    '<button type="button" class="lockdlg-edit"></button></div></div>';
+  ov.querySelector('h2').textContent = t('docLockTitle', {name: d.name});
+  ov.querySelector('p').textContent = t('docLockText');
+  const kopf = ov.querySelector('.lockdlg-listhead');
+  const liste = ov.querySelector('.lockdlg-list');
+  const andere = docs.filter(x => x.id !== id);
+  if(andere.length){
+    kopf.textContent = t('docLockOpenOther');
+    for(const x of andere){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'lockdlg-doc';
+      b.setAttribute('role', 'option');
+      b.textContent = x.name;
+      b.addEventListener('click', () => switchDoc(x.id));
+      liste.appendChild(b);
+    }
+  } else { kopf.hidden = true; liste.hidden = true; }
+  const ansehen = ov.querySelector('.lockdlg-view');
+  const trotzdem = ov.querySelector('.lockdlg-edit');
+  ansehen.textContent = t('docLockViewOnly');
+  trotzdem.textContent = t('docLockEditAnyway');
+  ansehen.addEventListener('click', () => {
+    closeLockDialog();
+    viewOnly = true;
+    src.readOnly = true;
+    updateDocName();
+    waitInBackground(lockTargetId);   /* wird von selbst beschreibbar (§6.5) */
+  });
+  trotzdem.addEventListener('click', () => {
+    closeLockDialog();
+    src.readOnly = false;
+    viewOnly = false;
+    lockGen++;                        /* ausstehende Warteanfragen ungültig (§6.5) */
+    const jetzt = activeDoc();
+    tabWarning = {type: 'tabConflict', name: jetzt ? jetzt.name : '',
+                  where: ownWindowKind()};
+    updateDocName(); render();
+  });
+  srcWrap.appendChild(ov);
+  lockDialogEl = ov;
+}
+function closeLockDialog(){
+  if(!lockDialogEl) return;
+  lockDialogEl.remove();
+  lockDialogEl = null;
+}
+/* „In der App" oder „im Browser" — aus der EIGENEN Sicht (§6.6): Das eigene
+   Fenster kennt seine Art, das andere Fenster wird daraus gefolgert. */
+function ownWindowKind(){
+  try{
+    return matchMedia('(display-mode: standalone)').matches
+      ? 'windowKindBrowser' : 'windowKindApp';
+  }catch(_){ return 'windowKindBrowser'; }
+}
+/* Der storage-Handler: docsync entscheidet (headless), hier wird angewendet. */
+function applyForeignStorageEvent(ev){
+  const erg = applyStorageEvent(docs, activeId, ev);
+  if(erg.docs !== docs){
+    docs = erg.docs;
+    if(!docMenu.hidden) renderDocMenu();
+  }
+  const d = erg.id != null ? docs.find(x => x.id === erg.id) : null;
+  switch(erg.action){
+    case 'created':
+      /* Text lazy aus dem Speicher (§6.3) — der Aufrufer reicht nichts herein. */
+      if(d){ try{ const tx = localStorage.getItem(DOC_TEXT_PREFIX + erg.id);
+                   if(tx != null) d.text = String(tx); }catch(_){} }
+      /* Handle der id lazy nachladen (§6.9): „dieselbe Datei landet im selben
+         Dokument" (D73) soll auch über Fenstergrenzen gelten. */
+      if(hasFsAccess) idbLoadHandle(erg.id);
+      break;
+    case 'renamed':
+      updateDocName();
+      break;
+    case 'deleted':
+      docGoneElsewhere = true;   /* behalten, warnfarben, bis getippt wird (§6.5) */
+      /* Mit dem Dokument geht auch hier das gemerkte Handle (§6.9) — das
+         löschende Fenster hat den IDB-Eintrag bereits entfernt. */
+      fileHandles.delete(erg.id);
+      updateDocName();
+      render();
+      break;
+    case 'foreignWrite':
+      if(!tabWarning){
+        const ad = activeDoc();
+        tabWarning = {type: 'tabConflict', name: ad ? ad.name : '', where: ownWindowKind()};
+        render();
+      }
+      break;
+    case 'snaps':
+      /* Stände-Cache der id verwerfen — frisch beim nächsten Öffnen (§6.3). */
+      try{
+        const l = readSnapList(localStorage, erg.id);
+        if(l.length) snaps[erg.id] = l; else delete snaps[erg.id];
+      }catch(_){}
+      break;
+  }
+  if(erg.docs !== docs || erg.action === 'renamed' || erg.action === 'created'){
+    if(!docMenu.hidden) renderDocMenu();
+  }
 }
 function noteStore(ok){
   const neu = ok ? null : {type: 'storeFailed'};
@@ -3393,12 +3542,18 @@ const I18N = {
     sourceLoadWarn:"„{url}“ konnte nicht geladen werden ({error}). Die Datei muss per http(s) erreichbar sein und CORS erlauben (Access-Control-Allow-Origin).",
     padGoneWarn:"Dieser Link zeigt auf ein Etherpad-Pad. Die Etherpad-Anbindung gibt es nicht mehr — gemeinsames Arbeiten läuft jetzt über ein Werkbaum-Backend (?live=…). Der Text des Pads lässt sich dort einmal einfügen und dann zu zweit bearbeiten.",
     storeFailedWarn:"Speichern im Browser fehlgeschlagen — vermutlich ist der Speicher voll. Änderungen können beim Neuladen verloren gehen; Platz schaffen: nicht mehr gebrauchte Dokumente oder frühere Stände löschen.",
-    tabConflictWarn:"Werkbaum ist in einem weiteren Browser-Tab geöffnet — beide schreiben in dieselbe Dokumentenliste, und der zuletzt speichernde gewinnt. Am besten nur in einem Tab arbeiten.",
+    tabConflictWarn:"„{name}“ wird in einem anderen Fenster ({where}) bearbeitet — der letzte Tastendruck gewinnt.",
     liveUnsentWarn:"Deine Änderungen sind seit {min} Minuten NICHT auf dem Server angekommen — sie existieren nur in diesem Fenster. Vor dem Schließen sichern (Strg+S oder Kamera-Knopf).",
     liveEndedWarn:"Die Live-Verbindung zu diesem Server-Dokument ist getrennt — Werkbaum verbindet automatisch neu. Bis dahin bleiben Änderungen nur in diesem Fenster.",
-    tabModalTitle:"Werkbaum ist mehrfach geöffnet",
-    tabModalText:"Diese App ist gerade in einem weiteren Fenster oder Tab geöffnet. Beide schreiben in dieselbe Dokument-Ablage — der zuletzt speichernde überschreibt den anderen. Bitte das andere Fenster schließen; dieser Hinweis verschwindet dann von selbst.",
-    tabModalForce:"Trotzdem fortfahren (nicht empfohlen)",
+    docLockTitle:"„{name}“ ist in einem anderen Fenster geöffnet",
+    docLockText:"Ein anderes Fenster bearbeitet dieses Dokument gerade — der letzte Tastendruck gewinnt. Was willst du tun?",
+    docLockOpenOther:"Anderes Dokument öffnen:",
+    docLockViewOnly:"Hier nur ansehen",
+    docLockEditAnyway:"Trotzdem hier bearbeiten",
+    docKindViewOnly:"nur ansehen — in einem anderen Fenster geöffnet",
+    docKindGoneElsewhere:"anderswo gelöscht",
+    windowKindApp:"in der App",
+    windowKindBrowser:"im Browser",
     snapLocalHead:"Lokale Sicherungen (dieses Fenster)",
     kindLiveDead:"getrennt — verbindet neu …",
     kindLiveUnsent:"ungesendete Änderungen!",
@@ -3529,12 +3684,18 @@ const I18N = {
     sourceLoadWarn:"Could not load “{url}” ({error}). The file must be reachable via http(s) and allow CORS (Access-Control-Allow-Origin).",
     padGoneWarn:"This link points at an Etherpad pad. The Etherpad connection is gone — collaboration now runs through a Werkbaum backend (?live=…). Paste the pad’s text there once, then edit it together.",
     storeFailedWarn:"Saving in the browser failed — its storage is probably full. Changes may be lost on reload; free space by deleting unused documents or earlier states.",
-    tabConflictWarn:"Werkbaum is open in another browser tab — both write to the same document list, and the last one to save wins. Best work in a single tab.",
+    tabConflictWarn:"“{name}” is being edited in another window ({where}) — the last keystroke wins.",
     liveUnsentWarn:"Your changes have NOT reached the server for {min} minutes — they exist only in this window. Save before closing (Ctrl+S or the camera button).",
     liveEndedWarn:"The live connection to this server document is down — Werkbaum reconnects automatically. Until then, changes stay in this window only.",
-    tabModalTitle:"Werkbaum is open more than once",
-    tabModalText:"This app is currently open in another window or tab. Both write to the same document storage — whichever saves last overwrites the other. Please close the other window; this notice then disappears by itself.",
-    tabModalForce:"Continue anyway (not recommended)",
+    docLockTitle:"“{name}” is open in another window",
+    docLockText:"Another window is editing this document right now — the last keystroke wins. What would you like to do?",
+    docLockOpenOther:"Open another document:",
+    docLockViewOnly:"View only here",
+    docLockEditAnyway:"Edit here anyway",
+    docKindViewOnly:"view only — open in another window",
+    docKindGoneElsewhere:"deleted elsewhere",
+    windowKindApp:"in the installed app",
+    windowKindBrowser:"in the browser",
     snapLocalHead:"Local backups (this window)",
     kindLiveDead:"disconnected — reconnecting …",
     kindLiveUnsent:"unsent changes!",
@@ -3665,12 +3826,18 @@ const I18N = {
     sourceLoadWarn:"No se pudo cargar «{url}» ({error}). El archivo debe ser accesible por http(s) y permitir CORS (Access-Control-Allow-Origin).",
     padGoneWarn:"Este enlace apunta a un pad de Etherpad. La conexión con Etherpad ya no existe: ahora se colabora a través de un backend de Werkbaum (?live=…). Pega allí el texto del pad una vez y editadlo juntos.",
     storeFailedWarn:"No se pudo guardar en el navegador: su almacenamiento probablemente está lleno. Los cambios pueden perderse al recargar; libera espacio borrando documentos sin uso o estados anteriores.",
-    tabConflictWarn:"Werkbaum está abierto en otra pestaña — ambas escriben en la misma lista de documentos y gana la última en guardar. Mejor trabaja en una sola pestaña.",
+    tabConflictWarn:"«{name}» se está editando en otra ventana ({where}) — gana la última tecla.",
     liveUnsentWarn:"Tus cambios NO han llegado al servidor desde hace {min} minutos — solo existen en esta ventana. Guarda antes de cerrar (Ctrl+S o el botón de cámara).",
     liveEndedWarn:"La conexión en vivo con este documento del servidor se ha perdido — Werkbaum se reconecta automáticamente. Hasta entonces, los cambios quedan solo en esta ventana.",
-    tabModalTitle:"Werkbaum está abierto más de una vez",
-    tabModalText:"Esta aplicación está abierta en otra ventana o pestaña. Ambas escriben en el mismo almacén de documentos — la última en guardar sobrescribe a la otra. Cierra la otra ventana; este aviso desaparecerá solo.",
-    tabModalForce:"Continuar de todos modos (no recomendado)",
+    docLockTitle:"«{name}» está abierto en otra ventana",
+    docLockText:"Otra ventana está editando este documento ahora mismo — la última tecla gana. ¿Qué quieres hacer?",
+    docLockOpenOther:"Abrir otro documento:",
+    docLockViewOnly:"Solo ver aquí",
+    docLockEditAnyway:"Editar aquí de todos modos",
+    docKindViewOnly:"solo lectura — abierto en otra ventana",
+    docKindGoneElsewhere:"eliminado en otra ventana",
+    windowKindApp:"en la app instalada",
+    windowKindBrowser:"en el navegador",
     snapLocalHead:"Copias locales (esta ventana)",
     kindLiveDead:"desconectado — reconectando …",
     kindLiveUnsent:"¡cambios sin enviar!",
@@ -3801,12 +3968,18 @@ const I18N = {
     sourceLoadWarn:"Impossible de charger « {url} » ({error}). Le fichier doit être accessible en http(s) et autoriser CORS (Access-Control-Allow-Origin).",
     padGoneWarn:"Ce lien pointe vers un pad Etherpad. La connexion Etherpad n’existe plus — la collaboration passe désormais par un backend Werkbaum (?live=…). Collez-y une fois le texte du pad, puis modifiez-le à plusieurs.",
     storeFailedWarn:"L'enregistrement dans le navigateur a échoué — son stockage est probablement plein. Les modifications peuvent être perdues au rechargement ; libérez de l'espace en supprimant des documents inutilisés ou des états antérieurs.",
-    tabConflictWarn:"Werkbaum est ouvert dans un autre onglet — les deux écrivent dans la même liste de documents et le dernier à enregistrer l'emporte. Mieux vaut travailler dans un seul onglet.",
+    tabConflictWarn:"« {name} » est modifié dans une autre fenêtre ({where}) — le dernier à taper gagne.",
     liveUnsentWarn:"Tes modifications ne sont PAS arrivées au serveur depuis {min} minutes — elles n'existent que dans cette fenêtre. Enregistre avant de fermer (Ctrl+S ou le bouton appareil photo).",
     liveEndedWarn:"La connexion en direct à ce document serveur est interrompue — Werkbaum se reconnecte automatiquement. D'ici là, les modifications restent dans cette fenêtre.",
-    tabModalTitle:"Werkbaum est ouvert plusieurs fois",
-    tabModalText:"Cette application est ouverte dans une autre fenêtre ou un autre onglet. Les deux écrivent dans le même stockage de documents — le dernier à enregistrer écrase l'autre. Ferme l'autre fenêtre ; cet avis disparaîtra de lui-même.",
-    tabModalForce:"Continuer quand même (déconseillé)",
+    docLockTitle:"« {name} » est ouvert dans une autre fenêtre",
+    docLockText:"Une autre fenêtre modifie ce document en ce moment — le dernier à taper gagne. Que veux-tu faire ?",
+    docLockOpenOther:"Ouvrir un autre document :",
+    docLockViewOnly:"Consulter seulement ici",
+    docLockEditAnyway:"Modifier quand même ici",
+    docKindViewOnly:"consultation — ouvert dans une autre fenêtre",
+    docKindGoneElsewhere:"supprimé ailleurs",
+    windowKindApp:"dans l'app installée",
+    windowKindBrowser:"dans le navigateur",
     snapLocalHead:"Sauvegardes locales (cette fenêtre)",
     kindLiveDead:"déconnecté — reconnexion …",
     kindLiveUnsent:"modifications non envoyées !",
@@ -3937,12 +4110,18 @@ const I18N = {
     sourceLoadWarn:"Nie udało się wczytać „{url}” ({error}). Plik musi być dostępny przez http(s) i zezwalać na CORS (Access-Control-Allow-Origin).",
     padGoneWarn:"Ten link prowadzi do pada Etherpad. Połączenia z Etherpadem już nie ma — wspólna praca odbywa się teraz przez backend Werkbaum (?live=…). Wklej tam raz tekst pada i edytujcie go razem.",
     storeFailedWarn:"Zapis w przeglądarce nie powiódł się — jego pamięć jest zapewne pełna. Zmiany mogą przepaść przy przeładowaniu; zwolnij miejsce, usuwając nieużywane dokumenty lub wcześniejsze stany.",
-    tabConflictWarn:"Werkbaum jest otwarty w innej karcie — obie zapisują tę samą listę dokumentów i wygrywa ta, która zapisze ostatnia. Najlepiej pracować w jednej karcie.",
+    tabConflictWarn:"„{name}” jest edytowany w innym oknie ({where}) — wygrywa ostatni klawisz.",
     liveUnsentWarn:"Twoje zmiany NIE dotarły na serwer od {min} minut — istnieją tylko w tym oknie. Zapisz przed zamknięciem (Ctrl+S lub przycisk aparatu).",
     liveEndedWarn:"Połączenie na żywo z tym dokumentem serwera zostało przerwane — Werkbaum łączy się ponownie automatycznie. Do tego czasu zmiany pozostają tylko w tym oknie.",
-    tabModalTitle:"Werkbaum jest otwarty więcej niż raz",
-    tabModalText:"Ta aplikacja jest otwarta w innym oknie lub karcie. Obie zapisują do tego samego magazynu dokumentów — ostatni zapis nadpisuje drugi. Zamknij drugie okno; ten komunikat zniknie sam.",
-    tabModalForce:"Kontynuuj mimo to (niezalecane)",
+    docLockTitle:"„{name}” jest otwarte w innym oknie",
+    docLockText:"Inne okno właśnie edytuje ten dokument — wygrywa ostatni klawisz. Co chcesz zrobić?",
+    docLockOpenOther:"Otwórz inny dokument:",
+    docLockViewOnly:"Tylko podgląd",
+    docLockEditAnyway:"Edytuj mimo to",
+    docKindViewOnly:"tylko podgląd — otwarte w innym oknie",
+    docKindGoneElsewhere:"usunięte gdzie indziej",
+    windowKindApp:"w zainstalowanej aplikacji",
+    windowKindBrowser:"w przeglądarce",
     snapLocalHead:"Lokalne kopie (to okno)",
     kindLiveDead:"rozłączono — ponowne łączenie …",
     kindLiveUnsent:"niewysłane zmiany!",
@@ -4073,12 +4252,18 @@ const I18N = {
     sourceLoadWarn:"Не удалось загрузить «{url}» ({error}). Файл должен быть доступен по http(s) и разрешать CORS (Access-Control-Allow-Origin).",
     padGoneWarn:"Эта ссылка ведёт на пад Etherpad. Подключения к Etherpad больше нет — совместная работа теперь идёт через бэкенд Werkbaum (?live=…). Вставьте туда текст пада один раз и редактируйте вместе.",
     storeFailedWarn:"Не удалось сохранить в браузере — его хранилище, вероятно, заполнено. Изменения могут потеряться при перезагрузке; освободите место, удалив ненужные документы или прежние состояния.",
-    tabConflictWarn:"Werkbaum открыт в другой вкладке — обе пишут в один список документов, и побеждает та, что сохранит последней. Лучше работать в одной вкладке.",
+    tabConflictWarn:"«{name}» редактируется в другом окне ({where}) — побеждает последнее нажатие.",
     liveUnsentWarn:"Ваши изменения НЕ доходят до сервера уже {min} мин — они существуют только в этом окне. Сохраните перед закрытием (Ctrl+S или кнопка камеры).",
     liveEndedWarn:"Живое соединение с этим серверным документом прервано — Werkbaum переподключается автоматически. До тех пор изменения остаются только в этом окне.",
-    tabModalTitle:"Werkbaum открыт несколько раз",
-    tabModalText:"Приложение открыто в другом окне или вкладке. Оба пишут в одно хранилище документов — последний сохранивший перезаписывает другого. Закройте другое окно; это сообщение исчезнет само.",
-    tabModalForce:"Продолжить всё равно (не рекомендуется)",
+    docLockTitle:"«{name}» открыт в другом окне",
+    docLockText:"Другое окно сейчас редактирует этот документ — побеждает последнее нажатие. Что вы хотите сделать?",
+    docLockOpenOther:"Открыть другой документ:",
+    docLockViewOnly:"Только просмотр",
+    docLockEditAnyway:"Всё равно редактировать здесь",
+    docKindViewOnly:"только просмотр — открыт в другом окне",
+    docKindGoneElsewhere:"удалён в другом окне",
+    windowKindApp:"в установленном приложении",
+    windowKindBrowser:"в браузере",
     snapLocalHead:"Локальные копии (это окно)",
     kindLiveDead:"нет связи — переподключение …",
     kindLiveUnsent:"неотправленные изменения!",
@@ -4209,12 +4394,18 @@ const I18N = {
     sourceLoadWarn:"„{url}“ लोड नहीं हो सका ({error})। फ़ाइल http(s) से उपलब्ध होनी चाहिए और CORS की अनुमति देनी चाहिए (Access-Control-Allow-Origin)।",
     padGoneWarn:"यह लिंक एक Etherpad पैड की ओर इशारा करता है। Etherpad कनेक्शन अब नहीं है — साझा काम अब Werkbaum बैकएंड (?live=…) से होता है। पैड का टेक्स्ट वहाँ एक बार चिपकाएँ और मिलकर संपादित करें।",
     storeFailedWarn:"ब्राउज़र में सहेजना विफल रहा — संभवतः उसका संग्रहण भर गया है। पुनः लोड करने पर बदलाव खो सकते हैं; अनुपयोगी दस्तावेज़ या पिछली स्थितियाँ हटाकर जगह बनाएँ।",
-    tabConflictWarn:"Werkbaum एक और ब्राउज़र टैब में खुला है — दोनों एक ही दस्तावेज़ सूची में लिखते हैं, और आख़िर में सहेजने वाला जीतता है। बेहतर है कि एक ही टैब में काम करें।",
+    tabConflictWarn:"„{name}“ दूसरी विंडो में संपादित हो रहा है ({where}) — अंतिम कीस्ट्रोक जीतता है।",
     liveUnsentWarn:"आपके बदलाव {min} मिनट से सर्वर तक नहीं पहुँचे — वे केवल इस विंडो में मौजूद हैं। बंद करने से पहले सहेजें (Ctrl+S या कैमरा बटन)।",
     liveEndedWarn:"इस सर्वर दस्तावेज़ से लाइव कनेक्शन टूट गया है — Werkbaum अपने आप फिर जुड़ता है। तब तक बदलाव केवल इसी विंडो में रहते हैं।",
-    tabModalTitle:"Werkbaum एक से अधिक बार खुला है",
-    tabModalText:"यह ऐप किसी और विंडो या टैब में भी खुला है। दोनों एक ही दस्तावेज़ भंडार में लिखते हैं — आख़िर में सहेजने वाला दूसरे को मिटा देता है। कृपया दूसरी विंडो बंद करें; यह सूचना अपने आप हट जाएगी।",
-    tabModalForce:"फिर भी जारी रखें (अनुशंसित नहीं)",
+    docLockTitle:"„{name}“ दूसरी विंडो में खुला है",
+    docLockText:"दूसरी विंडो इस दस्तावेज़ को अभी संपादित कर रही है — अंतिम कीस्ट्रोक जीतता है। आप क्या करना चाहेंगे?",
+    docLockOpenOther:"दूसरा दस्तावेज़ खोलें:",
+    docLockViewOnly:"यहाँ केवल देखें",
+    docLockEditAnyway:"फिर भी यहाँ संपादित करें",
+    docKindViewOnly:"केवल देखना — दूसरी विंडो में खुला",
+    docKindGoneElsewhere:"दूसरी जगह हटाया गया",
+    windowKindApp:"इंस्टॉल किए गए ऐप में",
+    windowKindBrowser:"ब्राउज़र में",
     snapLocalHead:"स्थानीय प्रतियाँ (यह विंडो)",
     kindLiveDead:"संपर्क टूटा — फिर जोड़ रहा है …",
     kindLiveUnsent:"बिना भेजे बदलाव!",
@@ -4345,12 +4536,18 @@ const I18N = {
     sourceLoadWarn:"无法加载“{url}”（{error}）。该文件必须可通过 http(s) 访问并允许 CORS（Access-Control-Allow-Origin）。",
     padGoneWarn:"此链接指向一个 Etherpad pad。Etherpad 连接已移除——协作现在通过 Werkbaum 后端（?live=…）进行。把 pad 的文本粘贴过去一次，然后一起编辑。",
     storeFailedWarn:"无法保存到浏览器——其存储空间可能已满。重新加载时更改可能丢失；请删除不再使用的文档或以前的状态以腾出空间。",
-    tabConflictWarn:"Werkbaum 已在另一个浏览器标签页中打开——两者写入同一份文档列表，最后保存者生效。最好只在一个标签页中工作。",
+    tabConflictWarn:"“{name}”正在另一个窗口中编辑（{where}）——最后按键者生效。",
     liveUnsentWarn:"你的更改已有 {min} 分钟未到达服务器——它们只存在于此窗口中。关闭前请先保存（Ctrl+S 或相机按钮）。",
     liveEndedWarn:"与此服务器文档的实时连接已断开——Werkbaum 会自动重连。在此之前，更改只保留在此窗口中。",
-    tabModalTitle:"Werkbaum 已多处打开",
-    tabModalText:"此应用正同时在另一个窗口或标签页中打开。两者写入同一份文档存储——后保存者会覆盖对方。请关闭另一个窗口；此提示会自行消失。",
-    tabModalForce:"仍要继续（不推荐）",
+    docLockTitle:"“{name}”已在另一个窗口中打开",
+    docLockText:"另一个窗口正在编辑此文档——最后按键者生效。您想怎么做？",
+    docLockOpenOther:"打开其他文档：",
+    docLockViewOnly:"仅在此查看",
+    docLockEditAnyway:"仍要在此编辑",
+    docKindViewOnly:"仅查看——已在其他窗口打开",
+    docKindGoneElsewhere:"已在其他窗口删除",
+    windowKindApp:"在安装的应用中",
+    windowKindBrowser:"在浏览器中",
     snapLocalHead:"本地备份（此窗口）",
     kindLiveDead:"已断开——正在重连 …",
     kindLiveUnsent:"有未发送的更改！",
@@ -4481,12 +4678,18 @@ const I18N = {
     sourceLoadWarn:"「{url}」を読み込めませんでした（{error}）。ファイルは http(s) でアクセス可能で、CORS（Access-Control-Allow-Origin）を許可する必要があります。",
     padGoneWarn:"このリンクは Etherpad のパッドを指しています。Etherpad 連携は廃止されました。共同編集は Werkbaum バックエンド（?live=…）で行います。パッドの本文を一度貼り付ければ、複数人で編集できます。",
     storeFailedWarn:"ブラウザーへの保存に失敗しました — ストレージが満杯の可能性があります。再読み込みで変更が失われることがあります。不要なドキュメントや以前の状態を削除して空きを作ってください。",
-    tabConflictWarn:"Werkbaum が別のタブでも開いています — 両方が同じドキュメント一覧に書き込み、最後に保存した方が勝ちます。1 つのタブでの作業をおすすめします。",
+    tabConflictWarn:"「{name}」は別のウィンドウで編集中です（{where}）— 最後のキー操作が優先されます。",
     liveUnsentWarn:"変更が {min} 分間サーバーに届いていません — この変更はこのウィンドウにしか存在しません。閉じる前に保存してください（Ctrl+S またはカメラボタン）。",
     liveEndedWarn:"このサーバー文書とのライブ接続が切れています — Werkbaum は自動的に再接続します。それまで変更はこのウィンドウにのみ残ります。",
-    tabModalTitle:"Werkbaum が複数開かれています",
-    tabModalText:"このアプリは別のウィンドウまたはタブでも開かれています。両方が同じ文書ストレージに書き込むため、最後に保存した側が他方を上書きします。もう一方のウィンドウを閉じてください。この通知は自動的に消えます。",
-    tabModalForce:"それでも続行（非推奨）",
+    docLockTitle:"「{name}」は別のウィンドウで開かれています",
+    docLockText:"別のウィンドウがこのドキュメントを編集中です — 最後のキー操作が優先されます。どうしますか？",
+    docLockOpenOther:"別のドキュメントを開く：",
+    docLockViewOnly:"ここでは閲覧のみ",
+    docLockEditAnyway:"それでもここで編集する",
+    docKindViewOnly:"閲覧のみ — 別のウィンドウで開かれています",
+    docKindGoneElsewhere:"別のウィンドウで削除済み",
+    windowKindApp:"インストールしたアプリで",
+    windowKindBrowser:"ブラウザーで",
     snapLocalHead:"ローカルの控え（このウィンドウ）",
     kindLiveDead:"切断 — 再接続中 …",
     kindLiveUnsent:"未送信の変更あり！",
@@ -4665,18 +4868,50 @@ function uniqueName(base){
   while(taken.has(base + ' ' + i)) i++;
   return base + ' ' + i;
 }
-/* Die volle Persistenz (Flush-Punkte: Wechseln/Anlegen/Löschen/Umbenennen,
-   Verlassen der Seite — nicht der Tastendruck, D82): Index + Texte über das
-   Ablageschema (docstore.js, D83). Unveränderte Schlüssel werden dort nicht
-   angefasst; ein Fehlschlag (Quota voll) wird gemeldet statt geschluckt. */
+/* Die Dirty-Hälfte des Schemas v3 (RFC 002 §6.1): An den Flush-Punkten
+   (Wechseln/Anlegen/Löschen/Umbenennen, Verlassen der Seite — nicht der
+   Tastendruck, D82) wird nur geschrieben, was DIESES Fenster angelegt,
+   umbenannt oder getippt hat, plus der Index-Hinweis. Kein Voll-Flush mehr,
+   der fremde Schlüssel schriebe oder entfernte — verschiedene Dokumente in
+   zwei Fenstern kollidieren damit gar nicht mehr. Unveränderte Schlüssel
+   werden nicht angefasst; ein Fehlschlag (Quota voll) wird gemeldet statt
+   geschluckt. */
+const dirtyDocs = createDirtySet();
 function persistDocs(){
   try{
-    storeDocs(localStorage, docs, Object.keys(localStorage));
+    for(const id of dirtyDocs.entries()){
+      const d = docs.find(x => x.id === id);
+      if(d) writeDoc(localStorage, d);
+    }
+    dirtyDocs.clear();
+    writeIndexHint(localStorage, indexHint());
     localStorage.setItem(LS_ACTIVE, activeId || '');
     const d = activeDoc();
     if(d) localStorage.setItem(LS_SRC, d.text);   /* Spiegel: Rollback-Fallback */
     noteStore(true);
   }catch(_){ noteStore(false); }
+}
+/* Die Speicher-ids ∪ eigene Liste — der Index-Hinweis sagt, was es gibt; er
+   entfernt NIE etwas (§6.1). Die eigene Liste bestimmt die Reihenfolge,
+   Nachzügler aus dem Speicher hängen hinten an. */
+function indexHint(){
+  const eintraege = new Map();
+  for(const d of docs){
+    const e = {id: d.id, name: d.name};
+    if(d.source) e.source = d.source;
+    eintraege.set(d.id, e);
+  }
+  for(const k of Object.keys(localStorage)){
+    let id = null;
+    if(k.startsWith(DOC_META_PREFIX)) id = k.slice(DOC_META_PREFIX.length);
+    else if(k.startsWith(DOC_TEXT_PREFIX)) id = k.slice(DOC_TEXT_PREFIX.length);
+    if(!id || eintraege.has(id) || hasTombstone(localStorage, id)) continue;
+    const meta = readMeta(localStorage, id);
+    const e = {id, name: (meta && meta.name) || id};
+    if(meta && meta.source) e.source = meta.source;
+    eintraege.set(id, e);
+  }
+  return [...eintraege.values()];
 }
 /* Die Tastendruck-Hälfte (D82/D83): der Text des AKTIVEN Dokuments unter
    seinem eigenen Schlüssel plus der Spiegel — der Tastendruck schreibt damit
@@ -4710,9 +4945,10 @@ function seedShippedDocs(){
   try{ seen = localStorage.getItem(LS_SEEDED); }catch(_){}
   const doc = docs.find(d => d.id === WERKBAUM_ID);
   if(!seen){
-    if(!doc) docs.push({ id: WERKBAUM_ID, name: WERKBAUM_NAME, text: WERKBAUM_DOC });
+    if(!doc){ docs.push({ id: WERKBAUM_ID, name: WERKBAUM_NAME, text: WERKBAUM_DOC }); dirtyDocs.add(WERKBAUM_ID); }
   } else if(seen !== '1' && seen !== fp && doc && fingerprint(doc.text) === seen){
     doc.text = WERKBAUM_DOC;
+    dirtyDocs.add(WERKBAUM_ID);
   }
   try{ localStorage.setItem(LS_SEEDED, fp); }catch(_){}
   /* Dasselbe Nachziehen für das Beispiel-Dokument (D27-Nachtrag): Ohne den
@@ -4726,6 +4962,7 @@ function seedShippedDocs(){
   const ex = docs.find(d => d.id === EXAMPLE_ID);
   if(exSeen && exSeen !== exFp && ex && fingerprint(ex.text) === exSeen){
     ex.text = INITIAL;
+    dirtyDocs.add(EXAMPLE_ID);
   }
   try{ localStorage.setItem(LS_SEEDED_EXAMPLE, exFp); }catch(_){}
   /* Nur vergleichen, solange der Text der ausgelieferte ist — hat der Nutzer ihn
@@ -4734,29 +4971,43 @@ function seedShippedDocs(){
   if(shipped && shipped.text === WERKBAUM_DOC) computeFresh(WERKBAUM_ID, WERKBAUM_DOC);
 }
 
-/* Aus dem localStorage laden (Schema: docstore.js, D83); bei fehlender oder
-   unbrauchbarer Dokumentenliste den bestehenden Einzeltext (oder INITIAL)
-   als erstes Dokument migrieren. */
+/* Aus dem localStorage laden (Schema v3: docstore.js, RFC 002 §6.1/§6.10
+   Schritt 1); bei fehlender oder unbrauchbarer Dokumentenliste den
+   bestehenden Einzeltext (oder INITIAL) als erstes Dokument migrieren.
+   Reihenfolge: Tombstones altern → Union-Lesen → Altformat-Migration →
+   Seeding → der Dirty-Flush schreibt nur, was fehlt. */
 function loadDocs(){
+  try{ expireTombstones(localStorage, Object.keys(localStorage), Date.now()); }catch(_){}
   let gelesen = null;
-  try{ gelesen = readDocs(localStorage); }catch(_){}
+  try{ gelesen = readDocs(localStorage, Object.keys(localStorage)); }catch(_){}
   if(gelesen){
     docs = gelesen.docs;
   } else {
     let legacy = null;
     try{ legacy = localStorage.getItem(LS_SRC); }catch(_){}
     docs = [{ id: EXAMPLE_ID, name: EXAMPLE_NAME, text: (legacy !== null) ? legacy : INITIAL }];
+    /* Erstkontakt oder geräumte Ablage: das Beispiel neu anlegen — auch gegen
+       einen alten Tombstone des Beispiels (typed, siehe D22-Neu-Satz). */
+    try{ writeDoc(localStorage, docs[0], {typed: true}); }catch(_){}
   }
   let a = null;
   try{ a = localStorage.getItem(LS_ACTIVE); }catch(_){}
   /* Alt-Zustand (erste Version: zufällige id, lokalisierter Name): ein noch
      unverändertes Beispiel-Dokument bekommt nachträglich die reservierte id und
      den englischen Namen, damit Namensfix und Reset auch dort greifen. Nur bei
-     unverändertem Text (=== INITIAL), um echte Nutzerinhalte nie zu adoptieren. */
+     unverändertem Text (=== INITIAL), um echte Nutzerinhalte nie zu adoptieren.
+     Der alte Text-Schlüssel wird mit Tombstone abgeräumt — der v3-Sweep
+     existiert nicht mehr, es bleibt sonst als namenloses Nachzügler-Dokument
+     stehen. */
   if(!docs.some(d => d.id === EXAMPLE_ID) && docs[0] && docs[0].text === INITIAL){
-    if(a === docs[0].id) a = EXAMPLE_ID;
+    const altId = docs[0].id;
+    if(a === altId) a = EXAMPLE_ID;
     docs[0].id = EXAMPLE_ID;
     docs[0].name = EXAMPLE_NAME;
+    if(altId !== EXAMPLE_ID){
+      removeDoc(localStorage, altId, Date.now());
+      dirtyDocs.add(EXAMPLE_ID);
+    }
   }
   activeId = docs.some(d => d.id === a) ? a : docs[0].id;
   /* „Der Spiegel gewinnt" gilt nur noch der EINMALIGEN Migration aus dem
@@ -4772,21 +5023,46 @@ function loadDocs(){
     try{
       const spiegel = localStorage.getItem(LS_SRC);
       const d = docs.find(x => x.id === activeId);
-      if(d && spiegel !== null && spiegel !== d.text) d.text = spiegel;
+      if(d && spiegel !== null && spiegel !== d.text){ d.text = spiegel; dirtyDocs.add(d.id); }
     }catch(_){}
   }
+  /* Schema v3: Alt-Stände verteilen, Meta für Index-Dokumente schreiben —
+     idempotent (§6.1). */
+  try{ migrateV3(localStorage, Date.now()); }catch(_){}
   seedShippedDocs();
   /* Namensfix für die kurzlebige Fassung mit dem Tippfehler — nur, solange der
      ausgelieferte Name unverändert ist; eine eigene Umbenennung bleibt stehen
      (Dokumentnamen sind Nutzerdaten, D22). */
   const wb = docs.find(d => d.id === WERKBAUM_ID);
-  if(wb && wb.name === WERKBAUM_NAME_ALT) wb.name = WERKBAUM_NAME;
+  if(wb && wb.name === WERKBAUM_NAME_ALT){ wb.name = WERKBAUM_NAME; dirtyDocs.add(WERKBAUM_ID); }
+  /* §6.10 Schritt 5: kein persistDocs() nach dem Laden — der Dirty-Flush
+     schreibt nur die Migration/Seeding-Ergebnisse und den Index-Hinweis. */
+  persistDocs();
 }
 function saveSrc(){
   if(restoring) return;
   const d = activeDoc();
-  if(d) d.text = src.value;
-  persistActiveText();   /* nicht persistDocs: das serialisierte ALLE Dokumente je Tastendruck (D82) */
+  if(d){
+    d.text = src.value;
+    if(docGoneElsewhere) reviveGoneDoc();   /* Tippen ist Absicht (§6.5) */
+  }
+  persistActiveText();   /* nur der aktive Text plus Spiegel — kein Voll-Write (D82) */
+}
+/* Das anderswo gelöschte aktive Dokument wird durch Tippen wieder angelegt:
+   der Tombstone fällt, Meta und Text kommen neu (§6.5). */
+function reviveGoneDoc(){
+  const d = activeDoc();
+  if(!d) return;
+  docGoneElsewhere = false;
+  /* Der Index-Hinweis kommt gleich mit — bis zum nächsten Flush hinge das
+     Dokument sonst allein an seinen eigenen Schlüsseln. v3 findet es dort
+     (readDocs vereinigt Meta, Text und Index), ein Rückbau auf einen Build
+     VOR v3 aber nicht: Der liest nur den Index und räumt bei seinem
+     Voll-Flush jeden Text-Schlüssel ab, den er darin nicht findet. Der
+     stille Verlust ist der teuerste Fehler (SPEC §4, D59), und die Zeile
+     schließt genau das Fenster (RFC 002 §9, Nachmessung Fall 9). */
+  try{ writeDoc(localStorage, d, {typed: true}); writeIndexHint(localStorage, indexHint()); }catch(_){}
+  updateDocName();
 }
 function saveUI(){
   if(restoring) return;
@@ -4887,11 +5163,16 @@ function updateDocName(){
       /* Verbindungs-Status am Chip (D90-Nachtrag): Die zeilenlose Warnung
          unten übersieht man leicht (Nutzer-Befund) — getrennt bzw.
          ungesendet steht deshalb warnfarben OBEN neben dem Namen, kurz.
-         Getrennt heißt zugleich: die Wiederverbindung läuft schon. */
+         Getrennt heißt zugleich: die Wiederverbindung läuft schon.
+         Daneben die beiden Zustände aus dem Mehr-Fenster-Umbau (RFC 002
+         §6.5): „nur ansehen" (Sperre hält ein anderes Fenster) und
+         „anderswo gelöscht" (behalten, bis getippt wird). */
       const tot = art === 'server' && !liveState;
       const unsent = !tot && liveWarning && liveWarning.type === 'liveUnsent';
-      kindEl.classList.toggle('warn', tot || !!unsent);
+      kindEl.classList.toggle('warn', tot || !!unsent || viewOnly || docGoneElsewhere);
       kindEl.textContent =
+        docGoneElsewhere ? t(label) + ' · ' + t('docKindGoneElsewhere') :
+        viewOnly         ? t(label) + ' · ' + t('docKindViewOnly') :
         tot    ? t(label) + ' · ' + t('kindLiveDead') :
         unsent ? t(label) + ' · ' + t('kindLiveUnsent') :
                  t(label) + (host ? ' · ' + host : '');
@@ -5058,6 +5339,7 @@ function restoreDoc(id){
   if(!window.confirm(t('docRestoreConfirm', {name: d.name}))) return;
   d.text = shipped.text;
   d.name = shipped.name;
+  dirtyDocs.add(d.id);
   foldOverrides.clear();
   loadActiveIntoEditor();
   persistDocs();
@@ -5079,6 +5361,7 @@ async function reloadDoc(){
     try{
       d.text = await fetchRemote(d.source);
       sourceWarning = null;
+      dirtyDocs.add(d.id);
       loadActiveIntoEditor();
       persistDocs();
     }catch(err){
@@ -5095,6 +5378,7 @@ async function reloadDoc(){
     if(perm === 'prompt') perm = await h.requestPermission({mode: 'read'});
     if(perm !== 'granted') return;
     d.text = await (await h.getFile()).text();
+    dirtyDocs.add(d.id);
     loadActiveIntoEditor();
     persistDocs();
   }catch(_){}
@@ -5122,20 +5406,20 @@ function flushActive(){ const d = activeDoc(); if(d) d.text = src.value; }
 let snaps = {};        /* {docId: [{t, text}, …]} — ältester zuerst */
 let snapBase = '';     /* Text bei Dokumentwechsel; Vergleich, solange es keinen Stand gibt */
 
-function loadSnaps(){ snaps = parseSnaps(localStorage.getItem(LS_SNAPS)); }
+function loadSnaps(){ snaps = readAllSnaps(localStorage, Object.keys(localStorage)); }
 
 function snapshotNow(manuell){
   const d = activeDoc();
   if(!d) return false;
   /* Auch für Server-Dokumente (D89, kehrt D86 teilweise um): Die Historie
-     führt weiterhin der Server, aber die lokalen Stände sind das
+      führt weiterhin der Server, aber die lokalen Stände sind das
      Sicherheitsnetz für alles, was ihn NICHT erreicht — genau der Verlust,
      den D86 möglich gemacht hat. Im Uhr-Menü stehen sie als eigener
      Abschnitt „Lokale Sicherungen" unter den Server-Meilensteinen. */
   const text = src.value;
   if(!addSnapshot(snaps, d.id, text, Date.now(), {base: snapBase, manual: manuell})) return false;
   snapBase = text;
-  persistSnaps(snaps, localStorage);
+  persistSnaps(localStorage, snaps, d.id, Object.keys(localStorage));
   if(!snapMenu.hidden) renderSnapMenu();
   return true;
 }
@@ -5475,6 +5759,7 @@ function loadActiveIntoEditor(){ const d = activeDoc(); src.value = d ? d.text :
   /* Vergleichsstand für den nächsten Snapshot (D54): Ohne ihn legte der
      erste Takt nach dem Öffnen auch ein unverändertes Dokument weg. */
   snapBase = src.value; closeSnapMenu();
+  syncDocLock();   /* die Sperre folgt dem aktiven Dokument (RFC 002 §6.4) */
   render(); updateDocName(); updateFreshBtn();
   /* Ein Dokumentwechsel ist mehr als neuer Text im Feld: Adresszeile und
      Live-Sitzung gehören dem, was man vor sich hat (D80). Hier, weil jeder
@@ -5507,8 +5792,18 @@ function followActiveDoc(){
 
 function switchDoc(id){
   if(id === activeId) return;
+  /* Anderswo gelöscht (§6.5): Der Wechsel ohne Tastendruck lässt das
+     Dokument gehen — der Text wandert in die lokalen Sicherungen, sichtbar
+     im Uhr-Menü, solange die Sitzung lebt. */
+  if(docGoneElsewhere){
+    const alt = activeDoc();
+    if(alt) rescueSnapshot(alt.id, src.value);
+    docs = docs.filter(x => !alt || x.id !== alt.id);
+    docGoneElsewhere = false;
+    if(!docs.length) docs = [{ id: EXAMPLE_ID, name: EXAMPLE_NAME, text: INITIAL }];
+  }
   /* Was noch im Debounce steckt, ist getippt und gemeint: erst loswerden,
-     solange das Textfeld noch den Text dieses Dokuments zeigt (D80). */
+      solange das Textfeld noch den Text dieses Dokuments zeigt (D80). */
   if(liveActive() && liveState.pushTimer){
     clearTimeout(liveState.pushTimer);
     liveState.pushTimer = null;
@@ -5534,6 +5829,7 @@ function newDoc(){
   const d = { id: uid(), name: uniqueName(t('docNewName')), text: '' };
   docs.push(d);
   activeId = d.id;
+  dirtyDocs.add(d.id);
   foldOverrides.clear();
   loadActiveIntoEditor();
   persistDocs();
@@ -5570,7 +5866,7 @@ function commitRename(){
     /* Server-Dokumente: Der Titel gehört dem Server — alle sehen denselben
        (D76). Der Weg dorthin ist PATCH /title (D85), nicht der lokale Name. */
     if(String(d.id).startsWith('live:')) renameOnServer(d, val);
-    else { d.name = val; persistDocs(); updateDocName(); }
+    else { d.name = val; dirtyDocs.add(d.id); persistDocs(); updateDocName(); }
   }
   renderDocMenu();
   finishNewDoc();
@@ -5585,7 +5881,7 @@ function cancelRename(){ renamingId = null; renderDocMenu(); finishNewDoc(); }
 async function renameOnServer(d, titel){
   const url = String(d.id).slice(5);
   const alt = d.name;
-  const zeige = () => { persistDocs(); updateDocName(); if(!docMenu.hidden) renderDocMenu(); };
+  const zeige = () => { dirtyDocs.add(d.id); persistDocs(); updateDocName(); if(!docMenu.hidden) renderDocMenu(); };
   d.name = titel; zeige();
   const patch = async () => {
     const doc = await fetchJson(url);
@@ -5612,13 +5908,27 @@ async function renameOnServer(d, titel){
 }
 /* Der gemeinsame Kern von Löschen und Verlassen: den Eintrag samt lokaler
    Anhängsel entfernen. Die beiden Aktionen unterscheiden sich für den
-   Benutzer (Wort, Icon, Rückfrage — D81-Nachtrag 5), lokal tun sie dasselbe. */
+   Benutzer (Wort, Icon, Rückfrage — D81-Nachtrag 5), lokal tun sie dasselbe.
+   Seit RFC 002 hinterlässt beides einen Tombstone (§6.2) — er hindert die
+   anderen Fenster daran, das Dokument still wieder anzulegen; verfällt nach
+   sieben Tagen. */
 function removeDocLocally(d){
   if(liveState && liveState.id === d.id) stopLive();  /* dito fürs Server-Dokument (D76) */
   if(fileHandles.has(d.id)){ fileHandles.delete(d.id); idbDeleteHandle(d.id); }   /* mit dem Dokument geht sein Datei-Handle (D72) */
+  /* War das aktive Dokument ohnehin anderswo gelöscht, geht der Text sicher
+     in die lokalen Sicherungen (§6.5), bevor die Spur verschwindet. */
+  if(docGoneElsewhere && d.id === activeId) rescueSnapshot(d.id, src.value);
   docs = docs.filter(x => x.id !== d.id);
-  if(snaps[d.id]){ delete snaps[d.id]; persistSnaps(snaps, localStorage); }   /* mit dem Dokument gehen seine Stände (D54) */
-  if(!docs.length) docs = [{ id: EXAMPLE_ID, name: EXAMPLE_NAME, text: INITIAL }];
+  try{ removeDoc(localStorage, d.id, Date.now()); }catch(_){ noteStore(false); }
+  docGoneElsewhere = false;
+  if(snaps[d.id]){ delete snaps[d.id]; }   /* mit dem Dokument gehen seine Stände (D54); den Schlüssel räumt removeDoc */
+  if(!docs.length){
+    docs = [{ id: EXAMPLE_ID, name: EXAMPLE_NAME, text: INITIAL }];
+    /* Das letzte gelöschte Dokument wird als Beispiel neu gesät (D22) —
+       selbst wenn eine alte Löschung des Beispiels noch als Tombstone steht:
+       der Neu-Satz ist Absicht, der Tombstone fällt (typed, §6.2). */
+    try{ writeDoc(localStorage, docs[0], {typed: true}); }catch(_){ noteStore(false); }
+  }
   /* Zeilen-Aktion (D81): Nur wenn das AKTIVE Dokument geht, wechselt der
      Editor; das Menü bleibt offen — wer aufräumt, räumt meist weiter. */
   if(d.id === activeId){
@@ -5713,6 +6023,15 @@ async function idbHandleOp(mode, fn){
 }
 function idbPutHandle(docId, handle){ return idbHandleOp('readwrite', s => { s.put(handle, docId); }); }
 function idbDeleteHandle(docId){ return idbHandleOp('readwrite', s => { s.delete(docId); }); }
+/* Ein einzelnes Handle nachladen (RFC 002 §6.9): Ein anderes Fenster kennt
+   neue Dokumente nur aus dem storage-Ereignis — sein Handle wäre sonst nicht
+   in der Map, und ein Speichern hier käme mit dem Dialog und überschriebe
+   das gemerkte. */
+function idbLoadHandle(docId){
+  return idbHandleOp('readonly', s => s.get(docId)).then(h => {
+    if(h && typeof h.createWritable === 'function') fileHandles.set(docId, h);
+  });
+}
 /* Beim Start die gemerkten Handles zurückholen — nur für Dokumente, die es
    noch gibt (verwaiste Einträge räumen sich dabei weg), und nur, was sich wie
    ein Handle verhält (defensiv gegen fremden Speicherinhalt). */
@@ -5750,6 +6069,7 @@ async function adoptFile(handle, name, text){
     activeId = d.id;
   }
   if(handle){ fileHandles.set(activeId, handle); idbPutHandle(activeId, handle); }
+  dirtyDocs.add(activeId);
   foldOverrides.clear();
   loadActiveIntoEditor();
   persistDocs();
@@ -5895,7 +6215,10 @@ document.addEventListener('keydown', e => {
     if(!e.repeat) saveLocalFile();
   }
 });
-/* Dokumente laden + aktiven Text in den Editor holen (nach applyLang). */
+/* Dokumente laden + aktiven Text in den Editor holen (nach applyLang).
+   §6.10 Schritt 1/5: lesen, Migration, Tombstones altern — schreiben tut nur
+   die Migration selbst (im Dirty-Flush von loadDocs); danach holt die Sperre
+   (beim Boot) die Entscheidung, beschreibbar oder Dialog. */
 function initDocs(){
   restoring = true;
   loadDocs();
@@ -5904,7 +6227,6 @@ function initDocs(){
   src.value = d ? d.text : '';
   snapBase = src.value;
   restoring = false;
-  persistDocs();   /* migrierte/geladene Liste festschreiben (stabil über Reload) */
   updateDocName();
   render();
 }
@@ -5959,6 +6281,7 @@ function adoptRemote(s, text){
   else { d = {id: s.id, name: s.name, text}; docs.push(d); }
   d.source = s.source;
   activeId = s.id;
+  dirtyDocs.add(s.id);
   sourceWarning = null;
   computeFresh(s.id, text);   /* was ist seit dem letzten Ansehen in Produktion? (D28) */
   loadActiveIntoEditor();
@@ -6115,6 +6438,7 @@ function adoptLive(doc){
   else { d = {id: liveState.id, name: doc.title || liveState.urls.doc, text: content}; docs.push(d); }
   d.source = liveState.urls.doc;
   activeId = liveState.id;
+  dirtyDocs.add(liveState.id);
   sourceWarning = null;
   computeFresh(liveState.id, content);
   loadActiveIntoEditor();
@@ -6158,7 +6482,7 @@ function livePendingChanges(){
 function rescueSnapshot(docId, text){
   if(!text || !text.trim()) return;
   if(addSnapshot(snaps, docId, text, Date.now(), {base: null, manual: true}))
-    persistSnaps(snaps, localStorage);
+    persistSnaps(localStorage, snaps, docId, Object.keys(localStorage));
 }
 
 /* Eine tote Sitzung heilt sich SELBST (Nutzer-Einwand zu D89: „Ohne Reload
@@ -6398,6 +6722,7 @@ function applyRenameEvents(feed){
   const d = docs.find(x => x.id === liveState.id);
   if(!d || d.name === ev.title) return;
   d.name = ev.title;
+  dirtyDocs.add(d.id);
   persistDocs();
   updateDocName();
   if(!docMenu.hidden) renderDocMenu();
@@ -6839,11 +7164,19 @@ let startLang = 'de';
 try{ startLang = localStorage.getItem('werkbaum-lang') || detectLang(); }catch(_){ startLang = detectLang(); }
 applyLang(I18N[startLang] ? startLang : 'de');   /* setzt Texte + rendert */
 initDocs();      /* Dokumente laden + aktiven Text in den Editor (nach Sprache) */
-/* Flush-Punkte beim Verlassen (D82): Das Dokument-Array wird beim Tippen
-   nicht mehr geschrieben (nur der Spiegel) — hier holt es den Stand nach.
-   `pagehide` statt `beforeunload` (greift auch beim bfcache), dazu der
-   verborgene Tab: Auf Mobil räumt der Browser Tabs oft ohne pagehide ab. */
-addEventListener('pagehide', () => persistDocs());
+/* Sperre für das wiederhergestellte aktive Dokument (RFC 002 §6.10 Schritt
+   2/3): Ein nicht geteiltes Dokument, das ein anderes Fenster hält, öffnet
+   nicht still — der Dialog mit drei Auswegen steht vor dem ersten
+   Tastendruck; `live:` wird nie gesperrt (Server führt zusammen). */
+acquireDocLock(activeId);
+/* Flush-Punkte beim Verlassen (D82): Der Tastendruck schreibt nur den aktiven
+   Text — hier holt der Dirty-Flush den Rest nach. `pagehide` statt
+   `beforeunload` (greift auch beim bfcache), dazu der verborgene Tab: Auf
+   Mobil räumt der Browser Tabs oft ohne pagehide ab. */
+addEventListener('pagehide', () => {
+  if(docGoneElsewhere && activeDoc()) rescueSnapshot(activeId, src.value);
+  persistDocs();
+});
 document.addEventListener('visibilitychange', () => { if(document.hidden) persistDocs(); });
 if(hasFsAccess) handlesReady = idbLoadHandles();   /* gemerkte Datei-Handles zurückholen (D72, Stufe 2) */
 /* Erst mit den Handles wissen Speichern-Tooltip und Neu-laden-Knopf, ob das
@@ -6873,6 +7206,11 @@ loadLive();            /* ?live= — Server-Dokument samt Feed (asynchron, D76) 
 /* Beide haben ihren Parameter jetzt gelesen (synchron, vor dem ersten
    `await`). Ab hier folgt die Adresszeile dem aktiven Dokument (D80). */
 bootDone = true;
+/* Nachziehen, was andere Fenster während des Starts geschrieben haben (§6.10
+   Schritt 4): Der Handler war registriert, hat aber nur gesammelt. */
+for(const ev of storageBacklog.splice(0)){
+  try{ applyForeignStorageEvent(ev); }catch(_){}
+}
 refreshTaiga();        /* kann das Backend Taiga? (asynchron, D91) */
 
 /* ---------- PWA: Service Worker (D73) ----------
@@ -7214,9 +7552,14 @@ function resetToDefaults(){
   if(!confirmed) return;
 
   /* Nicht-Dokument-Zustand auf Defaults (UI, Sprache, Update-Log) — die
-     Dokumentenliste (werkbaum-docs) bleibt erhalten (D22). Die beiden
+      Dokumentenliste (werkbaum-docs) bleibt erhalten (D22). Die beiden
      Update-Schlüssel schreibt niemand mehr (D45); sie werden nur noch
-     aufgeräumt, falls sie aus einer früheren Fassung herumliegen. */
+     aufgeräumt, falls sie aus einer früheren Fassung herumliegen. Die
+     Tombstones fallen mit (RFC 002 §6.2): der Reset macht gelöschte
+     Dokumente wieder anlegbar. */
+  Object.keys(localStorage)
+    .filter(k => k.startsWith(DOC_GONE_PREFIX))
+    .forEach(k => { try{ localStorage.removeItem(k); }catch(_){} });
   ['werkbaum-ui','werkbaum-lang','werkbaum-html-hash','werkbaum-update-available','werkbaum-update-log','werkbaum-fs-notice']
     .forEach(k => { try{ localStorage.removeItem(k); }catch(_){} });
 
@@ -7228,6 +7571,7 @@ function resetToDefaults(){
     if(d){ d.text = text; d.name = name; }
     else if(vorn) docs.unshift({ id, name, text });
     else docs.push({ id, name, text });
+    dirtyDocs.add(id);
   };
   reseed(EXAMPLE_ID, EXAMPLE_NAME, INITIAL, true);
   reseed(WERKBAUM_ID, WERKBAUM_NAME, WERKBAUM_DOC, false);

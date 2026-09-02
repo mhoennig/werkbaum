@@ -76,11 +76,11 @@
       - [^] #ed.docs.picker: Breadcrumb picker in the app header (S)  %% Werkbaum › name, see D81
       - [^] #ed.docs.url: Load a document from ?sourceUrl= (S)
       - [^] #ed.docs.restore: Restore a shipped document from the menu (XS)
-      - [ ] #ed.docs.windows: Two windows on one storage: app and tab side by side (M)  %% docs/rfc/002-mehrfenster.md, D94
-        - [ ] #ed.docs.windows.keys: Every document owns its keys — text, meta, states; the index never deletes (S)
-        - [ ] #ed.docs.windows.sync: The storage event keeps the list, names and tombstones current in every window (S)
-        - [ ] #ed.docs.windows.lock: A per-document lock via the Web Locks API finds the one real loss case (S) :#ed.docs.windows.keys
-        - [ ] #ed.docs.windows.dialog: Three exits instead of continue anyway: open another, view only, edit anyway (XS) :#ed.docs.windows.lock
+      - [x] #ed.docs.windows: Two windows on one storage: app and tab side by side (M)  %% docs/rfc/002-mehrfenster.md, D94
+        - [x] #ed.docs.windows.keys: Every document owns its keys — text, meta, states; the index never deletes (S)
+        - [x] #ed.docs.windows.sync: The storage event keeps the list, names and tombstones current in every window (S)
+        - [x] #ed.docs.windows.lock: A per-document lock via the Web Locks API finds the one real loss case (S) :#ed.docs.windows.keys
+        - [x] #ed.docs.windows.dialog: Three exits instead of continue anyway: open another, view only, edit anyway (XS) :#ed.docs.windows.lock
     - [^] #ed.jump: Jump between diagram and text (S)
       - [^] #ed.jump.dep: Ctrl+click follows a dependency to its id (XS)
     - [^] #ed.lineno: Line numbers in the text editor (XS)  %% the warnings name them

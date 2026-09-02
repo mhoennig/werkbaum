@@ -7747,15 +7747,16 @@ Warnung den Zustand, und die Sicherungen halten den Text. Unabhängig davon
 kann `tools/pull-doc --git-commit` (D88) per Cron eine Git-Historie des
 Server-Dokuments führen — ein Netz außerhalb des Browsers.
 
-**Nachtrag — der modale Zwei-Fenster-Dialog wird revidiert (2026-09-02).**
-Das erste Netz oben ist in der Sache überholt: Es erschien auch dort, wo
+**Nachtrag — der modale Zwei-Fenster-Dialog ist weg (revidiert, gebaut 2026-09-02).**
+Das erste Netz oben war in der Sache überholt: Es erschien auch dort, wo
 nichts kollidiert (dasselbe geteilte Dokument in App und Tab — zwei
 Live-Clients, der Server führt zusammen), und es schützte nicht vor dem,
 wovor es warnte — hinter der Overlay-Schicht liefen Start, Flush und Feed
-weiter. Der eigentliche Verlust zwischen zwei Fenstern liegt in den
+weiter. Der eigentliche Verlust zwischen zwei Fenstern lag in den
 Sammel-Schlüsseln der Ablage, nicht im Dialog. Analyse, Alternativen und
-Entscheidungen: **D94** und `docs/rfc/002-mehrfenster.md`. Die drei
-anderen Netze (Sicherungen, Rettung, Wachhund) bleiben.
+Entscheidungen: **D94** und `docs/rfc/002-mehrfenster.md`. Der Präsenz-Kanal
+(Herzschlag, Timeout, Notluke) und der modale Dialog sind ersatzlos
+ausgebaut; die drei anderen Netze (Sicherungen, Rettung, Wachhund) bleiben.
 
 ## D90 — Die Dokumentart steht grau hinter dem Namens-Chip
 Nutzerwunsch, unmittelbar aus dem D89-Vorfall: Hinter der Brotkrume
@@ -8830,7 +8831,7 @@ ungepuffert durch. Fällt er durch, ist die Antwort nicht Node, sondern eine
 neue Frage an den Entwickler. Offen sonst nur die Prompts. Gebaut ist
 nichts.
 
-## D94 — Mehr-Fenster-Betrieb: getrennte Schlüssel, Sperre je Dokument, Dialog mit Auswegen — als RFC vorgelegt, nichts gebaut
+## D94 — Mehr-Fenster-Betrieb: getrennte Schlüssel, Sperre je Dokument, Dialog mit Auswegen — gebaut (2026-09-02)
 Gemeldet: Werkbaum als installierte App mit einem `?live=`-Dokument, dazu
 dieselbe Seite im Browser-Tab — der Tab stellt das zuletzt aktive
 (geteilte) Dokument her, und in beiden Fenstern steht sofort der modale
@@ -8918,5 +8919,65 @@ Browser-Bestand (Chrome 69, Firefox 96, Safari 15.4).
 im Browser mit zwei Tabs — vor allem der Fall, der heute rot ist: B legt
 ein Dokument an, A wechselt das Dokument, B's Dokument muss überleben.
 Die PWA-Nachstellung selbst bleibt Handtest (D73), ebenso Firefox und
-Safari. Werkzeuggrenzen wie in D79/D82/D83/D91-Nachtrag 9 benannt. Gebaut
-ist nichts.
+Safari. Werkzeuggrenzen wie in D79/D82/D83/D91-Nachtrag 9 benannt.
+
+**Gebaut (2026-09-02, vier Schritte wie im RFC §12):**
+
+- **Schema v3** (`docstore.js`): `readDocs` liest die Union aus Meta-, Text-
+  und Index-ids minus Tombstones; `writeDoc`/`writeIndexHint`/`removeDoc`/
+  `expireTombstones` ersetzen den Voll-Flush — der Index schreibt sich aus
+  `Speicher-ids ∪ eigene Liste` und entfernt nichts. Migration
+  (`migrateV3`) verteilt die alten Sammel-Stände und schreibt fehlende
+  Meta, idempotent. Die Stände liegen je Dokument (`werkbaum-snaps:<id>`,
+  `snapshots.js`); nur der Quota-Notfall fasst noch einen fremden
+  Schlüssel an — lesend gekürzt, nie aus dem eigenen Gedächtnis
+  überschrieben (§6.8).
+- **Dirty-Flush** statt Voll-Flush (`app.js`): die Flush-Punkte schreiben
+  nur, was dieses Fenster angelegt, umbenannt oder getippt hat, plus den
+  Index-Hinweis. Der Tastendruck bleibt `storeDocText` — er hebt einen
+  Tombstone selbst (Tippen ist Absicht).
+- **`docsync.js` (neu, headless, getestet)** wendet storage-Ereignisse an:
+  Liste, Namen, Tombstones, Stände-Cache, Reihenfolge-Hinweis; am aktiven
+  Dokument die drei Fälle umbenannt / anderswo gelöscht (behalten, bis
+  getippt wird) / fremd geschrieben. Datei-Handles werden bei `meta` neu
+  lazy aus IndexedDB nachgeladen bzw. bei `deleted` verworfen (§6.9).
+- **Web Locks je Dokument** (`ifAvailable`, gehalten, solange aktiv):
+  Fällt von selbst, wartende Requests werden geweckt. Bekommt ein Fenster
+  die Sperre nicht, zeigt es den Dialog über dem Editor mit drei Auswegen
+  (anderes Dokument öffnen / nur ansehen / trotzdem bearbeiten); ohne
+  Locks-API warnt der storage-Rückfall ohne Dialog. Die `tabConflict`-
+  Warnung nennt Dokument und Fensterart (aus der eigenen Sicht gefolgert,
+  `display-mode: standalone`).
+- Headless: 666 Tests grün, die Gegenprobe per Mutation gezogen — der
+  zurückgebaute Sweep lässt genau den benannten Test fallen.
+
+**Nachgemessen im Browser, zwei echte Tabs (2026-09-02).** Die neun Fälle
+aus RFC §10, Ergebnisse dort im Einzelnen: **1 bis 8 grün** — B's neues
+Dokument überlebt A's Flush (der Test für Befund 2, im Vor-v3-Build per
+Worktree gegengeprüft und dort nachweislich rot), beide Kamera-Stände
+bleiben nebeneinander, „anderswo gelöscht" behält den Editor und wird durch
+Tippen zurückgeholt, der Chip folgt einer fremden Umbenennung, der Dialog
+steht nur im zweiten Fenster und dessen „nur ansehen" wird von selbst
+beschreibbar, sobald das erste wegwechselt, dasselbe `live:`-Dokument in
+beiden Fenstern gibt **keinen** Dialog (das gemeldete Symptom), und bei
+wirklich voller Quota weichen die Stände, während die Dokumente bleiben.
+
+**Fall 9 deckte eine Lücke auf — geschlossen.** `reviveGoneDoc()` schrieb
+Meta und Text, aber nicht den Index-Hinweis: Ein anderswo gelöschtes und
+hier durch Tippen wiederbelebtes Dokument hing bis zum nächsten Flush-Punkt
+allein an seinen eigenen Schlüsseln. v3 findet es dort (`readDocs`
+vereinigt Meta, Text und Index), ein **Rückbau** auf einen Build vor v3
+aber nicht — der liest nur den Index und räumt bei seinem Voll-Flush jeden
+Text-Schlüssel ab, den er darin nicht findet. Also stiller Verlust, der
+teuerste Fehler (SPEC §4, D59). Die Funktion schreibt den Hinweis jetzt
+mit; Gegenprobe per Mutation gezogen — ohne die Zeile bleibt der Index ohne
+das Dokument, während Meta und Text dastehen. Sonst heilt sich der Index
+von selbst, weil `indexHint()` die Speicher-Schlüssel mitliest.
+
+**Offen bleibt die Handarbeit** (RFC §10): installierte PWA neben einem Tab,
+Firefox, Safari, ein Browser ohne Locks-API. Werkzeuggrenzen wie gehabt —
+die Browser-Fläche war verborgen, getippt wurde per `value` + `input`
+(D91-Nachtrag 8), gelöscht über die Ablage (`confirm` ist nicht stubbar,
+D91-Nachtrag 9), und der Live-Feed ruht im dauerhaft verborgenen
+Automatisierungs-Tab (D76-Nachtrag 1) — dass B A's Zeile sieht, ist deshalb
+über die Antwort auf den eigenen PATCH gemessen, nicht über den Feed.

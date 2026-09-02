@@ -1,9 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { LS_SNAPS, SNAP_KEEP, parseSnaps, addSnapshot, dropOldestSnap,
-         persistSnaps, snapLabel } from '../src/snapshots.js';
+import { SNAP_EVERY, SNAP_KEEP, parseSnaps, addSnapshot, dropOldestSnap,
+         persistSnaps, readSnapList, readAllSnaps, snapLabel, snapKey } from '../src/snapshots.js';
+import { DOC_SNAPS_PREFIX } from '../src/docstore.js';
 
 /* Frühere Stände (D54). Herausgezogen aus app.js, damit genau das prüfbar
-   wird, was dort dreimal daneben lag: die Regel, wann ein Stand entsteht. */
+   wird, was dort dreimal daneben lag: die Regel, wann ein Stand entsteht.
+   Seit RFC 002 liegt JEDES Dokument unter eigenem Schlüssel — der alte
+   Sammel-Schlüssel ließ den Flush des einen Fensters die Stände des anderen
+   wegwerfen, die Rettungs-Sicherungen eingeschlossen (Befund 3). */
 
 describe('addSnapshot — Takt und Knopf unterscheiden sich in einer Sache', () => {
   /* DER gemeldete Fehler (D54-Nachtrag 2): Dokument geöffnet, nichts geändert,
@@ -71,10 +75,10 @@ describe('addSnapshot — es bleiben die letzten 20', () => {
   });
 });
 
-describe('dropOldestSnap — das Älteste geht zuerst, dokumentübergreifend', () => {
-  it('trifft das älteste über alle Dokumente hinweg', () => {
+describe('dropOldestSnap — das Älteste geht zuerst, dokumentübergreifend (im Gedächtnis)', () => {
+  it('trifft das älteste über alle Dokumente hinweg und sagt, welches es war', () => {
     const snaps = {a: [{t: 50, text: 'a1'}], b: [{t: 10, text: 'b1'}, {t: 60, text: 'b2'}]};
-    expect(dropOldestSnap(snaps)).toBe(true);
+    expect(dropOldestSnap(snaps)).toBe('b');
     expect(snaps.b.map(s => s.text)).toEqual(['b2']);
     expect(snaps.a).toHaveLength(1);
   });
@@ -85,86 +89,117 @@ describe('dropOldestSnap — das Älteste geht zuerst, dokumentübergreifend', (
     expect(snaps).toEqual({});
   });
 
-  it('meldet false, wenn nichts mehr da ist', () => {
-    expect(dropOldestSnap({})).toBe(false);
-    expect(dropOldestSnap({a: []})).toBe(false);
+  it('meldet null, wenn nichts mehr da ist', () => {
+    expect(dropOldestSnap({})).toBe(null);
+    expect(dropOldestSnap({a: []})).toBe(null);
   });
 });
 
 /* Der Speicher ist mit den Dokumenten geteilt. Läuft er über, sollen die
    Dokumente überleben — Stände sind das Nachgeben-Bare. */
-describe('persistSnaps — Dokumente gehen vor Ständen', () => {
+describe('persistSnaps — je Dokument geschrieben, Verdrängung über die Schlüssel', () => {
   function speicher(limit){
-    const s = {daten: null, entfernt: false, versuche: 0};
-    return Object.assign(s, {
+    const m = new Map();
+    return {
+      getItem: k => (m.has(k) ? m.get(k) : null),
       setItem(k, v){
-        s.versuche++;
-        if(v.length > limit) throw new Error('QuotaExceededError');
-        s.daten = v;
+        if(String(v).length > limit) throw new Error('QuotaExceededError');
+        m.set(k, String(v));
       },
-      removeItem(){ s.entfernt = true; }
-    });
+      removeItem: k => m.delete(k),
+      keys: () => [...m.keys()],
+      map: m,
+    };
   }
 
-  it('speichert, wenn es passt', () => {
+  it('speichert unter dem Schlüssel des Dokuments, wenn es passt', () => {
     const store = speicher(1e6), snaps = {a: [{t: 1, text: 'kurz'}]};
-    expect(persistSnaps(snaps, store)).toBe(true);
-    expect(JSON.parse(store.daten)).toEqual(snaps);
-    expect(store.versuche).toBe(1);
+    expect(persistSnaps(store, snaps, 'a', store.keys())).toBe(true);
+    expect(JSON.parse(store.getItem(snapKey('a')))).toEqual(snaps.a);
   });
 
-  it('wirft die ältesten Stände weg, bis es passt', () => {
-    const snaps = {a: [{t: 1, text: 'x'.repeat(200)}, {t: 3, text: 'y'.repeat(200)}],
-                   b: [{t: 2, text: 'z'.repeat(200)}]};
-    const store = speicher(300);
-    expect(persistSnaps(snaps, store)).toBe(true);
-    /* Übrig bleibt der jüngste — t:1 und t:2 fielen in dieser Reihenfolge. */
-    expect(Object.keys(snaps)).toEqual(['a']);
+  it('wirft den ältesten Stand des EIGENEN Dokuments weg, bis der eigene Schlüssel passt', () => {
+    const snaps = {a: [{t: 1, text: 'x'.repeat(200)}, {t: 3, text: 'y'.repeat(200)}]};
+    const store = speicher(220);          /* eine Liste (217 Zeichen) passt, beide nicht */
+    expect(persistSnaps(store, snaps, 'a', store.keys())).toBe(true);
     expect(snaps.a.map(s => s.t)).toEqual([3]);
   });
 
-  it('gibt auf und räumt den Schlüssel weg, wenn selbst leer nicht passt', () => {
-    const snaps = {a: [{t: 1, text: 'x'}]};
-    const store = speicher(1);            /* nicht einmal "{}" passt */
-    expect(persistSnaps(snaps, store)).toBe(false);
-    expect(store.entfernt).toBe(true);
-    expect(snaps).toEqual({});
+  it('greift im Notfall auf den ältesten Stand EINES FREMDEN Dokuments zurück — lesend, §6.8', () => {
+    const snaps = {a: [{t: 9, text: 'x'.repeat(200)}, {t: 20, text: 'y'.repeat(200)}],
+                   b: [{t: 1, text: 'p'.repeat(100)}, {t: 4, text: 'q'.repeat(100)}]};
+    const store = speicher(220);
+    store.map.set(snapKey('b'), JSON.stringify(snaps.b));   /* der Zustand des anderen Fensters */
+    expect(persistSnaps(store, snaps, 'a', store.keys())).toBe(true);
+    /* Der älteste Stand (t:1) war b's — sein Schlüssel im Speicher wurde
+       gekürzt, nicht aus dem Gedächtnis überschrieben; dann räumte der
+       eigene älteste, bis a passte. */
+    expect(snaps.a.map(s => s.t)).toEqual([20]);
+    expect(JSON.parse(store.getItem(snapKey('b'))).map(s => s.t)).toEqual([4]);
+    expect(snaps.b).toBeUndefined();   /* Cache verworfen — beim nächsten Öffnen frisch gelesen */
   });
 
-  it('speichert unter dem vereinbarten Schlüssel', () => {
-    let key = null;
-    persistSnaps({}, {setItem(k){ key = k; }, removeItem(){}});
-    expect(key).toBe(LS_SNAPS);
+  it('entfernt den fremden Schlüssel ganz, wenn sein letzter Stand gefallen ist', () => {
+    const snaps = {a: [{t: 9, text: 'x'.repeat(200)}, {t: 20, text: 'y'.repeat(200)}],
+                   b: [{t: 1, text: 'p'.repeat(100)}]};
+    const store = speicher(220);
+    store.map.set(snapKey('b'), JSON.stringify(snaps.b));
+    expect(persistSnaps(store, snaps, 'a', store.keys())).toBe(true);
+    expect(store.getItem(snapKey('b'))).toBe(null);   /* sein letzter Stand ging */
+  });
+
+  it('gibt auf und räumt den eigenen Schlüssel weg, wenn selbst leer nicht passt', () => {
+    const snaps = {a: [{t: 1, text: 'x'}]};
+    const store = speicher(1);            /* nicht einmal "[]" passt */
+    expect(persistSnaps(store, snaps, 'a', store.keys())).toBe(false);
+    expect(store.getItem(snapKey('a'))).toBe(null);
+    expect(snaps).toEqual({});
   });
 });
 
-/* Was aus dem Speicher kommt, ist fremder Text: alte Fassung, von Hand
-   bearbeitet, halb geschrieben. Ein Sicherheitsnetz darf daran nicht die App
-   aufhängen. */
-describe('parseSnaps — beschädigter Speicher bringt die App nicht um', () => {
-  it('liest die erwartete Form', () => {
-    const o = {a: [{t: 1, text: 'x'}]};
-    expect(parseSnaps(JSON.stringify(o))).toEqual(o);
+/* Beim Laden werden die Schlüssel gelesen — ein Schlüssel ohne brauchbare
+   Liste fällt still weg. */
+describe('readAllSnaps / readSnapList — die Stände liegen je Dokument', () => {
+  const store = {
+    getItem: k => ({[snapKey('a')]: '[{"t":1,"text":"x"}]',
+                    [snapKey('b')]: '{kaputt',
+                    [snapKey('c')]: '[]'}[k] ?? null),
+  };
+  const keys = [snapKey('a'), snapKey('b'), snapKey('c'), 'werkbaum-ui'];
+
+  it('readAllSnaps liest alle Dokumente aus den Schlüsseln', () => {
+    expect(readAllSnaps(store, Object.keys({})).a).toBeUndefined();   /* ohne Schlüsselliste: nichts */
+    expect(Object.keys(readAllSnaps(store, [snapKey('a'), snapKey('b'), snapKey('c'), 'werkbaum-ui'])))
+      .toEqual(['a']);
+  });
+
+  it('readSnapList liest eine Liste, beschädigter Inhalt wird eine leere Liste', () => {
+    expect(readSnapList(store, 'a')).toEqual([{t: 1, text: 'x'}]);
+    expect(readSnapList(store, 'b')).toEqual([]);
+    expect(readSnapList(store, 'gibtsnicht')).toEqual([]);
+  });
+
+  it('parseSnaps wirft Einträge weg, die nicht die erwartete Form haben', () => {
+    const raw = JSON.stringify([{t: 1, text: 'gut'}, {t: 'später', text: 'x'}, {t: 2}, null, {text: 'ohne t'}]);
+    expect(parseSnaps(raw)).toEqual([{t: 1, text: 'gut'}]);
   });
 
   it.each([
     ['leer',              null],
     ['leerer String',     ''],
     ['kaputtes JSON',     '{nicht json'],
-    ['kein Objekt',       '"text"'],
-    ['Array statt Objekt', '[1,2,3]'],
+    ['keine Liste',       '"text"'],
+    ['Objekt statt Liste', '{"a":1}'],
     ['null',              'null'],
-  ])('gibt bei %s ein leeres Objekt zurück', (_name, raw) => {
-    expect(parseSnaps(raw)).toEqual({});
+  ])('gibt bei %s eine leere Liste zurück', (_name, raw) => {
+    expect(parseSnaps(raw)).toEqual([]);
   });
+});
 
-  it('wirft Einträge weg, die nicht die erwartete Form haben', () => {
-    const raw = JSON.stringify({
-      a: [{t: 1, text: 'gut'}, {t: 'späth', text: 'x'}, {t: 2}, null, {text: 'ohne t'}],
-      b: 'keine Liste',
-      c: []
-    });
-    expect(parseSnaps(raw)).toEqual({a: [{t: 1, text: 'gut'}]});
+describe('snapKey — der Schlüssel trägt das Präfix des Ablageschemas', () => {
+  it('werkbaum-snaps:<id>', () => {
+    expect(snapKey('example')).toBe(DOC_SNAPS_PREFIX + 'example');
+    expect(snapKey('live:https://x/api/v1/documents/a')).toBe(DOC_SNAPS_PREFIX + 'live:https://x/api/v1/documents/a');
   });
 });
 
@@ -193,3 +228,4 @@ describe('snapLabel — heute die Uhrzeit, sonst mit Datum', () => {
     expect(snapLabel(ts, 'xx-!', ts)).toBe('2026-03-05 14:37');
   });
 });
+
