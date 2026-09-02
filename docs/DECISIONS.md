@@ -8765,6 +8765,58 @@ auch wenn sie erst spät gebaut werden — RFC §5.7 und §5.10):
   keinen Git-Spiegel; eine echte Teilmenge der lokalen Fassung mit
   denselben Verben.
 
-Offen bleiben nur noch Messungen (GraalJS-Spike, SSE durch den Apache)
-und die Prompts. Die Umsetzungsreihenfolge steht im RFC; gebaut ist nichts.
+**Dritte Runde — Node ist eine Technologie, keine Abhängigkeit; der
+Entwurf kippt (2026-09-02, später am Tag).** Nutzer-FYI, als wichtig
+notiert: *„Bevor komplette neue Technologien eingeführt werden, hier z. B.
+Node.js, sollte dies dem menschlichen Entwickler deutlich gemacht werden
+und dessen Zustimmung eingeholt werden. Node.js einzuführen ist eine
+Dimension schlimmer als eine neue Dependency für den Kotlin/Spring-Boot
+Backend."* Das RFC hatte Node — bisher im Repo reines Build-Werkzeug
+(Vite) — als **Laufzeit** vorgeschlagen, lokal als Paket und auf dem
+Server als Dienst, und dabei nur die SDK-Abhängigkeit abgefragt; die
+eigentliche Frage war nie sichtbar gestellt. Die Regel steht jetzt in
+CLAUDE.md (Querschnitts-Konventionen): Eine neue Laufzeit oder Sprache wird
+als eigene, benannte Entscheidung mit den Alternativen innerhalb der
+vorhandenen Technologien vorgelegt — nie als Nebensatz.
+
+Nachgeholt in zwei Schritten — erst die **Beweggründe** (Nutzer: „die
+Frage aufsplitten und mich mehr nach Beweggründen fragen, daraus die
+eigentliche Entscheidung ableiten"), dann die Entscheidung:
+
+- **Beweggründe:** Entwickler arbeiten parallel an geteilten Plänen und
+  setzen agentische KI ein — Pläne im Dialog erstellen, Feature-Fortschritt
+  tracken; der Agent läuft meist lokal (OpenCode, Claude Code, Codex),
+  später auch im Frontend. Pläne liegen **beides**: als Datei im Repo und
+  als Server-Dokument. Der Text eines lokalen Plans **darf** zur Analyse
+  an den eigenen Server. Die Startzeit eines lokalen Prozesses ist egal.
+- **Daraus folgt: kein lokaler Prozess, keine neue Laufzeit.** Der
+  MCP-Server lebt **nur im Backend** (Streamable HTTP, Bearer-Token per
+  Spring Security), die Werkbaum-Logik läuft dort per GraalJS aus den
+  unveränderten Frontend-Modulen, beim Bauen zu einem ES-Modul gebündelt —
+  Node bleibt Build-Werkzeug. Jedes Werkzeug hat zwei Formen: `text` (der
+  Agent hat die Datei selbst gelesen, bekommt den neuen Text zurück und
+  schreibt ihn selbst; die Leitplanken sind dort **Befund**) und `document`
+  (UUID eines Dokuments dieses Backends; Zeilen-Diff, Konfliktschutz,
+  Leitplanken als **Sperre**). `document` ist bewusst eine UUID, keine URL
+  — kein Fremdserver, keine SSRF-Frage. Der Git-Spiegel ist `pull-doc`,
+  vom Cron oder vom Agenten selbst aufgerufen; ein Spiegel am Dienst
+  entfällt.
+- **Verworfen:** das Node-Paket (`#ai.mcp.node` `[-]`); als Rückfall
+  benannt, nicht gewählt: das Backend-Jar im stdio-Modus beim Entwickler
+  (keine neue Laufzeit, aber ohne Anlass, sobald der Text zum Server darf).
+- **Backend-Abhängigkeiten, Rückfrage gestellt und beantwortet:** GraalJS
+  (`org.graalvm.polyglot`) und der **Spring-AI-Starter**
+  (`spring-ai-starter-mcp-server-webmvc`); Boot-4-Verträglichkeit ist beim
+  Spike zu prüfen, Rückfall das MCP-Java-SDK direkt.
+- **Die Runde-1-Entscheidungen zum Node-Paket sind überholt** (SDK,
+  Serialisierung im Paket, npm); die Tool-Schicht lebt als
+  `frontend/src/inspect.js`, `guard.js`, `edit.js` — dort, wo `#ai.dialog`
+  sie ohnehin braucht.
+
+**Vor allem anderen steht jetzt der Spike** (`#ai.mcp.spike`): Läuft das
+Bündel in GraalJS mit denselben Zahlen wie Vitest, was kostet ein Kontext
+auf dem knappen Host (D76-Nachtrag 3), reicht der Apache den SSE-Strom
+ungepuffert durch. Fällt er durch, ist die Antwort nicht Node, sondern eine
+neue Frage an den Entwickler. Offen sonst nur die Prompts. Gebaut ist
+nichts.
 

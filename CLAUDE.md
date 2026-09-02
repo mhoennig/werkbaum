@@ -36,6 +36,13 @@ Integrations-Backend.
   `I18N`-Objekt (frontend/index.html) anlegen, dann in alle Sprachen
   übersetzen.
 - Keine neuen Laufzeit-Abhängigkeiten ohne Rückfrage (gilt in beiden Teilen).
+- **Eine neue Technologie ist eine Dimension schwerer als eine neue
+  Abhängigkeit** — Node.js als *Laufzeit* (auf dem Server oder als eigenes
+  Paket; bisher ist es nur Build-Werkzeug), eine weitere Sprache, ein
+  weiteres Laufzeitsystem. Das wird dem Entwickler **deutlich gemacht** und
+  seine **Zustimmung eingeholt**, als eigene benannte Entscheidung mit den
+  Alternativen innerhalb der vorhandenen Technologien (JVM, Vanilla JS im
+  Browser) — nie als Nebensatz eines Vorschlags (D93-Nachtrag).
 - Der Notationstext ist das führende Datenformat; kein Teil erfindet ein
   eigenes Speicherformat für die Struktur.
 - Im mitgelieferten Plan `docs/examples/werkbaum.werkbaum` bekommt **jeder**

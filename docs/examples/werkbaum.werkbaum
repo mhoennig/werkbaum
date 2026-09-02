@@ -225,16 +225,18 @@
     - [?] #ai.dialog: Edit the plan in a dialogue with the AI (L)
     - [?] #ai.key: Bring your own API key, no server in between (M)
     - [?] #ai.ground: llms.md grounds the model in the notation (S)
-    - [ ] #ai.mcp: An MCP server hands the plan to outside agents (XL) :#not.llms  %% docs/rfc/001-mcp-server.md
-      - [ ] #ai.mcp.node: A Node package that reuses the one JS parser (S)  %% no second parser, D14
-      - [ ] #ai.mcp.read: Resources: the agent guide, a file, a server document (S)
-      - [ ] #ai.mcp.inspect: Tools that answer what the diagram answers (M)  %% tree, warnings, cheapest path
-      - [ ] #ai.mcp.write: Writes go out as line diffs and are refused on conflict (M) :#col.live.diff
-      - [ ] #ai.mcp.guard: Guard rails: no broken notation, no [^] from an agent (S)
-      - [ ] #ai.mcp.verbs: Node verbs: add, move, size, remove — the rules live in the frontend (M) :#ai.mcp.write
-      - [ ] #ai.mcp.mirror: The shared document mirrors into git after every agent write (S) :#col.git.pull
-      + [?] #ai.mcp.http: Streamable HTTP, served by the backend running the JS modules (M) :#col.live.owner  %% GraalJS spike first
-      - [-] #ai.mcp.kotlin: A server inside the backend with its own Kotlin parser (L)  %% the second grammar D14 forbids
+    - [ ] #ai.mcp: An MCP server in the backend hands the plan to outside agents (XL) :#not.llms  %% docs/rfc/001-mcp-server.md
+      - [ ] #ai.mcp.spike: GraalJS runs the one JS parser inside the JVM — measured before anything is built (S)  %% memory, same numbers as vitest, SSE through Apache
+      - [ ] #ai.mcp.core: The tool layer as headless frontend modules, bundled into the jar (M) :#ai.mcp.spike
+      - [ ] #ai.mcp.read: Resources: the agent guide and the server documents (S)
+      - [ ] #ai.mcp.inspect: Tools that answer what the diagram answers, for a text or a document (M)  %% tree, warnings, cheapest path
+      - [ ] #ai.mcp.write: Writes to documents go out as line diffs and are refused on conflict (M) :#col.live.diff
+      - [ ] #ai.mcp.guard: Guard rails: no broken notation, no [^] — a block on documents, a finding on text (S)
+      - [ ] #ai.mcp.verbs: Node verbs: add, move, size, remove — text to text, and on documents (M) :#ai.mcp.write
+      - [ ] #ai.mcp.auth: A static bearer token via Spring Security; OAuth once there is an IdP (S)
+      - [ ] #ai.mcp.mirror: pull-doc names who changed which version — run by cron or by the agent (S) :#col.git.pull
+      - [-] #ai.mcp.node: A local Node package as stdio server (L)  %% a new runtime, and the text may go to the own server instead — D93
+      - [-] #ai.mcp.kotlin: A parser of its own in Kotlin (L)  %% the second grammar D14 forbids
 
 ---
 #wb
@@ -1298,39 +1300,50 @@
 
 #ai.mcp
   The other direction of the AI integration: not an LLM inside the editor,
-  but the plan handed to agents that live outside it — Claude Code, IDE
-  agents, desktop assistants — over the Model Context Protocol. Specified in
+  but the plan handed to agents that live outside it — Claude Code,
+  OpenCode, Codex, IDE agents — over the Model Context Protocol, served by
+  the backend over streamable HTTP. No local process, no new runtime: a
+  URL and a token in the host's configuration. Specified in
   docs/rfc/001-mcp-server.md before anything is built.
 
-#ai.mcp.node
-  The server is a small Node package that imports the frontend's headless
-  modules (parser, model, live diff) as they are. That keeps D14 intact: the
-  one JS parser stays the only parser, and agents get the same warnings,
-  effective statuses and cheapest path the diagram shows.
+#ai.mcp.spike
+  The whole design rests on the JVM running the frontend's JS modules
+  through GraalJS. Before a line is built, a spike measures it: the bundle
+  parses the shipped plan with the same numbers vitest reports, a context
+  costs a known amount of memory on the tight production host, and Apache
+  passes the SSE stream of a long tool call unbuffered.
+
+#ai.mcp.core
+  The tool layer — tree to JSON, guard rails, node edits — lives as headless
+  modules in frontend/src, tested with vitest, and is bundled at build time
+  into one ES module inside the jar. That keeps D14 intact: the one JS
+  parser stays the only parser, and Node stays what it is here, a build tool.
 
 #ai.mcp.read
-  What an agent can read: llms.md as the notation guide, a local .werkbaum
-  file, and a shared document on a Werkbaum backend by its URL — the same
-  three sources a person has.
+  What an agent can read: llms.md as the notation guide, and the documents
+  of this backend by UUID — with title, version and checksum. A local file
+  the agent reads itself and hands the text to the tools.
 
 #ai.mcp.inspect
   Tools that return the parsed tree with ids, statuses (own and effective),
   sizes (given and assumed), tags and dependencies, the warnings the editor
   would show, and the cheapest path with its stations and per-person load —
-  so the agent reasons on the model instead of re-implementing the SPEC.
+  for a text the agent passes in or a document it names — so the agent
+  reasons on the model instead of re-implementing the SPEC.
 
 #ai.mcp.write
-  Edits leave the server as the same line diffs the editor sends: against a
-  base version with checksum, refused on a real conflict, visible to every
-  open editor with "changed by" naming the agent. A local file is written
-  only if it is unchanged since it was read.
+  Edits to a document leave the server as the same line diffs the editor
+  sends: against a base version with checksum, refused on a real conflict,
+  visible to every open editor with "changed by" naming the agent's host.
+  For a text, the tool returns the new text and the agent writes the file.
 
 #ai.mcp.guard
   Guard rails on every write: the result must not break the notation (no new
   mixedGate, unknownStatus, descStray or duplicateId), and an agent never
   writes [^] — "in production" is a deploy's statement (D30), not a model's.
-  Content warnings like a size conflict are written and reported, so a human
-  sees them as the amber mark. Both rails can be lifted per call, never silently.
+  On a document that blocks the write; on a text it is a finding the agent
+  sees. Content warnings like a size conflict are written and reported, so a
+  human sees them as the amber mark. Both rails can be lifted per call.
 
 #ai.mcp.verbs
   Convenience for the model: add a node under a parent, move a subtree, set a
@@ -1338,24 +1351,26 @@
   gets wrong. The text-to-text rules live in frontend/src/edit.js beside the
   fold and short-id helpers, so exactly one place keeps knowing the line format.
 
+#ai.mcp.auth
+  One static bearer token per installation, checked by Spring Security like
+  the master password; without it the endpoint is closed, not open. OAuth
+  2.1, which MCP foresees for HTTP, waits for an identity provider.
+
 #ai.mcp.mirror
   Both at once: the agent works on the shared document, where the people
-  are, and the same plan stays under git control. After every agent write
-  the server runs pull-doc --git-commit for a configured mirror file, naming
-  the agent in the commit — the server is the source, git the archive. The
-  reverse (git as the source) is a different node, #col.git.
+  are, and the same plan stays under git control. pull-doc --git-commit
+  archives the server state — run by a cron, or by the agent itself right
+  after its change — and with --with-history the commit names who changed
+  which version, as trailers, so blame never credits the agent with a
+  human's lines. The server is the source, git the archive.
 
-#ai.mcp.http
-  Streamable HTTP as a second transport, so a hosted agent can reach the
-  server without a local process. Served by the Spring backend, which runs
-  the same JS modules through GraalJS — Kotlin is transport and access
-  (a static bearer token via Spring Security), the logic stays in one place.
-  A spike must first prove the modules run there and what they cost in
-  memory; if it fails, the Node package serves HTTP as its own service.
-  Documents only: no file store, no git mirror over the network.
+#ai.mcp.node
+  A local Node package as stdio server was the first draft: files and the
+  git mirror right at the process. Discarded because it would make Node a
+  runtime — a new technology, one dimension heavier than a dependency — and
+  the motives did not need it: the text may go to the own server instead.
 
 #ai.mcp.kotlin
-  Building the server into the Spring backend with a parser of its own would
-  put it next to the documents — but a Kotlin parser is exactly the second
-  grammar D14 forbids. Discarded; the backend may host the transport
-  (#ai.mcp.http), never a second grammar.
+  A parser of its own in Kotlin would put the logic next to the documents —
+  but it is exactly the second grammar D14 forbids. Discarded; the backend
+  runs the JS parser instead of rebuilding it.
