@@ -233,8 +233,8 @@
       - [ ] #ai.mcp.guard: Guard rails: no broken notation, no [^] from an agent (S)
       - [ ] #ai.mcp.verbs: Node verbs: add, move, size, remove — the rules live in the frontend (M) :#ai.mcp.write
       - [ ] #ai.mcp.mirror: The shared document mirrors into git after every agent write (S) :#col.git.pull
-      + [?] #ai.mcp.http: A remote transport over streamable HTTP (M)
-      - [-] #ai.mcp.kotlin: A server inside the backend (L)  %% would need a Kotlin parser, D14
+      + [?] #ai.mcp.http: Streamable HTTP, served by the backend running the JS modules (M) :#col.live.owner  %% GraalJS spike first
+      - [-] #ai.mcp.kotlin: A server inside the backend with its own Kotlin parser (L)  %% the second grammar D14 forbids
 
 ---
 #wb
@@ -1347,12 +1347,15 @@
 
 #ai.mcp.http
   Streamable HTTP as a second transport, so a hosted agent can reach the
-  server without a local process. Optional: stdio covers the local agents
-  first, and remote access raises the authentication question the backend
-  has not answered yet (#col.live.owner).
+  server without a local process. Served by the Spring backend, which runs
+  the same JS modules through GraalJS — Kotlin is transport and access
+  (a static bearer token via Spring Security), the logic stays in one place.
+  A spike must first prove the modules run there and what they cost in
+  memory; if it fails, the Node package serves HTTP as its own service.
+  Documents only: no file store, no git mirror over the network.
 
 #ai.mcp.kotlin
-  Building the server into the Spring backend would put it next to the
-  documents — but every useful tool needs the parser, and a Kotlin parser is
-  exactly the second grammar D14 forbids. Discarded in favour of the Node
-  package.
+  Building the server into the Spring backend with a parser of its own would
+  put it next to the documents — but a Kotlin parser is exactly the second
+  grammar D14 forbids. Discarded; the backend may host the transport
+  (#ai.mcp.http), never a second grammar.

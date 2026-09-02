@@ -6,7 +6,7 @@
 | Plan-Knoten | `#ai.mcp` in `docs/examples/werkbaum.werkbaum` |
 | Entscheidung | D93 in `docs/DECISIONS.md` (Verweis auf dieses RFC) |
 | Berührt | `frontend/src/*` (headless-Module, lesend), neues Paket `mcp/`, `tools/pull-doc` (Aufrufer), README, `.mcp.json` |
-| Berührt nicht | Notation (SPEC), `llms.md`, Backend-Code, Deploy-Skripte |
+| Berührt nicht | Notation (SPEC), `llms.md`, Deploy-Skripte; Backend-Code erst in Phase 6 (§7.3) |
 
 ## 1. Zusammenfassung
 
@@ -298,6 +298,36 @@ setzt genau darauf auf:
 Im Plan steht das als `#ai.mcp.mirror` mit Abhängigkeit auf
 `#col.git.pull`.
 
+**Wer steht im Commit?** Ein Spiegel-Commit enthält den **ganzen**
+Serverstand — die Zeilen des Agenten und alles, was Menschen seit dem
+letzten Commit geändert haben. „Der Agent hat diesen Commit gemacht“ ist
+also nur die halbe Wahrheit, und die Form der Urheber-Angabe entscheidet,
+ob `git blame` später lügt. Vier Formen, mit dem, was sie aussagen:
+
+| Form | Aussage | Preis |
+|---|---|---|
+| **a) `git commit --author="Claude Code <…>"`** | Der Agent ist Git-**Autor** des Commits — `blame` schreibt ihm **jede** Zeile darin zu, auch die, die Anna getippt hat | Falsche Blame-Auskunft; und Git verlangt eine E-Mail-Adresse, die es nicht gibt |
+| **b) `Co-Authored-By:`-Trailer** | Die Konvention, die das Repo für Claude-Commits schon nutzt: „hat beigetragen“, ohne Autor zu sein; GitHub zeigt Co-Autoren an | Braucht ebenfalls `Name <email>`; für Menschen aus der Server-Historie gibt es nur den Anzeigenamen |
+| **c) Freitext im Betreff** (`… (Version 8, via Claude Code)`) | Lesbar im `git log --oneline`, nennt den Auslöser | Nicht maschinenlesbar; nennt nur den Auslöser, nicht die Beteiligten |
+| **d) Historie im Rumpf + eigene Trailer** | Der Rumpf listet aus `GET /history`, **wer welche Version** seit dem letzten Spiegel-Commit geändert hat („v7 Anna · v8 Claude Code“); je Beteiligtem ein Trailer `Werkbaum-Changed-By: <Anzeigename>`, dazu `Werkbaum-Version: 8` | Ein zweiter `GET` je Commit; eigene Trailer statt der GitHub-Konvention |
+
+**Vorschlag: d, mit c im Betreff.** Es ist die einzige Form, die die
+Wahrheit des Commits trägt: Git-Autor bleibt, wer den Prozess betreibt
+(das ist buchstäblich richtig — er hat committet), die Beteiligten stehen
+mit Namen im Rumpf, maschinenlesbar per `git interpret-trailers`, und der
+`Werkbaum-Version:`-Trailer gibt `pull-doc` beim nächsten Lauf die
+Untergrenze für „seit dem letzten Commit“ — ohne ihn müsste der Betreff
+geparst werden. Damit wird der **Cron-Commit** (D88) im selben Zug
+ehrlicher: Auch dort stehen dann die Menschen, die seither geändert haben.
+Der Schalter dafür (`--with-history`) kommt ins Skript, nicht in den
+Aufrufer (D77-Nachtrag); der MCP-Server setzt ihn immer. Die Anzeigenamen
+bleiben, was sie in der Server-Historie sind: Behauptungen, keine
+Nachweise (D86) — im Commit steht deshalb „Changed-By“, nicht „Author“.
+
+Verworfen: **a** (Blame lügt) und **b** allein (erfundene E-Mail-Adressen,
+und ein Trailer ohne Versionsbezug sagt nicht, *was* der Beitrag war).
+Entscheidung: §11.
+
 ### 5.8 Prompts (optional, Phase 6)
 
 Zwei vorgefertigte Anweisungen, die ein Host dem Nutzer anbietet:
@@ -325,6 +355,89 @@ node mcp/server.js [--root <dir>]… [--server <backend-basis>] [--name <anzeige
 - `--mirror`: Spiegel-Datei je Dokument (§5.7); die Datei muss in einem
   git-Worktree unter einer erlaubten Wurzel liegen — `pull-doc` prüft das
   ohnehin.
+- `--http [<port>]`: statt stdio ein Streamable-HTTP-Endpunkt (§5.10);
+  schließt `--root` und `--mirror` aus.
+
+### 5.10 Streamable HTTP — der entfernte Transport
+
+Für lokale Hosts genügt stdio: Der Host startet den Server als
+Kindprozess, der Prozess hat die Rechte des Nutzers, die Dateiwurzeln sind
+seine. Ein **gehosteter** Agent (Anthropic-API-MCP-Connector, Claude
+Desktop mit entferntem Server, ein Managed Agent) kann keinen Kindprozess
+starten; er braucht eine URL. Das ist `#ai.mcp.http`, und drei Fragen
+hängen daran — Ort, Zugang, Umfang. Sie sind Architektur und werden jetzt
+entschieden, gebaut wird die Phase erst, wenn ein solcher Host wirklich
+ansteht.
+
+**Ort — wo läuft der HTTP-Server?** Vorweg, weil die Frage kam: MCP
+verlangt **kein** Node. Das Protokoll ist JSON-RPC über stdio oder HTTP,
+und es gibt offizielle SDKs für TypeScript, Python, **Kotlin und Java**
+sowie einen Spring-AI-Starter für MCP-Server. Das Backend *kann* also einen
+MCP-Server anbieten. Was Node im ersten Entwurf erzwang, war nicht das
+Protokoll, sondern der **Parser**: Jedes nützliche Tool braucht
+`parser.js`/`model.js`, und D14 verbietet eine zweite Grammatik. Daraus
+folgen drei echte Optionen:
+
+| Option | Aussage | Preis |
+|---|---|---|
+| **a) Dasselbe Node-Paket als eigener Dienst** auf dem Server-Host: systemd-User-Unit wie das Backend (D77), lauscht auf `127.0.0.1`, Apache reicht `/mcp/` per `RewriteRule … [P]` durch — dieselbe Zeile wie für `/api/` | Ein Paket, zwei Transporte; die Infrastruktur aus D77 wird wiederverwendet; das Paket läuft **neben** dem Backend und spricht es über `127.0.0.1` an | Node auf dem Server (bisher nur JDK, D77 — per nvm ins Home, dasselbe Muster wie das JDK); ein zweiter Dienst zu betreiben (`remote mcp …` als Ziel); das Bearer-Token prüft der Node-Dienst selbst |
+| b1) Im Kotlin-Backend, mit eigenem Parser | ein Dienst | **D14 — verworfen** (`#ai.mcp.kotlin`) |
+| **b2) Im Kotlin-Backend, das die JS-Module selbst ausführt** — GraalJS (`org.graalvm.polyglot`) lädt `frontend/src/*.js` als ES-Module in der JVM; Kotlin ist nur Transport (offizielles Kotlin-SDK oder Spring-AI-Starter) und Zugang (Spring Security, das es schon gibt) | **Ein** Deployment, kein Node auf dem Server, kein zweiter Dienst; das Bearer-Token ist ein Spring-Security-Filter neben dem Master-Passwort; die Werkbaum-Logik bleibt **einmal** vorhanden — dieselbe Technik, die der Plan für das IDE-Plugin vorsieht (`#idea.drift.js`: „den einen JS-Parser im IDE laufen lassen“) | Zwei neue Backend-Abhängigkeiten (MCP-SDK, GraalJS); Speicher auf dem knappen Host (D76-Nachtrag 3 — GraalJS im Interpreter-Modus auf Stock-OpenJDK kostet nach Erfahrungswerten einige zehn MB, **zu messen**); ein Spike, der beweist, dass die ESM-Module dort laufen (`crypto.subtle` in `live.js` gibt es in GraalJS nicht — die Prüfsumme muss dort aus Kotlin kommen); und die Tool-Schicht muss so geschnitten sein, dass **dieselbe** JS-Datei in Node (stdio) und in GraalJS (HTTP) läuft |
+| c) Gar nicht; entfernte Hosts nutzen eine stdio-Brücke (`mcp-remote` o. Ä.) | nichts zu bauen | Löst das Problem nicht: Die Brücke braucht selbst einen Prozess beim Nutzer, und ein Managed Agent hat keinen |
+
+Für die **lokalen** Agenten (Claude Code mit Dateien und Git-Spiegel)
+bleibt stdio in jedem Fall Node — b2 ersetzt nicht das Paket, sondern nur
+den entfernten Transport. Damit die beiden Hosts nicht auseinanderlaufen,
+wird die Tool-Schicht (`inspect`, `guard`, `verbs`) als reine ESM-Datei
+ohne Node-APIs geschnitten und von beiden Seiten aufgerufen; Ablagen und
+Transport sind je Host eigen. Das ist bei b2 Pflicht, bei a nur Ordnung —
+und es kostet nichts, es von Anfang an so zu tun.
+
+**Vorschlag: b2, unter Vorbehalt eines Spikes; a als Rückfall.** b2 ist
+die bessere Architektur — ein Dienst, die vorhandene Zugangsschicht, kein
+zweites Laufzeitsystem auf dem Server —, hängt aber an zwei Messungen, die
+vor Phase 6 stehen: Laufen die Module in GraalJS (ESM-Laden, kein
+`crypto.subtle`, kein `TextEncoder`-Unterschied), und was kostet es an
+Speicher auf der Zielumgebung. Fällt eine der beiden durch, ist a ohne
+Umbau der Tool-Schicht möglich. Unabhängig von der Wahl gilt: Streamable
+HTTP läuft im **zustandslosen** Modus (keine Sitzungs-Ids, die einen
+Neustart nicht überleben), und ob der Apache der Zielumgebung den
+SSE-Strom langer Werkzeugaufrufe **ungepuffert** durchreicht, ist zu
+messen (die D17-Nachtrag-4-Lehre) — Long Polling ist gemessen
+(D76-Nachtrag 2), ein Strom nicht.
+
+**Zugang — wer darf?** Die MCP-Spezifikation sieht für HTTP-Transporte
+OAuth 2.1 vor (der Server als Resource Server, Discovery über
+Protected-Resource-Metadaten). Werkbaum hat aber weder Nutzerkonten noch
+einen Identity Provider; der Zugriff auf Dokumente ist die **unerratbare
+UUID** (D76), und die REST-API steht damit heute schon jedem offen, der
+eine kennt.
+
+| Option | Aussage | Preis |
+|---|---|---|
+| a) **Kein Zugang nötig** — der Server tut über HTTP nichts, was die REST-API nicht auch tut (Dokument per UUID lesen/schreiben, `llms.md` ist öffentlich) | konsequent zum UUID-Modell; nichts zu verwalten | Ein offener Rechen-Endpunkt (`inspect` parst beliebig große Texte) lädt zum Missbrauch ein; und sobald `#col.live.owner` existiert, braucht der Server einen Weg, das Owner-Passwort **je Aufrufer** zu bekommen — ohne Zugangsschicht gibt es den nicht |
+| **b) Statisches Bearer-Token** je Installation (`WERKBAUM_MCP_TOKEN` in der Umgebung, wie das Master-Passwort D77); Hosts geben es als Header mit (Claude Code: `--header "Authorization: Bearer …"`, der API-MCP-Connector: `authorization_token`) | Eine Zeile Konfiguration, keine Konten; hält den Rechen-Endpunkt zu; das Token reist über HTTPS (Apache), nie im Transkript — es steht in der Host-Konfiguration | Ein Token für alle Aufrufer: keine Unterscheidung, wer schreibt (den Namen liefert weiterhin der Handshake — eine Behauptung); Rotation von Hand |
+| c) OAuth 2.1 von Anfang an | spezifikationsgemäß; Hosts wie Claude.ai-Connectoren erwarten es | Braucht einen Authorization Server, den es nicht gibt — entweder selbst bauen (weit über den Anlass hinaus) oder an einen IdP hängen; die Taiga-Instanz wechselt auf OIDC (D91-Nachtrag 1), das wäre der naheliegende, aber fremde Anker |
+
+**Vorschlag: b jetzt, c dann, wenn es einen IdP gibt.** Das Bearer-Token
+ist die Zugangsschicht, die `#col.live.owner` ohnehin braucht: Das
+Owner-Passwort eines Dokuments kommt später **nicht** als Tool-Parameter
+(Transkript), sondern über dieselbe Umgebung des Dienstes — je Dokument
+eine Zuordnung, die der Betreiber pflegt. OAuth 2.1 wird nicht
+ausgeschlossen, nur nicht vor dem IdP gebaut; die Schnittstelle der Tools
+ändert sich dadurch nicht.
+
+**Umfang — was bietet der entfernte Server an?** Weniger als der lokale:
+**keine Datei-Ablage** (`--root` entfällt — der Dienst hat kein
+Nutzer-Dateisystem, und ein Pfad-Parameter über HTTP wäre die Einladung,
+die §8 verbietet) und **keinen Git-Spiegel** (`--mirror` entfällt — der
+Cron-`pull-doc` auf dem Server-Host übernimmt das Archiv für alle, ob der
+Schreibende lokal oder entfernt war). Übrig bleiben Guide, Dokumente und
+alle Tools auf Dokumenten. Damit ist die entfernte Fassung eine **echte
+Teilmenge** der lokalen, und ein Agent, der beides kennt, merkt keinen
+Unterschied in den Verben.
+
+Entscheidung: §11.
 
 Für Claude Code:
 
@@ -412,15 +525,18 @@ mcp/
   server.js             MCP-Rahmen: Resources, Tools, Prompts registrieren; stdio
   stores/file.js        lesen, Prüfsumme, atomar schreiben, Wurzel-Prüfung
   stores/live.js        GET / PATCH gegen /api/v1/documents (D76), clientId/seq
-  inspect.js            Baum → JSON, Warnungen → {type, line, text}, Pfad → Stationen
-  guard.js              Leitplanken (§5.5): Struktur-Warnungen, [^]-Sperre
-  verbs.js              Knoten-Verben → Aufrufe von frontend/src/edit.js, dann Ablage
+  core/inspect.js       Baum → JSON, Warnungen → {type, line, text}, Pfad → Stationen
+  core/guard.js         Leitplanken (§5.5): Struktur-Warnungen, [^]-Sperre
+  core/verbs.js         Knoten-Verben → Aufrufe von frontend/src/edit.js (Text → Text)
   tests/*.test.js       Vitest gegen einen In-Memory-Transport des SDK; Fixtures = SPEC §10 und der mitgelieferte Plan
 ```
 
-Die Regeln in `inspect.js` und `guard.js` sind Text→JSON bzw. Text→Text und
-damit headless testbar — die Hausregel aus D54-Nachtrag 3 gilt auch hier;
-`server.js` verdrahtet nur.
+`core/` ist die **gemeinsame Tool-Schicht**: reine ES-Module ohne
+Node-APIs (kein `fs`, kein `process`, keine `crypto`), Text hinein, JSON
+oder Text heraus. Genau diese Dateien führt in Phase 6 auch das Backend in
+GraalJS aus (§5.10, b2) — Ablagen und Transport sind je Host eigen, die
+Regeln nicht. Die Regeln sind damit headless testbar — die Hausregel aus
+D54-Nachtrag 3 gilt auch hier; `server.js` verdrahtet nur.
 
 ### 7.3 Backend
 
@@ -433,6 +549,18 @@ Dinge sind zu **prüfen**, nicht zu bauen:
 - `clientId`-Präfix `mcp-`: Das Backend behandelt es wie jeden Client; ein
   späterer Filter („nur menschliche Änderungen zeigen“) wäre ein eigener
   Wunsch.
+
+**Falls §5.10 auf b2 fällt** (HTTP-Transport im Backend), kommt in
+Phase 6 dazu — und erst dann: ein Paket `de.werkbaum.integration.mcp` mit
+dem MCP-Endpunkt unter `/api/v1/mcp` (Kotlin-SDK oder Spring-AI-Starter),
+ein GraalJS-Kontext, der `frontend/src/*.js` und die gemeinsame
+Tool-Schicht lädt (die Dateien wandern beim Bauen ins Jar als Ressourcen —
+dieselbe Quelle, keine Kopie), die Prüfsumme aus `java.security`
+statt `crypto.subtle`, ein Bearer-Token-Filter in `SecurityConfiguration`
+neben dem Master-Passwort, `taiga`/`mcp` in `GET /info`, und
+`build.gradle.kts` mit den zwei Abhängigkeiten (Rückfragepflicht,
+CLAUDE.md — mit §11 gestellt). Der Speicher-Nachweis gehört in den
+DECISIONS-Nachtrag, gemessen wie in D77.
 
 Perspektivisch berührt: `#col.live.owner`. Sobald Verwaltungs-Aktionen an
 ein Owner-Passwort gebunden sind, braucht der MCP-Server einen Weg, es zu
@@ -465,7 +593,7 @@ eingecheckt, wie im Frontend).
 | `README.md` / `README.de.md` | Abschnitt „Für KI-Agenten: der MCP-Server“ — Installation, die drei Quellen, die Leitplanken |
 | `docs/CHANGELOG.md` | je Phase eine Zeile |
 | `.github/workflows/*` | `npm --prefix mcp test` neben dem Frontend-Test; kein Deploy (lokales Werkzeug) |
-| `tools/pull-doc` | **unverändert im Verhalten**; ein neuer Schalter `--author <text>` für den Urheber in der Commit-Nachricht (§5.7) — der Schalter kommt ins Skript, nicht in den Aufrufer (D77-Nachtrag) |
+| `tools/pull-doc` | **unverändert im Verhalten**; ein neuer Schalter `--with-history` (§5.7): holt `GET /history`, listet im Rumpf, wer welche Version seit dem letzten Spiegel-Commit geändert hat, und setzt die Trailer `Werkbaum-Changed-By:` und `Werkbaum-Version:` — der Schalter kommt ins Skript, nicht in den Aufrufer (D77-Nachtrag); der MCP-Server setzt ihn immer, der Cron darf |
 | `scripts/deploy-*.sh`, `tools/remote` | **unverändert** — nichts davon läuft auf dem Server |
 | `frontend/public/llms.md` | **unverändert** (Notation, D43); ein Verweis auf den Server gehört in `llms.txt` (Wegweiser, D43-Nachtrag 2) |
 
@@ -503,7 +631,7 @@ eingecheckt, wie im Frontend).
 | Git als **Quelle** (Server folgt dem Repo) | Umkehrung von §5.7; Konfliktmarker mitten in der Notation, eigene Fragen | `#col.git.pr`, `#col.git.auto` |
 | `?sourceUrl=`-Quellen | nur lesend; der Agent kann die URL selbst holen | Nachtrag bei Bedarf |
 | Streamable HTTP | Phase 6, hängt an der Authentifizierungsfrage | `#ai.mcp.http` |
-| Ein Kotlin-Server | D14 | `#ai.mcp.kotlin` (`[-]`) |
+| Ein Kotlin-Server **mit eigenem Parser** | D14 — das Backend darf den Transport tragen (§5.10, GraalJS), nie eine zweite Grammatik | `#ai.mcp.kotlin` (`[-]`) |
 
 ## 10. Umsetzungsreihenfolge
 
@@ -539,7 +667,14 @@ Plan-Knoten gehen beim Mergen auf `[x]`.
    verschmutzte Spiegel-Datei wird vom nächsten Commit überschrieben und
    die Abweichung steht im Diff.
 6. **Prompts und HTTP** (`#ai.mcp.http`, optional): die zwei Prompts;
-   Streamable HTTP erst nach `#col.live.owner`.
+   Streamable HTTP erst nach `#col.live.owner`, und davor die zwei
+   Messungen aus §5.10 — der GraalJS-Spike (laufen `parser.js`,
+   `model.js` und `mcp/core/*` als ES-Module in der JVM, was kostet der
+   Kontext auf der Zielumgebung) und der SSE-Strom durch den Apache. Fällt
+   der Spike durch, trägt das Node-Paket den Transport (`--http`) als
+   eigener Dienst. Nachweis: derselbe Werkzeugaufruf liefert über stdio
+   und über HTTP dasselbe JSON; ohne Bearer-Token 401; ein `--root`-Pfad
+   wird über HTTP gar nicht erst angeboten.
 
 ## 11. Entscheidungen (Multiple-Choice-Runde, 2026-09-02)
 
@@ -553,10 +688,22 @@ Plan-Knoten gehen beim Mergen auf `[x]`.
 | Schreib-Tools (§5.4) | **Zusätzlich Knoten-Verben** | `add_node`, `move_node`, `set_size`, `remove_node`; Regeln in `frontend/src/edit.js`, nicht im Paket |
 | Verteilung | **Nur aus dem Repo** | `.mcp.json`; npm erst auf Nachfrage von außen |
 
+**Zweite Runde** (Nutzer: Architektur-Entscheidungen jetzt diskutieren,
+auch wenn sie erst später gebaut werden — §5.7 und §5.10):
+
+| Frage | Entschieden | Anmerkung |
+|---|---|---|
+| Urheber im Spiegel-Commit (§5.7) | **Historie im Rumpf + Trailer** | `Werkbaum-Changed-By:` je Beteiligtem, `Werkbaum-Version:`; Git-Autor bleibt der Betreiber; gilt auch für den Cron-Commit (`pull-doc --with-history`) |
+| HTTP: Ort (§5.10) | **Im Backend, das die JS-Module per GraalJS ausführt** — Spike vorbehalten | Kotlin ist Transport und Zugang, die Logik bleibt einmal vorhanden; fällt der Spike durch (ESM in GraalJS, Speicher auf dem Host), Rückfall auf den Node-Dienst hinter Apache ohne Umbau der Tool-Schicht |
+| HTTP: Zugang (§5.10) | **Statisches Bearer-Token** | `WERKBAUM_MCP_TOKEN`; OAuth 2.1 erst mit einem IdP |
+| HTTP: Umfang (§5.10) | **Nur Dokumente** | keine Datei-Ablage, kein Git-Spiegel über HTTP; echte Teilmenge der lokalen Fassung |
+
 **Weiterhin offen** (stellt sich erst beim Bauen oder danach):
 
-1. **Streamable HTTP** — wartet auf `#col.live.owner`; bis dahin stdio.
-2. **`--author`-Schalter in `pull-doc`** — Form der Urheber-Angabe in der
-   Commit-Nachricht (Trailer `Co-Authored-By:` oder Freitext im Betreff);
-   entscheidet sich beim Bauen von Phase 5.
-3. **Prompts** (§5.8) — ob zwei genügen und wie sie heißen; Phase 6.
+1. **Prompts** (§5.8) — ob zwei genügen und wie sie heißen; Phase 6.
+2. **Der GraalJS-Spike** — laufen `parser.js`/`model.js` und die
+   Tool-Schicht als ES-Module in der JVM, und was kostet der Kontext an
+   Speicher auf der Zielumgebung (D76-Nachtrag 3)? Messung vor Phase 6;
+   das Ergebnis entscheidet zwischen b2 und a (§5.10) und gehört als
+   Nachtrag zu D93.
+3. **SSE durch den Apache** — Messung vor Phase 6 (§5.10).

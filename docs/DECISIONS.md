@@ -8734,7 +8734,37 @@ der Option „zunächst offen halten“ — keine wurde gewählt):
 - **Die Baum-Serialisierung bleibt im MCP-Paket**, **verteilt wird nur
   aus dem Repo** (`.mcp.json`, kein npm).
 
-Offen bleibt der Transport über Streamable HTTP (nach `#col.live.owner`)
-und die Form der Urheber-Angabe im `pull-doc`-Commit. Die
-Umsetzungsreihenfolge steht im RFC; gebaut ist nichts.
+**Zweite Runde** (Nutzer: Architektur-Entscheidungen jetzt diskutieren,
+auch wenn sie erst spät gebaut werden — RFC §5.7 und §5.10):
+
+- **Urheber im Spiegel-Commit: Historie im Rumpf plus Trailer.** Ein
+  Spiegel-Commit trägt den ganzen Serverstand, auch die Zeilen der
+  Menschen seit dem letzten Commit; den Agenten zum Git-Autor zu machen
+  ließe `blame` lügen. Git-Autor bleibt der Betreiber, der Rumpf listet
+  aus der Server-Historie, wer welche Version geändert hat, je
+  Beteiligtem ein Trailer `Werkbaum-Changed-By:`, dazu `Werkbaum-Version:`
+  als Untergrenze für den nächsten Lauf. Das gilt für den Cron-Commit
+  (D88) gleich mit — auch der wird damit ehrlicher.
+- **Streamable HTTP läuft im Backend, das die JS-Module per GraalJS
+  ausführt** — Spike vorbehalten. Die Frage des Nutzers („Kotlin kann das
+  nicht?“) hat den ersten Entwurf korrigiert: MCP braucht kein Node, nur
+  der Parser erzwang es, und den kann die JVM ausführen statt
+  nachzubauen — dieselbe Technik, die der Plan für das IDE-Plugin
+  vorsieht (`#idea.drift.js`). Kotlin ist Transport und Zugang, die Logik
+  bleibt einmal vorhanden, kein zweiter Dienst auf dem knappen Host. Der
+  Spike (ESM in GraalJS, Speicher auf der Zielumgebung) entscheidet vor
+  Phase 6; Rückfall ist der Node-Dienst hinter Apache, ohne Umbau der
+  Tool-Schicht, die deshalb von Anfang an als reine ES-Module ohne
+  Node-APIs geschnitten wird.
+- **Zugang über ein statisches Bearer-Token** je Installation
+  (`WERKBAUM_MCP_TOKEN`, wie das Master-Passwort D77); OAuth 2.1, das die
+  MCP-Spezifikation vorsieht, erst mit einem Identity Provider. Das Token
+  ist zugleich die Schicht, über die später das Owner-Passwort
+  (`#col.live.owner`) kommt — nie als Tool-Parameter.
+- **Der entfernte Server bietet nur Dokumente an** — keine Datei-Ablage,
+  keinen Git-Spiegel; eine echte Teilmenge der lokalen Fassung mit
+  denselben Verben.
+
+Offen bleiben nur noch Messungen (GraalJS-Spike, SSE durch den Apache)
+und die Prompts. Die Umsetzungsreihenfolge steht im RFC; gebaut ist nichts.
 
