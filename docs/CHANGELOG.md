@@ -19,6 +19,7 @@ reverse.
 
 ## 2026-09-02
 
+- Running the installed app and a browser tab side by side recorded as planned: documents get their own storage keys so windows stop deleting each other's work, a per-document lock finds the one real loss case, and the second window gets three exits instead of "continue anyway" — spelled out in RFC 002 before it is built
 - An MCP server for AI agents recorded as planned: it lives in the backend, runs the one JS parser through GraalJS, hands plans to Claude Code and other agents as resources and tools over streamable HTTP, and writes changes as conflict-safe line diffs — no new runtime, spelled out in an RFC before it is built
 
 ## 2026-08-28

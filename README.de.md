@@ -219,7 +219,7 @@ anderen Domain läge das Web-Verzeichnis in `…/subs-ssl/<name>/`.)
 - `docs/DECISIONS.md` — Design-Entscheidungen mit Begründung
 - `docs/ROADMAP.md` — Mermaid-Plugin, Taiga-Integration, Tenzu
 - `docs/TASKS.md` — offene Aufgaben (Checkboxen)
-- `docs/rfc/` — Vorschläge, die mehrere Teile des Repos berühren und vor dem Bauen abgewogen werden (001: ein MCP-Server für KI-Agenten)
+- `docs/rfc/` — Vorschläge, die mehrere Teile des Repos berühren und vor dem Bauen abgewogen werden (001: ein MCP-Server für KI-Agenten; 002: installierte App und Browser-Tab nebeneinander)
 - `docs/brand/BRAND.md` — Logo, Wortbild, Anwendungsregeln
 - `docs/design/` — Design-Herleitung der Marke
 - `CLAUDE.md` — Projektkontext für Claude Code

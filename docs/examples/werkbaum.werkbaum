@@ -72,10 +72,15 @@
     - [^] #ed.mobile: Works on a phone (S)
       - [^] #ed.mobile.tip: A tap on a node opens its tooltip as a window (XS)  %% no pointer, no tooltip
     - [^] #ed.tipwindow: The same window at the pointer and on keyboard focus (XS)  %% a title has no paragraphs and never shows on focus
-    - [^] #ed.docs: Several documents in one editor (M)
+    - [^] #ed.docs: Several documents in one editor (L)
       - [^] #ed.docs.picker: Breadcrumb picker in the app header (S)  %% Werkbaum › name, see D81
       - [^] #ed.docs.url: Load a document from ?sourceUrl= (S)
       - [^] #ed.docs.restore: Restore a shipped document from the menu (XS)
+      - [ ] #ed.docs.windows: Two windows on one storage: app and tab side by side (M)  %% docs/rfc/002-mehrfenster.md, D94
+        - [ ] #ed.docs.windows.keys: Every document owns its keys — text, meta, states; the index never deletes (S)
+        - [ ] #ed.docs.windows.sync: The storage event keeps the list, names and tombstones current in every window (S)
+        - [ ] #ed.docs.windows.lock: A per-document lock via the Web Locks API finds the one real loss case (S) :#ed.docs.windows.keys
+        - [ ] #ed.docs.windows.dialog: Three exits instead of continue anyway: open another, view only, edit anyway (XS) :#ed.docs.windows.lock
     - [^] #ed.jump: Jump between diagram and text (S)
       - [^] #ed.jump.dep: Ctrl+click follows a dependency to its id (XS)
     - [^] #ed.lineno: Line numbers in the text editor (XS)  %% the warnings name them
@@ -164,7 +169,7 @@
       - [^] #col.live.rename: Renaming reaches everyone (S)  %% PATCH /title + RENAMED in the feed, see D85
       - [^] #col.live.history: Earlier states come from the server (M)  %% milestones in the clock menu, rollback for everyone, see D86
       - [^] #col.live.name: A self-chosen display name (XS)  %% fills "changed by", a claim, not a proof
-      - [^] #col.live.safe: Unsent work is loud, rescued and never silently discarded (M)  %% modal for a second window, watchdog, local backups — see D89
+      - [^] #col.live.safe: Unsent work is loud, rescued and never silently discarded (M)  %% watchdog, local backups — see D89; the modal for a second window gives way to #ed.docs.windows (D94)
       - [-] #col.live.ws: Transport over a websocket (S)  %% plain HTTP turned out to be enough
       - [-] #col.live.own: A merge algorithm of our own (XL)  %% solved problem, do not reinvent
   - [?] #mmd: Mermaid plugin (XL)
@@ -600,6 +605,32 @@
 #ed.docs.restore
   Brings a shipped document back to the state it was delivered in. Without it
   an edited example would never see a newer version again.
+
+#ed.docs.windows
+  The installed app and a browser tab share one origin and thus one storage.
+  Today a second window gets a modal dialog even where nothing collides, while
+  the full flush behind it silently deletes documents the other window
+  created — RFC 002 removes the collision instead of warning about it.
+
+#ed.docs.windows.keys
+  Text, metadata and earlier states live under their own key per document,
+  and deleting leaves a tombstone. No window ever writes another window's
+  key, so different documents in two windows cannot clash at all.
+
+#ed.docs.windows.sync
+  Windows learn about each other through the storage event: a document
+  created, renamed or deleted elsewhere shows up without a reload. A document
+  deleted elsewhere while open here stays until you type — typing recreates it.
+
+#ed.docs.windows.lock
+  One loss case remains: the same non-shared document in front in two windows.
+  A Web Locks lock per document is taken while the document is active; it is
+  atomic and falls by itself when the window closes — no heartbeat, no timer.
+
+#ed.docs.windows.dialog
+  The window that does not get the lock chooses: open another document, view
+  this one read-only until the other window lets go, or edit anyway with a
+  standing warning that names the document. Shared documents never ask.
 
 #ed.jump
   Alt+click on a node selects its line in the text; Alt+click in the text

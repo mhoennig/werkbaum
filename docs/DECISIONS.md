@@ -7747,6 +7747,16 @@ Warnung den Zustand, und die Sicherungen halten den Text. Unabhängig davon
 kann `tools/pull-doc --git-commit` (D88) per Cron eine Git-Historie des
 Server-Dokuments führen — ein Netz außerhalb des Browsers.
 
+**Nachtrag — der modale Zwei-Fenster-Dialog wird revidiert (2026-09-02).**
+Das erste Netz oben ist in der Sache überholt: Es erschien auch dort, wo
+nichts kollidiert (dasselbe geteilte Dokument in App und Tab — zwei
+Live-Clients, der Server führt zusammen), und es schützte nicht vor dem,
+wovor es warnte — hinter der Overlay-Schicht liefen Start, Flush und Feed
+weiter. Der eigentliche Verlust zwischen zwei Fenstern liegt in den
+Sammel-Schlüsseln der Ablage, nicht im Dialog. Analyse, Alternativen und
+Entscheidungen: **D94** und `docs/rfc/002-mehrfenster.md`. Die drei
+anderen Netze (Sicherungen, Rettung, Wachhund) bleiben.
+
 ## D90 — Die Dokumentart steht grau hinter dem Namens-Chip
 Nutzerwunsch, unmittelbar aus dem D89-Vorfall: Hinter der Brotkrume
 („Werkbaum › Name", D81) soll erkennbar sein, was für ein Dokument vorn ist —
@@ -8820,3 +8830,93 @@ ungepuffert durch. Fällt er durch, ist die Antwort nicht Node, sondern eine
 neue Frage an den Entwickler. Offen sonst nur die Prompts. Gebaut ist
 nichts.
 
+## D94 — Mehr-Fenster-Betrieb: getrennte Schlüssel, Sperre je Dokument, Dialog mit Auswegen — als RFC vorgelegt, nichts gebaut
+Gemeldet: Werkbaum als installierte App mit einem `?live=`-Dokument, dazu
+dieselbe Seite im Browser-Tab — der Tab stellt das zuletzt aktive
+(geteilte) Dokument her, und in beiden Fenstern steht sofort der modale
+Dialog aus D89 mit dem einzigen Ausgang „Trotzdem fortfahren“. Fazit des
+Nutzers: App und Browser lassen sich im selben Browser gar nicht
+nebeneinander benutzen. Der Plan liegt als **RFC 002**
+(`docs/rfc/002-mehrfenster.md`), im mitgelieferten Plan als
+`#ed.docs.windows`; sieben Fragen wurden als Multiple-Choice entschieden.
+
+**Der Befund reicht weiter als das Symptom.** Der Dialog ist nur für den
+Benutzer modal: `updateTabModal()` hängt ein Overlay an, dahinter laufen
+`loadDocs()`, `initDocs()` samt `persistDocs()`, `startLive()`, der
+Feed, der Stände-Takt und die Flushes bei `pagehide`/`visibilitychange`
+weiter. Und der Voll-Flush ist der eigentliche Fehler: `storeDocs()`
+schreibt den Index aus der **eigenen** In-Memory-Liste und **entfernt
+jeden Text-Schlüssel, der nicht darin steht** (der D83-Sweep) — ein im
+anderen Fenster angelegtes Dokument wird beim nächsten Flush samt Text
+gelöscht. `persistSnaps()` schreibt die Stände **aller** Dokumente unter
+einen Schlüssel und wirft damit die des anderen Fensters weg, die
+D89-Rettungssicherungen eingeschlossen. Beides trifft zwei gewöhnliche
+Tabs genauso und braucht weder PWA noch Live-Editing. Dagegen ist
+dasselbe `live:`-Dokument in zwei Fenstern unbedenklich (je Tab eigene
+Client-Kennung im `sessionStorage`, D76-Nachtrag 7) — der Dialog verbot
+ausgerechnet den Fall, der funktioniert.
+
+**Was am Speicher nicht geht:** Web-Speicher hängt am Ursprung, nicht an
+der Darstellungsart — App und Tab teilen localStorage, IndexedDB, Service
+Worker und BroadcastChannel ohne Schalter; Storage Buckets teilen nur
+innerhalb des Ursprungs. Eine eigene Subdomain trennte, kostete aber zwei
+Installationen (Alternative E im RFC).
+
+**Entschieden (Nutzer, sieben Fragen):**
+
+- **Je Dokument eigene Schlüssel** — Text (wie bisher), Meta
+  (`werkbaum-meta:<id>`), Stände (`werkbaum-snaps:<id>`); der Index
+  `werkbaum-docs` bleibt als Reihenfolge-Hinweis und Rollback-Brücke,
+  **löscht aber nie mehr**. Kein Fenster schreibt je den Schlüssel eines
+  anderen; das Lesen-Zusammenführen-Schreiben-Race auf einem gemeinsamen
+  Schlüssel wird damit vermieden statt gemildert (die Alternative
+  „Index vor dem Flush zusammenführen“ ließe es an genau den
+  Flush-Punkten stehen, die in zwei Fenstern gleichzeitig feuern). D83
+  wird damit zum dritten Mal fortgeschrieben; Migration einmalig,
+  idempotent.
+- **Tombstone je gelöschter id** (`werkbaum-gone:<id>`, Zeitstempel,
+  Verfall nach 7 Tagen): Ohne ihn legte ein Fenster mit veralteter Liste
+  ein anderswo gelöschtes Dokument beim Tastendruck still wieder an —
+  „Schlüssel fehlt“ ist von „nie gesehen“ nicht zu unterscheiden.
+- **Der Restfall — dasselbe nicht-`live:`-Dokument in beiden Fenstern
+  vorn — wird per Web Locks API erkannt** (`navigator.locks`, je
+  Dokument, `ifAvailable`): atomar, fällt beim Schließen von selbst, keine
+  Timer-Drossel verborgener Fenster, und ein wartender `request` weckt
+  das zweite Fenster, sobald das erste loslässt. Der Präsenz-Kanal aus
+  D89 (BroadcastChannel, Herzschlag, 75-s-Timeout, Notluke je Fenster)
+  wird ersatzlos ausgebaut; ohne Locks-API bleibt der `storage`-Rückfall
+  mit Warnung. Nicht „lokal“, sondern „nicht `live:`“ ist das Kriterium:
+  URL- und Datei-Dokumente sind ebenso im Browser wahr.
+- **Statt „Trotzdem fortfahren“ drei Auswege**: anderes Dokument öffnen,
+  hier nur ansehen (Textfeld schreibgeschützt, wird von selbst
+  beschreibbar, wenn das andere Fenster loslässt), trotzdem hier
+  bearbeiten (letzter Tastendruck gewinnt, Warnung nennt das Dokument).
+  Beim Start öffnet ein gehaltenes Dokument nicht still — das ist das
+  Symptom, nur jetzt allein im Verlustfall und mit Ausgang.
+- **Aktives Dokument anderswo gelöscht: behalten, bis getippt wird** —
+  Tippen ist Absicht (D55-Linie) und legt es wieder an; ohne Tastendruck
+  wandert der Text beim Wechsel in die lokalen Sicherungen. Sofortiges
+  Wegschalten zöge Text unter der Schreibmarke weg.
+- **Die D84-Warnung bleibt nur im Restfall** und nennt das Dokument;
+  verschiedene Dokumente in zwei Fenstern sind still — eine Warnung ohne
+  Gefahr lehrt, Warnungen zu übersehen.
+- **Plan-Knoten `#ed.docs.windows`** unter der Dokument-Ablage — die
+  Ablage ist die Sache, die PWA nur der Anlass.
+
+**Verworfen** (RFC §7): nichts tun und den Dialog ehrlicher beschriften
+(behebt den Sweep nicht); Index zusammenführen; ein Schreiber für alle
+Fenster (zwingt den funktionierenden Fall in Lesemodus, bräuchte den in
+D78 ausgebauten Schreibschutz zurück); eigene Subdomain; IndexedDB; das
+zweite Fenster tritt zugunsten der App zurück (aus einem Tab lässt sich
+die App nicht fokussieren — die Grenze aus D90-Nachtrag). Nicht verworfen,
+nur nicht hier: die Ablage ins Backend (D22 nennt sie Platzhalter).
+
+**Keine neue Abhängigkeit, keine neue Technologie:** Web Locks sind
+Browser-Bestand (Chrome 69, Firefox 96, Safari 15.4).
+
+**Gemessen wird** (RFC §10) headless die Regelmatrix samt Gegenproben und
+im Browser mit zwei Tabs — vor allem der Fall, der heute rot ist: B legt
+ein Dokument an, A wechselt das Dokument, B's Dokument muss überleben.
+Die PWA-Nachstellung selbst bleibt Handtest (D73), ebenso Firefox und
+Safari. Werkzeuggrenzen wie in D79/D82/D83/D91-Nachtrag 9 benannt. Gebaut
+ist nichts.
