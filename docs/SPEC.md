@@ -965,12 +965,12 @@ selbst, wenn das Fenster schließt. Bekommt das zweite Fenster sie nicht,
 zeigt es einen Dialog mit drei Auswegen: anderes Dokument öffnen, hier nur
 ansehen (Textfeld schreibgeschützt, wird von selbst beschreibbar, sobald
 das andere Fenster loslässt) oder trotzdem hier bearbeiten — dann gewinnt
-der letzte Tastendruck, und die Warnung nennt das Dokument. `live:`
--Dokumente werden nie gesperrt: Zwei Fenster sind zwei Live-Clients, der
-Server führt zusammen. Ohne Web Locks (file://, alte Browser) bleibt der
-storage-Rückfall: ein fremder Schreibzugriff am eigenen aktiven Dokument
-warnt, ohne Dialog. Siehe D94 (und D89 für die lokalen Sicherungen und den
-Wachhund).
+der letzte Tastendruck, und die Warnung nennt das Dokument.
+`live:`-Dokumente werden nie gesperrt: Zwei Fenster sind zwei Live-Clients,
+der Server führt zusammen. Ohne Web Locks (file://, alte Browser) bleibt
+der storage-Rückfall: ein fremder Schreibzugriff am eigenen aktiven
+Dokument warnt, ohne Dialog. Siehe D94 (und D89 für die lokalen
+Sicherungen und den Wachhund).
 
 Siehe D76 (Protokoll und Begründung) und
 `backend/docs/live-editing-proposal.md`.
