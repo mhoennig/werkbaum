@@ -212,6 +212,7 @@ directory would be `…/subs-ssl/<name>/`.)
 - `docs/DECISIONS.md` — design decisions with rationale
 - `docs/ROADMAP.md` — Mermaid plugin, Taiga integration, Tenzu
 - `docs/TASKS.md` — open tasks (checkboxes)
+- `docs/rfc/` — proposals that span several parts of the repo, weighed before they are built (001: an MCP server for AI agents)
 - `docs/brand/BRAND.md` — logo, wordmark, usage rules
 - `docs/design/` — design derivation of the brand
 - `CLAUDE.md` — project context for Claude Code

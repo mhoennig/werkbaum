@@ -8673,3 +8673,68 @@ sagen weiterhin, wo sich einer lohnt. Und ein Doppelklick öffnet und
 schließt in einem Zug — hinnehmbar, auf Knoten doppelklickt niemand
 absichtlich.
 
+## D93 — MCP-Server für KI-Agenten: als RFC vorgelegt, nichts gebaut
+Gewünscht: ein Plan für ein MCP-Modul, mit dem KI-Agenten außerhalb des
+Editors (Claude Code, IDE-Agenten, Desktop-Assistenten) einen Werkbaum-Plan
+lesen, befragen und ändern können. Der Plan liegt als **RFC** in
+`docs/rfc/001-mcp-server.md` — die erste Datei dieser Art; ein RFC ist die
+Form für etwas, das über mehrere Teile des Repos reicht und Alternativen
+abwägt, bevor eine Zeile Code entsteht (die Taiga-Anlage in D91 hat
+dasselbe als Nachtragskette getan). Im mitgelieferten Plan steht es als
+`#ai.mcp` mit Teilpaketen.
+
+**Was das RFC vorschlägt, in einem Satz:** Ein Node-Paket `mcp/`, das die
+headless-Module des Frontends (`parser.js`, `model.js`, `live.js`)
+**unverändert importiert** — kein zweiter Parser, D14 —, den Plan als
+Ressource anbietet, mit Tools den Baum, die Warnungen und den günstigsten
+Pfad liefert und Änderungen als Zeilen-Diff mit Basisversion und Prüfsumme
+schreibt (D76), mit zwei Leitplanken: keine beschädigte Notation, kein
+`[^]` von einem Agenten (D30).
+
+**Schon entschieden, weil es aus vorhandenen Entscheidungen folgt:**
+
+- **Kein Server im Kotlin-Backend** (`#ai.mcp.kotlin` als `[-]`): Jedes
+  nützliche Tool braucht den Parser, und ein Kotlin-Parser ist genau die
+  zweite Grammatik, die D14 verbietet.
+- **Kein Modell im Server, kein API-Schlüssel:** Das Modell sitzt im Host;
+  `#ai.key` und `#ai.dialog` bleiben eigene Knoten. Der MCP-Server ist die
+  **Gegenrichtung** zu `#ai.dialog`, nicht sein Ersatz.
+- **Kein Geheimnis über MCP:** Master-Passwort (D76-Nachtrag 6) und
+  Taiga-Token (D91) laufen nie durch ein Transkript — deshalb weder die
+  Dokumentenliste noch Taiga-Tools in der ersten Fassung.
+- **Kein Backend-Umbau:** Die vorhandene REST-API genügt.
+- **Geteiltes Dokument und Git zugleich** (Nutzer-Wunsch, mitten in der
+  Ausarbeitung): Der Agent arbeitet auf dem Server-Dokument, und nach
+  jedem seiner Schreibvorgänge committet der Server den Serverstand über
+  das vorhandene `pull-doc --git-commit` (D88) in eine Spiegel-Datei —
+  der Server ist die Quelle, Git das Archiv (`#ai.mcp.mirror`). Die
+  Umkehrung, Git als Quelle, bleibt bei `#col.git`.
+
+**Entschieden in einer Multiple-Choice-Runde** (RFC §11, jede Frage mit
+der Option „zunächst offen halten“ — keine wurde gewählt):
+
+- **`@modelcontextprotocol/sdk` darf herein** — die erste
+  Laufzeit-Abhängigkeit des Repos, isoliert im MCP-Paket; der gebündelte
+  Editor bleibt abhängigkeitsfrei (D11/D19/D20). Die Rückfrage, die
+  CLAUDE.md verlangt, ist damit gestellt und beantwortet.
+- **Nur Struktur-Warnungen blockieren** einen Agenten-Schreibvorgang
+  (`mixedGate`, `unknownStatus`, `descStray`, `duplicateId`); inhaltliche
+  Widersprüche (`sizeConflict`, `assigneeOverload`, `unknownDep`, …)
+  werden geschrieben und gemeldet. Vorgeschlagen war die strenge Fassung
+  (jede neue Warnung blockiert, D59-Linie); der Nutzer hat entschieden,
+  dass ein Agent in Zwischenschritten arbeiten darf und ein Mensch die
+  bernsteinfarbenen Marken sieht — wie bei einer eigenen Änderung.
+- **Der Anzeigename ist der Host-Name aus dem Handshake** („Claude Code“),
+  Rückfall „Agent“.
+- **Knoten-Verben kommen dazu** (`add_node`, `move_node`, `set_size`,
+  `remove_node`) — nicht nur `apply_ops`. Die Text→Text-Regeln dafür
+  liegen als `frontend/src/edit.js` neben `setFoldMark` und
+  `expandShortIds`, headless und getestet; das Paket verdrahtet nur.
+  Damit kennt weiterhin genau eine Stelle das Zeilenformat.
+- **Die Baum-Serialisierung bleibt im MCP-Paket**, **verteilt wird nur
+  aus dem Repo** (`.mcp.json`, kein npm).
+
+Offen bleibt der Transport über Streamable HTTP (nach `#col.live.owner`)
+und die Form der Urheber-Angabe im `pull-doc`-Commit. Die
+Umsetzungsreihenfolge steht im RFC; gebaut ist nichts.
+

@@ -17,6 +17,10 @@ the git history of `docs/examples/werkbaum.werkbaum`. A day can therefore carry
 a link without having a note (someone forgot to write one) — but never the
 reverse.
 
+## 2026-09-02
+
+- An MCP server for AI agents recorded as planned: a Node package that reuses the one JS parser, hands the plan to Claude Code and other agents as resource and tools, writes changes as conflict-safe line diffs, and mirrors the shared document into git after every agent write — spelled out in an RFC before it is built
+
 ## 2026-08-28
 
 - Folding or unfolding a node keeps it in place on screen now: the scroll position follows the layout shift, so the clicked node no longer jumps away

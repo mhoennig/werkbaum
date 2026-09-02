@@ -225,6 +225,16 @@
     - [?] #ai.dialog: Edit the plan in a dialogue with the AI (L)
     - [?] #ai.key: Bring your own API key, no server in between (M)
     - [?] #ai.ground: llms.md grounds the model in the notation (S)
+    - [ ] #ai.mcp: An MCP server hands the plan to outside agents (XL) :#not.llms  %% docs/rfc/001-mcp-server.md
+      - [ ] #ai.mcp.node: A Node package that reuses the one JS parser (S)  %% no second parser, D14
+      - [ ] #ai.mcp.read: Resources: the agent guide, a file, a server document (S)
+      - [ ] #ai.mcp.inspect: Tools that answer what the diagram answers (M)  %% tree, warnings, cheapest path
+      - [ ] #ai.mcp.write: Writes go out as line diffs and are refused on conflict (M) :#col.live.diff
+      - [ ] #ai.mcp.guard: Guard rails: no broken notation, no [^] from an agent (S)
+      - [ ] #ai.mcp.verbs: Node verbs: add, move, size, remove — the rules live in the frontend (M) :#ai.mcp.write
+      - [ ] #ai.mcp.mirror: The shared document mirrors into git after every agent write (S) :#col.git.pull
+      + [?] #ai.mcp.http: A remote transport over streamable HTTP (M)
+      - [-] #ai.mcp.kotlin: A server inside the backend (L)  %% would need a Kotlin parser, D14
 
 ---
 #wb
@@ -1285,3 +1295,64 @@
   The system prompt is essentially llms.md (D43): the agent guide already
   explains the notation for reading and writing, so the model needs no
   training — just the document and the request.
+
+#ai.mcp
+  The other direction of the AI integration: not an LLM inside the editor,
+  but the plan handed to agents that live outside it — Claude Code, IDE
+  agents, desktop assistants — over the Model Context Protocol. Specified in
+  docs/rfc/001-mcp-server.md before anything is built.
+
+#ai.mcp.node
+  The server is a small Node package that imports the frontend's headless
+  modules (parser, model, live diff) as they are. That keeps D14 intact: the
+  one JS parser stays the only parser, and agents get the same warnings,
+  effective statuses and cheapest path the diagram shows.
+
+#ai.mcp.read
+  What an agent can read: llms.md as the notation guide, a local .werkbaum
+  file, and a shared document on a Werkbaum backend by its URL — the same
+  three sources a person has.
+
+#ai.mcp.inspect
+  Tools that return the parsed tree with ids, statuses (own and effective),
+  sizes (given and assumed), tags and dependencies, the warnings the editor
+  would show, and the cheapest path with its stations and per-person load —
+  so the agent reasons on the model instead of re-implementing the SPEC.
+
+#ai.mcp.write
+  Edits leave the server as the same line diffs the editor sends: against a
+  base version with checksum, refused on a real conflict, visible to every
+  open editor with "changed by" naming the agent. A local file is written
+  only if it is unchanged since it was read.
+
+#ai.mcp.guard
+  Guard rails on every write: the result must not break the notation (no new
+  mixedGate, unknownStatus, descStray or duplicateId), and an agent never
+  writes [^] — "in production" is a deploy's statement (D30), not a model's.
+  Content warnings like a size conflict are written and reported, so a human
+  sees them as the amber mark. Both rails can be lifted per call, never silently.
+
+#ai.mcp.verbs
+  Convenience for the model: add a node under a parent, move a subtree, set a
+  size, remove or discard a node — by id, not by line index, which an agent
+  gets wrong. The text-to-text rules live in frontend/src/edit.js beside the
+  fold and short-id helpers, so exactly one place keeps knowing the line format.
+
+#ai.mcp.mirror
+  Both at once: the agent works on the shared document, where the people
+  are, and the same plan stays under git control. After every agent write
+  the server runs pull-doc --git-commit for a configured mirror file, naming
+  the agent in the commit — the server is the source, git the archive. The
+  reverse (git as the source) is a different node, #col.git.
+
+#ai.mcp.http
+  Streamable HTTP as a second transport, so a hosted agent can reach the
+  server without a local process. Optional: stdio covers the local agents
+  first, and remote access raises the authentication question the backend
+  has not answered yet (#col.live.owner).
+
+#ai.mcp.kotlin
+  Building the server into the Spring backend would put it next to the
+  documents — but every useful tool needs the parser, and a Kotlin parser is
+  exactly the second grammar D14 forbids. Discarded in favour of the Node
+  package.
