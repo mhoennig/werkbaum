@@ -9006,6 +9006,40 @@ Diagramm die Höhe hat), ist die Karte immer noch höher als der getönte
 Grund, in dem sie steckt, und malt darüber hinaus. Lesbar bleibt sie; wen
 es stört, deckelt `.lockdlg` mit `max-height`.
 
+**Nachtrag 2 — „der letzte Tastendruck gewinnt" war zu eng gefasst
+(2026-09-02).** Nutzer-Rückfrage beim Ausprobieren: „Man kann im Diagramm
+auf- und zusammenklappen — das beeinflusst das andere Fenster nicht,
+richtig? Und was für ein letzter Tastendruck?" Beides trifft einen
+Formulierungsfehler, nicht einen Baufehler:
+
+- **Falten IST eine Änderung.** Umklappen schreibt die Faltmarke in den
+  Text (D38-Nachtrag 2) und damit in den Speicher — es nimmt am selben
+  Wettlauf teil wie das Tippen. Nachgemessen: A klappt „Ast A" zu, im
+  Speicher steht `- > Ast A (M)`; B's Editor und Diagramm bleiben
+  unverändert (6 Knoten, keine Marke), und B's nächster Tastendruck
+  überschreibt den Speicher — **A's Faltung ist damit weg**. „Beeinflusst
+  das andere Fenster nicht" stimmt also für die Anzeige und nicht für den
+  gespeicherten Text.
+- **Die Warnung sagte deshalb das Falsche.** „Der letzte Tastendruck
+  gewinnt" liest sich, als zähle nur Tippen. Sie heißt jetzt „die zuletzt
+  **gespeicherte Änderung** gewinnt" (englisch „whichever change is saved
+  last wins"), in allen neun Sprachen; der Dialogtext nennt das Falten
+  ausdrücklich mit. SPEC §9 nachgezogen.
+- **Der Dokumentwechsel wandert nicht mit** (dieselbe Rückfrage): Ein
+  anderes Dokument zu wählen ändert nur das eigene Fenster. Der geteilte
+  Schlüssel `werkbaum-active` wird zwar überschrieben, aber kein Fenster
+  reagiert darauf — er entscheidet erst wieder, was ein **Neustart**
+  öffnet (§3, „letzter Schreiber gewinnt, harmlos"). Nachgemessen: A
+  wechselt auf „Zweites", B bleibt auf „Falt-Probe".
+
+**Dabei aufgefallen, benannt und noch nicht behoben:** Wer „trotzdem hier
+bearbeiten" gewählt hat, behält die Warnung, auch wenn das andere Fenster
+das Dokument längst verlassen hat — dieser Ausweg fordert die Sperre
+bewusst nicht mehr an (`lockGen++`), also erfährt er vom Loslassen nichts.
+Sauber wäre, auch dort im Hintergrund zu warten (`waitInBackground`) und
+die Warnung zu räumen, sobald die Sperre ankommt — dieselbe Mechanik wie
+bei „nur ansehen", nur ohne den Schreibschutz.
+
 **Offen bleibt die Handarbeit** (RFC §10): installierte PWA neben einem Tab,
 Firefox, Safari, ein Browser ohne Locks-API. Werkzeuggrenzen wie gehabt —
 die Browser-Fläche war verborgen, getippt wurde per `value` + `input`

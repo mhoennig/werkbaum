@@ -965,7 +965,12 @@ selbst, wenn das Fenster schließt. Bekommt das zweite Fenster sie nicht,
 zeigt es einen Dialog mit drei Auswegen: anderes Dokument öffnen, hier nur
 ansehen (Textfeld schreibgeschützt, wird von selbst beschreibbar, sobald
 das andere Fenster loslässt) oder trotzdem hier bearbeiten — dann gewinnt
-der letzte Tastendruck, und die Warnung nennt das Dokument.
+die **zuletzt gespeicherte Änderung**, und die Warnung nennt das Dokument.
+Änderung heißt dabei nicht nur Tippen: Auch das Falten im Diagramm schreibt
+in den Text (§9, `>`/`<`) und nimmt an diesem Wettlauf teil. Das andere
+Fenster zieht dabei nichts nach — es zeigt weiter seine eigene Fassung —,
+und auch das aktive Dokument wechselt dort nicht mit; der gemerkte
+Dokumentwähler entscheidet erst wieder, was ein **Neustart** öffnet.
 `live:`-Dokumente werden nie gesperrt: Zwei Fenster sind zwei Live-Clients,
 der Server führt zusammen. Ohne Web Locks (file://, alte Browser) bleibt
 der storage-Rückfall: ein fremder Schreibzugriff am eigenen aktiven
