@@ -9040,6 +9040,48 @@ Sauber wäre, auch dort im Hintergrund zu warten (`waitInBackground`) und
 die Warnung zu räumen, sobald die Sperre ankommt — dieselbe Mechanik wie
 bei „nur ansehen", nur ohne den Schreibschutz.
 
+**Nachtrag 3 — „nur ansehen" galt nur dem Textfeld; jetzt gilt es dem
+Dokument (2026-09-02).** Folgerichtiger Nutzer-Einwand aus Nachtrag 2:
+Wenn Falten eine Änderung ist, muss der Nur-Ansehen-Modus auch das
+Diagramm stillstellen — „in dem ersten Fenster soll das natürlich weiter
+funktionieren."
+
+**Es war schlimmer als eine fehlende Sperre: `readonly` hielt gar nichts
+auf.** `replaceTextUndoable` fällt auf `src.value = neu` zurück, wenn
+`execCommand` scheitert (D14: „der richtige Zustand geht vor der
+Rückgängig-Historie") — und eine Zuweisung an `value` schreibt auch in ein
+schreibgeschütztes Feld. Nachgemessen im Nur-Ansehen-Fenster: Ein Klick
+auf das Falt-Zeichen setzte `- > Ast A (M)` in Textfeld **und** Speicher.
+Der Modus war also nur eine Beschriftung.
+
+**Gesperrt wird jetzt an den Schreibstellen, nicht am Feld.** Eine Zeile
+in `replaceTextUndoable` weist im Nur-Ansehen-Modus jeden programmatischen
+Schreibzugriff ab — das deckt Falten, Falt-Durchschalter, „aus Taiga
+übernehmen", das Laden eines früheren Stands und die ID-Kurzform in einem
+Griff. Dazu ruhen die **Gesten** selbst, damit nichts still ins Leere
+geht: `toggleFold` und der Durchschalter kehren früh um, die Falt-Zeichen
+und der Knopf treten zurück und nehmen keinen Klick an (`body.viewonly`),
+und im Knoten-Fenster entfallen die Aktionen, die in die Zeile schreiben —
+Story/Task anlegen, Ticket verknüpfen, „übernehmen". **„Nach Taiga
+schreiben" bleibt**: Es fasst den Plan nicht an.
+
+**Alles, was nur die Ansicht ändert, bleibt bedienbar** — Zoom, Modus,
+Pfad, der Faltzustand aus dem Text, Export, Sprünge. Der Modus sagt
+„dieses Dokument nicht ändern", nicht „nichts tun".
+
+**Nachgemessen** mit zwei Fenstern: Im Nur-Ansehen-Fenster lassen Chip,
+Tastatur (←) und Durchschalter Text und Speicher unangetastet (5 Knoten
+bleiben 5, `pointer-events: none`, Deckkraft 0,45); im haltenden Fenster
+faltet dieselbe Geste unverändert und schreibt `> Ast A`; verlässt das
+haltende Fenster das Dokument, wird das andere von selbst wieder
+beschreibbar **und** faltbar (`> Ast B` geschrieben). Vorher, zur
+Gegenprobe: derselbe Klick schrieb im Nur-Ansehen-Modus in den Speicher.
+
+**Benannt, nicht behoben:** Menüwege, die in den Text schreiben (früheren
+Stand laden, „Original wiederherstellen"), sind im Nur-Ansehen-Modus zwar
+wirkungslos — die Sperre greift —, ihre Einträge stehen aber weiterhin da.
+Sie auszugrauen ist der nächste kleine Schritt, wenn es jemanden stört.
+
 **Offen bleibt die Handarbeit** (RFC §10): installierte PWA neben einem Tab,
 Firefox, Safari, ein Browser ohne Locks-API. Werkzeuggrenzen wie gehabt —
 die Browser-Fläche war verborgen, getippt wurde per `value` + `input`

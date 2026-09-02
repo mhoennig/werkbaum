@@ -1751,8 +1751,15 @@
 }
 .lockdlg-edit{border-color:var(--warn)!important;color:var(--warn)!important}
 @media print{ .lockdlg-overlay{ display:none; } }
-/* „Nur ansehen" (§6.5 Ausweg 2): das Textfeld trägt seinen Zustand. */
+/* „Nur ansehen" (§6.5 Ausweg 2): das Textfeld trägt seinen Zustand — und das
+   Diagramm mit, denn das Falten schreibt ebenfalls in den Text (D38-Nachtrag 2).
+   Die Falt-Zeichen und der Falt-Durchschalter treten zurück und nehmen keinen
+   Klick mehr an; die Sperre selbst sitzt im JS, das hier ist ihr sichtbarer
+   Teil (D94-Nachtrag 3). Alles Übrige — Zoom, Modus, Pfad, Export — bleibt
+   bedienbar: Es ändert die Ansicht, nicht den Plan. */
 #src[readonly]{background:rgba(107,122,140,.08);color:var(--muted);cursor:default}
+body.viewonly #out .fold{pointer-events:none;opacity:.45}
+body.viewonly #foldBtn{pointer-events:none;opacity:.45}
 
 /* ---------- Taiga-Anlege- und Anmeldedialog (D91) ----------
    Im tabmodal-Idiom (Overlay + Karte); nur die Innereien sind eigen. */

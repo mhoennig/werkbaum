@@ -25,6 +25,7 @@ reverse.
 - The other-window warning now names the document and says whether it is open in the app or in the browser — and stays silent when nothing collides
 - Fix: in the "open in another window" dialog the list of other documents squeezed its buttons until the names ran into each other — picking one is a dropdown now, one line tall however many documents you have
 - The two-window warning says "whichever change is saved last wins" now instead of "the last keystroke" — folding a branch in the diagram writes to the text too, so it joins the same race
+- "View only" really is view only now: while the document is held by another window, the diagram's fold marks stay put too — folding writes to the text and used to slip past the read-only text area; the window holding the document folds as before
 - An MCP server for AI agents recorded as planned: it lives in the backend, runs the one JS parser through GraalJS, hands plans to Claude Code and other agents as resources and tools over streamable HTTP, and writes changes as conflict-safe line diffs — no new runtime, spelled out in an RFC before it is built
 
 ## 2026-08-28

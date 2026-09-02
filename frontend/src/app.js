@@ -133,6 +133,17 @@ let lockTargetId = null;      /* id der letzten Anfrage (syncDocLock vergleicht)
 let lockRelease = null;       /* löst die gehaltene Sperre (Callback-Promise) */
 let lockGen = 0;              /* Generation: ungültigt ausstehende Anfragen */
 let viewOnly = false;         /* Ausweg 2: „hier nur ansehen" (§6.5) */
+/* „Nur ansehen" gilt dem DOKUMENT, nicht nur dem Textfeld: Auch das Falten im
+   Diagramm schreibt in den Text (D38-Nachtrag 2), und ein `readonly` am
+   Textfeld hält das nicht auf — `replaceTextUndoable` fällt auf `value =`
+   zurück, wenn `execCommand` scheitert, und das schreibt auch in ein
+   schreibgeschütztes Feld (nachgemessen: die Faltmarke landete im Speicher).
+   Die Klasse macht den Zustand für das CSS sichtbar; die Sperre selbst sitzt
+   an den Schreibstellen (D94-Nachtrag 3). */
+function setViewOnly(on){
+  viewOnly = on;
+  document.body.classList.toggle('viewonly', on);
+}
 let docGoneElsewhere = false; /* aktives Dokument anderswo gelöscht (§6.5) */
 let lockDialogEl = null;      /* Dialog über dem Editor (§6.5) */
 function clearTabConflict(){
@@ -160,7 +171,7 @@ function acquireDocLock(id){
   releaseDocLock();
   lockTargetId = id;
   docGoneElsewhere = false;
-  viewOnly = false;
+  setViewOnly(false);
   src.readOnly = false;                   /* im Zweifel beschreibbar; der Dialog setzt es zurück */
   closeLockDialog();
   clearTabConflict();
@@ -179,7 +190,7 @@ function acquireDocLock(id){
 function lockArrived(id){
   if(id !== activeId) return;             /* inzwischen weggewechselt */
   lockHeldId = id;
-  viewOnly = false;
+  setViewOnly(false);
   src.readOnly = false;
   closeLockDialog();
   clearTabConflict();
@@ -242,7 +253,7 @@ function enterLockDialog(id){
   trotzdem.textContent = t('docLockEditAnyway');
   ansehen.addEventListener('click', () => {
     closeLockDialog();
-    viewOnly = true;
+    setViewOnly(true);
     src.readOnly = true;
     updateDocName();
     waitInBackground(lockTargetId);   /* wird von selbst beschreibbar (§6.5) */
@@ -250,7 +261,7 @@ function enterLockDialog(id){
   trotzdem.addEventListener('click', () => {
     closeLockDialog();
     src.readOnly = false;
-    viewOnly = false;
+    setViewOnly(false);
     lockGen++;                        /* ausstehende Warteanfragen ungültig (§6.5) */
     const jetzt = activeDoc();
     tabWarning = {type: 'tabConflict', name: jetzt ? jetzt.name : '',
@@ -1506,6 +1517,11 @@ function foldStateMatches(txt, want){
    ersetzt die Auswahl — geändert wird deshalb nur das wirklich abweichende
    Stück zwischen gemeinsamem Anfang und Ende. */
 function replaceTextUndoable(neu){
+  /* „Nur ansehen" (§6.5): kein programmatischer Schreibzugriff — nicht das
+     Falten, nicht der Falt-Durchschalter, nicht „aus Taiga übernehmen",
+     nicht das Laden eines früheren Stands. Der Rückfall unten schriebe sonst
+     am `readonly` vorbei. */
+  if(viewOnly) return false;
   const alt = src.value;
   /* Nichts zu schreiben heißt: kein `input`-Ereignis, also auch kein render().
      Deshalb false — der Aufrufer zeichnet dann selbst neu. Sonst bliebe das
@@ -1645,6 +1661,7 @@ function refocusNode(line, before){
   suppressTipFocus = false;
 }
 function toggleFold(el){
+  if(viewOnly) return;      /* keine Faltmarken im Nur-Ansehen-Modus (§6.5) */
   const line = +el.dataset.line;
   const st = foldByLine.get(line);
   if(!st || !st.canFold) return;
@@ -2021,6 +2038,9 @@ function appendTaigaActions(el){
     }
     return;
   }
+  /* Anlegen und Verknüpfen schreiben die Ref in die Zeile — im
+     Nur-Ansehen-Modus gibt es sie deshalb gar nicht erst (§6.5). */
+  if(viewOnly) return;
   const mk = (label, action) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'nodetip-taigabtn'; b.tabIndex = -1;
@@ -2170,7 +2190,10 @@ function paintDiff(box, line, st, key, slug, ref, lineNo, act){
     act.appendChild(mkBtn('→ ' + t('taigaTicketPush'),
       () => pushStatus(key, slug, ref, ziel, st.data.version)));
   }
-  act.appendChild(mkBtn('← ' + t('taigaTicketPull'),
+  /* „übernehmen" schreibt die Statusbox in den Text — im Nur-Ansehen-Modus
+     entfällt der Knopf; „nach Taiga schreiben" bleibt, es fasst den Plan
+     nicht an (§6.5). */
+  if(!viewOnly) act.appendChild(mkBtn('← ' + t('taigaTicketPull'),
     () => pullStatus(lineNo, ticket.code)));
   if(!ziel) line('tk-line', t('taigaTicketNoMap'));
 }
@@ -3294,6 +3317,7 @@ showc.addEventListener('click', () => { setDiscarded(!discardedShown()); render(
    Baum und setzt sie zurück, sobald jemand von Hand umklappt (D44-Linie). */
 const foldBtn = document.getElementById('foldBtn');
 foldBtn.addEventListener('click', () => {
+  if(viewOnly) return;      /* er schreibt den ganzen Baum in den Text (§6.5) */
   const mode = FOLD_CYCLE[foldCycleNext];
   foldCycleApplied = foldCycleNext;
   foldCycleNext = (foldCycleNext + 1) % FOLD_CYCLE.length;

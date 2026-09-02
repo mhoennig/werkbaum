@@ -963,8 +963,10 @@ Verlustfall hält jedes Fenster, solange ein nicht-`live:`-Dokument vorn
 ist, eine **Sperre** (Web Locks API) auf es — atomar, und sie fällt von
 selbst, wenn das Fenster schließt. Bekommt das zweite Fenster sie nicht,
 zeigt es einen Dialog mit drei Auswegen: anderes Dokument öffnen, hier nur
-ansehen (Textfeld schreibgeschützt, wird von selbst beschreibbar, sobald
-das andere Fenster loslässt) oder trotzdem hier bearbeiten — dann gewinnt
+ansehen (**das ganze Dokument ist dann schreibgeschützt**: Textfeld wie
+Diagramm — auch die Faltmarken lassen sich dort nicht umklappen, denn das
+schriebe in den Text; es wird von selbst wieder beschreibbar, sobald das
+andere Fenster loslässt) oder trotzdem hier bearbeiten — dann gewinnt
 die **zuletzt gespeicherte Änderung**, und die Warnung nennt das Dokument.
 Änderung heißt dabei nicht nur Tippen: Auch das Falten im Diagramm schreibt
 in den Text (§9, `>`/`<`) und nimmt an diesem Wettlauf teil. Das andere
