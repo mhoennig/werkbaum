@@ -17,6 +17,11 @@ the git history of `docs/examples/werkbaum.werkbaum`. A day can therefore carry
 a link without having a note (someone forgot to write one) — but never the
 reverse.
 
+## 2026-09-03
+
+- The project moved to its own Gitea at git.javagil.de — the footer's repository and version links point there now, and GitHub stays a clone carrying the very same commits
+- Every push is built by Werkator, the project's own CI, alongside the GitHub Pages build: backend and frontend as two named builds
+
 ## 2026-09-02
 
 - Running the installed app and a browser tab side by side works now: text, names and earlier states live under their own storage key per document and deleting leaves a tombstone, so windows stop deleting each other's work

@@ -136,6 +136,22 @@ Setting up the backend: see [backend/README.md](backend/README.md) and
 > old `?etherpad=` link now shows a note pointing here rather than silently
 > doing nothing; see `docs/DECISIONS.md` D78.
 
+### Where the code lives
+
+The repository is at **<https://git.javagil.de/mi/werkbaum>** (Gitea) — that is
+`origin`, and that is where branches belong:
+
+```bash
+git clone mih09-git@git.javagil.de:mi/werkbaum.git      # or https://git.javagil.de/mi/werkbaum.git
+```
+
+**GitHub stays a clone.** `main` is mirrored there by hand
+(`scripts/push-github.sh`), because two things hang off it: the GitHub Pages
+instance (the 🚧 *latest build* linked at the top) and the example links above,
+which load plan files from `raw.githubusercontent.com` via `?sourceUrl=`. Gitea
+serves raw files **without** an `Access-Control-Allow-Origin` header, so the
+browser would block them there (`docs/DECISIONS.md` D23, D95).
+
 ### Running it locally
 
 The editor source now lives as ES modules under `frontend/src/`, bundled by
@@ -225,7 +241,8 @@ directory would be `…/subs-ssl/<name>/`.)
 
 The editor is published as a static page on **GitHub Pages** via GitHub
 Actions (workflow: `.github/workflows/pages.yml`). Triggered on every push to
-`main` and manually (`workflow_dispatch`).
+`main` **of the clone** — that is, after `scripts/push-github.sh` has mirrored it
+(D95) — and manually (`workflow_dispatch`).
 
 The workflow sets up Node, runs `npm ci`, `npm test` (Vitest) and `npm run build`
 (Vite), then publishes the bundled `frontend/dist/index.html` as `index.html` at
@@ -240,8 +257,8 @@ commit"), and the **micro** part is the number of commits since that last bump �
 so it grows with every commit and resets to `0` right after a bump
 (`Werkbaum 1.0.0`, `1.0.1`, … then bump `VERSION` to `1.1` → `1.1.0`). Nothing is
 written back to the repo. In the footer the name **Werkbaum** links to the
-repository, while the **version number** links to that exact commit
-(`…/commit/<sha>`). Opened locally, the editor shows the source placeholder
+repository on Gitea, while the **version number** links to that exact commit
+there (`…/commit/<sha>`) — the clone carries the same SHAs. Opened locally, the editor shows the source placeholder
 (`Werkbaum 1.0`).
 
 **One-time setup:** In the repo settings under **Pages**, select **Source** =

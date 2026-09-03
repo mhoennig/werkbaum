@@ -142,6 +142,22 @@ Das Backend einrichten: siehe [backend/README.md](backend/README.md) und
 > `?etherpad=`-Link zeigt heute einen Hinweis hierher, statt still nichts zu
 > tun; siehe `docs/DECISIONS.md` D78.
 
+### Wo der Code liegt
+
+Das Repository liegt auf **<https://git.javagil.de/mi/werkbaum>** (Gitea) — das
+ist `origin`, und dort gehören die Branches hin:
+
+```bash
+git clone mih09-git@git.javagil.de:mi/werkbaum.git      # oder https://git.javagil.de/mi/werkbaum.git
+```
+
+**GitHub bleibt ein Klon.** `main` wird dorthin von Hand gespiegelt
+(`scripts/push-github.sh`), denn zwei Dinge hängen daran: die
+GitHub-Pages-Instanz (der 🚧 *latest build* ganz oben) und die Beispiel-Links
+weiter oben, die ihre Pläne per `?sourceUrl=` von `raw.githubusercontent.com`
+laden. Gitea liefert `raw`-Dateien **ohne** `Access-Control-Allow-Origin` aus —
+dort blockte der Browser sie (`docs/DECISIONS.md` D23, D95).
+
 ### Lokal ausführen
 
 Die Editor-Quelle liegt jetzt als ES-Module unter `frontend/src/`, gebündelt mit
@@ -228,7 +244,8 @@ anderen Domain läge das Web-Verzeichnis in `…/subs-ssl/<name>/`.)
 
 Der Editor wird per GitHub Actions als statische Seite auf **GitHub Pages**
 veröffentlicht (Workflow: `.github/workflows/pages.yml`). Ausgelöst bei jedem
-Push auf `main` sowie manuell (`workflow_dispatch`).
+Push auf `main` **des Klons** — also nachdem `scripts/push-github.sh` gespiegelt
+hat (D95) — sowie manuell (`workflow_dispatch`).
 
 Der Workflow richtet Node ein, führt `npm ci`, `npm test` (Vitest) und
 `npm run build` (Vite) aus und veröffentlicht die gebündelte
@@ -244,8 +261,8 @@ gepflegt), die **Micro-Stelle** aus der Zahl der Commits seit diesem letzten
 Bump — sie steigt also mit jedem Commit und beginnt nach einem Bump wieder bei
 `0` (`Werkbaum 1.0.0`, `1.0.1`, … dann `VERSION` auf `1.1` bumpen → `1.1.0`). Es
 wird nichts ins Repo zurückgeschrieben. Im Footer verlinkt der Name **Werkbaum**
-die Repo-Startseite, die **Versionsnummer** genau den zugehörigen Commit
-(`…/commit/<sha>`). Lokal geöffnet zeigt der Editor den Platzhalter aus dem
+die Repo-Startseite auf Gitea, die **Versionsnummer** genau den zugehörigen
+Commit dort (`…/commit/<sha>`) — der Klon trägt dieselben SHAs. Lokal geöffnet zeigt der Editor den Platzhalter aus dem
 Quelltext (`Werkbaum 1.0`).
 
 **Einmalige Einrichtung:** In den Repo-Settings unter **Pages** als **Source**

@@ -3,7 +3,7 @@
 Werkbaum is a plain-text notation for work-breakdown structures (WBS) with
 and/or decomposition. This guide teaches you to **read and write** it. The
 normative specification (German) is
-https://github.com/mhoennig/werkbaum/blob/main/docs/SPEC.md — if this guide
+https://git.javagil.de/mi/werkbaum/src/branch/main/docs/SPEC.md — if this guide
 and the SPEC disagree, the SPEC wins.
 
 Files are UTF-8 with LF line endings; the extension `.werkbaum` is a

@@ -124,6 +124,8 @@
       - [^] #bld.backend.proxy: Apache passes /api/ on, in .htaccess (XS)  %% measured: the P flag is allowed
       - [^] #bld.backend.remote: One command for everything on the server (S)  %% remote <target> <action>
       - [^] #bld.backend.backup: Save the database, and prove it can be read back (XS)
+    - [x] #bld.werkator: Also built by Werkator, the project's own CI (S)  %% .werkator.yml, backend + frontend
+    - [x] #bld.gitea: The repository lives on Gitea, GitHub stays a clone (S)
     - [-] #bld.ghpages: Deploy through a gh-pages branch (S)  %% GitHub Actions instead
     - [-] #bld.gfonts: Fonts from Google (XS)  %% self-hosted, no third-party request
   - [ ] #be: Backend (XL)
@@ -852,6 +854,17 @@
   The database is a file in a home directory, and H2 holds it open, so a copy
   taken while the service runs can be torn. Stop, fetch, start again — and read
   the archive back before trusting it.
+
+#bld.werkator
+  Werkator, the project's own declarative CI, builds every push from a
+  committed .werkator.yml — backend and frontend as two named builds. It builds
+  and tests only; deploying stays with the scripts.
+
+#bld.gitea
+  The repository moved to Gitea; GitHub stays a clone that carries the
+  published main. The clone is not sentiment: the Pages instance hangs off it,
+  and so do the example links, which need a raw endpoint that sends CORS
+  headers.
 
 #bld.ghpages
   Rejected: the official Actions route needs no extra branch and no deploy

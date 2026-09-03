@@ -9089,3 +9089,58 @@ die Browser-Fläche war verborgen, getippt wurde per `value` + `input`
 D91-Nachtrag 9), und der Live-Feed ruht im dauerhaft verborgenen
 Automatisierungs-Tab (D76-Nachtrag 1) — dass B A's Zeile sieht, ist deshalb
 über die Antwort auf den eigenen PATCH gemessen, nicht über den Feed.
+
+## D95 — Das Repo zieht nach Gitea; GitHub bleibt ein Klon, von Hand gespiegelt (2026-09-03)
+Werkbaum lag auf GitHub. Seit Werkator (die eigene CI, https://werkator.javagil.de)
+die Builds fährt und `werkdock` bereits auf `git.javagil.de` liegt, gehört auch
+Werkbaum dorthin: **`origin` ist jetzt `mi/werkbaum` auf Gitea**, GitHub bleibt
+als **Klon** unter dem Remote `github` stehen.
+
+**Der Klon ist kein Andenken, sondern zwei gemessene Zwänge:**
+
+- **CORS.** Die Beispiel-Links beider READMEs laden ihre Pläne per
+  `?sourceUrl=` (D23) — und das geht nur, wenn die Quelle
+  `Access-Control-Allow-Origin` sendet. Nachgemessen an
+  `https://git.javagil.de/mi/werkdock/raw/branch/main/README.md` (mit
+  `Origin:`-Header): HTTP 200, `Access-Control-Expose-Headers`, aber **kein
+  `Access-Control-Allow-Origin`**. Ein Beispiel-Link auf Gitea liefe also
+  genau in den Fehler, den D23 als häufigsten benennt. `raw.githubusercontent.com`
+  sendet ihn (D24) — die Beispiel-Links bleiben deshalb dort.
+- **GitHub Pages.** Die „latest build“-Instanz (D16) ist ein
+  Actions-Workflow und lässt sich nicht mitnehmen. Sie bleibt, und sie baut,
+  sobald `main` auf dem Klon ankommt.
+
+**Gespiegelt wird von Hand, und nur `main`** (`scripts/push-github.sh`).
+Feature-Branches und Tags bleiben in Gitea; was auf GitHub steht, ist der
+veröffentlichte Stand. Erwogen und verworfen: **ein `origin` mit zwei
+Push-URLs** (spiegelt bei jedem Push, auch bei Zwischenständen, und ein
+Fehler an einer der beiden Seiten bricht den Push) und der **Voll-Mirror**
+(`--mirror` löscht auf GitHub Branches, die in Gitea verschwunden sind — bei
+einem öffentlichen Klon die unhöflichste Variante).
+
+**Der Deploy spiegelt nicht, er erinnert.** `scripts/deploy-prod.sh` prüft
+jetzt zweierlei getrennt: ob HEAD auf **origin (Gitea)** liegt — daran hängt
+der Footer-Versionslink — und ob er auf **github** liegt; fehlt das zweite,
+nennt es den Skript-Namen. Ausdrücklich so entschieden (Multiple-Choice): Ein
+Deploy, der nebenbei woanders hin pusht, tut mehr, als sein Name sagt.
+
+**Nie erzwungen.** Liegt `github/main` nicht in der Historie von `main`,
+bricht das Spiegel-Script ab und zeigt `git log main..github/main`. Ein
+Force-Push auf einen Klon, den andere geklont haben, ist eine bewusste
+Handlung und keine Zeile in einem Hilfsskript.
+
+**Die Links im Produkt zeigen auf Gitea** — Footer-Repo-Link und
+Footer-Versionslink (`…/commit/<sha>`, D16), `llms.txt` und `llms.md` (D43).
+Voraussetzung geprüft: Die Gitea-Instanz liefert Repo-Seite und API **ohne
+Anmeldung** (HTTP 200). Die SHAs sind auf beiden Seiten dieselben, der Link
+bleibt also auch für jemanden auflösbar, der vom Klon kommt. Beide
+`COMMIT_URL`-Stellen ziehen mit — `deploy-prod.sh` **und** der
+Pages-Workflow; das ist dieselbe Doppelpflege, die D16 schon für die
+`sed`-Regeln benannt hat.
+
+**Werkator:** Die `gitea:`-Sektion der `.werkator.yml` nennt jetzt
+`git.javagil.de` / `mi` / `werkbaum` statt der GitHub-Platzhalter, und der
+beobachtete Klon `~/werkbaum` auf mih09 bekommt Gitea als `origin` — sonst
+sähe der Watcher neue Commits erst nach dem Spiegeln. **Status-Checks werden
+weiterhin nicht gepostet**, solange auf der Instanz kein Gitea-Token liegt;
+die Sektion ist bis dahin eine Beschriftung.

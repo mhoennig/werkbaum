@@ -117,13 +117,22 @@ if git -C "$ROOT" rev-parse HEAD >/dev/null 2>&1; then
   [ -z "$BASE" ] && BASE="$(git -C "$ROOT" rev-list --max-parents=0 HEAD | tail -1)"
   MICRO="$(git -C "$ROOT" rev-list --count "${BASE}..HEAD")"
   BUILD_VERSION="${MAJORMINOR}.${MICRO}"
-  COMMIT_URL="https://github.com/mhoennig/werkbaum/commit/$(git -C "$ROOT" rev-parse HEAD)"
+  COMMIT_URL="https://git.javagil.de/mi/werkbaum/commit/$(git -C "$ROOT" rev-parse HEAD)"
   echo "==> Footer-Version ${BUILD_VERSION} -> ${COMMIT_URL}"
-  # Der Link zeigt ins Leere, solange der Commit nicht auf GitHub liegt — nach
-  # einer Beförderung (Schritt 0) ist das der Normalfall.
-  if [ -z "$(git -C "$ROOT" branch -r --contains HEAD 2>/dev/null)" ]; then
-    echo "   ! HEAD liegt noch nicht auf origin — der Footer-Versionslink läuft" >&2
-    echo "     ins Leere, bis 'git push' nachgeholt ist." >&2
+  # Der Link zeigt auf Gitea (origin, D95) und läuft ins Leere, solange der
+  # Commit dort nicht liegt — nach einer Beförderung (Schritt 0) ist das der
+  # Normalfall.
+  if ! git -C "$ROOT" branch -r --contains HEAD 2>/dev/null | grep -q "^ *origin/"; then
+    echo "   ! HEAD liegt noch nicht auf origin (Gitea) — der Footer-Versionslink" >&2
+    echo "     läuft ins Leere, bis 'git push' nachgeholt ist." >&2
+  fi
+  # GitHub ist seit D95 nur noch ein Klon und wird VON HAND gespiegelt. Der
+  # Deploy spiegelt nicht selbst — er erinnert nur, denn die Pages-Instanz und
+  # die ?sourceUrl=-Beispiellinks (raw.githubusercontent.com) hängen daran.
+  if git -C "$ROOT" remote get-url github >/dev/null 2>&1 &&
+     ! git -C "$ROOT" branch -r --contains HEAD 2>/dev/null | grep -q "^ *github/"; then
+    echo "   ! HEAD liegt noch nicht auf github — der Klon hinkt hinterher;" >&2
+    echo "     'scripts/push-github.sh' holt es nach." >&2
   fi
   SED_ARGS+=(-e "s#\(<a class=\"ver\" href=\"\)[^\"]*#\1${COMMIT_URL}#")
   SED_ARGS+=(-e "s#\(<a class=\"ver\"[^>]*>\)[0-9.]\+</a>#\1${BUILD_VERSION}</a>#")

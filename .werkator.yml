@@ -4,12 +4,12 @@ werkator:
   version:
     since: "1.0.1"
 
-# Commit status target. Points at GitHub for now; the repository will move to
-# https://git.javagil.de (Gitea) later, GitHub stays a synchronised clone. Status
-# checks are posted only once the origin is a Gitea; until then this is a label.
+# Commit status target. The repository lives on Gitea since D95; GitHub stays a
+# clone that `scripts/push-github.sh` feeds by hand. Status checks are posted
+# only once the instance holds a Gitea token; until then this is a label.
 gitea:
-  baseUrl: https://github.com
-  owner: mhoennig
+  baseUrl: https://git.javagil.de
+  owner: mi
   repo: werkbaum
   statusContext: werkator
 

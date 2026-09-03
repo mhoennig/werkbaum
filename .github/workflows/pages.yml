@@ -76,7 +76,7 @@ jobs:
           [ -z "$BASE" ] && BASE="$(git rev-list --max-parents=0 HEAD | tail -1)"
           MICRO="$(git rev-list --count "${BASE}..HEAD")"       # Commits seit dem Bump
           BUILD_VERSION="${MAJORMINOR}.${MICRO}"
-          COMMIT_URL="https://github.com/mhoennig/werkbaum/commit/$(git rev-parse HEAD)"
+          COMMIT_URL="https://git.javagil.de/mi/werkbaum/commit/$(git rev-parse HEAD)"
           echo "Footer-Version: ${BUILD_VERSION} -> ${COMMIT_URL}"
           mkdir -p site
           sed -e 's#\.\./LICENSE#LICENSE#g' \
