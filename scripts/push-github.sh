@@ -7,13 +7,13 @@
 # dorthin: `main`. Feature-Branches und Tags bleiben in Gitea — was auf GitHub
 # steht, ist der veröffentlichte Stand.
 #
-# Der Klon ist kein Selbstzweck. An ihm hängen zwei Dinge, die nicht umziehen
-# können:
-#   * der GitHub-Pages-Workflow (`.github/workflows/pages.yml`), also die
-#     „latest build"-Instanz mhoennig.github.io/werkbaum;
-#   * die Beispiel-Links der READMEs, die per `?sourceUrl=` von
-#     raw.githubusercontent.com laden — Gitea sendet auf `raw`-Dateien KEIN
-#     `Access-Control-Allow-Origin`, der Browser blockte sie also (D23, D95).
+# Der Klon ist kein Selbstzweck. An ihm hängt der GitHub-Pages-Workflow
+# (`.github/workflows/pages.yml`), also die „latest build"-Instanz
+# mhoennig.github.io/werkbaum — die kann nicht umziehen.
+#
+# Die Beispiel-Links der READMEs waren ein zweiter Grund und sind es nicht mehr:
+# `git.javagil.de` sendet auf `raw`-Dateien inzwischen
+# `Access-Control-Allow-Origin`, sie laden deshalb von Gitea (D96, revidiert D95).
 #
 # Verwendung:
 #   scripts/push-github.sh [-n] [-y]
