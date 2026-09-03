@@ -2,7 +2,7 @@
 
 |                                 |                                                                                                                                                              |
 |---------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Status                          | **Abgestimmt** (sieben Fragen am 2026-09-02, Entscheidungen in §13 und D94) — nichts gebaut                                                                  |
+| Status                          | **Gebaut und im Browser nachgemessen** (2026-09-02, Branch `rfc-002-mehrfenster`; Fälle 1–8 grün, Fall 9 deckte eine Lücke auf, die geschlossen ist — §10. Offen: die Handarbeit, PWA/Firefox/Safari/ohne Locks) |                                                                  |
 | Anlass                          | Fehlerbericht: installierte App und Browser-Tab mit demselben geteilten Dokument ⇒ modaler Dialog in beiden Fenstern, einziger Ausgang „Trotzdem fortfahren“ |
 | Plan-Knoten                     | `#ed.docs.windows` in `docs/examples/werkbaum.werkbaum`                                                                                                      |
 | Entscheidung                    | D94 in `docs/DECISIONS.md`; revidiert **D89** (Dialog) und schreibt **D83** (Ablageschema) und **D84** (Fremd-Tab-Warnung) fort                              |
@@ -497,6 +497,59 @@ Inszenieren von Speicherzuständen erst alle alten Tabs schließen (D83).
 stubben (D91-Nachtrag 9) — Löschen wird über die Ablage selbst inszeniert.
 Eine echte PWA-Installation lässt sich nicht automatisieren (D73).
 
+### Ergebnis der Nachmessung (2026-09-02)
+
+Zwei echte Tabs auf `localhost:8137`, Fall 6 gegen ein lokal laufendes
+Backend. **Grün: 1 bis 8.** Im Einzelnen — Fall 1: A sieht B's neues Dokument
+ohne Neuladen, und nach A's Dokumentwechsel samt `visibilitychange`/
+`pagehide` sind dessen Text **und** Meta unangetastet; Fall 2: beide
+Kamera-Stände liegen nebeneinander, B's Flush lässt A's stehen; Fall 3: Chip
+„deleted elsewhere", Editor behält seine 221 Knoten, Tastendruck holt
+Dokument und Tombstone zurück, der Wechsel ohne Tastendruck legt den Text
+(68 791 Zeichen) in `werkbaum-snaps:werkbaum`; Fall 4: der Chip folgt der
+fremden Umbenennung, der Text bleibt; Fall 5: Dialog nur im zweiten Fenster,
+„nur ansehen" setzt `readOnly`, und als das erste Fenster wegwechselte, wurde
+das zweite **von selbst** beschreibbar — „trotzdem" nennt Dokument und
+Fensterart in beiden Fenstern; Fall 6 und 7: dasselbe `live:`-Dokument in
+beiden Fenstern gibt **keinen** Dialog, auch beim Start (das gemeldete
+Symptom), beide schreiben, der Server zählt von 2 auf 4 und behält beide
+Zeilen; Fall 8: mit wirklich voller Quota (kein Stub) steht `storeFailed`,
+die Dokumente bleiben unangetastet, die Stände weichen 4 → 0, und der nächste
+gelungene Schreibvorgang räumt die Warnung.
+
+**Gegenprobe im Vor-v3-Build gezogen** (git-Worktree am Commit davor, eigener
+Dev-Server): Dort ist Fall 1 nachweislich rot — B legt ein Dokument an, A
+wechselt das Dokument, und B's Text ist weg (`werkbaum-doc:… = null`, Eintrag
+aus dem Index entfernt). Genau Befund 2.
+
+**Fall 9 hat eine Lücke aufgedeckt, die jetzt geschlossen ist.** Alles, was
+der Index kennt, ist im alten Build sichtbar — ein Dokument, das gerade nur
+an `werkbaum-meta:<id>` und `werkbaum-doc:<id>` hängt, aber nicht im Index
+steht, ist dort jedoch nicht nur unsichtbar: Dessen Voll-Flush **löscht**
+seinen Text-Schlüssel. Das Fenster dafür ist schmal, weil `indexHint()` die
+Speicher-Schlüssel mitliest und sich damit bei jedem Flush selbst heilt —
+aber es gab eine Stelle, die es regelmäßig öffnete: `reviveGoneDoc()`
+(§6.5) schrieb Meta und Text und **nicht** den Index-Hinweis. Ein anderswo
+gelöschtes und hier durch Tippen wiederbelebtes Dokument hing also bis zum
+nächsten Flush-Punkt allein an seinen eigenen Schlüsseln. Die Funktion
+schreibt den Hinweis jetzt mit. Nachgemessen im Browser: Index nach dem
+Tastendruck sofort wieder vollständig; Gegenprobe per Mutation — ohne die
+Zeile bleibt der Index ohne das Dokument, während Meta und Text dastehen.
+
+**Zwei Beobachtungen ohne Handlungsbedarf.** Fügen zwei Fenster gleichzeitig
+an derselben Stelle eines geteilten Dokuments ein, kann die Zeilenreihenfolge
+im Editor kurz von der des Servers abweichen; der nächste Push gleicht sie an,
+verloren geht nichts. Und die **Feed-Hälfte** von Fall 6 („beide sehen beides
+ohne Neuladen") ist in dieser Umgebung nicht messbar — der Automatisierungs-
+Tab ist dauerhaft `hidden`, der Feed ruht dort planmäßig (D76-Nachtrag 1);
+gemessen ist stattdessen, dass B A's Zeile über die Antwort auf den eigenen
+PATCH bekam. Getippt wurde durchweg per `value` + `input`-Ereignis, weil die
+Browser-Fläche verborgen war und echte Tastendrücke nicht ankommen
+(D91-Nachtrag 8).
+
+**Offen bleibt die Handarbeit** aus dem Absatz oben: installierte PWA + Tab,
+Firefox, Safari, ein Browser ohne Locks-API.
+
 ## 11. Abgrenzung — was nicht gebaut wird
 
 | Nicht gebaut                                                                                          | Warum                                                                                                                  |
@@ -540,3 +593,12 @@ zurück als heute.
 
 - 2026-09-02 — erste Fassung aus dem Fehlerbericht; sieben Fragen
   entschieden; RFC, Plan-Knoten und D94 in einem Commit. Nichts gebaut.
+- 2026-09-02 — gebaut in vier Schritten (§12): Schema v3 + Tombstones +
+  Dirty-Flush; `docsync.js` + storage-Handler; Web Locks + Dialog + Warnung;
+  Dokumentation. Headless 666 Tests grün, Gegenprobe per Mutation gezogen;
+  die Browser-Nachmessungen (§10) standen noch aus.
+- 2026-09-02 — im Browser nachgemessen (§10): Fälle 1–8 grün, Fall 1 im
+  Vor-v3-Build gegengeprüft und dort rot. Fall 9 deckte auf, dass
+  `reviveGoneDoc()` den Index-Hinweis nicht mitschrieb — behoben, Gegenprobe
+  per Mutation gezogen. Offen bleibt die Handarbeit: PWA neben Tab, Firefox,
+  Safari, ein Browser ohne Locks-API.

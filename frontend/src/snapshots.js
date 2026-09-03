@@ -6,17 +6,28 @@
    dafür ist reine Logik — sie hing nur an `localStorage`, `Date.now()` und
    dem `<textarea>` fest und war deshalb nicht prüfbar.
 
+   Seit RFC 002 (Schema v3) liegen die Stände je Dokument unter einem eigenen
+   Schlüssel `werkbaum-snaps:<id>` — der alte Sammel-Schlüssel ließ jeden
+   Voll-Flush die Stände des anderen Fensters wegwerfen, die Rettungs-
+   Sicherungen eingeschlossen (Befund 3). Nur der Quota-Notfall fasst noch
+   einen fremden Schlüssel an (§6.8, bewusst so belassen: Dokumente gehen
+   vor Ständen, D54).
+
    Aufteilung wie bei den übrigen Modulen: Hier steht, WAS gilt; in
    app.js bleibt, WOHER die Werte kommen (aktives Dokument, Schreibschutz,
    Menü) und WOHIN sie gehen (`localStorage`). Der Speicher wird als
-   `{setItem, removeItem}` hereingereicht, die Uhr als Zahl — beides lässt sich
-   im Test stellen.
+   `{getItem, setItem, removeItem}` hereingereicht, die Schlüsselliste dazu
+   (im Browser `Object.keys(localStorage)`) — beides lässt sich im Test
+   stellen.
 
-   Datenform: `{docId: [{t, text}, …]}`, ältester Stand zuerst. */
+   Datenform: je Schlüssel eine Liste `[{t, text}, …]`, ältester Stand zuerst. */
 
-export const LS_SNAPS = 'werkbaum-snaps';
+import { DOC_SNAPS_PREFIX } from './docstore.js';
+
 export const SNAP_EVERY = 10 * 60 * 1000;
 export const SNAP_KEEP = 20;
+
+export function snapKey(id){ return DOC_SNAPS_PREFIX + id; }
 
 /* Was aus dem Speicher kommt, ist fremder Text: Es kann von einer älteren
    Fassung stammen, von Hand bearbeitet oder halb geschrieben sein. Alles, was
@@ -25,15 +36,25 @@ export const SNAP_KEEP = 20;
    umbringen. */
 export function parseSnaps(raw){
   let o;
-  try{ o = JSON.parse(raw || '{}'); }
-  catch(_){ return {}; }
-  if(!o || typeof o !== 'object' || Array.isArray(o)) return {};
+  try{ o = JSON.parse(raw || 'null'); }
+  catch(_){ return []; }
+  if(!Array.isArray(o)) return [];
+  return o.filter(s => s && typeof s.text === 'string' && typeof s.t === 'number');
+}
+
+/* Die Stände EINES Dokuments aus dem Speicher lesen. */
+export function readSnapList(storage, id){
+  return parseSnaps(storage.getItem(snapKey(id)));
+}
+
+/* Alle Stände des Speichers lesen — beim Laden, aus den Schlüsseln. Ein
+   Schlüssel ohne brauchbare Liste fällt still weg. */
+export function readAllSnaps(storage, allKeys){
   const out = {};
-  for(const id of Object.keys(o)){
-    const list = o[id];
-    if(!Array.isArray(list)) continue;
-    const rein = list.filter(s => s && typeof s.text === 'string' && typeof s.t === 'number');
-    if(rein.length) out[id] = rein;
+  for(const k of (allKeys || [])){
+    if(typeof k !== 'string' || !k.startsWith(DOC_SNAPS_PREFIX)) continue;
+    const liste = parseSnaps(storage.getItem(k));
+    if(liste.length) out[k.slice(DOC_SNAPS_PREFIX.length)] = liste;
   }
   return out;
 }
@@ -60,32 +81,54 @@ export function addSnapshot(snaps, id, text, now, opts){
 }
 
 /* Wirft den ältesten Stand **über alle Dokumente hinweg** weg und sagt, ob
-   noch einer da war. Über alle, nicht nur im aktiven Dokument: Wenn der Platz
-   knapp wird, ist das Älteste das Entbehrlichste, gleich zu welchem Dokument
-   es gehört. */
+   noch einer da war — im GEDÄCHTNIS; den Speicher pflegt persistSnaps.
+   Über alle, nicht nur im aktiven Dokument: Wenn der Platz knapp wird, ist
+   das Älteste das Entbehrlichste, gleich zu welchem Dokument es gehört. */
 export function dropOldestSnap(snaps){
   let id = null, t = Infinity;
   for(const k in snaps){
     const l = snaps[k];
     if(l && l.length && l[0].t < t){ t = l[0].t; id = k; }
   }
-  if(id === null) return false;
+  if(id === null) return null;
   snaps[id].shift();
   if(!snaps[id].length) delete snaps[id];
-  return true;
+  return id;
 }
 
-/* Der Platz im Speicher ist geteilt. Läuft er über, sollen die **Dokumente**
-   überleben, nicht ihre Stände — deshalb wirft der Fehlerfall Stände weg, bis
-   es passt, notfalls alle. Gibt zurück, ob am Ende etwas gespeichert wurde. */
-export function persistSnaps(snaps, store){
+/* Die Stände eines Dokuments schreiben. Der Platz im Speicher ist geteilt —
+   läuft er über, sollen die **Dokumente** überleben, nicht ihre Stände (D54):
+   Der älteste Stand geht zuerst, dokumentübergreifend. Dabei wird ein fremder
+   Schlüssel nur im Notfall angefasst — und dann lesend geändert, nie aus dem
+   eigenen Gedächtnis überschrieben (§6.8). Gibt zurück, ob etwas gespeichert
+   wurde. */
+export function persistSnaps(storage, snaps, id, allKeys){
   for(;;){
-    try{ store.setItem(LS_SNAPS, JSON.stringify(snaps)); return true; }
+    try{ storage.setItem(snapKey(id), JSON.stringify(snaps[id] || [])); return true; }
     catch(_){
-      if(!dropOldestSnap(snaps)){
-        try{ store.removeItem(LS_SNAPS); }catch(_){}
+      const opfer = dropOldestSnap(snaps);
+      if(opfer === null){
+        /* Nichts mehr da — den eigenen Schlüssel frei geben. */
+        delete snaps[id];
+        try{ storage.removeItem(snapKey(id)); }catch(_){}
         return false;
       }
+      if(opfer !== id){
+        /* Der älteste Stand lag bei einem fremden Dokument — dessen Schlüssel
+           im Speicher nachziehen (lesen, kürzen, schreiben), den Cache hier
+           verwerfen; beim nächsten Öffnen des Menüs frisch gelesen. */
+        const fremd = parseSnaps(storage.getItem(snapKey(opfer)));
+        fremd.shift();
+        try{
+          if(fremd.length) storage.setItem(snapKey(opfer), JSON.stringify(fremd));
+          else storage.removeItem(snapKey(opfer));
+        }catch(__){
+          try{ storage.removeItem(snapKey(opfer)); }catch(___){}
+        }
+        delete snaps[opfer];
+      }
+      /* Eigener Verlust: die Liste schrumpfte im Gedächtnis mit — der nächste
+         Versuch schreibt weniger. */
     }
   }
 }

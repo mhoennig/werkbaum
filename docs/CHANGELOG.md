@@ -19,7 +19,13 @@ reverse.
 
 ## 2026-09-02
 
-- Running the installed app and a browser tab side by side recorded as planned: documents get their own storage keys so windows stop deleting each other's work, a per-document lock finds the one real loss case, and the second window gets three exits instead of "continue anyway" — spelled out in RFC 002 before it is built
+- Running the installed app and a browser tab side by side works now: text, names and earlier states live under their own storage key per document and deleting leaves a tombstone, so windows stop deleting each other's work
+- A document created, renamed or deleted in another window shows up without a reload now, and a document deleted elsewhere while open here stays until you type — typing brings it back
+- The modal "open more than once" dialog is gone; the one remaining loss case — the same non-shared document open in two windows — is found by a per-document lock, and the second window chooses: open another document, view only until the other window lets go, or edit anyway
+- The other-window warning now names the document and says whether it is open in the app or in the browser — and stays silent when nothing collides
+- Fix: in the "open in another window" dialog the list of other documents squeezed its buttons until the names ran into each other — picking one is a dropdown now, one line tall however many documents you have
+- The two-window warning says "whichever change is saved last wins" now instead of "the last keystroke" — folding a branch in the diagram writes to the text too, so it joins the same race
+- "View only" really is view only now: while the document is held by another window, the diagram's fold marks stay put too — folding writes to the text and used to slip past the read-only text area; the window holding the document folds as before
 - An MCP server for AI agents recorded as planned: it lives in the backend, runs the one JS parser through GraalJS, hands plans to Claude Code and other agents as resources and tools over streamable HTTP, and writes changes as conflict-safe line diffs — no new runtime, spelled out in an RFC before it is built
 
 ## 2026-08-28

@@ -7747,15 +7747,16 @@ Warnung den Zustand, und die Sicherungen halten den Text. Unabhängig davon
 kann `tools/pull-doc --git-commit` (D88) per Cron eine Git-Historie des
 Server-Dokuments führen — ein Netz außerhalb des Browsers.
 
-**Nachtrag — der modale Zwei-Fenster-Dialog wird revidiert (2026-09-02).**
-Das erste Netz oben ist in der Sache überholt: Es erschien auch dort, wo
+**Nachtrag — der modale Zwei-Fenster-Dialog ist weg (revidiert, gebaut 2026-09-02).**
+Das erste Netz oben war in der Sache überholt: Es erschien auch dort, wo
 nichts kollidiert (dasselbe geteilte Dokument in App und Tab — zwei
 Live-Clients, der Server führt zusammen), und es schützte nicht vor dem,
 wovor es warnte — hinter der Overlay-Schicht liefen Start, Flush und Feed
-weiter. Der eigentliche Verlust zwischen zwei Fenstern liegt in den
+weiter. Der eigentliche Verlust zwischen zwei Fenstern lag in den
 Sammel-Schlüsseln der Ablage, nicht im Dialog. Analyse, Alternativen und
-Entscheidungen: **D94** und `docs/rfc/002-mehrfenster.md`. Die drei
-anderen Netze (Sicherungen, Rettung, Wachhund) bleiben.
+Entscheidungen: **D94** und `docs/rfc/002-mehrfenster.md`. Der Präsenz-Kanal
+(Herzschlag, Timeout, Notluke) und der modale Dialog sind ersatzlos
+ausgebaut; die drei anderen Netze (Sicherungen, Rettung, Wachhund) bleiben.
 
 ## D90 — Die Dokumentart steht grau hinter dem Namens-Chip
 Nutzerwunsch, unmittelbar aus dem D89-Vorfall: Hinter der Brotkrume
@@ -8830,7 +8831,7 @@ ungepuffert durch. Fällt er durch, ist die Antwort nicht Node, sondern eine
 neue Frage an den Entwickler. Offen sonst nur die Prompts. Gebaut ist
 nichts.
 
-## D94 — Mehr-Fenster-Betrieb: getrennte Schlüssel, Sperre je Dokument, Dialog mit Auswegen — als RFC vorgelegt, nichts gebaut
+## D94 — Mehr-Fenster-Betrieb: getrennte Schlüssel, Sperre je Dokument, Dialog mit Auswegen — gebaut (2026-09-02)
 Gemeldet: Werkbaum als installierte App mit einem `?live=`-Dokument, dazu
 dieselbe Seite im Browser-Tab — der Tab stellt das zuletzt aktive
 (geteilte) Dokument her, und in beiden Fenstern steht sofort der modale
@@ -8918,5 +8919,173 @@ Browser-Bestand (Chrome 69, Firefox 96, Safari 15.4).
 im Browser mit zwei Tabs — vor allem der Fall, der heute rot ist: B legt
 ein Dokument an, A wechselt das Dokument, B's Dokument muss überleben.
 Die PWA-Nachstellung selbst bleibt Handtest (D73), ebenso Firefox und
-Safari. Werkzeuggrenzen wie in D79/D82/D83/D91-Nachtrag 9 benannt. Gebaut
-ist nichts.
+Safari. Werkzeuggrenzen wie in D79/D82/D83/D91-Nachtrag 9 benannt.
+
+**Gebaut (2026-09-02, vier Schritte wie im RFC §12):**
+
+- **Schema v3** (`docstore.js`): `readDocs` liest die Union aus Meta-, Text-
+  und Index-ids minus Tombstones; `writeDoc`/`writeIndexHint`/`removeDoc`/
+  `expireTombstones` ersetzen den Voll-Flush — der Index schreibt sich aus
+  `Speicher-ids ∪ eigene Liste` und entfernt nichts. Migration
+  (`migrateV3`) verteilt die alten Sammel-Stände und schreibt fehlende
+  Meta, idempotent. Die Stände liegen je Dokument (`werkbaum-snaps:<id>`,
+  `snapshots.js`); nur der Quota-Notfall fasst noch einen fremden
+  Schlüssel an — lesend gekürzt, nie aus dem eigenen Gedächtnis
+  überschrieben (§6.8).
+- **Dirty-Flush** statt Voll-Flush (`app.js`): die Flush-Punkte schreiben
+  nur, was dieses Fenster angelegt, umbenannt oder getippt hat, plus den
+  Index-Hinweis. Der Tastendruck bleibt `storeDocText` — er hebt einen
+  Tombstone selbst (Tippen ist Absicht).
+- **`docsync.js` (neu, headless, getestet)** wendet storage-Ereignisse an:
+  Liste, Namen, Tombstones, Stände-Cache, Reihenfolge-Hinweis; am aktiven
+  Dokument die drei Fälle umbenannt / anderswo gelöscht (behalten, bis
+  getippt wird) / fremd geschrieben. Datei-Handles werden bei `meta` neu
+  lazy aus IndexedDB nachgeladen bzw. bei `deleted` verworfen (§6.9).
+- **Web Locks je Dokument** (`ifAvailable`, gehalten, solange aktiv):
+  Fällt von selbst, wartende Requests werden geweckt. Bekommt ein Fenster
+  die Sperre nicht, zeigt es den Dialog über dem Editor mit drei Auswegen
+  (anderes Dokument öffnen / nur ansehen / trotzdem bearbeiten); ohne
+  Locks-API warnt der storage-Rückfall ohne Dialog. Die `tabConflict`-
+  Warnung nennt Dokument und Fensterart (aus der eigenen Sicht gefolgert,
+  `display-mode: standalone`).
+- Headless: 666 Tests grün, die Gegenprobe per Mutation gezogen — der
+  zurückgebaute Sweep lässt genau den benannten Test fallen.
+
+**Nachgemessen im Browser, zwei echte Tabs (2026-09-02).** Die neun Fälle
+aus RFC §10, Ergebnisse dort im Einzelnen: **1 bis 8 grün** — B's neues
+Dokument überlebt A's Flush (der Test für Befund 2, im Vor-v3-Build per
+Worktree gegengeprüft und dort nachweislich rot), beide Kamera-Stände
+bleiben nebeneinander, „anderswo gelöscht" behält den Editor und wird durch
+Tippen zurückgeholt, der Chip folgt einer fremden Umbenennung, der Dialog
+steht nur im zweiten Fenster und dessen „nur ansehen" wird von selbst
+beschreibbar, sobald das erste wegwechselt, dasselbe `live:`-Dokument in
+beiden Fenstern gibt **keinen** Dialog (das gemeldete Symptom), und bei
+wirklich voller Quota weichen die Stände, während die Dokumente bleiben.
+
+**Fall 9 deckte eine Lücke auf — geschlossen.** `reviveGoneDoc()` schrieb
+Meta und Text, aber nicht den Index-Hinweis: Ein anderswo gelöschtes und
+hier durch Tippen wiederbelebtes Dokument hing bis zum nächsten Flush-Punkt
+allein an seinen eigenen Schlüsseln. v3 findet es dort (`readDocs`
+vereinigt Meta, Text und Index), ein **Rückbau** auf einen Build vor v3
+aber nicht — der liest nur den Index und räumt bei seinem Voll-Flush jeden
+Text-Schlüssel ab, den er darin nicht findet. Also stiller Verlust, der
+teuerste Fehler (SPEC §4, D59). Die Funktion schreibt den Hinweis jetzt
+mit; Gegenprobe per Mutation gezogen — ohne die Zeile bleibt der Index ohne
+das Dokument, während Meta und Text dastehen. Sonst heilt sich der Index
+von selbst, weil `indexHint()` die Speicher-Schlüssel mitliest.
+
+**Nachtrag — die Auswahl im Sperr-Dialog ist ein Aufklapp-Feld
+(2026-09-02).** Gemeldet aus der produktiven Instanz: „Die Buttons mit den
+anderen Dokumenten überlappen sich und sind unleserlich." Die Ursache ist
+nicht die Zahl der Dokumente, sondern eine Flexbox-Falle: Die Liste war ein
+`flex`-Spaltenkasten mit gedeckelter Höhe (9rem), und ihre Knöpfe tragen
+serienmäßig `flex-shrink: 1` — statt zu scrollen, schrumpfte der Kasten sie
+unter ihre eigene Textzeile. Nachgemessen bei acht Dokumenten: 14,5 px
+Kastenhöhe gegen 32 px Inhalt, also 17,5 px Überstand je Knopf bei 4 px
+Abstand — die Beschriftungen liefen ineinander.
+
+Zwei Wege standen offen: `flex-shrink: 0` (dann scrollt die Liste wirklich)
+oder ein **Aufklapp-Feld**. Entschieden (Nutzer): das Aufklapp-Feld. Es ist
+**eine Zeile hoch, unabhängig von der Anzahl** — und der Dialog liegt in
+einem Kasten, der auf dem Telefon oder bei kleinem Editor-Panel ohnehin
+knapp ist; eine Liste, die mit der Dokumentenzahl wächst, bleibt dort auch
+scrollend unhandlich. Die Auswahl aus vielen gleichartigen Dingen ist
+zudem genau das, wofür ein Aufklapp-Feld die vertraute Geste ist.
+
+Gebaut mit dem vorhandenen Vokabular: die Kopfzeile ist jetzt ein echtes
+`<label for>`, das Feld trägt einen deaktivierten Platzhalter („—"), und
+die Auswahl schaltet sofort um — dieselbe Ein-Klick-Geste wie zuvor der
+Knopf. **Kein neuer i18n-Schlüssel**: Der Platzhalter ist ein Strich, den
+Kontext trägt das vorhandene `docLockOpenOther`.
+
+**Nachgemessen** im Browser bei acht Dokumenten: Feld 36 px hoch, kein
+Überstand (−2 px), Karte von 364 auf 256 px geschrumpft; die Auswahl
+schaltet um, der Dialog schließt, das Textfeld wird beschreibbar. **Benannt,
+nicht behoben:** Ist das Editor-Panel sehr flach (gemessen 172 px, weil das
+Diagramm die Höhe hat), ist die Karte immer noch höher als der getönte
+Grund, in dem sie steckt, und malt darüber hinaus. Lesbar bleibt sie; wen
+es stört, deckelt `.lockdlg` mit `max-height`.
+
+**Nachtrag 2 — „der letzte Tastendruck gewinnt" war zu eng gefasst
+(2026-09-02).** Nutzer-Rückfrage beim Ausprobieren: „Man kann im Diagramm
+auf- und zusammenklappen — das beeinflusst das andere Fenster nicht,
+richtig? Und was für ein letzter Tastendruck?" Beides trifft einen
+Formulierungsfehler, nicht einen Baufehler:
+
+- **Falten IST eine Änderung.** Umklappen schreibt die Faltmarke in den
+  Text (D38-Nachtrag 2) und damit in den Speicher — es nimmt am selben
+  Wettlauf teil wie das Tippen. Nachgemessen: A klappt „Ast A" zu, im
+  Speicher steht `- > Ast A (M)`; B's Editor und Diagramm bleiben
+  unverändert (6 Knoten, keine Marke), und B's nächster Tastendruck
+  überschreibt den Speicher — **A's Faltung ist damit weg**. „Beeinflusst
+  das andere Fenster nicht" stimmt also für die Anzeige und nicht für den
+  gespeicherten Text.
+- **Die Warnung sagte deshalb das Falsche.** „Der letzte Tastendruck
+  gewinnt" liest sich, als zähle nur Tippen. Sie heißt jetzt „die zuletzt
+  **gespeicherte Änderung** gewinnt" (englisch „whichever change is saved
+  last wins"), in allen neun Sprachen; der Dialogtext nennt das Falten
+  ausdrücklich mit. SPEC §9 nachgezogen.
+- **Der Dokumentwechsel wandert nicht mit** (dieselbe Rückfrage): Ein
+  anderes Dokument zu wählen ändert nur das eigene Fenster. Der geteilte
+  Schlüssel `werkbaum-active` wird zwar überschrieben, aber kein Fenster
+  reagiert darauf — er entscheidet erst wieder, was ein **Neustart**
+  öffnet (§3, „letzter Schreiber gewinnt, harmlos"). Nachgemessen: A
+  wechselt auf „Zweites", B bleibt auf „Falt-Probe".
+
+**Dabei aufgefallen, benannt und noch nicht behoben:** Wer „trotzdem hier
+bearbeiten" gewählt hat, behält die Warnung, auch wenn das andere Fenster
+das Dokument längst verlassen hat — dieser Ausweg fordert die Sperre
+bewusst nicht mehr an (`lockGen++`), also erfährt er vom Loslassen nichts.
+Sauber wäre, auch dort im Hintergrund zu warten (`waitInBackground`) und
+die Warnung zu räumen, sobald die Sperre ankommt — dieselbe Mechanik wie
+bei „nur ansehen", nur ohne den Schreibschutz.
+
+**Nachtrag 3 — „nur ansehen" galt nur dem Textfeld; jetzt gilt es dem
+Dokument (2026-09-02).** Folgerichtiger Nutzer-Einwand aus Nachtrag 2:
+Wenn Falten eine Änderung ist, muss der Nur-Ansehen-Modus auch das
+Diagramm stillstellen — „in dem ersten Fenster soll das natürlich weiter
+funktionieren."
+
+**Es war schlimmer als eine fehlende Sperre: `readonly` hielt gar nichts
+auf.** `replaceTextUndoable` fällt auf `src.value = neu` zurück, wenn
+`execCommand` scheitert (D14: „der richtige Zustand geht vor der
+Rückgängig-Historie") — und eine Zuweisung an `value` schreibt auch in ein
+schreibgeschütztes Feld. Nachgemessen im Nur-Ansehen-Fenster: Ein Klick
+auf das Falt-Zeichen setzte `- > Ast A (M)` in Textfeld **und** Speicher.
+Der Modus war also nur eine Beschriftung.
+
+**Gesperrt wird jetzt an den Schreibstellen, nicht am Feld.** Eine Zeile
+in `replaceTextUndoable` weist im Nur-Ansehen-Modus jeden programmatischen
+Schreibzugriff ab — das deckt Falten, Falt-Durchschalter, „aus Taiga
+übernehmen", das Laden eines früheren Stands und die ID-Kurzform in einem
+Griff. Dazu ruhen die **Gesten** selbst, damit nichts still ins Leere
+geht: `toggleFold` und der Durchschalter kehren früh um, die Falt-Zeichen
+und der Knopf treten zurück und nehmen keinen Klick an (`body.viewonly`),
+und im Knoten-Fenster entfallen die Aktionen, die in die Zeile schreiben —
+Story/Task anlegen, Ticket verknüpfen, „übernehmen". **„Nach Taiga
+schreiben" bleibt**: Es fasst den Plan nicht an.
+
+**Alles, was nur die Ansicht ändert, bleibt bedienbar** — Zoom, Modus,
+Pfad, der Faltzustand aus dem Text, Export, Sprünge. Der Modus sagt
+„dieses Dokument nicht ändern", nicht „nichts tun".
+
+**Nachgemessen** mit zwei Fenstern: Im Nur-Ansehen-Fenster lassen Chip,
+Tastatur (←) und Durchschalter Text und Speicher unangetastet (5 Knoten
+bleiben 5, `pointer-events: none`, Deckkraft 0,45); im haltenden Fenster
+faltet dieselbe Geste unverändert und schreibt `> Ast A`; verlässt das
+haltende Fenster das Dokument, wird das andere von selbst wieder
+beschreibbar **und** faltbar (`> Ast B` geschrieben). Vorher, zur
+Gegenprobe: derselbe Klick schrieb im Nur-Ansehen-Modus in den Speicher.
+
+**Benannt, nicht behoben:** Menüwege, die in den Text schreiben (früheren
+Stand laden, „Original wiederherstellen"), sind im Nur-Ansehen-Modus zwar
+wirkungslos — die Sperre greift —, ihre Einträge stehen aber weiterhin da.
+Sie auszugrauen ist der nächste kleine Schritt, wenn es jemanden stört.
+
+**Offen bleibt die Handarbeit** (RFC §10): installierte PWA neben einem Tab,
+Firefox, Safari, ein Browser ohne Locks-API. Werkzeuggrenzen wie gehabt —
+die Browser-Fläche war verborgen, getippt wurde per `value` + `input`
+(D91-Nachtrag 8), gelöscht über die Ablage (`confirm` ist nicht stubbar,
+D91-Nachtrag 9), und der Live-Feed ruht im dauerhaft verborgenen
+Automatisierungs-Tab (D76-Nachtrag 1) — dass B A's Zeile sieht, ist deshalb
+über die Antwort auf den eigenen PATCH gemessen, nicht über den Feed.
