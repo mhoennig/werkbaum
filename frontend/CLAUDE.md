@@ -150,31 +150,46 @@ verworfene Elemente. Quelle sind ES-Module unter `src/`; `index.html` ist der
   auseinander und die PATCH-Antwort gewinnt — wer das prüfen will, muss die
   PATCH-Antwort im Client verzögern, sonst meldet die Messung „geht doch".
 - Zustand wird im `localStorage` gehalten (Server-Dokumente ausgenommen): `werkbaum-lang`
-  (Sprache), `werkbaum-docs` (JSON-Array der Dokumente `[{id,name,text}]`),
-  `werkbaum-active` (id des aktiven Dokuments), `werkbaum-src` (Spiegel des
+  (Sprache), `werkbaum-active` (id des aktiven Dokuments), `werkbaum-src` (Spiegel des
   aktiven Texts), `werkbaum-ui` (JSON: Modus, verworfene,
   günstigster Pfad, Split-Zustand inkl. `--col`/`--drow`, Zoom, Vollbild). Neue
   GUI-Einstellungen in `saveUI()`/`restoreState()` mitführen; `saveUI` liefert
   während `restoring===true` nichts, damit das Wiederherstellen nicht sofort
   zurückschreibt.
-  **Persistenz ist geteilt (D82) und je Dokument abgelegt (D83):** Das
-  Schema liegt headless in `docstore.js` — `werkbaum-docs` ist nur der
-  INDEX `[{id,name,source?}]`, der Text jedes Dokuments ein eigener
-  Schlüssel `werkbaum-doc:<id>`. Der Tastendruck schreibt über
-  `persistActiveText()`/`storeDocText()` NUR den aktiven Text (+ Spiegel
-  `werkbaum-src` als Rollback-Fallback); den Voll-Flush macht
-  `persistDocs()`/`storeDocs()` an Flush-Punkten (Wechseln/Anlegen/Löschen/
-  Umbenennen, `pagehide`, verborgener Tab) — mit Vergleich vor jedem
-  Schreiben und Abräumen verwaister Text-Schlüssel; nie wieder eine
-  Voll-Serialisierung in einen Tastendruck-Pfad hängen. Die „Spiegel
-  gewinnt"-Regel in `loadDocs` gilt NUR noch der einmaligen Migration aus
-  dem Altformat (Texte im Array) und muss **vor** `seedShippedDocs()`
-  laufen — danach drehte der ältere Spiegel eine frisch nachgezogene
-  Fassung zurück und das Dokument gälte für immer als bearbeitet. Ein
-  fehlender Text-Schlüssel ergibt ein leeres Dokument, nie den Verlust der
-  Liste. Scheitert ein Write (Quota), meldet die persistente Warnung
-  `storeFailed` (`noteStore()`, rendert nur an der Flanke) — nie wieder
-  still schlucken.
+  **Persistenz ist geteilt (D82) und je Dokument abgelegt (D83, v3 nach
+  RFC 002/D94):** Das Schema liegt headless in `docstore.js` — der Text
+  jedes Dokuments unter `werkbaum-doc:<id>`, sein Name/Quelle/Geburtsdatum
+  unter `werkbaum-meta:<id>`, seine früheren Stände unter
+  `werkbaum-snaps:<id>`, eine Löschung als Tombstone `werkbaum-gone:<id>`
+  (Verfall 7 Tage). `werkbaum-docs` ist nur der Reihenfolge-Hinweis
+  `[{id,name,source?}]` — er **entfernt nichts mehr** und wird aus
+  `Speicher-ids ∪ eigene Liste` geschrieben (`writeIndexHint`). Der
+  Tastendruck schreibt über `persistActiveText()`/`storeDocText()` NUR den
+  aktiven Text (+ Spiegel `werkbaum-src`); den **Dirty-Flush** macht
+  `persistDocs()` an Flush-Punkten (Wechseln/Anlegen/Löschen/Umbenennen,
+  `pagehide`, verborgener Tab) — er schreibt NUR, was dieses Fenster
+  angelegt, umbenannt oder getippt hat (`dirtyDocs`, docsync.js), **nie**
+  den Schlüssel eines anderen Fensters (der alte Orphan-Sweep des
+  Voll-Flushes hat fremde Dokumente samt Text gelöscht — genau dagegen ist
+  die Gegenprobe im Test). Die „Spiegel gewinnt"-Regel in `loadDocs` gilt
+  NUR noch der einmaligen Migration aus dem Altformat (Texte im Array) und
+  muss **vor** `seedShippedDocs()` laufen — danach drehte der ältere Spiegel
+  eine frisch nachgezogene Fassung zurück und das Dokument gälte für immer
+  als bearbeitet. Ein fehlender Text-Schlüssel ergibt ein leeres Dokument,
+  nie den Verlust der Liste. Scheitert ein Write (Quota), meldet die
+  persistente Warnung `storeFailed` (`noteStore()`, rendert nur an der
+  Flanke) — nie wieder still schlucken.
+  **Zwei Fenster (RFC 002/D94):** Das `storage`-Ereignis zieht Liste, Namen
+  und Tombstones per `applyStorageEvent()` (docsync.js, headless getestet)
+  im laufenden Fenster nach; das aktive anderswo gelöschte Dokument bleibt
+  warnfarben stehen, bis getippt wird (Tippen belebt es — `storeDocText`
+  hebt den Tombstone selbst). Ein zweites Fenster am selben **nicht
+  geteilten** Dokument wird per Web-Locks-Sperre je Dokument erkannt
+  (`syncDocLock()`/`acquireDocLock()`); der Dialog über dem Editor hat drei
+  Auswege (anderes öffnen / nur ansehen `viewOnly` / trotzdem bearbeiten);
+  ohne Locks-API warnt der `foreignWrite`-Rückfall. `live:`-Dokumente
+  werden nie gesperrt — der Server führt zusammen. Der D89-Präsenz-Kanal
+  (BroadcastChannel, Herzschlag, modaler Dialog) ist ersatzlos weg.
 - Dokumente (D22): mehrere umschaltbare Notationstexte. `loadDocs()` migriert bei
   fehlendem `werkbaum-docs` den bestehenden `werkbaum-src` (oder `INITIAL`) in
   **ein** Dokument; `initDocs()` (Aufruf **nach** `applyLang`) holt den aktiven

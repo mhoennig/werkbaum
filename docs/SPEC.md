@@ -952,14 +952,32 @@ anderen, ohne neu zu laden.
   10-Minuten-Takt sie wieder, und das Uhr-Menü zeigt sie als eigenen Abschnitt
   unter den Server-Meilensteinen. Siehe D89.
 
-**Ein zweites Werkbaum-Fenster desselben Browsers** — Tab, Fenster oder
-PWA — bekommt einen **modalen Dialog**, in beiden Fenstern, bis eines
-geschlossen ist: Beide schreiben in dieselbe Dokument-Ablage, der zuletzt
-speichernde überschreibt den anderen. Erkannt per Herzschlag
-(BroadcastChannel); der Dialog schließt sich **von selbst**, sobald das
-andere Fenster zu ist — es ist nichts zu bestätigen. „Trotzdem fortfahren"
-ist die Notluke und gilt je Fenster und Vorfall. Siehe D89 (und D84 für die
-zeilenlose Warnung, die daneben bestehen bleibt).
+**Ein zweites Werkbaum-Fenster desselben Browsers** — Tab, Fenster oder PWA
+— kollidiert nur noch am **selben nicht geteilten Dokument**: Text, Name und
+frühere Stände liegen je Dokument unter eigenen Schlüsseln, der Index löscht
+nie, und gelöschte Dokumente hinterlassen einen Tombstone. Verschiedene
+Dokumente in zwei Fenstern arbeiten daher still nebeneinander; ein
+anderswo angelegtes, umbenanntes oder gelöschtes Dokument zeigt sich im
+laufenden Fenster ohne Neuladen (storage-Ereignis). Für den einen
+Verlustfall hält jedes Fenster, solange ein nicht-`live:`-Dokument vorn
+ist, eine **Sperre** (Web Locks API) auf es — atomar, und sie fällt von
+selbst, wenn das Fenster schließt. Bekommt das zweite Fenster sie nicht,
+zeigt es einen Dialog mit drei Auswegen: anderes Dokument öffnen, hier nur
+ansehen (**das ganze Dokument ist dann schreibgeschützt**: Textfeld wie
+Diagramm — auch die Faltmarken lassen sich dort nicht umklappen, denn das
+schriebe in den Text; es wird von selbst wieder beschreibbar, sobald das
+andere Fenster loslässt) oder trotzdem hier bearbeiten — dann gewinnt
+die **zuletzt gespeicherte Änderung**, und die Warnung nennt das Dokument.
+Änderung heißt dabei nicht nur Tippen: Auch das Falten im Diagramm schreibt
+in den Text (§9, `>`/`<`) und nimmt an diesem Wettlauf teil. Das andere
+Fenster zieht dabei nichts nach — es zeigt weiter seine eigene Fassung —,
+und auch das aktive Dokument wechselt dort nicht mit; der gemerkte
+Dokumentwähler entscheidet erst wieder, was ein **Neustart** öffnet.
+`live:`-Dokumente werden nie gesperrt: Zwei Fenster sind zwei Live-Clients,
+der Server führt zusammen. Ohne Web Locks (file://, alte Browser) bleibt
+der storage-Rückfall: ein fremder Schreibzugriff am eigenen aktiven
+Dokument warnt, ohne Dialog. Siehe D94 (und D89 für die lokalen
+Sicherungen und den Wachhund).
 
 Siehe D76 (Protokoll und Begründung) und
 `backend/docs/live-editing-proposal.md`.
