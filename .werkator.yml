@@ -1,0 +1,52 @@
+# Werkator CI configuration for Werkbaum (built by https://werkator.javagil.de).
+# Reference: https://github.com/mhoennig/werkator/blob/main/docs/configuration.md
+werkator:
+  version:
+    since: "1.0.1"
+
+# Commit status target. Points at GitHub for now; the repository will move to
+# https://git.javagil.de (Gitea) later, GitHub stays a synchronised clone. Status
+# checks are posted only once the origin is a Gitea; until then this is a label.
+gitea:
+  baseUrl: https://github.com
+  owner: mhoennig
+  repo: werkbaum
+  statusContext: werkator
+
+artifacts:
+  retentionPerBranch: 3
+
+watcher:
+  newBranchMaxAge: 5d
+
+# Named build definitions. "default" carries no trigger on purpose: it is only
+# the settings base the two real builds inherit from, so nothing runs twice.
+builds:
+  default:
+    stdoutLog: build.stdout.log
+    stderrLog: build.stderr.log
+
+  # Backend: Kotlin/Spring Boot under backend/, JUnit 5 + Cucumber, H2 in memory.
+  # The openApiGenerate task runs as part of compilation; jacoco reports land in
+  # backend/build/reports and are browsed by the artifact page's report index.
+  backend:
+    trigger:
+      onPush: true
+    cleanCommand: rm -rf backend/build
+    buildCommand: cd backend && ./gradlew --console=plain --no-daemon test
+    artifactDirs:
+      - backend/build/reports
+    statusContext: werkator/backend
+
+  # Frontend: Vite bundles the editor into one self-contained frontend/dist/index.html.
+  # `npm ci` installs from the lock file; the tests run first, a red Vitest run
+  # never produces an artifact. The default build carries the "latest build" hint,
+  # exactly like the GitHub Pages deployment.
+  frontend:
+    trigger:
+      onPush: true
+    cleanCommand: rm -rf frontend/dist frontend/node_modules
+    buildCommand: cd frontend && npm ci --no-audit --no-fund && npm test && npm run build
+    artifactDirs:
+      - frontend/dist
+    statusContext: werkator/frontend
