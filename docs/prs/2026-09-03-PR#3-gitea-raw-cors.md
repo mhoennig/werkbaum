@@ -27,7 +27,7 @@ Die Datei selbst war also einwandfrei erreichbar; es fehlte genau ein Header.
 - Die Konfiguration liegt beim Unix-Benutzer `mih09-git` auf mih09 und in **keinem** Repository; sie ist im Wortlaut in D96 festgehalten.
 - Giteas eigener `[cors]`-Abschnitt und die `.htaccess` der Domain teilen sich die Arbeit: die API-Route deckt Gitea ab, die Web-Route der Apache davor.
 
-#### Szenario#1.01: Ein Beispiel-Link öffnet den Plan statt eines CORS-Fehlers
+#### Szenario#3.01: Ein Beispiel-Link öffnet den Plan statt eines CORS-Fehlers
 
 Damit die Links auf `origin` zeigen können und nicht auf einen Klon.
 
@@ -39,7 +39,7 @@ Damit die Links auf `origin` zeigen können und nicht auf einen Klon.
 
 - Messung 2026-09-03 auf allen fünf Beispieldateien: je HTTP 200 mit genau einem `Access-Control-Allow-Origin: *`.
 
-#### Szenario#1.02: Die API-Route trägt den Header genau einmal
+#### Szenario#3.02: Die API-Route trägt den Header genau einmal
 
 Damit die Antwort gültig bleibt — zwei `Access-Control-Allow-Origin`-Header verwirft der Browser als ungültig.
 
@@ -51,7 +51,7 @@ Damit die Antwort gültig bleibt — zwei `Access-Control-Allow-Origin`-Header v
 
 - Messung 2026-09-03: `/api/v1/repos/mi/werkdock/raw/README.md` → ein Header (zuvor, mit der ersten Fassung der `.htaccess`, waren es zwei).
 
-#### Szenario#1.03: Gewöhnliche Repo-Seiten bleiben unberührt
+#### Szenario#3.03: Gewöhnliche Repo-Seiten bleiben unberührt
 
 Damit der Header nur dort steht, wo er gebraucht wird, und nicht site-weit.
 
