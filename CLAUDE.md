@@ -24,6 +24,8 @@ Integrations-Backend.
   Eintrag begründen, alte Einträge nie löschen. Besonders D13 (Backend-Stack)
   und D14 (Parser-Hoheit) beachten.
 - Ziele: docs/ROADMAP.md · Offene Arbeit: docs/TASKS.md (Checkboxen pflegen).
+- Pull Requests: jeder PR bekommt ein Dokument unter `docs/prs/` — Konvention
+  in docs/prs/README.md.
 - Änderungen: @docs/CHANGELOG.md — **jedes Feature und jeder behobene Fehler
   bekommt dort eine Zeile**, englisch, ein Satz, unter der Überschrift des
   Tages (`## JJJJ-MM-TT`). Die Datei speist das Neuigkeiten-Popup im Editor

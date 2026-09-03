@@ -21,6 +21,7 @@ reverse.
 
 - The project moved to its own Gitea at git.javagil.de — the footer's repository and version links point there now, and GitHub stays a clone carrying the very same commits
 - Every push is built by Werkator, the project's own CI, alongside the GitHub Pages build: backend and frontend as two named builds
+- The example plan links now load from git.javagil.de instead of the GitHub clone, and the "Werkbaum itself" link works again — it pointed at a file name that does not exist
 
 ## 2026-09-02
 

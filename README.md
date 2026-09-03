@@ -54,7 +54,7 @@ The editor can pull its notation text from an external text file via the
 Git or a wiki:
 
 ```
-https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum
+https://werkbaum.javagil.de/?sourceUrl=https://git.javagil.de/mi/werkbaum/raw/branch/main/docs/examples/example-plan-0.werkbaum
 ```
 
 Ready-made examples in [`docs/examples/`](docs/examples/) — **open them one
@@ -63,11 +63,11 @@ between all of them in the editor title bar:
 
 | Example | Shows |
 |---|---|
-| **▶ [0 · Online shop relaunch](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum)** | a software project with all eight states |
-| **▶ [1 · New kitchen](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-1.werkbaum)** | a non-software plan, lots of alternatives — good for the cheapest-path toggle |
-| **▶ [2 · Community conference](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-2.werkbaum)** | a wide plan with many people; compare horizontal vs. compact |
-| **▶ [3 · Three workstreams](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-3.werkbaum)** | several roots = several trees side by side |
-| **▶ [Werkbaum itself](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-werkbaum.werkbaum)** | what exists today and where it could go |
+| **▶ [0 · Online shop relaunch](https://werkbaum.javagil.de/?sourceUrl=https://git.javagil.de/mi/werkbaum/raw/branch/main/docs/examples/example-plan-0.werkbaum)** | a software project with all eight states |
+| **▶ [1 · New kitchen](https://werkbaum.javagil.de/?sourceUrl=https://git.javagil.de/mi/werkbaum/raw/branch/main/docs/examples/example-plan-1.werkbaum)** | a non-software plan, lots of alternatives — good for the cheapest-path toggle |
+| **▶ [2 · Community conference](https://werkbaum.javagil.de/?sourceUrl=https://git.javagil.de/mi/werkbaum/raw/branch/main/docs/examples/example-plan-2.werkbaum)** | a wide plan with many people; compare horizontal vs. compact |
+| **▶ [3 · Three workstreams](https://werkbaum.javagil.de/?sourceUrl=https://git.javagil.de/mi/werkbaum/raw/branch/main/docs/examples/example-plan-3.werkbaum)** | several roots = several trees side by side |
+| **▶ [Werkbaum itself](https://werkbaum.javagil.de/?sourceUrl=https://git.javagil.de/mi/werkbaum/raw/branch/main/docs/examples/werkbaum.werkbaum)** | what exists today and where it could go |
 
 The loaded text becomes its own document whose **name is the URL**, so your own
 documents stay untouched; the same link updates that one document instead of
@@ -79,9 +79,10 @@ and D24) — a convention, not a contract: `sourceUrl` reads any text file over
 http(s) regardless of extension or content type.
 
 **Caveat — CORS:** the browser only fetches a foreign host if it sends
-`Access-Control-Allow-Origin`. `raw.githubusercontent.com` and GitLab raw links
-do; an arbitrary web server often does not. If loading fails the previous
-content stays and a warning explains why. Only `http`/`https` are allowed.
+`Access-Control-Allow-Origin`. `raw.githubusercontent.com`, GitLab raw links and
+`git.javagil.de` do (D96); an arbitrary web server often does not. If loading
+fails the previous content stays and a warning explains why. Only `http`/`https`
+are allowed.
 
 ### Working on one plan together (`?live=`)
 
@@ -146,11 +147,11 @@ git clone mih09-git@git.javagil.de:mi/werkbaum.git      # or https://git.javagil
 ```
 
 **GitHub stays a clone.** `main` is mirrored there by hand
-(`scripts/push-github.sh`), because two things hang off it: the GitHub Pages
-instance (the 🚧 *latest build* linked at the top) and the example links above,
-which load plan files from `raw.githubusercontent.com` via `?sourceUrl=`. Gitea
-serves raw files **without** an `Access-Control-Allow-Origin` header, so the
-browser would block them there (`docs/DECISIONS.md` D23, D95).
+(`scripts/push-github.sh`), because the GitHub Pages instance hangs off it — the
+🚧 *latest build* linked at the top. The example links above used to be a second
+reason and are not any more: `git.javagil.de` now serves raw files with an
+`Access-Control-Allow-Origin` header, so they point at Gitea
+(`docs/DECISIONS.md` D96, revising D95).
 
 ### Running it locally
 

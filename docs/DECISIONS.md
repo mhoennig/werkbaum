@@ -635,8 +635,8 @@ mögliche Erweiterung.)
 
 **CORS ist die eigentliche Einschränkung.** Der Browser lädt fremde Hosts nur,
 wenn die Zielseite `Access-Control-Allow-Origin` sendet. Das tun u. a.
-`raw.githubusercontent.com` und GitLab-Raw-Links; ein beliebiger Webserver
-oft **nicht**. Scheitert das Laden (CORS, 404, Netz), bleibt der bisherige Stand
+`raw.githubusercontent.com`, GitLab-Raw-Links und — seit D96 — das eigene
+`git.javagil.de`; ein beliebiger Webserver oft **nicht**. Scheitert das Laden (CORS, 404, Netz), bleibt der bisherige Stand
 stehen und es erscheint eine **Warnung** im Warnbereich (Typ `sourceLoad`,
 zeilenlos ⇒ zuoberst), die CORS ausdrücklich als wahrscheinliche Ursache nennt.
 Bewusst kein Proxy-Dienst als Ausweg: das würde fremde Inhalte über einen
@@ -9144,3 +9144,62 @@ beobachtete Klon `~/werkbaum` auf mih09 bekommt Gitea als `origin` — sonst
 sähe der Watcher neue Commits erst nach dem Spiegeln. **Status-Checks werden
 weiterhin nicht gepostet**, solange auf der Instanz kein Gitea-Token liegt;
 die Sektion ist bis dahin eine Beschriftung.
+
+**Nachtrag zu D95 — der CORS-Zwang ist weg (2026-09-03).** Von den zwei
+gemessenen Gründen für den Klon hält nur noch einer: `git.javagil.de` liefert
+`raw`-Dateien inzwischen mit `Access-Control-Allow-Origin` (D96), die
+Beispiel-Links zeigen deshalb auf Gitea. **GitHub Pages bleibt** — der
+Actions-Workflow der „latest build“-Instanz (D16) lässt sich nicht mitnehmen,
+und daran hängt das Spiegeln weiterhin.
+
+## D96 — `git.javagil.de` liefert `raw`-Dateien mit `Access-Control-Allow-Origin` (2026-09-03)
+D95 hielt fest, dass die Beispiel-Links auf `raw.githubusercontent.com` bleiben
+müssen, weil Gitea den CORS-Header nicht sendet. Das war eine
+Server-Konfiguration, keine Eigenschaft von Gitea — sie ist jetzt gesetzt, und
+die Links zeigen auf `origin`.
+
+**Gemessen, nicht vermutet.** Giteas eigener `[cors]`-Abschnitt allein reicht
+nicht: mit `ENABLED = true` / `ALLOW_DOMAIN = *` / `METHODS = GET,HEAD` in
+`app.ini` trägt `/api/v1/repos/mi/werkdock/raw/README.md` den Header, die
+**Web**-Route `/mi/werkdock/raw/branch/main/README.md` aber weiterhin nicht —
+Gitea 1.27 legt die CORS-Middleware nur auf `/api/v1`. Die Beispiel-Links
+benutzen die Web-Route.
+
+**Also beides, mit klarer Aufteilung.** Der `[cors]`-Abschnitt bleibt für die
+API-Route; die Web-Route bekommt den Header im Apache davor, in der
+`.htaccess` der Domain:
+
+```apache
+SetEnvIf Request_URI "^/[^/]+/[^/]+/(raw|media)/" GITEA_RAW_CORS
+Header always set Access-Control-Allow-Origin "*" env=GITEA_RAW_CORS
+```
+
+Zwei Fallen, beide beim Umsetzen aufgelaufen: `<LocationMatch>` ist in einer
+`.htaccess` **nicht erlaubt** (nur Server-Config/VHost) — auf einem Managed
+Webspace gibt es aber nur `.htaccess`, daher `SetEnvIf`. Und die Regel darf
+`/api/v1` **nicht** mitfassen: `Header always` schreibt in `err_headers_out`
+und *ergänzt* dort, statt zu ersetzen — zusammen mit Giteas eigenem Header
+standen zwei `Access-Control-Allow-Origin: *` in der Antwort, was Browser als
+ungültig verwerfen. Gemessen: je genau ein Header auf beiden raw-Routen, keiner
+auf gewöhnlichen Repo-Seiten.
+
+**`*` ohne Credentials ist hier die harmlose Variante.** Unter einem
+Wildcard-Ursprung sendet der Browser grundsätzlich keine Cookies; ein fremder
+Ursprung liest also nur, was ohnehin anonym abrufbar ist. Private Repositories
+brauchen die Sitzung und antworten weiter mit 404/403 (nachgemessen: 404 auf
+einen nicht existierenden Pfad). Ausdrücklich **nicht** getan: kein
+`Access-Control-Allow-Credentials: true` (damit könnten fremde Seiten private
+Repositories im Namen des angemeldeten Benutzers lesen), kein Zurückspiegeln
+des `Origin` (dasselbe Risiko, sobald jemand später Credentials ergänzt), und
+der Header steht nicht site-weit, sondern nur auf den raw-Pfaden.
+
+**Kein Preflight nötig.** `OPTIONS` auf die Web-raw-Route antwortet weiterhin
+`405`. Das ist folgenlos: der Abruf aus D23 ist ein *simple request* —
+schlichtes `GET`, `credentials:'omit'`, keine eigenen Header —, und dafür
+schickt der Browser keinen Preflight.
+
+**Die Konfiguration liegt in keinem Repository.** Sie gehört dem Unix-Benutzer
+`mih09-git` auf mih09 (`gitea/custom/conf/app.ini` und
+`doms/git.javagil.de/htdocs-ssl/.htaccess`, beide mit Zeitstempel-Sicherung
+daneben) — deshalb steht sie hier im Wortlaut, damit sie nach einem Neuaufsetzen
+wiederherstellbar ist.

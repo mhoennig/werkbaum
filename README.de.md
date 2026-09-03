@@ -57,7 +57,7 @@ einer externen Textdatei beziehen — praktisch zum Teilen eines Plans oder wenn
 die Quelle in Git oder einem Wiki gepflegt wird:
 
 ```
-https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum
+https://werkbaum.javagil.de/?sourceUrl=https://git.javagil.de/mi/werkbaum/raw/branch/main/docs/examples/example-plan-0.werkbaum
 ```
 
 Fertige Beispiele in [`docs/examples/`](docs/examples/) — **nacheinander
@@ -66,11 +66,11 @@ Editor-Titelzeile zwischen allen umschalten:
 
 | Beispiel | Zeigt |
 |---|---|
-| **▶ [0 · Online-Shop-Relaunch](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-0.werkbaum)** | ein Softwareprojekt mit allen acht Status |
-| **▶ [1 · Neue Küche](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-1.werkbaum)** | ein Plan ohne Software, viele Alternativen — gut für den Günstigster-Pfad-Schalter |
-| **▶ [2 · Community-Konferenz](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-2.werkbaum)** | ein breiter Plan mit vielen Beteiligten; horizontal vs. kompakt vergleichen |
-| **▶ [3 · Drei Arbeitsstränge](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-plan-3.werkbaum)** | mehrere Wurzeln = mehrere Bäume nebeneinander |
-| **▶ [Werkbaum selbst](https://werkbaum.javagil.de/?sourceUrl=https://raw.githubusercontent.com/mhoennig/werkbaum/main/docs/examples/example-werkbaum.werkbaum)** | Bestand und mögliche Weiterentwicklung |
+| **▶ [0 · Online-Shop-Relaunch](https://werkbaum.javagil.de/?sourceUrl=https://git.javagil.de/mi/werkbaum/raw/branch/main/docs/examples/example-plan-0.werkbaum)** | ein Softwareprojekt mit allen acht Status |
+| **▶ [1 · Neue Küche](https://werkbaum.javagil.de/?sourceUrl=https://git.javagil.de/mi/werkbaum/raw/branch/main/docs/examples/example-plan-1.werkbaum)** | ein Plan ohne Software, viele Alternativen — gut für den Günstigster-Pfad-Schalter |
+| **▶ [2 · Community-Konferenz](https://werkbaum.javagil.de/?sourceUrl=https://git.javagil.de/mi/werkbaum/raw/branch/main/docs/examples/example-plan-2.werkbaum)** | ein breiter Plan mit vielen Beteiligten; horizontal vs. kompakt vergleichen |
+| **▶ [3 · Drei Arbeitsstränge](https://werkbaum.javagil.de/?sourceUrl=https://git.javagil.de/mi/werkbaum/raw/branch/main/docs/examples/example-plan-3.werkbaum)** | mehrere Wurzeln = mehrere Bäume nebeneinander |
+| **▶ [Werkbaum selbst](https://werkbaum.javagil.de/?sourceUrl=https://git.javagil.de/mi/werkbaum/raw/branch/main/docs/examples/werkbaum.werkbaum)** | Bestand und mögliche Weiterentwicklung |
 
 Der geladene Text wird als **eigenes Dokument** geführt, dessen **Name die URL**
 ist — eigene Dokumente bleiben unberührt, und derselbe Link aktualisiert dieses
@@ -83,10 +83,10 @@ Notationsdateien tragen die Endung **`.werkbaum`** (UTF-8; siehe `docs/SPEC.md`
 erreichbare Textdatei, unabhängig von Endung und Content-Type.
 
 **Einschränkung — CORS:** Der Browser lädt fremde Hosts nur, wenn sie
-`Access-Control-Allow-Origin` senden. `raw.githubusercontent.com` und
-GitLab-Raw-Links tun das; ein beliebiger Webserver oft nicht. Scheitert das
-Laden, bleibt der bisherige Stand stehen und eine Warnung nennt die Ursache.
-Zugelassen sind nur `http`/`https`.
+`Access-Control-Allow-Origin` senden. `raw.githubusercontent.com`,
+GitLab-Raw-Links und `git.javagil.de` tun das (D96); ein beliebiger Webserver
+oft nicht. Scheitert das Laden, bleibt der bisherige Stand stehen und eine
+Warnung nennt die Ursache. Zugelassen sind nur `http`/`https`.
 
 ### Zusammen an einem Plan arbeiten (`?live=`)
 
@@ -152,11 +152,11 @@ git clone mih09-git@git.javagil.de:mi/werkbaum.git      # oder https://git.javag
 ```
 
 **GitHub bleibt ein Klon.** `main` wird dorthin von Hand gespiegelt
-(`scripts/push-github.sh`), denn zwei Dinge hängen daran: die
-GitHub-Pages-Instanz (der 🚧 *latest build* ganz oben) und die Beispiel-Links
-weiter oben, die ihre Pläne per `?sourceUrl=` von `raw.githubusercontent.com`
-laden. Gitea liefert `raw`-Dateien **ohne** `Access-Control-Allow-Origin` aus —
-dort blockte der Browser sie (`docs/DECISIONS.md` D23, D95).
+(`scripts/push-github.sh`), denn die GitHub-Pages-Instanz hängt daran — der
+🚧 *latest build* ganz oben. Die Beispiel-Links waren ein zweiter Grund und sind
+es nicht mehr: `git.javagil.de` liefert `raw`-Dateien inzwischen mit
+`Access-Control-Allow-Origin`, sie zeigen deshalb auf Gitea
+(`docs/DECISIONS.md` D96, revidiert D95).
 
 ### Lokal ausführen
 
