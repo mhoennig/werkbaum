@@ -50,9 +50,6 @@ application-local.yaml
 hs_err_pid*
 replay_pid*
 !gradle-wrapper.jar
-/backend/gradle/wrapper/
-/backend/gradlew
-/backend/gradlew.bat
 
 # === Frontend (Vanilla HTML/CSS/JS, D11) ===
 # Derzeit build-frei; falls später Tooling dazukommt:
