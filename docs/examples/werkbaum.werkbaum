@@ -124,8 +124,8 @@
       - [^] #bld.backend.proxy: Apache passes /api/ on, in .htaccess (XS)  %% measured: the P flag is allowed
       - [^] #bld.backend.remote: One command for everything on the server (S)  %% remote <target> <action>
       - [^] #bld.backend.backup: Save the database, and prove it can be read back (XS)
-    - [x] #bld.werkator: Also built by Werkator, the project's own CI (S)  %% .werkator.yml, backend + frontend
-    - [x] #bld.gitea: The repository lives on Gitea, GitHub stays a clone (S)
+    - [^] #bld.werkator: Also built by Werkator, the project's own CI (S)  %% .werkator.yml, backend + frontend
+    - [^] #bld.gitea: The repository lives on Gitea, GitHub stays a clone (S)
     - [-] #bld.ghpages: Deploy through a gh-pages branch (S)  %% GitHub Actions instead
     - [-] #bld.gfonts: Fonts from Google (XS)  %% self-hosted, no third-party request
   - [ ] #be: Backend (XL)
